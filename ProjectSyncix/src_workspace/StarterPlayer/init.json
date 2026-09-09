@@ -1,0 +1,71 @@
+{
+  "class_name": "StarterPlayer",
+  "name": "StarterPlayer",
+  "syncix_id": "00000000-0000-4000-8000-000000000006",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "AutoJumpEnabled": {
+      "Boolean": true
+    },
+    "CameraMaxZoomDistance": {
+      "Number": 128.0
+    },
+    "CameraMinZoomDistance": {
+      "Number": 0.5
+    },
+    "CameraMode": {
+      "String": "Enum.CameraMode.Classic"
+    },
+    "CharacterJumpHeight": {
+      "Number": 7.199999809265137
+    },
+    "CharacterJumpPower": {
+      "Number": 50.0
+    },
+    "CharacterMaxSlopeAngle": {
+      "Number": 89.0
+    },
+    "CharacterUseJumpPower": {
+      "Boolean": false
+    },
+    "CharacterWalkSpeed": {
+      "Number": 16.0
+    },
+    "DevCameraOcclusionMode": {
+      "String": "Enum.DevCameraOcclusionMode.Zoom"
+    },
+    "DevComputerCameraMovementMode": {
+      "String": "Enum.DevComputerCameraMovementMode.UserChoice"
+    },
+    "DevComputerMovementMode": {
+      "String": "Enum.DevComputerMovementMode.UserChoice"
+    },
+    "DevTouchCameraMovementMode": {
+      "String": "Enum.DevTouchCameraMovementMode.UserChoice"
+    },
+    "DevTouchMovementMode": {
+      "String": "Enum.DevTouchMovementMode.UserChoice"
+    },
+    "EnableMouseLockOption": {
+      "Boolean": true
+    },
+    "HealthDisplayDistance": {
+      "Number": 100.0
+    },
+    "LoadCharacterAppearance": {
+      "Boolean": true
+    },
+    "NameDisplayDistance": {
+      "Number": 100.0
+    },
+    "UserEmotesEnabled": {
+      "Boolean": true
+    }
+  },
+  "children": [
+    "48dd09f2-d9f4-40c2-b1b9-bb49288ac2d8",
+    "566a675c-41ca-4a76-9ab9-0afc386d7c3b"
+  ],
+  "parent": null
+}

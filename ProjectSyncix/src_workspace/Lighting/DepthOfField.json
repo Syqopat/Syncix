@@ -1,0 +1,26 @@
+{
+  "class_name": "DepthOfFieldEffect",
+  "name": "DepthOfField",
+  "syncix_id": "63b6f700-2c40-4c02-8dcf-4a868cb5de3b",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Enabled": {
+      "Boolean": false
+    },
+    "FarIntensity": {
+      "Number": 0.10000000149011612
+    },
+    "FocusDistance": {
+      "Number": 0.05000000074505806
+    },
+    "InFocusRadius": {
+      "Number": 30.0
+    },
+    "NearIntensity": {
+      "Number": 0.75
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000009"
+}

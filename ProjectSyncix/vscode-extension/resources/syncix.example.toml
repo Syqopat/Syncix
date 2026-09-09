@@ -1,0 +1,118 @@
+# Syncix project settings.
+#
+# Copy this file to `syncix.toml` next to your project and delete anything you
+# do not need — every key below is optional and shows its default value.
+#
+# Settings are read when the core starts. After editing, restart it:
+#   syncix down && syncix up
+#
+# To see what is actually in effect right now:
+#   syncix config
+
+
+[sync]
+
+# Which directions are active.
+#
+#   two_way         Studio <-> disk. The default.
+#   studio_to_disk  Studio is the source. Changes made in Studio are written to
+#                   disk; changes made on disk are NOT sent to Studio. Useful
+#                   when you build scenes in Studio and want the result in
+#                   version control.
+#   disk_to_studio  The file system is the source — this is how Rojo works.
+#                   Studio becomes a receiver and never pushes back.
+#   manual          Nothing syncs automatically. Only explicit commands are
+#                   carried out (syncix pull, syncix set, ...). For working
+#                   carefully in a scene you do not want touched.
+mode = "two_way"
+
+# What happens to editor changes while the game is running (Play mode).
+#
+#   queue    Held back and applied when Play ends. The default.
+#   ignore   Discarded.
+#   apply    Applied to the running session. Studio throws that session away
+#            when Play stops, so the change is usually lost. Only turn this on
+#            if you specifically want it.
+play_mode = "queue"
+
+# How long the writer waits for things to settle before writing to disk, in
+# milliseconds. Lower is more responsive but writes more often.
+debounce_ms = 120
+
+# Ask for confirmation in Studio the first time a project connects.
+ask_permission = false
+
+# Put Syncix's own changes on Studio's undo stack, so Ctrl+Z can take them back.
+undo = true
+
+
+[files]
+
+# The folder that mirrors the Roblox tree, relative to this file.
+sync_dir = "src_workspace"
+
+# Paths Syncix never reads and never deletes. Glob patterns.
+# Your own notes, generated files and anything you keep beside the tree.
+ignore = []
+
+# Write .meta.json files next to scripts. These carry a script's properties and
+# attributes. Turning this off keeps the folder clean but means those values
+# only live in Studio.
+meta_files = true
+
+
+[safety]
+
+# Move files to a trash folder instead of deleting them.
+#
+# The reconciler removes files that no longer exist in the Roblox tree. That is
+# correct, but one-sided: if you edit a file while the core is not running,
+# nobody saw the edit, and the next startup treats the file as surplus. With
+# trash on, that file is recoverable (syncix trash / syncix restore).
+trash = true
+
+# How many trash rounds to keep. Older ones are removed.
+trash_keep = 10
+
+# How long to wait before a deleted file is treated as a real deletion, in
+# milliseconds. Moving a file looks like delete + create to the operating
+# system, so this window is what tells the two apart. Raise it on slow disks.
+delete_grace_ms = 800
+
+# Ask before `syncix rm` deletes anything. Scripts can pass --yes.
+confirm_delete = true
+
+
+[scope]
+
+# Which services are synced. Leave empty for the built-in list:
+#   Workspace, ReplicatedStorage, ReplicatedFirst, ServerStorage,
+#   ServerScriptService, StarterPlayer, StarterGui, StarterPack, Lighting,
+#   SoundService, Teams, TextChatService, LocalizationService, MaterialService
+#
+# Players, Chat and TestService are deliberately excluded: Players fills up at
+# run time and its contents are not authored content.
+services = []
+
+# Classes that are never synced.
+ignore_classes = []
+
+# Properties that are never synced, whatever class they appear on. Useful for
+# noisy or machine-specific values.
+ignore_properties = []
+
+
+[server]
+
+# Port the core listens on. If it is busy, the next one is tried — unless you
+# pass the port explicitly on the command line (syncix serve 25565), in which
+# case Syncix stays on that port or fails. That is deliberate: you type the same
+# port into the Studio plugin, and a core that quietly moved elsewhere would
+# leave the two sides disagreeing with no visible reason.
+port = 8080
+
+
+[editor]
+
+# Keep sourcemap.json up to date so luau-lsp can resolve requires.
+sourcemap = true

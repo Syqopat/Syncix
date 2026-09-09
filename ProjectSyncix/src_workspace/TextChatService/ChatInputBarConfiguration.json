@@ -1,0 +1,70 @@
+{
+  "class_name": "ChatInputBarConfiguration",
+  "name": "ChatInputBarConfiguration",
+  "syncix_id": "b9743071-b795-4c3c-94a1-491e32ea0da5",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "AutocompleteEnabled": {
+      "Boolean": true
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 0.09803922,
+        "g": 0.105882354,
+        "b": 0.11372549
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 0.2
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/BuilderSans.json",
+        "weight": "Enum.FontWeight.Medium",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "KeyboardKeyCode": {
+      "String": "Enum.KeyCode.Slash"
+    },
+    "PlaceholderColor3": {
+      "Color3": {
+        "r": 0.69803923,
+        "g": 0.69803923,
+        "b": 0.69803923
+      }
+    },
+    "TargetTextChannel": {
+      "Ref": ""
+    },
+    "TextBox": {
+      "Ref": ""
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "TextSize": {
+      "Number": 18.0
+    },
+    "TextStrokeColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextStrokeTransparency": {
+      "Number": 0.5
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-00000000000c"
+}

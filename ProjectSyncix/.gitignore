@@ -1,0 +1,20 @@
+# Rust
+core-engine/target/
+
+# Node
+vscode-extension/node_modules/
+vscode-extension/out/
+
+# Syncix calisma dosyalari
+.syncix/
+syncix-core.log
+*.vsix
+
+# Editor
+.vscode/
+.DS_Store
+
+# Uretilen dosyalar
+sourcemap.json
+*.rbxmx
+*.rbxlx

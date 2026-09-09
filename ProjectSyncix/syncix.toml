@@ -1,0 +1,9 @@
+# Syncix proje ayarlari
+sync_dir = "src_workspace"
+port = 8080
+
+# Senkron disi birakilacak yollar (glob).
+# Bu yollar ne okunur ne de silinir. Not: Syncix zaten yalnizca kendi
+# uretebilecegi bicimdeki dosyalara dokunur (.json .lua .luau .txt .meta.json),
+# yani README gibi dosyalar bu liste olmadan da guvendedir.
+ignore = ["notlar/**"]

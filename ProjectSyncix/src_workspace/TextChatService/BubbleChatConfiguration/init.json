@@ -1,0 +1,77 @@
+{
+  "class_name": "BubbleChatConfiguration",
+  "name": "BubbleChatConfiguration",
+  "syncix_id": "39bebb0b-a882-4f8f-9de3-677f422a0213",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "AdorneeName": {
+      "String": "HumanoidRootPart"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 0.98039216,
+        "g": 0.98039216,
+        "b": 0.98039216
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 0.1
+    },
+    "BubbleDuration": {
+      "Number": 15.0
+    },
+    "BubblesSpacing": {
+      "Number": 6.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/BuilderSans.json",
+        "weight": "Enum.FontWeight.Medium",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "LocalPlayerStudsOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "MaxBubbles": {
+      "Number": 3.0
+    },
+    "MaxDistance": {
+      "Number": 100.0
+    },
+    "MinimizeDistance": {
+      "Number": 40.0
+    },
+    "TailVisible": {
+      "Boolean": true
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 0.22352941,
+        "g": 0.23137255,
+        "b": 0.23921569
+      }
+    },
+    "TextSize": {
+      "Number": 20.0
+    },
+    "VerticalStudsOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "5ad7d8d7-8ab5-4c80-b96b-65557a46c597",
+    "db169018-aaca-45f7-aeec-ecd2c8d2b5f5",
+    "d4bbd0cc-ea00-425c-9221-6bd42abba470",
+    "4d58ad18-1929-4db6-826a-0e614f616940"
+  ],
+  "parent": "00000000-0000-4000-8000-00000000000c"
+}

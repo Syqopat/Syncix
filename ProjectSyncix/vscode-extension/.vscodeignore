@@ -1,0 +1,15 @@
+# Pakete GIRMEYECEKLER.
+# node_modules BILEREK listede yok: 'ws' calisma zamani bagimliligi ve
+# paketten duserse eklenti "Cannot find module 'ws'" ile hic acilmiyor.
+# Bu hata bir kez yasandi; kendi makinede node_modules yerinde oldugu icin
+# gorunmuyor, yalnizca temiz kurulumda ortaya cikiyor.
+.vscode/**
+src/**
+out/**/*.map
+tsconfig.json
+**/*.ts
+!out/**/*.js
+.gitignore
+node_modules/.bin/**
+node_modules/**/test/**
+node_modules/**/*.md

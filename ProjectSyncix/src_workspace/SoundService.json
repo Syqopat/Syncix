@@ -1,0 +1,26 @@
+{
+  "class_name": "SoundService",
+  "name": "SoundService",
+  "syncix_id": "00000000-0000-4000-8000-00000000000a",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "AmbientReverb": {
+      "String": "Enum.ReverbType.NoReverb"
+    },
+    "DistanceFactor": {
+      "Number": 3.3299999237060547
+    },
+    "DopplerScale": {
+      "Number": 1.0
+    },
+    "RespectFilteringEnabled": {
+      "Boolean": true
+    },
+    "RolloffScale": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": null
+}

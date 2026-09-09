@@ -1,0 +1,99 @@
+name: Release
+
+# Sürüm etiketi itildiğinde (v0.1.0 gibi) çalışır.
+#
+# Neden CI şart: core binary'si her platform için o platformda derlenmeli.
+# Windows'ta macOS binary'si üretilemez (macOS SDK gerekir). Bu iş akışı üç
+# binary'yi kendi makinelerinde derleyip tek bir .vsix içinde toplar; böylece
+# kullanıcı hangi işletim sisteminde olursa olsun tek kurulumla çalışır.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  core:
+    name: Core (${{ matrix.hedef }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            hedef: x86_64-pc-windows-msvc
+            klasor: win32-x64
+            dosya: syncix-core.exe
+          - os: macos-latest
+            hedef: aarch64-apple-darwin
+            klasor: darwin-arm64
+            dosya: syncix-core
+          - os: macos-latest
+            hedef: x86_64-apple-darwin
+            klasor: darwin-x64
+            dosya: syncix-core
+          - os: ubuntu-latest
+            hedef: x86_64-unknown-linux-gnu
+            klasor: linux-x64
+            dosya: syncix-core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.hedef }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core-engine
+      - name: Derle
+        working-directory: core-engine
+        run: cargo build --release --target ${{ matrix.hedef }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-${{ matrix.klasor }}
+          path: core-engine/target/${{ matrix.hedef }}/release/${{ matrix.dosya }}
+
+  paket:
+    name: VSIX paketi
+    needs: core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Studio eklentisini derle
+        run: rojo build studio-plugin/default.project.json -o vscode-extension/resources/SyncixPlugin.rbxm
+
+      - name: Binary'leri indir
+        uses: actions/download-artifact@v4
+        with:
+          path: indirilen
+
+      - name: Binary'leri yerleştir
+        run: |
+          for d in indirilen/core-*; do
+            klasor="${d#indirilen/core-}"
+            mkdir -p "vscode-extension/resources/bin/$klasor"
+            cp "$d"/* "vscode-extension/resources/bin/$klasor/"
+            chmod +x "vscode-extension/resources/bin/$klasor/"* || true
+          done
+          find vscode-extension/resources/bin -type f -exec ls -la {} \;
+
+      - name: Paketle
+        working-directory: vscode-extension
+        run: |
+          npm ci || npm install
+          npm run compile
+          npx --yes @vscode/vsce package --out ../syncix.vsix
+
+      - name: Sürüme ekle
+        uses: softprops/action-gh-release@v2
+        with:
+          files: syncix.vsix
+          body: |
+            Kurulum: syncix.vsix dosyasını indir, VS Code'da
+            Extensions panelinde "..." > "Install from VSIX..." ile kur.
+
+            Studio eklentisi ve core binary'si paketin içinde gelir,
+            ayrıca bir şey indirmeye gerek yoktur.

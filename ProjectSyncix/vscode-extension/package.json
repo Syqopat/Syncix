@@ -1,0 +1,211 @@
+{
+  "name": "syncix-vscode",
+  "displayName": "Syncix",
+  "description": "Developer platform for Roblox",
+  "version": "0.1.0",
+  "publisher": "Syncix",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "syncix.initProject",
+        "title": "Create Project Here",
+        "category": "Syncix",
+        "icon": "$(add)"
+      },
+      {
+        "command": "syncix.start",
+        "title": "Syncix: Start"
+      },
+      {
+        "command": "syncix.stop",
+        "title": "Syncix: Stop"
+      },
+      {
+        "command": "syncix.inspectNode",
+        "title": "Syncix: Inspect Properties"
+      },
+      {
+        "command": "syncix.openDiagnostics",
+        "title": "Syncix: Open Diagnostics Dashboard"
+      },
+      {
+        "command": "syncix.createInstance",
+        "title": "Syncix: Create Instance"
+      },
+      {
+        "command": "syncix.renameInstance",
+        "title": "Syncix: Rename Instance"
+      },
+      {
+        "command": "syncix.deleteInstance",
+        "title": "Syncix: Delete Instance"
+      },
+      {
+        "command": "syncix.searchExplorer",
+        "title": "Syncix: Search Explorer"
+      },
+      {
+        "command": "syncix.showStatus",
+        "title": "Syncix: Show Status"
+      },
+      {
+        "command": "syncix.reconnect",
+        "title": "Syncix: Reconnect"
+      },
+      {
+        "command": "syncix.restartCore",
+        "title": "Syncix: Restart Core Engine"
+      },
+      {
+        "command": "syncix.stopCore",
+        "title": "Syncix: Stop Core Engine"
+      },
+      {
+        "command": "syncix.installPlugin",
+        "title": "Syncix: Install / Update Studio Plugin"
+      },
+      {
+        "command": "syncix.openInspector",
+        "title": "Syncix: Open Inspector"
+      },
+      {
+        "command": "syncix.refresh",
+        "title": "Syncix: Refresh Tree"
+      },
+      {
+        "command": "syncix.installCliGlobal",
+        "title": "Syncix: Install CLI (system-wide)"
+      },
+      {
+        "command": "syncix.selfTest",
+        "title": "Syncix: Run Self Test (end-to-end)"
+      },
+      {
+        "command": "syncix.openWorkspaceFolder",
+        "title": "Syncix: Open Sync Folder"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "syncix.renameInstance",
+          "when": "false"
+        },
+        {
+          "command": "syncix.deleteInstance",
+          "when": "false"
+        },
+        {
+          "command": "syncix.inspectNode",
+          "when": "false"
+        },
+        {
+          "command": "syncix.openNodeFile",
+          "when": "false"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "syncix.createInstance",
+          "when": "view == syncixExplorer && viewItem == syncixNode",
+          "group": "syncix@1"
+        },
+        {
+          "command": "syncix.renameInstance",
+          "when": "view == syncixExplorer && viewItem == syncixNode",
+          "group": "syncix@2"
+        },
+        {
+          "command": "syncix.deleteInstance",
+          "when": "view == syncixExplorer && viewItem == syncixNode",
+          "group": "syncix@3"
+        },
+        {
+          "command": "syncix.inspectNode",
+          "when": "view == syncixExplorer && viewItem == syncixNode",
+          "group": "syncix@4"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "syncix.searchExplorer",
+          "when": "view == syncixExplorer",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Syncix",
+      "properties": {
+        "syncix.autoStartCore": {
+          "type": "boolean",
+          "default": true,
+          "description": "VS Code açılırken Syncix Core Engine çalışmıyorsa otomatik başlat."
+        },
+        "syncix.coreExePath": {
+          "type": "string",
+          "default": "",
+          "description": "Syncix Core Engine exe yolu (otomatik başlatma için)."
+        },
+        "syncix.coreCwd": {
+          "type": "string",
+          "default": "",
+          "description": "Core Engine'in çalışma dizini (src_workspace yolu buna göre çözülür)."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "syncix-sidebar",
+          "title": "Syncix",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "syncix-sidebar": [
+        {
+          "id": "syncixExplorer",
+          "name": "Workspace Explorer"
+        },
+        {
+          "id": "syncixDiagnostics",
+          "name": "Diagnostics"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "syncixExplorer",
+        "contents": "No Syncix project in this folder yet.\n\nA project is a syncix.toml file plus the folder that mirrors your Roblox tree. Creating one also installs the Studio plugin and starts the core.\n\n[Create Syncix Project](command:syncix.initProject)",
+        "when": "!syncix.hasProject"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && vsce package --allow-missing-repository"
+  },
+  "dependencies": {
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.18.34",
+    "@types/vscode": "^1.80.0",
+    "@types/ws": "^8.5.5",
+    "typescript": "^5.0.0"
+  }
+}

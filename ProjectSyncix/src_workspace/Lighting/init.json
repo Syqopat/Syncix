@@ -1,0 +1,85 @@
+{
+  "class_name": "Lighting",
+  "name": "Lighting",
+  "syncix_id": "00000000-0000-4000-8000-000000000009",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Ambient": {
+      "Color3": {
+        "r": 0.27450982,
+        "g": 0.27450982,
+        "b": 0.27450982
+      }
+    },
+    "Brightness": {
+      "Number": 3.0
+    },
+    "ClockTime": {
+      "Number": 14.5
+    },
+    "ColorShift_Bottom": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "ColorShift_Top": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "EnvironmentDiffuseScale": {
+      "Number": 1.0
+    },
+    "EnvironmentSpecularScale": {
+      "Number": 1.0
+    },
+    "ExposureCompensation": {
+      "Number": 0.0
+    },
+    "FogColor": {
+      "Color3": {
+        "r": 0.75294125,
+        "g": 0.75294125,
+        "b": 0.75294125
+      }
+    },
+    "FogEnd": {
+      "Number": 100000.0
+    },
+    "FogStart": {
+      "Number": 0.0
+    },
+    "GeographicLatitude": {
+      "Number": 0.0
+    },
+    "GlobalShadows": {
+      "Boolean": true
+    },
+    "OutdoorAmbient": {
+      "Color3": {
+        "r": 0.27450982,
+        "g": 0.27450982,
+        "b": 0.27450982
+      }
+    },
+    "ShadowSoftness": {
+      "Number": 0.20000000298023224
+    },
+    "TimeOfDay": {
+      "String": "14:30:00"
+    }
+  },
+  "children": [
+    "bb6f2ccf-cee0-442b-a993-529512799bb7",
+    "d602a802-2942-480e-8db2-4472e962ffeb",
+    "86f7cd53-a53b-4e09-9b60-912358cfa4d1",
+    "1e83a38e-cdb4-4a22-a5e3-089473f1805d",
+    "63b6f700-2c40-4c02-8dcf-4a868cb5de3b"
+  ],
+  "parent": null
+}

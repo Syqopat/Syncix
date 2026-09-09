@@ -1,0 +1,66 @@
+{
+  "class_name": "Workspace",
+  "name": "Workspace",
+  "syncix_id": "00000000-0000-4000-8000-000000000001",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "AirDensity": {
+      "Number": 0.0012000000569969416
+    },
+    "AllowThirdPartySales": {
+      "Boolean": false
+    },
+    "ClientAnimatorThrottling": {
+      "String": "Enum.ClientAnimatorThrottlingMode.Default"
+    },
+    "DistributedGameTime": {
+      "Number": 0.0
+    },
+    "GlobalWind": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Gravity": {
+      "Number": 196.1999969482422
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "Retargeting": {
+      "String": "Enum.AnimatorRetargetingMode.Default"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "92106783-a138-4412-8261-b9df99d5fb4f",
+    "bfa47fe6-9c70-436c-9669-437f290f8b44",
+    "b27626a3-3983-444a-b8e7-0b1a023b3d25"
+  ],
+  "parent": null
+}

@@ -1,0 +1,53 @@
+{
+  "class_name": "UIGradient",
+  "name": "UIGradient",
+  "syncix_id": "5ad7d8d7-8ab5-4c80-b96b-65557a46c597",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Color": {
+      "ColorSequence": [
+        {
+          "t": 0.0,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0
+        },
+        {
+          "t": 1.0,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0
+        }
+      ]
+    },
+    "Enabled": {
+      "Boolean": false
+    },
+    "Offset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "Transparency": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.0,
+          "envelope": 0.0
+        }
+      ]
+    }
+  },
+  "children": [],
+  "parent": "39bebb0b-a882-4f8f-9de3-677f422a0213"
+}

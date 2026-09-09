@@ -1,0 +1,73 @@
+name: CI
+
+# Her itmede üç katman da denetlenir:
+#   1. Rust birim testleri  — property tip dönüşümü, UUID kalıcılığı, döngü dedektörü
+#   2. Luau sözdizimi       — Studio eklentisi ve oyun scriptleri
+#   3. TypeScript derlemesi — VS Code eklentisi
+# Bu iş akışının varlık sebebi: "Position" hatası (her Vector3 yazımının sessizce
+# düşmesi) aylarca fark edilmedi çünkü o katmanda hiç test yoktu.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  rust:
+    name: Core testleri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core-engine
+      - name: Testler
+        working-directory: core-engine
+        run: cargo test --all-features
+      - name: Clippy
+        working-directory: core-engine
+        run: cargo clippy -- -D warnings
+        continue-on-error: true
+
+  luau:
+    name: Luau sözdizimi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: CompeyDev/setup-rokit@v0.1.2
+      - name: Eklenti ve oyun scriptleri
+        run: sh tools/luau-check.sh $(find studio-plugin/src src_workspace -name "*.lua")
+
+  typescript:
+    name: Editör eklentisi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Bağımlılıklar
+        working-directory: vscode-extension
+        run: npm ci || npm install
+      - name: Derleme
+        working-directory: vscode-extension
+        run: npm run compile
+
+  surum-hizasi:
+    name: Sürüm hizası
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cargo.toml ile package.json aynı sürümde mi
+        run: |
+          CARGO=$(grep -m1 '^version' core-engine/Cargo.toml | cut -d'"' -f2)
+          PKG=$(node -p "require('./vscode-extension/package.json').version")
+          PLUGIN=$(grep -m1 'SYNCIX_VERSION' studio-plugin/src/init.server.lua | cut -d'"' -f2)
+          echo "core=$CARGO  eklenti=$PKG  plugin=$PLUGIN"
+          if [ "$CARGO" != "$PKG" ] || [ "$CARGO" != "$PLUGIN" ]; then
+            echo "HATA: sürümler uyuşmuyor. Üçü de aynı olmalı."
+            exit 1
+          fi

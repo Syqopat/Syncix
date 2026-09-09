@@ -1,0 +1,63 @@
+{
+  "class_name": "ChatWindowConfiguration",
+  "name": "ChatWindowConfiguration",
+  "syncix_id": "38e3b1b2-d792-467a-826a-a14c100024d8",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 0.09803922,
+        "g": 0.105882354,
+        "b": 0.11372549
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 0.3
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/BuilderSans.json",
+        "weight": "Enum.FontWeight.Medium",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "HeightScale": {
+      "Number": 1.0
+    },
+    "HorizontalAlignment": {
+      "String": "Enum.HorizontalAlignment.Left"
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "TextSize": {
+      "Number": 18.0
+    },
+    "TextStrokeColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextStrokeTransparency": {
+      "Number": 0.5
+    },
+    "VerticalAlignment": {
+      "String": "Enum.VerticalAlignment.Top"
+    },
+    "WidthScale": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-00000000000c"
+}

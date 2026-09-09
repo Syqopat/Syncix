@@ -1,0 +1,23 @@
+{
+  "class_name": "BloomEffect",
+  "name": "Bloom",
+  "syncix_id": "1e83a38e-cdb4-4a22-a5e3-089473f1805d",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Intensity": {
+      "Number": 1.0
+    },
+    "Size": {
+      "Number": 24.0
+    },
+    "Threshold": {
+      "Number": 2.0
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000009"
+}

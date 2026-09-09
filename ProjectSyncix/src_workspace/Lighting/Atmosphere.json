@@ -1,0 +1,37 @@
+{
+  "class_name": "Atmosphere",
+  "name": "Atmosphere",
+  "syncix_id": "86f7cd53-a53b-4e09-9b60-912358cfa4d1",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Color": {
+      "Color3": {
+        "r": 0.78039217,
+        "g": 0.78039217,
+        "b": 0.78039217
+      }
+    },
+    "Decay": {
+      "Color3": {
+        "r": 0.41568628,
+        "g": 0.4392157,
+        "b": 0.49019608
+      }
+    },
+    "Density": {
+      "Number": 0.30000001192092896
+    },
+    "Glare": {
+      "Number": 0.0
+    },
+    "Haze": {
+      "Number": 0.0
+    },
+    "Offset": {
+      "Number": 0.25
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000009"
+}
