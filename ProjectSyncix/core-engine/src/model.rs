@@ -606,7 +606,7 @@ mod tests {
         let mut node = InstanceNode::new(class, name);
         node.parent = parent;
         let id = node.syncix_id;
-        model.upsert_instance(node).expect("upsert basarisiz");
+        model.upsert_instance(node).expect("upsert failed");
         id
     }
 
@@ -640,7 +640,7 @@ mod tests {
         let b = add(&mut m, "Folder", "B", Some(ws));
         let part = add(&mut m, "Part", "Box", Some(a));
 
-        let (old, new) = m.reparent(&part, Some(b)).expect("reparent basarisiz");
+        let (old, new) = m.reparent(&part, Some(b)).expect("reparent failed");
         assert_eq!(old, Some(a));
         assert_eq!(new, Some(b));
         assert_eq!(m.get_instance(&part).unwrap().parent, Some(b));

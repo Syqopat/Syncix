@@ -917,7 +917,7 @@ mod protection_tests {
         assert!(is_ignored(&p, "src", &patterns));
     }
 
-    /// Bozuk desen cokmeye fs_path acmamali.
+    /// A broken pattern must not cause a crash.
     #[test]
     fn broken_pattern_does_not_crash() {
         let patterns = vec!["[".to_string()];
@@ -1018,7 +1018,7 @@ mod trash_tests {
     /// Each test works in its own folder: the trash uses one run name per process,
     /// so tests sharing a directory would break each other.
     fn scratch_root(item_name: &str) -> PathBuf {
-        let root_dir = std::env::temp_dir().join(format!("syncix-cop-{}", item_name));
+        let root_dir = std::env::temp_dir().join(format!("syncix-trash-{}", item_name));
         let _ = fs::remove_dir_all(&root_dir);
         fs::create_dir_all(root_dir.join("src")).unwrap();
         root_dir
