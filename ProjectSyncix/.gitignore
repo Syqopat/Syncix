@@ -25,3 +25,6 @@ sourcemap.json
 # vsce paketi: her surumde yeniden uretiliyor, depoda tutulmuyor.
 *.vsix
 ikon-onizleme.png
+
+# Local editor agent rules; personal tooling, not part of the project.
+.agents/
