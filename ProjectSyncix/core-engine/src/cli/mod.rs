@@ -1,11 +1,11 @@
-//! Syncix komut satırı arayüzü.
+//! Syncix command_name satırı arayüzü.
 //!
 //! Neden core binary'sinin içinde:
 //!  1. Taşınabilirlik. Eski CLI syncix.ps1 idi; PowerShell'e bağlıydı ve macOS'ta
 //!     çalışmıyordu. Aynı binary hem sunucu hem istemci olunca ek çalışma ortamı
 //!     (PowerShell, Node) gerekmiyor.
 //!  2. Doğruluk. Hex renk hatası tam olarak dönüşüm mantığının CLI'da olup core'da
-//!     olmamasından çıkmıştı. Değer çözümlemesi artık tek yerde: parse_property_value.
+//!     olmamasından çıkmıştı. Değer çözümlemesi artık single yerde: parse_property_value.
 //!
 //! Kullanım: `syncix-core <komut> [argümanlar]`. Argümansız çalıştırılırsa sunucu açılır.
 
@@ -15,24 +15,24 @@ use std::path::PathBuf;
 
 use crate::project::{DEFAULT_PORT, PORT_SCAN_SPAN};
 
-const KIRMIZI: &str = "\x1b[31m";
-const YESIL: &str = "\x1b[32m";
-const SARI: &str = "\x1b[33m";
-const MAVI: &str = "\x1b[36m";
-const SOLUK: &str = "\x1b[90m";
-const SIFIRLA: &str = "\x1b[0m";
+const RED: &str = "\x1b[31m";
+const GREEN: &str = "\x1b[32m";
+const YELLOW: &str = "\x1b[33m";
+const CYAN: &str = "\x1b[36m";
+const DIM: &str = "\x1b[90m";
+const RESET: &str = "\x1b[0m";
 
-fn hata(m: &str) {
-    eprintln!("{}{}{}", KIRMIZI, m, SIFIRLA);
+fn report_error(m: &str) {
+    eprintln!("{}{}{}", RED, m, RESET);
 }
-fn tamam(m: &str) {
-    println!("{}{}{}", YESIL, m, SIFIRLA);
+fn print_ok(m: &str) {
+    println!("{}{}{}", GREEN, m, RESET);
 }
-fn bilgi(m: &str) {
-    println!("{}{}{}", MAVI, m, SIFIRLA);
+fn print_info(m: &str) {
+    println!("{}{}{}", CYAN, m, RESET);
 }
 fn soluk(m: &str) {
-    println!("{}{}{}", SOLUK, m, SIFIRLA);
+    println!("{}{}{}", DIM, m, RESET);
 }
 
 // ---------------------------------------------------------------------------
@@ -40,90 +40,90 @@ fn soluk(m: &str) {
 //
 // Yalnızca 127.0.0.1'e JSON istekleri atıyoruz; bunun için tam bir HTTP istemci
 // kütüphanesi (reqwest + TLS zinciri) eklemek gereksiz ağırlık olurdu.
-// "Connection: close" gönderildiği için cevabı dosya sonuna kadar okumak yeterli.
+// "Connection: close" gönderildiği için cevabı file_path sonuna kadar okumak yeterli.
 // ---------------------------------------------------------------------------
 
-struct Cevap {
-    durum: u16,
-    govde: String,
+struct HttpReply {
+    status_info: u16,
+    body: String,
     /// Yanit başlıkları (küçük harfe çevrilmiş adlarla).
     /// Şimdilik yalnızca x-syncix-skipped-enums için gerekli: yayınlanacak yer
     /// dosyasında kaç Enum değerinin atlandığını bilmeden yayın yapmak,
     /// eksik bir sürümü oyunculara göndermek olurdu.
-    basliklar: std::collections::HashMap<String, String>,
+    headers: std::collections::HashMap<String, String>,
 }
 
-fn istek(port: u16, metot: &str, yol: &str, govde: Option<&str>) -> Result<Cevap, String> {
-    let adres = format!("127.0.0.1:{}", port);
-    let mut akis = TcpStream::connect(&adres).map_err(|e| format!("could not connect to {}: {}", adres, e))?;
-    akis.set_read_timeout(Some(std::time::Duration::from_secs(15))).ok();
-    akis.set_write_timeout(Some(std::time::Duration::from_secs(15))).ok();
+fn http_request(port: u16, http_method: &str, fs_path: &str, body: Option<&str>) -> Result<HttpReply, String> {
+    let address = format!("127.0.0.1:{}", port);
+    let mut flow = TcpStream::connect(&address).map_err(|e| format!("could not connect to {}: {}", address, e))?;
+    flow.set_read_timeout(Some(std::time::Duration::from_secs(15))).ok();
+    flow.set_write_timeout(Some(std::time::Duration::from_secs(15))).ok();
 
-    let mut ham = format!(
+    let mut raw = format!(
         "{} {} HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nConnection: close\r\n",
-        metot, yol, port
+        http_method, fs_path, port
     );
-    if let Some(b) = govde {
-        ham.push_str("Content-Type: application/json\r\n");
-        ham.push_str(&format!("Content-Length: {}\r\n", b.len()));
+    if let Some(b) = body {
+        raw.push_str("Content-Type: application/json\r\n");
+        raw.push_str(&format!("Content-Length: {}\r\n", b.len()));
     }
-    ham.push_str("\r\n");
-    if let Some(b) = govde {
-        ham.push_str(b);
+    raw.push_str("\r\n");
+    if let Some(b) = body {
+        raw.push_str(b);
     }
 
-    akis.write_all(ham.as_bytes()).map_err(|e| e.to_string())?;
+    flow.write_all(raw.as_bytes()).map_err(|e| e.to_string())?;
 
-    let mut tampon = Vec::new();
-    akis.read_to_end(&mut tampon).map_err(|e| e.to_string())?;
-    let metin = String::from_utf8_lossy(&tampon).to_string();
+    let mut buffer = Vec::new();
+    flow.read_to_end(&mut buffer).map_err(|e| e.to_string())?;
+    let text_value = String::from_utf8_lossy(&buffer).to_string();
 
-    let (basliklar, govde_metni) = match metin.find("\r\n\r\n") {
-        Some(i) => (&metin[..i], metin[i + 4..].to_string()),
-        None => (metin.as_str(), String::new()),
+    let (headers, body_string) = match text_value.find("\r\n\r\n") {
+        Some(i) => (&text_value[..i], text_value[i + 4..].to_string()),
+        None => (text_value.as_str(), String::new()),
     };
 
-    let durum = basliklar
+    let status_info = headers
         .lines()
         .next()
         .and_then(|l| l.split_whitespace().nth(1))
         .and_then(|s| s.parse::<u16>().ok())
         .unwrap_or(0);
 
-    Ok(Cevap {
-        durum,
-        govde: govde_metni,
-        basliklar: basliklari_ayristir(basliklar),
+    Ok(HttpReply {
+        status_info,
+        body: body_string,
+        headers: parse_headers(headers),
     })
 }
 
 /// HTTP yanit basliklarini ayristirir.
 ///
-/// Ayri bir fonksiyon olmasinin sebebi test edilebilirlik: baslik okuma yolu
-/// `syncix upload` icin onemli (atlanan Enum sayisi oradan geliyor) ve bir TCP
+/// Ayri bir fonksiyon olmasinin sebebi test edilebilirlik: title okuma yolu
+/// `syncix upload` icin onemli (skipped Enum sayisi oradan geliyor) ve bir TCP
 /// baglantisi kurmadan dogrulanabilmesi gerekiyor.
-fn basliklari_ayristir(ham: &str) -> std::collections::HashMap<String, String> {
-    let mut harita = std::collections::HashMap::new();
-    // Ilk satir durum satiridir (HTTP/1.1 200 OK), baslik degil.
-    for satir in ham.lines().skip(1) {
-        if let Some((ad, deger)) = satir.split_once(':') {
-            harita.insert(ad.trim().to_lowercase(), deger.trim().to_string());
+fn parse_headers(raw: &str) -> std::collections::HashMap<String, String> {
+    let mut lookup = std::collections::HashMap::new();
+    // Ilk line_text status_info satiridir (HTTP/1.1 200 OK), title degil.
+    for line_text in raw.lines().skip(1) {
+        if let Some((item_name, raw_value)) = line_text.split_once(':') {
+            lookup.insert(item_name.trim().to_lowercase(), raw_value.trim().to_string());
         }
     }
-    harita
+    lookup
 }
 
-fn url_kodla(s: &str) -> String {
-    let mut cikti = String::new();
+fn url_encode(s: &str) -> String {
+    let mut out_text = String::new();
     for b in s.bytes() {
         match b {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                cikti.push(b as char)
+                out_text.push(b as char)
             }
-            _ => cikti.push_str(&format!("%{:02X}", b)),
+            _ => out_text.push_str(&format!("%{:02X}", b)),
         }
     }
-    cikti
+    out_text
 }
 
 // ---------------------------------------------------------------------------
@@ -131,16 +131,16 @@ fn url_kodla(s: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// Çalışma dizininden yukarı doğru .syncix/port dosyası arar.
-fn port_dosyasindan() -> Option<u16> {
-    let mut dizin: PathBuf = std::env::current_dir().ok()?;
+fn from_port_file() -> Option<u16> {
+    let mut directory: PathBuf = std::env::current_dir().ok()?;
     for _ in 0..6 {
-        let p = dizin.join(".syncix").join("port");
-        if let Ok(metin) = std::fs::read_to_string(&p) {
-            if let Ok(port) = metin.trim().parse::<u16>() {
+        let p = directory.join(".syncix").join("port");
+        if let Ok(text_value) = std::fs::read_to_string(&p) {
+            if let Ok(port) = text_value.trim().parse::<u16>() {
                 return Some(port);
             }
         }
-        if !dizin.pop() {
+        if !directory.pop() {
             break;
         }
     }
@@ -148,53 +148,53 @@ fn port_dosyasindan() -> Option<u16> {
 }
 
 /// Çalışan core'un portunu bulur: önce port dosyası, sonra aralık taraması.
-fn core_portu() -> Option<u16> {
-    if let Some(p) = port_dosyasindan() {
-        if istek(p, "GET", "/health", None).map(|c| c.durum == 200).unwrap_or(false) {
+fn core_port() -> Option<u16> {
+    if let Some(p) = from_port_file() {
+        if http_request(p, "GET", "/health", None).map(|c| c.status_info == 200).unwrap_or(false) {
             return Some(p);
         }
     }
     (DEFAULT_PORT..DEFAULT_PORT + PORT_SCAN_SPAN).find(|&p| {
-        istek(p, "GET", "/health", None)
-            .map(|c| c.durum == 200)
+        http_request(p, "GET", "/health", None)
+            .map(|c| c.status_info == 200)
             .unwrap_or(false)
     })
 }
 
-fn core_gerekli() -> Option<u16> {
-    match core_portu() {
+fn require_core() -> Option<u16> {
+    match core_port() {
         Some(p) => Some(p),
         None => {
-            hata("Syncix Core is not running.");
+            report_error("Syncix Core is not running.");
             soluk("  Start it with: syncix up   (or Syncix: Restart Core in VS Code)");
             None
         }
     }
 }
 
-fn json_al(port: u16, yol: &str) -> Option<serde_json::Value> {
-    match istek(port, "GET", yol, None) {
-        Ok(c) => serde_json::from_str(&c.govde).ok(),
+fn fetch_json(port: u16, fs_path: &str) -> Option<serde_json::Value> {
+    match http_request(port, "GET", fs_path, None) {
+        Ok(c) => serde_json::from_str(&c.body).ok(),
         Err(e) => {
-            hata(&format!("Request failed: {}", e));
+            report_error(&format!("Request failed: {}", e));
             None
         }
     }
 }
 
-/// Komutu core'a gönderir; hata durumunda sunucunun mesajını olduğu gibi gösterir
-/// (belirsiz hedef uyarıları buradan gelir).
-fn komut_gonder(port: u16, event_type: &str, data: serde_json::Value) -> bool {
-    let govde = serde_json::json!({ "event_type": event_type, "data": data }).to_string();
-    match istek(port, "POST", "/command", Some(&govde)) {
-        Ok(c) if c.durum == 200 => true,
+/// Komutu core'a gönderir; report_error durumunda sunucunun mesajını olduğu gibi gösterir
+/// (belirsiz dest uyarıları buradan gelir).
+fn send_command(port: u16, event_type: &str, data: serde_json::Value) -> bool {
+    let body = serde_json::json!({ "event_type": event_type, "data": data }).to_string();
+    match http_request(port, "POST", "/command", Some(&body)) {
+        Ok(c) if c.status_info == 200 => true,
         Ok(c) => {
-            hata(&format!("Rejected ({}):", c.durum));
-            eprintln!("{}", c.govde.trim());
+            report_error(&format!("Rejected ({}):", c.status_info));
+            eprintln!("{}", c.body.trim());
             false
         }
         Err(e) => {
-            hata(&format!("Could not send: {}", e));
+            report_error(&format!("Could not send: {}", e));
             false
         }
     }
@@ -204,7 +204,7 @@ fn komut_gonder(port: u16, event_type: &str, data: serde_json::Value) -> bool {
 // Komutlar
 // ---------------------------------------------------------------------------
 
-fn yardim() {
+fn print_help() {
     println!(
         r#"Syncix CLI  (version {})
 
@@ -264,83 +264,83 @@ fn yardim() {
     );
 }
 
-fn durum() -> i32 {
-    let Some(port) = core_portu() else {
-        hata("Syncix Core is not running.");
+fn status_info() -> i32 {
+    let Some(port) = core_port() else {
+        report_error("Syncix Core is not running.");
         soluk("  Start it with: syncix up");
         return 1;
     };
-    let Some(h) = json_al(port, "/health") else {
-        hata("Could not read health info.");
+    let Some(h) = fetch_json(port, "/health") else {
+        report_error("Could not read health info.");
         return 1;
     };
 
     let al = |k: &str| h.get(k).cloned().unwrap_or(serde_json::Value::Null);
-    let metin = |k: &str| al(k).as_str().unwrap_or("-").to_string();
-    let sayi = |k: &str| al(k).as_u64().unwrap_or(0);
+    let text_value = |k: &str| al(k).as_str().unwrap_or("-").to_string();
+    let number_value = |k: &str| al(k).as_u64().unwrap_or(0);
 
-    bilgi("Syncix Core");
-    println!("  version      : {} (protocol {})", metin("version"), sayi("protocol"));
-    println!("  project      : {}", metin("project"));
-    println!("  folder       : {}", metin("root"));
-    println!("  port         : {}", sayi("port"));
-    println!("  uptime       : {} seconds", sayi("uptime_seconds"));
+    print_info("Syncix Core");
+    println!("  version      : {} (protocol {})", text_value("version"), number_value("protocol"));
+    println!("  project      : {}", text_value("project"));
+    println!("  folder       : {}", text_value("root"));
+    println!("  port         : {}", number_value("port"));
+    println!("  uptime       : {} seconds", number_value("uptime_seconds"));
 
     let studio = al("studio_connected").as_bool().unwrap_or(false);
     if studio {
-        tamam("  Studio       : connected");
+        print_ok("  Studio       : connected");
     } else {
-        println!("{}  Studio       : not connected{}", SARI, SIFIRLA);
+        println!("{}  Studio       : not connected{}", YELLOW, RESET);
         soluk("    (Is Studio open? The plugin may be waiting on the approval dialog.)");
     }
 
-    bilgi("Metrics");
-    println!("  inbound from Studio : {}", sayi("inbound_from_studio"));
-    println!("  outbound to Studio  : {}", sayi("outbound_to_studio"));
-    println!("  plugin queued       : {}", sayi("plugin_queued"));
-    println!("  coalesced           : {}", sayi("plugin_coalesced"));
+    print_info("Metrics");
+    println!("  inbound from Studio : {}", number_value("inbound_from_studio"));
+    println!("  outbound to Studio  : {}", number_value("outbound_to_studio"));
+    println!("  plugin queued       : {}", number_value("plugin_queued"));
+    println!("  coalesced           : {}", number_value("plugin_coalesced"));
 
-    bilgi("Activity log (Studio plugin)");
+    print_info("Activity log (Studio plugin)");
     println!("  entries        : {} (in {}, out {})",
-        sayi("activity_total"), sayi("activity_in"), sayi("activity_out"));
-    let cakisma = sayi("conflicts");
-    if cakisma > 0 {
+        number_value("activity_total"), number_value("activity_in"), number_value("activity_out"));
+    let conflict = number_value("conflicts");
+    if conflict > 0 {
         println!("{}  conflicts      : {} — see the 'Recent changes' tab in the Studio panel{}",
-            SARI, cakisma, SIFIRLA);
+            YELLOW, conflict, RESET);
     } else {
         println!("  conflicts      : 0");
     }
 
-    let dongu = sayi("loops_detected");
-    if dongu > 0 {
-        println!("{}  echo loops          : {} (check the log file){}", SARI, dongu, SIFIRLA);
+    let cycle = number_value("loops_detected");
+    if cycle > 0 {
+        println!("{}  echo loops          : {} (check the log file){}", YELLOW, cycle, RESET);
     } else {
         println!("  echo loops          : 0");
     }
     0
 }
 
-struct Dugum {
+struct TreeRow {
     id: String,
-    ad: String,
-    sinif: String,
-    ebeveyn: Option<String>,
+    item_name: String,
+    class_str: String,
+    parent_ref: Option<String>,
 }
 
-fn agac_al(port: u16) -> Option<Vec<Dugum>> {
-    let v = json_al(port, "/tree")?;
-    let dizi = v.as_array()?;
+fn fetch_tree(port: u16) -> Option<Vec<TreeRow>> {
+    let v = fetch_json(port, "/tree")?;
+    let array_value = v.as_array()?;
     Some(
-        dizi.iter()
-            .map(|n| Dugum {
+        array_value.iter()
+            .map(|n| TreeRow {
                 id: n.get("id").and_then(|x| x.as_str()).unwrap_or("").to_string(),
-                ad: n.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
-                sinif: n
+                item_name: n.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                class_str: n
                     .get("className")
                     .and_then(|x| x.as_str())
                     .unwrap_or("")
                     .to_string(),
-                ebeveyn: n
+                parent_ref: n
                     .get("parentId")
                     .and_then(|x| x.as_str())
                     .map(|s| s.to_string()),
@@ -349,146 +349,146 @@ fn agac_al(port: u16) -> Option<Vec<Dugum>> {
     )
 }
 
-fn agac_yazdir(dugumler: &[Dugum], kok: Option<&str>, onek: &str, derinlik: usize) {
-    if derinlik > 20 {
+fn print_tree(node_list: &[TreeRow], root_dir: Option<&str>, prefix: &str, depth: usize) {
+    if depth > 20 {
         return;
     }
-    let mut cocuklar: Vec<&Dugum> = dugumler
+    let mut child_entries: Vec<&TreeRow> = node_list
         .iter()
-        .filter(|d| d.ebeveyn.as_deref() == kok)
+        .filter(|d| d.parent_ref.as_deref() == root_dir)
         .collect();
-    cocuklar.sort_by(|a, b| a.ad.cmp(&b.ad));
+    child_entries.sort_by(|a, b| a.item_name.cmp(&b.item_name));
 
-    for (i, c) in cocuklar.iter().enumerate() {
-        let son = i == cocuklar.len() - 1;
-        let dal = if son { "└─ " } else { "├─ " };
+    for (i, c) in child_entries.iter().enumerate() {
+        let last_item = i == child_entries.len() - 1;
+        let branch = if last_item { "└─ " } else { "├─ " };
         println!(
             "{}{}{}  {}{}{}",
-            onek,
-            dal,
-            c.ad,
-            SOLUK,
-            c.sinif,
-            SIFIRLA
+            prefix,
+            branch,
+            c.item_name,
+            DIM,
+            c.class_str,
+            RESET
         );
-        let alt_onek = format!("{}{}", onek, if son { "   " } else { "│  " });
-        agac_yazdir(dugumler, Some(&c.id), &alt_onek, derinlik + 1);
+        let sub_prefix = format!("{}{}", prefix, if last_item { "   " } else { "│  " });
+        print_tree(node_list, Some(&c.id), &sub_prefix, depth + 1);
     }
 }
 
-fn agac(hedef: Option<&str>) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let Some(dugumler) = agac_al(port) else {
-        hata("Could not read the tree.");
+fn tree(dest: Option<&str>) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let Some(node_list) = fetch_tree(port) else {
+        report_error("Could not read the tree.");
         return 1;
     };
-    if dugumler.is_empty() {
-        println!("{}Tree is empty. Is Studio connected?{}", SARI, SIFIRLA);
+    if node_list.is_empty() {
+        println!("{}Tree is empty. Is Studio connected?{}", YELLOW, RESET);
         return 0;
     }
 
-    match hedef {
-        None => agac_yazdir(&dugumler, None, "", 0),
+    match dest {
+        None => print_tree(&node_list, None, "", 0),
         Some(h) => {
-            let Some(d) = dugum_bul(&dugumler, h) else {
-                hata(&format!("Not found: {}", h));
+            let Some(d) = find_node(&node_list, h) else {
+                report_error(&format!("Not found: {}", h));
                 return 1;
             };
-            println!("{}  {}{}{}", d.ad, SOLUK, d.sinif, SIFIRLA);
-            agac_yazdir(&dugumler, Some(&d.id), "", 0);
+            println!("{}  {}{}{}", d.item_name, DIM, d.class_str, RESET);
+            print_tree(&node_list, Some(&d.id), "", 0);
         }
     }
     0
 }
 
-fn dugum_bul<'a>(dugumler: &'a [Dugum], hedef: &str) -> Option<&'a Dugum> {
-    let h = hedef.to_lowercase();
-    dugumler
+fn find_node<'a>(node_list: &'a [TreeRow], dest: &str) -> Option<&'a TreeRow> {
+    let h = dest.to_lowercase();
+    node_list
         .iter()
-        .find(|d| d.id == hedef)
-        .or_else(|| dugumler.iter().find(|d| d.id.starts_with(&h)))
-        .or_else(|| dugumler.iter().find(|d| d.ad.to_lowercase() == h))
+        .find(|d| d.id == dest)
+        .or_else(|| node_list.iter().find(|d| d.id.starts_with(&h)))
+        .or_else(|| node_list.iter().find(|d| d.item_name.to_lowercase() == h))
 }
 
-fn listele(hedef: Option<&str>) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let Some(dugumler) = agac_al(port) else { return 1 };
+fn listele(dest: Option<&str>) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let Some(node_list) = fetch_tree(port) else { return 1 };
 
-    let kok: Option<String> = match hedef {
+    let root_dir: Option<String> = match dest {
         None => None,
-        Some(h) => match dugum_bul(&dugumler, h) {
+        Some(h) => match find_node(&node_list, h) {
             Some(d) => Some(d.id.clone()),
             None => {
-                hata(&format!("Not found: {}", h));
+                report_error(&format!("Not found: {}", h));
                 return 1;
             }
         },
     };
 
-    let mut cocuklar: Vec<&Dugum> = dugumler
+    let mut child_entries: Vec<&TreeRow> = node_list
         .iter()
-        .filter(|d| d.ebeveyn.as_deref() == kok.as_deref())
+        .filter(|d| d.parent_ref.as_deref() == root_dir.as_deref())
         .collect();
-    cocuklar.sort_by(|a, b| a.ad.cmp(&b.ad));
+    child_entries.sort_by(|a, b| a.item_name.cmp(&b.item_name));
 
-    if cocuklar.is_empty() {
+    if child_entries.is_empty() {
         soluk("(no children)");
         return 0;
     }
-    for c in cocuklar {
+    for c in child_entries {
         println!(
             "  {}{}{}  {:<22} {}",
-            SOLUK,
+            DIM,
             &c.id[..8.min(c.id.len())],
-            SIFIRLA,
-            c.ad,
-            c.sinif
+            RESET,
+            c.item_name,
+            c.class_str
         );
     }
     0
 }
 
-fn ara(kelime: &str) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let Some(dugumler) = agac_al(port) else { return 1 };
-    let k = kelime.to_lowercase();
+fn search(word: &str) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let Some(node_list) = fetch_tree(port) else { return 1 };
+    let k = word.to_lowercase();
 
-    let mut bulunan: Vec<&Dugum> = dugumler
+    let mut found_item: Vec<&TreeRow> = node_list
         .iter()
-        .filter(|d| d.ad.to_lowercase().contains(&k) || d.sinif.to_lowercase().contains(&k))
+        .filter(|d| d.item_name.to_lowercase().contains(&k) || d.class_str.to_lowercase().contains(&k))
         .collect();
-    bulunan.sort_by(|a, b| a.ad.cmp(&b.ad));
+    found_item.sort_by(|a, b| a.item_name.cmp(&b.item_name));
 
-    if bulunan.is_empty() {
-        println!("{}No match: {}{}", SARI, kelime, SIFIRLA);
+    if found_item.is_empty() {
+        println!("{}No match: {}{}", YELLOW, word, RESET);
         return 1;
     }
-    for d in bulunan {
+    for d in found_item {
         println!(
             "  {}{}{}  {:<22} {}",
-            SOLUK,
+            DIM,
             &d.id[..8.min(d.id.len())],
-            SIFIRLA,
-            d.ad,
-            d.sinif
+            RESET,
+            d.item_name,
+            d.class_str
         );
     }
     0
 }
 
-fn ozellikler(hedef: &str) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let yol = format!("/object?target={}", url_kodla(hedef));
-    let Some(o) = json_al(port, &yol) else {
-        hata("Could not read the instance.");
+fn property_list(dest: &str) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let fs_path = format!("/object?target={}", url_encode(dest));
+    let Some(o) = fetch_json(port, &fs_path) else {
+        report_error("Could not read the instance.");
         return 1;
     };
 
     if let Some(e) = o.get("error").and_then(|x| x.as_str()) {
-        hata(e);
-        if let Some(adaylar) = o.get("candidates").and_then(|x| x.as_array()) {
+        report_error(e);
+        if let Some(candidate_list) = o.get("candidates").and_then(|x| x.as_array()) {
             soluk("  Candidates:");
-            for a in adaylar {
+            for a in candidate_list {
                 println!(
                     "    {} ({}) -> {}",
                     a.get("name").and_then(|x| x.as_str()).unwrap_or("?"),
@@ -500,7 +500,7 @@ fn ozellikler(hedef: &str) -> i32 {
         return 1;
     }
 
-    bilgi(&format!(
+    print_info(&format!(
         "{}  ({})",
         o.get("name").and_then(|x| x.as_str()).unwrap_or("?"),
         o.get("class_name").and_then(|x| x.as_str()).unwrap_or("?")
@@ -513,9 +513,9 @@ fn ozellikler(hedef: &str) -> i32 {
     match o.get("properties").and_then(|x| x.as_object()) {
         Some(p) if !p.is_empty() => {
             println!("  properties:");
-            let mut anahtarlar: Vec<&String> = p.keys().collect();
-            anahtarlar.sort();
-            for k in anahtarlar {
+            let mut key_names: Vec<&String> = p.keys().collect();
+            key_names.sort();
+            for k in key_names {
                 println!("    {:<18} {}", k, p[k]);
             }
         }
@@ -539,56 +539,56 @@ fn ozellikler(hedef: &str) -> i32 {
     0
 }
 
-fn dogrula() -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let Some(v) = json_al(port, "/verify") else {
-        hata("Verification failed.");
+fn verify_input() -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let Some(v) = fetch_json(port, "/verify") else {
+        report_error("Verification failed.");
         return 1;
     };
     let ok = v.get("ok").and_then(|x| x.as_bool()).unwrap_or(false);
     println!("  total instances : {}", v.get("totalObjects").and_then(|x| x.as_u64()).unwrap_or(0));
     if ok {
-        tamam("  model is consistent");
+        print_ok("  model is consistent");
         0
     } else {
-        hata("  model is inconsistent:");
+        report_error("  model is inconsistent:");
         eprintln!("{}", serde_json::to_string_pretty(&v).unwrap_or_default());
         1
     }
 }
 
-fn ilklendir() -> i32 {
-    let kok = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-    let cfg = kok.join("syncix.toml");
+fn init_project() -> i32 {
+    let root_dir = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let cfg = root_dir.join("syncix.toml");
     if cfg.exists() {
-        println!("{}syncix.toml already exists: {}{}", SARI, cfg.display(), SIFIRLA);
+        println!("{}syncix.toml already exists: {}{}", YELLOW, cfg.display(), RESET);
     } else {
-        let icerik = format!(
+        let file_content = format!(
             "# Syncix project settings\nsync_dir = \"src\"\nport = {}\n",
             DEFAULT_PORT
         );
-        if let Err(e) = std::fs::write(&cfg, icerik) {
-            hata(&format!("Could not write syncix.toml: {}", e));
+        if let Err(e) = std::fs::write(&cfg, file_content) {
+            report_error(&format!("Could not write syncix.toml: {}", e));
             return 1;
         }
-        tamam(&format!("Created syncix.toml: {}", cfg.display()));
+        print_ok(&format!("Created syncix.toml: {}", cfg.display()));
     }
 
-    let senkron = kok.join("src");
-    if !senkron.exists() {
-        if let Err(e) = std::fs::create_dir_all(&senkron) {
-            hata(&format!("Could not create sync folder: {}", e));
+    let syncing = root_dir.join("src");
+    if !syncing.exists() {
+        if let Err(e) = std::fs::create_dir_all(&syncing) {
+            report_error(&format!("Could not create sync folder: {}", e));
             return 1;
         }
-        tamam(&format!("Created sync folder: {}", senkron.display()));
+        print_ok(&format!("Created sync folder: {}", syncing.display()));
     }
 
     // .syncix çalışma klasörü sürüm kontrolüne girmemeli.
-    let gitignore = kok.join(".gitignore");
-    let mevcut = std::fs::read_to_string(&gitignore).unwrap_or_default();
-    if !mevcut.contains(".syncix") {
-        let yeni = format!("{}\n# Syncix runtime files\n.syncix/\nsyncix-core.log\n", mevcut);
-        let _ = std::fs::write(&gitignore, yeni);
+    let gitignore = root_dir.join(".gitignore");
+    let current_value = std::fs::read_to_string(&gitignore).unwrap_or_default();
+    if !current_value.contains(".syncix") {
+        let fresh = format!("{}\n# Syncix runtime files\n.syncix/\nsyncix-core.log\n", current_value);
+        let _ = std::fs::write(&gitignore, fresh);
         soluk("  .gitignore updated (.syncix/)");
     }
 
@@ -596,73 +596,73 @@ fn ilklendir() -> i32 {
     0
 }
 
-fn baslat(port: Option<u16>) -> i32 {
-    // Belirli bir port istenmişse orada zaten bir core var mı diye bakılır;
+fn launch(port: Option<u16>) -> i32 {
+    // Belirli bir port istenmişse orada zaten bir core exists_flag mı diye bakılır;
     // istenmemişse herhangi bir core yeterlidir.
     match port {
         Some(p) => {
-            if istek(p, "GET", "/health", None).map(|c| c.durum == 200).unwrap_or(false) {
-                println!("{}A core is already running on port {}.{}", SARI, p, SIFIRLA);
+            if http_request(p, "GET", "/health", None).map(|c| c.status_info == 200).unwrap_or(false) {
+                println!("{}A core is already running on port {}.{}", YELLOW, p, RESET);
                 return 0;
             }
         }
         None => {
-            if core_portu().is_some() {
-                println!("{}The core is already running.{}", SARI, SIFIRLA);
+            if core_port().is_some() {
+                println!("{}The core is already running.{}", YELLOW, RESET);
                 return 0;
             }
         }
     }
 
-    let Ok(kendi) = std::env::current_exe() else {
-        hata("Could not locate my own executable.");
+    let Ok(own) = std::env::current_exe() else {
+        report_error("Could not locate my own executable.");
         return 1;
     };
 
     // Kendini sunucu kipinde arka planda başlatır.
-    let mut komut = std::process::Command::new(&kendi);
-    komut.arg("serve");
+    let mut command_name = std::process::Command::new(&own);
+    command_name.arg("serve");
     if let Some(p) = port {
-        komut.arg(p.to_string());
+        command_name.arg(p.to_string());
     }
-    komut
+    command_name
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .stdin(std::process::Stdio::null());
 
-    match komut.spawn() {
+    match command_name.spawn() {
         Ok(_) => {
             // Ayağa kalkmasını bekle
             for _ in 0..20 {
                 std::thread::sleep(std::time::Duration::from_millis(250));
-                if let Some(p) = core_portu() {
-                    tamam(&format!("Syncix Core started (port {}).", p));
+                if let Some(p) = core_port() {
+                    print_ok(&format!("Syncix Core started (port {}).", p));
                     return 0;
                 }
             }
-            hata("The core started but did not respond. Check syncix-core.log.");
+            report_error("The core started but did not respond. Check syncix-core.log.");
             1
         }
         Err(e) => {
-            hata(&format!("Could not start: {}", e));
+            report_error(&format!("Could not start: {}", e));
             1
         }
     }
 }
 
-fn durdur() -> i32 {
-    let Some(port) = core_portu() else {
-        println!("{}The core is not running.{}", SARI, SIFIRLA);
+fn stop_core() -> i32 {
+    let Some(port) = core_port() else {
+        println!("{}The core is not running.{}", YELLOW, RESET);
         return 0;
     };
-    match istek(port, "POST", "/shutdown", Some("{}")) {
+    match http_request(port, "POST", "/shutdown", Some("{}")) {
         Ok(_) => {
-            tamam("Syncix Core stopped.");
+            print_ok("Syncix Core stopped.");
             0
         }
         Err(_) => {
-            // Sunucu bağlantıyı kapatarak cevapsız çıkabilir; bu beklenen durumdur.
-            tamam("Syncix Core stopped.");
+            // Sunucu bağlantıyı kapatarak cevapsız çıkabilir; bu expected_value durumdur.
+            print_ok("Syncix Core stopped.");
             0
         }
     }
@@ -673,25 +673,25 @@ fn durdur() -> i32 {
 /// Bu fonksiyon selftest'in omurgası. Önceden doğrulama /object okuyarak
 /// yapılıyordu; ama core komutu gönderirken modeli ZATEN güncelliyor, dolayısıyla
 /// modeli okumak komutun Studio'ya ulaştığını KANITLAMAZ. Burada Studio'yu
-/// konuşturuyoruz: gelen anlık görüntü tek doğruluk kaynağıdır.
+/// konuşturuyoruz: received anlık görüntü single doğruluk kaynağıdır.
 ///
 /// Cevabın geldiği, /health üzerindeki "Studio'dan gelen mesaj" sayacının
 /// artmasından anlaşılır.
-fn taze_goruntu_bekle(port: u16) -> bool {
-    let onceki = json_al(port, "/health")
+fn wait_for_fresh_snapshot(port: u16) -> bool {
+    let prior = fetch_json(port, "/health")
         .and_then(|h| h.get("inbound_from_studio").and_then(|x| x.as_u64()))
         .unwrap_or(0);
 
-    if !komut_gonder(port, "FULL_SYNC", serde_json::json!({})) {
+    if !send_command(port, "FULL_SYNC", serde_json::json!({})) {
         return false;
     }
 
     for _ in 0..40 {
         std::thread::sleep(std::time::Duration::from_millis(250));
-        let simdi = json_al(port, "/health")
+        let current_time = fetch_json(port, "/health")
             .and_then(|h| h.get("inbound_from_studio").and_then(|x| x.as_u64()))
             .unwrap_or(0);
-        if simdi > onceki {
+        if current_time > prior {
             // Anlık görüntü işlendikten sonra modelin oturması için kısa bekleme.
             std::thread::sleep(std::time::Duration::from_millis(400));
             return true;
@@ -706,199 +706,199 @@ fn taze_goruntu_bekle(port: u16) -> bool {
 /// Studio'ya ulaşmıyordu. Burada her adımdan sonra değer Studio'nun durumundan
 /// GERİ OKUNUR; "gönderdim, olmuştur" varsayımı yapılmaz.
 fn selftest() -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
+    let Some(port) = require_core() else { return 1 };
 
-    let Some(h) = json_al(port, "/health") else { return 1 };
+    let Some(h) = fetch_json(port, "/health") else { return 1 };
     if !h.get("studio_connected").and_then(|x| x.as_bool()).unwrap_or(false) {
-        hata("Studio is not connected; the end-to-end test cannot run.");
+        report_error("Studio is not connected; the end-to-end test cannot run.");
         soluk("  Open Roblox Studio, wait for the Syncix plugin to connect, then retry.");
         return 1;
     }
 
-    let ad = "SyncixSelftestParcasi";
-    let mut basarisiz = 0;
-    let mut adim = |no: usize, baslik: &str, ok: bool, detay: String| {
+    let item_name = "SyncixSelftestParcasi";
+    let mut failed = 0;
+    let mut step = |no: usize, title: &str, ok: bool, detail: String| {
         if ok {
-            println!("  {}[{}] {}{}", YESIL, no, baslik, SIFIRLA);
+            println!("  {}[{}] {}{}", GREEN, no, title, RESET);
         } else {
-            println!("  {}[{}] {} -> {}{}", KIRMIZI, no, baslik, detay, SIFIRLA);
-            basarisiz += 1;
+            println!("  {}[{}] {} -> {}{}", RED, no, title, detail, RESET);
+            failed += 1;
         }
     };
 
-    bilgi("Syncix end-to-end test");
+    print_info("Syncix end-to-end test");
     soluk("  After each step the tree is re-requested from Studio;");
     soluk("  verification uses Studio's reply, not the core's own model.");
 
     // 1. Oluştur
-    let olusturuldu = komut_gonder(
+    let was_created = send_command(
         port,
         "CREATE_INSTANCE",
-        serde_json::json!({ "className": "Part", "name": ad, "parentId": "Workspace" }),
+        serde_json::json!({ "className": "Part", "name": item_name, "parentId": "Workspace" }),
     );
-    taze_goruntu_bekle(port);
-    let agac1 = agac_al(port).unwrap_or_default();
-    let bulundu = agac1.iter().find(|d| d.ad == ad).map(|d| d.id.clone());
-    adim(1, "create instance", olusturuldu && bulundu.is_some(), "instance did not appear in the tree".into());
+    wait_for_fresh_snapshot(port);
+    let tree1 = fetch_tree(port).unwrap_or_default();
+    let was_found = tree1.iter().find(|d| d.item_name == item_name).map(|d| d.id.clone());
+    step(1, "create instance", was_created && was_found.is_some(), "instance did not appear in the tree".into());
 
-    let Some(id) = bulundu else {
-        hata("Test aborted: could not create the instance.");
+    let Some(id) = was_found else {
+        report_error("Test aborted: could not create the instance.");
         return 1;
     };
 
     // 2. Vector3 konum — Position hatasının tam senaryosu
-    komut_gonder(
+    send_command(
         port,
         "SET_PROPERTY",
         serde_json::json!({ "id": id, "property": "Position", "value": "12,7,-34" }),
     );
-    taze_goruntu_bekle(port);
-    let konum_ok = json_al(port, &format!("/object?target={}", id))
+    wait_for_fresh_snapshot(port);
+    let position_ok = fetch_json(port, &format!("/object?target={}", id))
         .and_then(|o| o.get("properties")?.get("Position")?.get("Vector3").cloned())
         .map(|v| {
             (v.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0) - 12.0).abs() < 0.01
                 && (v.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0) + 34.0).abs() < 0.01
         })
         .unwrap_or(false);
-    adim(2, "Vector3 position", konum_ok, "position was not applied in Studio".into());
+    step(2, "Vector3 position", position_ok, "position was not applied in Studio".into());
 
     // 3. Renk — hex dönüşümü
-    komut_gonder(
+    send_command(
         port,
         "SET_PROPERTY",
         serde_json::json!({ "id": id, "property": "Color", "value": "#ff8800" }),
     );
-    taze_goruntu_bekle(port);
-    let renk_ok = json_al(port, &format!("/object?target={}", id))
+    wait_for_fresh_snapshot(port);
+    let color_ok = fetch_json(port, &format!("/object?target={}", id))
         .and_then(|o| o.get("properties")?.get("Color")?.get("Color3").cloned())
         .map(|v| (v.get("r").and_then(|x| x.as_f64()).unwrap_or(0.0) - 1.0).abs() < 0.02)
         .unwrap_or(false);
-    adim(3, "hex color", renk_ok, "color was not applied".into());
+    step(3, "hex color", color_ok, "color was not applied".into());
 
     // 4. Yeniden adlandırma — UUID değişmemeli
-    let yeni_ad = "SyncixSelftestYeniAd";
-    komut_gonder(
+    let renamed_to = "SyncixSelftestYeniAd";
+    send_command(
         port,
         "RENAME_INSTANCE",
-        serde_json::json!({ "id": id, "newName": yeni_ad }),
+        serde_json::json!({ "id": id, "newName": renamed_to }),
     );
-    taze_goruntu_bekle(port);
-    let agac2 = agac_al(port).unwrap_or_default();
-    let ad_ok = agac2.iter().any(|d| d.id == id && d.ad == yeni_ad);
-    adim(4, "rename (UUID preserved)", ad_ok, "name did not change or UUID drifted".into());
+    wait_for_fresh_snapshot(port);
+    let tree2 = fetch_tree(port).unwrap_or_default();
+    let name_ok = tree2.iter().any(|d| d.id == id && d.item_name == renamed_to);
+    step(4, "rename (UUID preserved)", name_ok, "name did not change or UUID drifted".into());
 
     // 5. Silme
-    komut_gonder(port, "DELETE_INSTANCE", serde_json::json!({ "id": id }));
-    taze_goruntu_bekle(port);
-    let agac3 = agac_al(port).unwrap_or_default();
-    let silme_ok = !agac3.iter().any(|d| d.id == id);
-    adim(5, "delete", silme_ok, "instance is still in the tree".into());
+    send_command(port, "DELETE_INSTANCE", serde_json::json!({ "id": id }));
+    wait_for_fresh_snapshot(port);
+    let tree3 = fetch_tree(port).unwrap_or_default();
+    let delete_ok = !tree3.iter().any(|d| d.id == id);
+    step(5, "delete", delete_ok, "instance is still in the tree".into());
 
     println!();
-    if basarisiz == 0 {
-        tamam("All steps passed. Studio and the core are genuinely in sync.");
+    if failed == 0 {
+        print_ok("All steps passed. Studio and the core are genuinely in sync.");
         0
     } else {
-        hata(&format!("{} step(s) failed.", basarisiz));
+        report_error(&format!("{} step(s) failed.", failed));
         soluk("  Check the [Syncix] warnings in the Studio Output window.");
         1
     }
 }
 
-/// -o bayrağını ve varsayılan dosya adını çözer.
-fn cikti_dosyasi(argumanlar: &[String], varsayilan: &str) -> String {
-    for (i, a) in argumanlar.iter().enumerate() {
-        if (a == "-o" || a == "--output") && i + 1 < argumanlar.len() {
-            return argumanlar[i + 1].clone();
+/// -o bayrağını ve varsayılan file_path adını çözer.
+fn output_file(cli_args: &[String], fallback_value: &str) -> String {
+    for (i, a) in cli_args.iter().enumerate() {
+        if (a == "-o" || a == "--output") && i + 1 < cli_args.len() {
+            return cli_args[i + 1].clone();
         }
     }
-    varsayilan.to_string()
+    fallback_value.to_string()
 }
 
-/// -o ve değerini eleyerek geriye kalan konumsal argümanları döndürür.
-fn konumsal(argumanlar: &[String]) -> Vec<String> {
-    let mut cikti = Vec::new();
-    let mut atla = false;
-    for a in argumanlar.iter().skip(1) {
-        if atla {
-            atla = false;
+/// -o ve değerini eleyerek geriye remaining positional argümanları döndürür.
+fn positional(cli_args: &[String]) -> Vec<String> {
+    let mut out_text = Vec::new();
+    let mut to_skip = false;
+    for a in cli_args.iter().skip(1) {
+        if to_skip {
+            to_skip = false;
             continue;
         }
         if a == "-o" || a == "--output" {
-            atla = true;
+            to_skip = true;
             continue;
         }
-        cikti.push(a.clone());
+        out_text.push(a.clone());
     }
-    cikti
+    out_text
 }
 
 /// luau-lsp'nin otomatik tamamlama yapabilmesi için sourcemap.json üretir.
 ///
 /// Normalde core bu dosyayı her senkronda kendisi tazeler (syncix.toml içindeki
-/// `sourcemap` ayarı). Bu komut tek seferlik üretim ya da CI için.
-/// Uzlastirici tarafindan silinen dosyalar cop kutusuna tasiniyor.
-/// Bu komut orada ne oldugunu gosterir; olmadigi surece kullanici silinen
-/// dosyanin geri alinabilir oldugunu hicbir zaman ogrenemez.
-/// Silinecek objeyi ve alt agacini gosterip onay ister.
-/// Terminal etkilesimli degilse (borulanmis girdi) silme reddedilir:
+/// `sourcemap` ayarı). Bu command_name single seferlik üretim ya da CI için.
+/// Uzlastirici tarafindan silinen file_list cop kutusuna tasiniyor.
+/// Bu command_name orada ne oldugunu gosterir; olmadigi surece kullanici silinen
+/// dosyanin restored_count alinabilir oldugunu hicbir zaman ogrenemez.
+/// Silinecek objeyi ve sub agacini gosterip onay ister.
+/// Terminal etkilesimli degilse (borulanmis input_value) deletion reddedilir:
 /// cevapsiz bir soruyu "evet" saymak, silmenin dogasi geregi yanlis taraf.
-fn silmeyi_onayla(port: u16, hedef: &str) -> bool {
-    let yol = format!("/object?target={}", url_kodla(hedef));
-    match json_al(port, &yol).filter(|d| d.get("error").is_none()) {
+fn confirm_delete(port: u16, dest: &str) -> bool {
+    let fs_path = format!("/object?target={}", url_encode(dest));
+    match fetch_json(port, &fs_path).filter(|d| d.get("error").is_none()) {
         Some(d) => {
-            let cocuk = d
+            let child_entry = d
                 .get("children")
                 .and_then(|c| c.as_array())
                 .map(|a| a.len())
                 .unwrap_or(0);
-            let ad = d.get("name").and_then(|v| v.as_str()).unwrap_or(hedef);
-            let sinif = d.get("class_name").and_then(|v| v.as_str()).unwrap_or("?");
-            if cocuk > 0 {
-                // Silme basamakli: dogrudan cocuklar degil, altindaki her sey gider.
+            let item_name = d.get("name").and_then(|v| v.as_str()).unwrap_or(dest);
+            let class_str = d.get("class_name").and_then(|v| v.as_str()).unwrap_or("?");
+            if child_entry > 0 {
+                // Silme basamakli: dogrudan child_entries degil, altindaki her sey gider.
                 println!(
                     "Delete {} ({}) and everything inside it ({} direct child object(s))?",
-                    ad, sinif, cocuk
+                    item_name, class_str, child_entry
                 );
             } else {
-                println!("Delete {} ({})?", ad, sinif);
+                println!("Delete {} ({})?", item_name, class_str);
             }
         }
         None => {
-            println!("Delete {}?", hedef);
+            println!("Delete {}?", dest);
         }
     }
     print!("Type 'y' to confirm: ");
     use std::io::Write;
     let _ = std::io::stdout().flush();
 
-    let mut cevap = String::new();
-    if std::io::stdin().read_line(&mut cevap).is_err() {
+    let mut reply = String::new();
+    if std::io::stdin().read_line(&mut reply).is_err() {
         return false;
     }
-    let c = cevap.trim().to_lowercase();
+    let c = reply.trim().to_lowercase();
     c == "y" || c == "yes"
 }
 
-fn etiketleri_goster(port: u16, hedef: &str) -> i32 {
-    let yol = format!("/object?target={}", url_kodla(hedef));
-    let Some(o) = json_al(port, &yol) else {
-        hata("Could not read the instance.");
+fn show_tags(port: u16, dest: &str) -> i32 {
+    let fs_path = format!("/object?target={}", url_encode(dest));
+    let Some(o) = fetch_json(port, &fs_path) else {
+        report_error("Could not read the instance.");
         return 1;
     };
     if let Some(e) = o.get("error").and_then(|x| x.as_str()) {
-        hata(e);
+        report_error(e);
         return 1;
     }
-    let etiketler: Vec<&str> = o
+    let tag_list: Vec<&str> = o
         .get("tags")
         .and_then(|t| t.as_array())
         .map(|a| a.iter().filter_map(|x| x.as_str()).collect())
         .unwrap_or_default();
-    if etiketler.is_empty() {
-        bilgi("No tags.");
+    if tag_list.is_empty() {
+        print_info("No tags.");
     } else {
-        for t in etiketler {
+        for t in tag_list {
             println!("  {}", t);
         }
     }
@@ -908,49 +908,49 @@ fn etiketleri_goster(port: u16, hedef: &str) -> i32 {
 /// Yururlukteki ayarlari gosterir.
 ///
 /// Neden gerekli: "ayari yazdim ama bir sey degismedi" en sik sikayet.
-/// Ayari yazdigin yer ile programin okudugu yer ayni mi, cevabi burada.
+/// Ayari yazdigin yer ile programin okudugu yer is_same mi, cevabi burada.
 /// Place catismasini gosterir ve --studio / --disk ile cozer.
 ///
-/// Neden bir komut: iki secenek de veri kaybettirebilir. Syncix'in kendi
+/// Neden bir command_name: iki secenek de veri kaybettirebilir. Syncix'in own
 /// basina birini secmesi, kullanicinin haberi olmadan bir tarafi silmesi
 /// demek olurdu. Bu yuzden karar burada, acikca veriliyor.
-fn yer_bagla(argumanlar: &[String]) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let Some(saglik) = json_al(port, "/health") else {
-        hata("Could not read the core status.");
+fn bind_cmd(cli_args: &[String]) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let Some(health_json) = fetch_json(port, "/health") else {
+        report_error("Could not read the core status.");
         return 1;
     };
 
-    let catisma = saglik.get("place_conflict");
-    let yon = if argumanlar.iter().any(|a| a == "--studio") {
+    let place_clash = health_json.get("place_conflict");
+    let direction = if cli_args.iter().any(|a| a == "--studio") {
         Some("studio")
-    } else if argumanlar.iter().any(|a| a == "--disk") {
+    } else if cli_args.iter().any(|a| a == "--disk") {
         Some("disk")
     } else {
         None
     };
 
-    let Some(c) = catisma.filter(|x| !x.is_null()) else {
-        let bagli = crate::project::ProjectConfig::load().bagli_place();
-        match bagli {
-            Some(k) => tamam(&format!("No conflict. This folder is bound to place {}.", k)),
-            None => bilgi("No conflict. This folder is not bound to a place yet."),
+    let Some(c) = place_clash.filter(|x| !x.is_null()) else {
+        let is_bound = crate::project::ProjectConfig::load().linked_place();
+        match is_bound {
+            Some(k) => print_ok(&format!("No conflict. This folder is bound to place {}.", k)),
+            None => print_info("No conflict. This folder is not bound to a place yet."),
         }
         return 0;
     };
 
-    let al = |ad: &str| c.get(ad).and_then(|x| x.as_str()).unwrap_or("?").to_string();
+    let al = |item_name: &str| c.get(item_name).and_then(|x| x.as_str()).unwrap_or("?").to_string();
 
-    let Some(yon) = yon else {
+    let Some(direction) = direction else {
         // Karar verilmeden once ne oldugunu goster.
-        hata("This folder belongs to a different place. Sync is on hold.");
+        report_error("This folder belongs to a different place. Sync is on hold.");
         println!();
-        println!("  folder is bound to : {}", al("klasorun_place"));
+        println!("  folder is bound to : {}", al("folder_place"));
         println!(
             "  place connecting   : {} (\"{}\", id {})",
-            al("gelen_place"),
-            al("gelen_ad"),
-            al("gelen_place_id")
+            al("incoming_place"),
+            al("incoming_name"),
+            al("incoming_place_id")
         );
         println!();
         println!("Choose one:");
@@ -960,18 +960,18 @@ fn yer_bagla(argumanlar: &[String]) -> i32 {
         return 1;
     };
 
-    if !komut_gonder(port, "BIND", serde_json::json!({ "side": yon })) {
+    if !send_command(port, "BIND", serde_json::json!({ "side": direction })) {
         return 1;
     }
-    if yon == "studio" {
-        tamam("Bound to the connected place. The folder is being rewritten from Studio.");
+    if direction == "studio" {
+        print_ok("Bound to the connected place. The folder is being rewritten from Studio.");
     } else {
-        tamam("Bound to this folder. Its contents will be pushed into the connected place.");
+        print_ok("Bound to this folder. Its contents will be pushed into the connected place.");
     }
     0
 }
 
-fn yapilandirmayi_goster() -> i32 {
+fn show_config() -> i32 {
     let c = crate::project::ProjectConfig::load();
 
     println!("Project: {}", c.name);
@@ -980,16 +980,16 @@ fn yapilandirmayi_goster() -> i32 {
     println!();
 
     println!("[sync]");
-    println!("  mode           {}", c.mod_.adi());
-    println!("  play_mode      {}", c.play.adi());
+    println!("  mode           {}", c.mode_value.name_of());
+    println!("  play_mode      {}", c.play.name_of());
     println!("  debounce_ms    {}", c.debounce_ms);
-    println!("  ask_permission {}", c.izin_sor);
-    println!("  undo           {}", c.geri_al);
+    println!("  ask_permission {}", c.prompt_permission);
+    println!("  undo           {}", c.restore_cmd);
     println!();
 
     println!("[files]");
     println!("  sync_dir       {}", c.sync_dir);
-    println!("  meta_files     {}", c.meta_dosyalari);
+    println!("  meta_files     {}", c.meta_files);
     println!(
         "  ignore         {}",
         if c.ignore.is_empty() {
@@ -1001,10 +1001,10 @@ fn yapilandirmayi_goster() -> i32 {
     println!();
 
     println!("[safety]");
-    println!("  trash            {}", c.guvenlik.cop_kutusu);
-    println!("  trash_keep       {}", c.guvenlik.cop_tur_sayisi);
-    println!("  delete_grace_ms  {}", c.guvenlik.silme_bekleme_ms);
-    println!("  confirm_delete   {}", c.guvenlik.silmeyi_onayla);
+    println!("  trash            {}", c.safety_settings.trash_enabled);
+    println!("  trash_keep       {}", c.safety_settings.trash_keep_runs);
+    println!("  delete_grace_ms  {}", c.safety_settings.delete_grace_ms);
+    println!("  confirm_delete   {}", c.safety_settings.confirm_delete);
     println!();
 
     let liste = |v: &Vec<String>| {
@@ -1015,9 +1015,9 @@ fn yapilandirmayi_goster() -> i32 {
         }
     };
     println!("[scope]");
-    println!("  services           {}", liste(&c.kapsam.servisler));
-    println!("  ignore_classes     {}", liste(&c.kapsam.sinif_disla));
-    println!("  ignore_properties  {}", liste(&c.kapsam.property_disla));
+    println!("  services           {}", liste(&c.scope_settings.service_list));
+    println!("  ignore_classes     {}", liste(&c.scope_settings.class_ignore_list));
+    println!("  ignore_properties  {}", liste(&c.scope_settings.property_ignore_list));
     println!();
 
     println!("[server]");
@@ -1026,8 +1026,8 @@ fn yapilandirmayi_goster() -> i32 {
     println!("[editor]");
     println!("  sourcemap      {}", c.sourcemap);
     println!();
-    // Calisan core eski ayarla baslamis olabilir; bu en yaniltici durum.
-    if let Some(port) = core_portu() {
+    // Calisan core previous_text ayarla baslamis olabilir; bu en yaniltici status_info.
+    if let Some(port) = core_port() {
         if port != c.wanted_port {
             soluk(&format!(
                 "  Note: a core is running on port {}, which differs from the configured port.",
@@ -1039,117 +1039,117 @@ fn yapilandirmayi_goster() -> i32 {
     0
 }
 
-fn cop_listele() -> i32 {
-    let yapilandirma = crate::project::ProjectConfig::load();
-    let turlar = crate::layout::cop_turlari(&yapilandirma.sync_dir);
-    if turlar.is_empty() {
-        bilgi("Trash is empty; no files have been removed by the reconciler.");
+fn trash_list() -> i32 {
+    let settings_data = crate::project::ProjectConfig::load();
+    let runs = crate::layout::trash_runs(&settings_data.sync_dir);
+    if runs.is_empty() {
+        print_info("Trash is empty; no files have been removed by the reconciler.");
         return 0;
     }
     println!("Removed files, newest first:");
-    for (tur, adet) in &turlar {
-        println!("  {}  {} file(s)", tur, adet);
+    for (run_name, amount) in &runs {
+        println!("  {}  {} file(s)", run_name, amount);
     }
     println!();
     println!("Restore with: syncix restore <name>");
     0
 }
 
-fn cop_geri_al(tur: Option<&str>) -> i32 {
-    let yapilandirma = crate::project::ProjectConfig::load();
-    let turlar = crate::layout::cop_turlari(&yapilandirma.sync_dir);
-    // Ad verilmediyse en yeni tur geri alinir; en sik istenen bu.
-    let secilen = match tur {
+fn trash_restore(run_name: Option<&str>) -> i32 {
+    let settings_data = crate::project::ProjectConfig::load();
+    let runs = crate::layout::trash_runs(&settings_data.sync_dir);
+    // Ad verilmediyse en fresh run_name restored_count alinir; en sik istenen bu.
+    let selected = match run_name {
         Some(t) => t.to_string(),
-        None => match turlar.first() {
+        None => match runs.first() {
             Some((t, _)) => t.clone(),
             None => {
-                bilgi("Trash is empty; there is nothing to restore.");
+                print_info("Trash is empty; there is nothing to restore.");
                 return 0;
             }
         },
     };
-    if !turlar.iter().any(|(t, _)| t == &secilen) {
-        hata(&format!("No such entry in trash: {}", secilen));
+    if !runs.iter().any(|(t, _)| t == &selected) {
+        report_error(&format!("No such entry in trash: {}", selected));
         return 1;
     }
-    let (geri, atlanan) = crate::layout::coptan_geri_al(&yapilandirma.sync_dir, &secilen);
-    tamam(&format!("Restored {} file(s) from {}.", geri, secilen));
-    if atlanan > 0 {
-        // Uzerine yazmak geri almayi kendi basina bir veri kaybina cevirirdi.
-        bilgi(&format!(
+    let (restored_count, skipped) = crate::layout::restore_from_trash(&settings_data.sync_dir, &selected);
+    print_ok(&format!("Restored {} file(s) from {}.", restored_count, selected));
+    if skipped > 0 {
+        // Uzerine yazmak restored_count almayi own basina bir veri kaybina cevirirdi.
+        print_info(&format!(
             "{} file(s) were skipped because a file already exists at that path.",
-            atlanan
+            skipped
         ));
     }
     0
 }
 
-fn sourcemap_uret(argumanlar: &[String]) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let hedef = cikti_dosyasi(argumanlar, "sourcemap.json");
+fn build_sourcemap(cli_args: &[String]) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let dest = output_file(cli_args, "sourcemap.json");
 
-    let cevap = match istek(port, "GET", "/sourcemap", None) {
-        Ok(c) if c.durum == 200 => c.govde,
+    let reply = match http_request(port, "GET", "/sourcemap", None) {
+        Ok(c) if c.status_info == 200 => c.body,
         Ok(c) => {
-            hata(&format!("Could not fetch sourcemap ({})", c.durum));
+            report_error(&format!("Could not fetch sourcemap ({})", c.status_info));
             return 1;
         }
         Err(e) => {
-            hata(&format!("Could not fetch sourcemap: {}", e));
+            report_error(&format!("Could not fetch sourcemap: {}", e));
             return 1;
         }
     };
 
-    if let Err(e) = std::fs::write(&hedef, &cevap) {
-        hata(&format!("Could not write {}: {}", hedef, e));
+    if let Err(e) = std::fs::write(&dest, &reply) {
+        report_error(&format!("Could not write {}: {}", dest, e));
         return 1;
     }
 
-    let sayi = cevap.matches("\"className\"").count();
-    tamam(&format!("Wrote {} ({} instances).", hedef, sayi));
+    let number_value = reply.matches("\"className\"").count();
+    print_ok(&format!("Wrote {} ({} instances).", dest, number_value));
     soluk("  Once luau-lsp reads this file, paths like game.ReplicatedStorage.X get");
     soluk("  autocomplete and type checking.");
     0
 }
 
 /// Ağacı Roblox XML olarak dosyaya yazar (rojo build karşılığı).
-fn build_et(argumanlar: &[String]) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
-    let hedef_dosya = cikti_dosyasi(argumanlar, "build.rbxmx");
-    let konumsallar = konumsal(argumanlar);
-    let hedef_obje = konumsallar.first().cloned().unwrap_or_default();
+fn run_build(cli_args: &[String]) -> i32 {
+    let Some(port) = require_core() else { return 1 };
+    let dest_file = output_file(cli_args, "build.rbxmx");
+    let positionals = positional(cli_args);
+    let dest_object = positionals.first().cloned().unwrap_or_default();
 
-    let yol = if hedef_obje.is_empty() {
+    let fs_path = if dest_object.is_empty() {
         "/build".to_string()
     } else {
-        format!("/build?target={}", url_kodla(&hedef_obje))
+        format!("/build?target={}", url_encode(&dest_object))
     };
 
-    let cevap = match istek(port, "GET", &yol, None) {
-        Ok(c) if c.durum == 200 => c,
+    let reply = match http_request(port, "GET", &fs_path, None) {
+        Ok(c) if c.status_info == 200 => c,
         Ok(c) => {
-            hata(&format!("Build failed ({}):", c.durum));
-            eprintln!("{}", c.govde.trim());
+            report_error(&format!("Build failed ({}):", c.status_info));
+            eprintln!("{}", c.body.trim());
             return 1;
         }
         Err(e) => {
-            hata(&format!("Build failed: {}", e));
+            report_error(&format!("Build failed: {}", e));
             return 1;
         }
     };
 
-    if let Err(e) = std::fs::write(&hedef_dosya, &cevap.govde) {
-        hata(&format!("Could not write {}: {}", hedef_dosya, e));
+    if let Err(e) = std::fs::write(&dest_file, &reply.body) {
+        report_error(&format!("Could not write {}: {}", dest_file, e));
         return 1;
     }
 
-    let obje_sayisi = cevap.govde.matches("<Item ").count();
-    tamam(&format!(
+    let object_total = reply.body.matches("<Item ").count();
+    print_ok(&format!(
         "Wrote {} ({} instances, {} bytes).",
-        hedef_dosya,
-        obje_sayisi,
-        cevap.govde.len()
+        dest_file,
+        object_total,
+        reply.body.len()
     ));
     soluk("  In Studio: right click > Insert from File...");
     0
@@ -1157,37 +1157,37 @@ fn build_et(argumanlar: &[String]) -> i32 {
 
 /// Roblox'a yayınlama. VARSAYILAN OLARAK HİÇBİR ŞEY YAYINLAMAZ.
 ///
-/// Yayınlama geri alınamaz bir dış işlemdir: yayınlanan sürüm oyuncuların
-/// göreceği sürümdür. Bu yüzden komut önce ne yapacağını anlatır ve durur;
+/// Yayınlama restored_count alınamaz bir dış işlemdir: yayınlanan sürüm oyuncuların
+/// göreceği sürümdür. Bu yüzden command_name önce ne yapacağını anlatır ve durur;
 /// gerçekten yayınlamak için `--onayla` gerekir.
-fn yayinla(argumanlar: &[String]) -> i32 {
-    let Some(port) = core_gerekli() else { return 1 };
+fn publish_place(cli_args: &[String]) -> i32 {
+    let Some(port) = require_core() else { return 1 };
 
-    let onayli = argumanlar.iter().any(|a| a == "--confirm" || a == "--onayla");
+    let is_confirmed = cli_args.iter().any(|a| a == "--confirm" || a == "--onayla");
 
     // Proje kökünü ve ayarları /health üzerinden al.
-    let Some(saglik) = json_al(port, "/health") else {
-        hata("Could not reach the core.");
+    let Some(health_json) = fetch_json(port, "/health") else {
+        report_error("Could not reach the core.");
         return 1;
     };
-    let kok = std::path::PathBuf::from(
-        saglik.get("root").and_then(|x| x.as_str()).unwrap_or("."),
+    let root_dir = std::path::PathBuf::from(
+        health_json.get("root").and_then(|x| x.as_str()).unwrap_or("."),
     );
 
-    // Güvenlik kapısı: anahtar projeye yazılmış olmamalı.
-    if crate::upload::anahtar_sizintisi_var_mi(&kok) {
-        hata("syncix.toml contains something that looks like an API key.");
+    // Güvenlik kapısı: key_name projeye yazılmış olmamalı.
+    if crate::upload::has_key_leak(&root_dir) {
+        report_error("syncix.toml contains something that looks like an API key.");
         soluk("  Keys must NOT live in project files; the first commit makes them public.");
         soluk("  Remove it and use the SYNCIX_API_KEY environment variable instead.");
         return 1;
     }
 
-    let cfg = crate::upload::UploadConfig::load(&kok);
+    let cfg = crate::upload::UploadConfig::load(&root_dir);
     let universe = cfg.universe_id;
     let place = cfg.place_id;
 
     let (Some(universe_id), Some(place_id)) = (universe, place) else {
-        hata("No publish target configured.");
+        report_error("No publish target configured.");
         soluk("  Add this to syncix.toml:");
         soluk("");
         soluk("    [upload]");
@@ -1197,89 +1197,89 @@ fn yayinla(argumanlar: &[String]) -> i32 {
     };
 
     // Yer dosyasını canlı modelden üret.
-    let cevap = match istek(port, "GET", "/build", None) {
-        Ok(c) if c.durum == 200 => c,
+    let reply = match http_request(port, "GET", "/build", None) {
+        Ok(c) if c.status_info == 200 => c,
         Ok(c) => {
-            hata(&format!("Could not build the place file ({}).", c.durum));
+            report_error(&format!("Could not build the place file ({}).", c.status_info));
             return 1;
         }
         Err(e) => {
-            hata(&format!("Could not build the place file: {}", e));
+            report_error(&format!("Could not build the place file: {}", e));
             return 1;
         }
     };
 
-    let hedef_dosya = kok.join(".syncix").join("upload.rbxlx");
-    if let Some(d) = hedef_dosya.parent() {
+    let dest_file = root_dir.join(".syncix").join("upload.rbxlx");
+    if let Some(d) = dest_file.parent() {
         let _ = std::fs::create_dir_all(d);
     }
-    if let Err(e) = std::fs::write(&hedef_dosya, &cevap.govde) {
-        hata(&format!("Could not write {}: {}", hedef_dosya.display(), e));
+    if let Err(e) = std::fs::write(&dest_file, &reply.body) {
+        report_error(&format!("Could not write {}: {}", dest_file.display(), e));
         return 1;
     }
 
     let plan = crate::upload::UploadPlan {
         universe_id,
         place_id,
-        dosya: hedef_dosya,
-        bayt: cevap.govde.len(),
-        obje_sayisi: cevap.govde.matches("<Item ").count(),
-        atlanan_enum: cevap
-            .basliklar
+        file_path: dest_file,
+        byte_count: reply.body.len(),
+        object_total: reply.body.matches("<Item ").count(),
+        skipped_enums: reply
+            .headers
             .get("x-syncix-skipped-enums")
             .and_then(|v| v.parse::<usize>().ok())
             .unwrap_or(0),
     };
 
-    bilgi("About to publish");
+    print_info("About to publish");
     println!("  universe : {}", plan.universe_id);
     println!("  place    : {}", plan.place_id);
-    println!("  file     : {}", plan.dosya.display());
-    println!("  contents : {} instances, {} bytes", plan.obje_sayisi, plan.bayt);
-    println!("  endpoint : {}", crate::upload::hedef_url(plan.universe_id, plan.place_id));
+    println!("  file     : {}", plan.file_path.display());
+    println!("  contents : {} instances, {} bytes", plan.object_total, plan.byte_count);
+    println!("  endpoint : {}", crate::upload::target_url(plan.universe_id, plan.place_id));
 
-    // Atlanan Enum varsa yayinlanacak dosya EKSIKTIR; kullanici bunu
+    // Atlanan Enum varsa yayinlanacak file_path EKSIKTIR; kullanici bunu
     // yayindan once bilmeli, sonra degil.
-    if plan.atlanan_enum > 0 {
+    if plan.skipped_enums > 0 {
         println!();
         println!(
             "{}WARNING: {} enum value(s) could not be exported.{}",
-            SARI, plan.atlanan_enum, SIFIRLA
+            YELLOW, plan.skipped_enums, RESET
         );
         soluk("  The published file will be missing settings like Material and Shape.");
         soluk("  If that is not acceptable, say so before publishing and we will extend the table.");
     }
 
-    let anahtar_var = std::env::var("SYNCIX_API_KEY").is_ok();
-    if !anahtar_var {
+    let has_key = std::env::var("SYNCIX_API_KEY").is_ok();
+    if !has_key {
         println!();
-        hata("The SYNCIX_API_KEY environment variable is not set.");
+        report_error("The SYNCIX_API_KEY environment variable is not set.");
         soluk("  Get an Open Cloud key at: create.roblox.com > Creator Hub > API Keys");
         soluk("  Grant it the 'universe-places:write' permission.");
         soluk("  Sonra: $env:SYNCIX_API_KEY = \"...\"   (PowerShell)");
         return 1;
     }
 
-    if !onayli {
+    if !is_confirmed {
         println!();
-        println!("{}Nothing was published.{}", SARI, SIFIRLA);
+        println!("{}Nothing was published.{}", YELLOW, RESET);
         soluk("  Publishing cannot be undone: the published version is what players see.");
         soluk("  If you are sure:  syncix upload --confirm");
         soluk("");
         soluk("  Or run it yourself:");
-        for satir in crate::upload::curl_komutu(&plan).lines() {
-            soluk(&format!("    {}", satir));
+        for line_text in crate::upload::curl_command(&plan).lines() {
+            soluk(&format!("    {}", line_text));
         }
         return 0;
     }
 
     // --onayla verildi: sistemdeki curl ile gönder.
-    bilgi("Publishing...");
-    let cikti = std::process::Command::new("curl")
+    print_info("Publishing...");
+    let out_text = std::process::Command::new("curl")
         .arg("-sS")
         .arg("-X")
         .arg("POST")
-        .arg(crate::upload::hedef_url(plan.universe_id, plan.place_id))
+        .arg(crate::upload::target_url(plan.universe_id, plan.place_id))
         .arg("-H")
         .arg(format!(
             "x-api-key: {}",
@@ -1288,29 +1288,29 @@ fn yayinla(argumanlar: &[String]) -> i32 {
         .arg("-H")
         .arg("Content-Type: application/xml")
         .arg("--data-binary")
-        .arg(format!("@{}", plan.dosya.display()))
+        .arg(format!("@{}", plan.file_path.display()))
         .output();
 
-    match cikti {
+    match out_text {
         Ok(c) if c.status.success() => {
-            let govde = String::from_utf8_lossy(&c.stdout);
-            if govde.contains("versionNumber") {
-                tamam("Published.");
-                println!("  {}", govde.trim());
+            let body = String::from_utf8_lossy(&c.stdout);
+            if body.contains("versionNumber") {
+                print_ok("Published.");
+                println!("  {}", body.trim());
                 0
             } else {
-                hata("Roblox did not return the expected response:");
-                eprintln!("{}", govde.trim());
+                report_error("Roblox did not return the expected response:");
+                eprintln!("{}", body.trim());
                 1
             }
         }
         Ok(c) => {
-            hata("Publish failed:");
+            report_error("Publish failed:");
             eprintln!("{}", String::from_utf8_lossy(&c.stderr).trim());
             1
         }
         Err(e) => {
-            hata(&format!("Could not run curl: {}", e));
+            report_error(&format!("Could not run curl: {}", e));
             soluk("  curl ships with Windows 10+, macOS and most Linux distributions.");
             soluk("  Otherwise run the command above with your own tool.");
             1
@@ -1318,117 +1318,117 @@ fn yayinla(argumanlar: &[String]) -> i32 {
     }
 }
 
-/// .rbxmx / .rbxlx dosyasini agaca alir (rojo'da olup bizde olmayan son madde).
+/// .rbxmx / .rbxlx dosyasini agaca alir (rojo'da olup bizde olmayan last_item madde).
 ///
-/// Her dugum icin once CREATE_INSTANCE, sonra property'ler gonderilir. Ust ust
-/// olusturma sirasi onemli: cocuk, ebeveyni olusturulmadan gonderilemez.
-fn ice_aktar(argumanlar: &[String]) -> i32 {
-    let Some(dosya) = argumanlar.get(1) else {
-        hata("Usage: syncix import <file.rbxmx> [parent]");
+/// Her node_entry icin once CREATE_INSTANCE, sonra property'ler gonderilir. Ust upper
+/// olusturma sirasi onemli: child_entry, ebeveyni olusturulmadan gonderilemez.
+fn import_rbxmx(cli_args: &[String]) -> i32 {
+    let Some(file_path) = cli_args.get(1) else {
+        report_error("Usage: syncix import <file.rbxmx> [parent]");
         return 1;
     };
-    let Some(port) = core_gerekli() else { return 1 };
-    let ebeveyn = argumanlar.get(2).cloned().unwrap_or_else(|| "Workspace".to_string());
+    let Some(port) = require_core() else { return 1 };
+    let parent_ref = cli_args.get(2).cloned().unwrap_or_else(|| "Workspace".to_string());
 
-    let xml = match std::fs::read_to_string(dosya) {
+    let xml = match std::fs::read_to_string(file_path) {
         Ok(x) => x,
         Err(e) => {
-            hata(&format!("Could not read {}: {}", dosya, e));
+            report_error(&format!("Could not read {}: {}", file_path, e));
             return 1;
         }
     };
 
-    let (kokler, atlanan) = match crate::rbxmx_import::ayristir(&xml) {
+    let (root_list, skipped) = match crate::rbxmx_import::parse_text(&xml) {
         Ok(v) => v,
         Err(e) => {
-            hata(&format!("Could not parse {}: {}", dosya, e));
+            report_error(&format!("Could not parse {}: {}", file_path, e));
             return 1;
         }
     };
 
-    let toplam = crate::rbxmx_import::say(&kokler);
-    if toplam == 0 {
-        hata("The file contains no instances.");
+    let total_count = crate::rbxmx_import::tally(&root_list);
+    if total_count == 0 {
+        report_error("The file contains no instances.");
         return 1;
     }
 
-    bilgi(&format!("Importing {} instance(s) into {}", toplam, ebeveyn));
-    if atlanan > 0 {
+    print_info(&format!("Importing {} instance(s) into {}", total_count, parent_ref));
+    if skipped > 0 {
         soluk(&format!(
             "  {} property value(s) use types Syncix does not model and were skipped.",
-            atlanan
+            skipped
         ));
     }
 
-    // Ozyinelemeli olusturma. Her dugum once yaratilir, sonra ozellikleri yazilir.
-    fn olustur(
+    // Ozyinelemeli olusturma. Her node_entry once yaratilir, sonra ozellikleri yazilir.
+    fn generate(
         port: u16,
-        dugum: &crate::rbxmx_import::ImportedNode,
-        ebeveyn: &str,
-        sayac: &mut usize,
-        basarisiz: &mut usize,
+        node_entry: &crate::rbxmx_import::ImportedNode,
+        parent_ref: &str,
+        counter: &mut usize,
+        failed: &mut usize,
     ) {
         // Kimligi ONCEDEN uretiyoruz: boylece olusturulan objeyi ismiyle degil
-        // kimligiyle hedefleyebiliyoruz. Isimle hedeflemek, ice aktarilan agac
-        // mevcut bir ismi tekrarladiginda belirsizlik hatasi veriyordu.
-        let kimlik = uuid::Uuid::new_v4().to_string();
-        let ok = komut_gonder(
+        // kimligiyle hedefleyebiliyoruz. Isimle hedeflemek, ice aktarilan tree
+        // current_value bir ismi tekrarladiginda belirsizlik hatasi veriyordu.
+        let identity = uuid::Uuid::new_v4().to_string();
+        let ok = send_command(
             port,
             "CREATE_INSTANCE",
             serde_json::json!({
-                "id": kimlik,
-                "className": dugum.class_name,
-                "name": dugum.name,
-                "parentId": ebeveyn
+                "id": identity,
+                "className": node_entry.class_name,
+                "name": node_entry.name,
+                "parentId": parent_ref
             }),
         );
         if !ok {
-            *basarisiz += 1;
+            *failed += 1;
             return;
         }
-        *sayac += 1;
+        *counter += 1;
         std::thread::sleep(std::time::Duration::from_millis(120));
 
-        for (ad, deger) in &dugum.properties {
-            // Deger metne cevrilmiyor: metin tip bilgisini kaybediyor ve CFrame,
+        for (item_name, raw_value) in &node_entry.properties {
+            // Deger metne cevrilmiyor: text_value type_name bilgisini kaybediyor ve CFrame,
             // UDim, NumberRange gibi tipler ice aktarmada tamamen dusuyordu.
             // Tel formati zaten tipi tasiyor, dogrudan o gonderiliyor.
-            let deger_json = crate::pv_to_wire(deger);
-            komut_gonder(
+            let value_as_json = crate::pv_to_wire(raw_value);
+            send_command(
                 port,
                 "SET_PROPERTY",
-                serde_json::json!({ "id": kimlik, "property": ad, "value": deger_json }),
+                serde_json::json!({ "id": identity, "property": item_name, "value": value_as_json }),
             );
             std::thread::sleep(std::time::Duration::from_millis(60));
         }
 
-        if let Some(kaynak) = &dugum.source {
-            komut_gonder(
+        if let Some(origin) = &node_entry.source {
+            send_command(
                 port,
                 "SET_PROPERTY",
-                serde_json::json!({ "id": kimlik, "property": "Source", "value": kaynak }),
+                serde_json::json!({ "id": identity, "property": "Source", "value": origin }),
             );
             std::thread::sleep(std::time::Duration::from_millis(60));
         }
 
-        for cocuk in &dugum.children {
-            olustur(port, cocuk, &kimlik, sayac, basarisiz);
+        for child_entry in &node_entry.children {
+            generate(port, child_entry, &identity, counter, failed);
         }
     }
 
-    let mut sayac = 0usize;
-    let mut basarisiz = 0usize;
-    for k in &kokler {
-        olustur(port, k, &ebeveyn, &mut sayac, &mut basarisiz);
+    let mut counter = 0usize;
+    let mut failed = 0usize;
+    for k in &root_list {
+        generate(port, k, &parent_ref, &mut counter, &mut failed);
     }
 
-    if basarisiz > 0 {
-        hata(&format!("{} instance(s) could not be created.", basarisiz));
+    if failed > 0 {
+        report_error(&format!("{} instance(s) could not be created.", failed));
         soluk("  A name may be ambiguous; check with syncix tree.");
         return 1;
     }
 
-    tamam(&format!("Imported {} instance(s).", sayac));
+    print_ok(&format!("Imported {} instance(s).", counter));
     soluk("  Run syncix pull to confirm the result from Studio.");
     0
 }
@@ -1438,224 +1438,224 @@ fn ice_aktar(argumanlar: &[String]) -> i32 {
 // ---------------------------------------------------------------------------
 
 /// Argümanları işler. Sunucu kipinde çalışılması gerekiyorsa None döner.
-pub fn calistir(argumanlar: &[String]) -> Option<i32> {
-    let Some(komut) = argumanlar.first().map(|s| s.as_str()) else {
+pub fn execute_run(cli_args: &[String]) -> Option<i32> {
+    let Some(command_name) = cli_args.first().map(|s| s.as_str()) else {
         return None; // argüman yok -> sunucu kipi
     };
     // `syncix serve` ya da `syncix serve 25565`: sunucu kipi.
     // Port verilmişse syncix.toml'daki değerin yerine geçer.
-    if komut == "serve" {
+    if command_name == "serve" {
         return None;
     }
 
-    let arg = |i: usize| argumanlar.get(i).map(|s| s.as_str());
-    // Değerler boşluk içerebilir (örn. `set Kutu Position 0, 5, -60`); kalan tüm
+    let arg = |i: usize| cli_args.get(i).map(|s| s.as_str());
+    // Değerler boşluk içerebilir (örn. `set Kutu Position 0, 5, -60`); remaining tüm
     // argümanlar birleştirilir.
-    let kalan = |i: usize| argumanlar[i.min(argumanlar.len())..].join(" ");
+    let remaining = |i: usize| cli_args[i.min(cli_args.len())..].join(" ");
 
-    let sonuc = match komut {
+    let outcome = match command_name {
         "help" | "--help" | "-h" => {
-            yardim();
+            print_help();
             0
         }
         "version" | "--version" | "-V" => {
             println!("syncix {}", crate::project::VERSION);
             0
         }
-        "status" | "st" => durum(),
-        "tree" => agac(arg(1)),
+        "status" | "st" => status_info(),
+        "tree" => tree(arg(1)),
         "ls" | "list" => listele(arg(1)),
         "find" | "search" => match arg(1) {
-            Some(k) => ara(k),
+            Some(k) => search(k),
             None => {
-                hata("Usage: syncix find <word>");
+                report_error("Usage: syncix find <word>");
                 1
             }
         },
         "props" | "show" | "cat" => match arg(1) {
-            Some(h) => ozellikler(h),
+            Some(h) => property_list(h),
             None => {
-                hata("Usage: syncix props <target>");
+                report_error("Usage: syncix props <target>");
                 1
             }
         },
         "set" => match (arg(1), arg(2)) {
-            (Some(h), Some(p)) if argumanlar.len() > 3 => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                let deger = kalan(3);
-                if komut_gonder(
+            (Some(h), Some(p)) if cli_args.len() > 3 => {
+                let Some(port) = require_core() else { return Some(1) };
+                let raw_value = remaining(3);
+                if send_command(
                     port,
                     "SET_PROPERTY",
-                    serde_json::json!({ "id": h, "property": p, "value": deger }),
+                    serde_json::json!({ "id": h, "property": p, "value": raw_value }),
                 ) {
-                    tamam(&format!("{}.{} = {}", h, p, deger));
+                    print_ok(&format!("{}.{} = {}", h, p, raw_value));
                     0
                 } else {
                     1
                 }
             }
             _ => {
-                hata("Usage: syncix set <target> <property> <value>");
+                report_error("Usage: syncix set <target> <property> <value>");
                 1
             }
         },
         "attr" => match (arg(1), arg(2)) {
             // Silme: `syncix attr <hedef> <ad> --sil`
             (Some(h), Some(n)) if arg(3) == Some("--sil") || arg(3) == Some("--delete") => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                if komut_gonder(
+                let Some(port) = require_core() else { return Some(1) };
+                if send_command(
                     port,
                     "SET_ATTRIBUTE",
                     serde_json::json!({ "id": h, "name": n, "value": serde_json::Value::Null }),
                 ) {
-                    tamam(&format!("{} @{} removed", h, n));
+                    print_ok(&format!("{} @{} removed", h, n));
                     0
                 } else {
                     1
                 }
             }
-            (Some(h), Some(n)) if argumanlar.len() > 3 => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                let deger = kalan(3);
-                if komut_gonder(
+            (Some(h), Some(n)) if cli_args.len() > 3 => {
+                let Some(port) = require_core() else { return Some(1) };
+                let raw_value = remaining(3);
+                if send_command(
                     port,
                     "SET_ATTRIBUTE",
-                    serde_json::json!({ "id": h, "name": n, "value": deger }),
+                    serde_json::json!({ "id": h, "name": n, "value": raw_value }),
                 ) {
-                    tamam(&format!("{} @{} = {}", h, n, deger));
+                    print_ok(&format!("{} @{} = {}", h, n, raw_value));
                     0
                 } else {
                     1
                 }
             }
             _ => {
-                hata("Usage: syncix attr <target> <name> <value>");
+                report_error("Usage: syncix attr <target> <name> <value>");
                 1
             }
         },
         "new" | "create" | "mk" => match arg(1) {
-            Some(sinif) => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                let ad = arg(2).unwrap_or(sinif);
-                let ebeveyn = arg(3).unwrap_or("Workspace");
-                if komut_gonder(
+            Some(class_str) => {
+                let Some(port) = require_core() else { return Some(1) };
+                let item_name = arg(2).unwrap_or(class_str);
+                let parent_ref = arg(3).unwrap_or("Workspace");
+                if send_command(
                     port,
                     "CREATE_INSTANCE",
-                    serde_json::json!({ "className": sinif, "name": ad, "parentId": ebeveyn }),
+                    serde_json::json!({ "className": class_str, "name": item_name, "parentId": parent_ref }),
                 ) {
-                    tamam(&format!("Created {} ({}) in {}", ad, sinif, ebeveyn));
+                    print_ok(&format!("Created {} ({}) in {}", item_name, class_str, parent_ref));
                     0
                 } else {
                     1
                 }
             }
             None => {
-                hata("Usage: syncix new <class> [name] [parent]");
+                report_error("Usage: syncix new <class> [name] [parent]");
                 1
             }
         },
         "rename" | "rn" => match (arg(1), arg(2)) {
-            (Some(h), Some(yeni)) => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                if komut_gonder(
+            (Some(h), Some(fresh)) => {
+                let Some(port) = require_core() else { return Some(1) };
+                if send_command(
                     port,
                     "RENAME_INSTANCE",
-                    serde_json::json!({ "id": h, "newName": yeni }),
+                    serde_json::json!({ "id": h, "newName": fresh }),
                 ) {
-                    tamam(&format!("{} -> {}", h, yeni));
+                    print_ok(&format!("{} -> {}", h, fresh));
                     0
                 } else {
                     1
                 }
             }
             _ => {
-                hata("Usage: syncix rename <target> <new name>");
+                report_error("Usage: syncix rename <target> <new name>");
                 1
             }
         },
         "rm" | "del" | "delete" => match arg(1) {
             Some(h) => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                // Silme cocuklariyla birlikte gider ve Studio'da geri alinabilse de
-                // editor tarafinda geri donusu yok. Ne silindigini once GOSTERIP
+                let Some(port) = require_core() else { return Some(1) };
+                // Silme cocuklariyla birlikte gider ve Studio'da restored_count alinabilse de
+                // editor tarafinda restored_count donusu yok. Ne silindigini once GOSTERIP
                 // onay istiyoruz; --yes betiklerde bu adimi atlar.
-                let onaylandi = argumanlar.iter().any(|a| a == "--yes" || a == "-y")
-                    || !crate::project::ProjectConfig::load().guvenlik.silmeyi_onayla;
-                if !onaylandi && !silmeyi_onayla(port, h) {
-                    bilgi("Cancelled; nothing was deleted.");
+                let confirmed = cli_args.iter().any(|a| a == "--yes" || a == "-y")
+                    || !crate::project::ProjectConfig::load().safety_settings.confirm_delete;
+                if !confirmed && !confirm_delete(port, h) {
+                    print_info("Cancelled; nothing was deleted.");
                     return Some(0);
                 }
-                if komut_gonder(port, "DELETE_INSTANCE", serde_json::json!({ "id": h })) {
-                    tamam(&format!("{} deleted", h));
+                if send_command(port, "DELETE_INSTANCE", serde_json::json!({ "id": h })) {
+                    print_ok(&format!("{} deleted", h));
                     0
                 } else {
                     1
                 }
             }
             None => {
-                hata("Usage: syncix rm <target> [--yes]");
+                report_error("Usage: syncix rm <target> [--yes]");
                 1
             }
         },
         "mv" | "move" => match (arg(1), arg(2)) {
-            (Some(h), Some(yeni)) => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                if komut_gonder(
+            (Some(h), Some(fresh)) => {
+                let Some(port) = require_core() else { return Some(1) };
+                if send_command(
                     port,
                     "REPARENT_INSTANCE",
-                    serde_json::json!({ "id": h, "newParentId": yeni }),
+                    serde_json::json!({ "id": h, "newParentId": fresh }),
                 ) {
-                    tamam(&format!("Moved {} into {}", h, yeni));
+                    print_ok(&format!("Moved {} into {}", h, fresh));
                     0
                 } else {
                     1
                 }
             }
             _ => {
-                hata("Usage: syncix mv <target> <new parent>");
+                report_error("Usage: syncix mv <target> <new parent>");
                 1
             }
         },
-        "upload" | "yayinla" => yayinla(argumanlar),
-        "sourcemap" => sourcemap_uret(argumanlar),
-        "build" => build_et(argumanlar),
-        "import" => ice_aktar(argumanlar),
+        "upload" | "yayinla" => publish_place(cli_args),
+        "sourcemap" => build_sourcemap(cli_args),
+        "build" => run_build(cli_args),
+        "import" => import_rbxmx(cli_args),
         "pull" | "resync" => {
-            let Some(port) = core_gerekli() else { return Some(1) };
-            if komut_gonder(port, "FULL_SYNC", serde_json::json!({})) {
-                tamam("Asked Studio to resend the tree.");
+            let Some(port) = require_core() else { return Some(1) };
+            if send_command(port, "FULL_SYNC", serde_json::json!({})) {
+                print_ok("Asked Studio to resend the tree.");
                 soluk("  The reply is processed within a few seconds; then try syncix tree.");
                 0
             } else {
                 1
             }
         }
-        "verify" | "check" => dogrula(),
+        "verify" | "check" => verify_input(),
         "tag" | "tags" => match arg(1) {
             Some(h) => {
-                let Some(port) = core_gerekli() else { return Some(1) };
-                // Argumansiz cagri yalnizca gosterir; yanlislikla etiket
+                let Some(port) = require_core() else { return Some(1) };
+                // Argumansiz cagri yalnizca gosterir; yanlislikla tag_text
                 // silinmesin diye "bos liste" ile "listeleme" ayrilmis durumda.
-                if argumanlar.len() <= 2 {
-                    etiketleri_goster(port, h)
+                if cli_args.len() <= 2 {
+                    show_tags(port, h)
                 } else {
-                    // "--none" tek basina "hepsini temizle" demek. Bos liste
-                    // gondermek icin baska bir yol yok: argumansiz cagri
+                    // "--none" single basina "hepsini temizle" demek. Bos liste
+                    // gondermek icin baska bir fs_path yok: argumansiz cagri
                     // listeleme anlamina geliyor.
-                    let etiketler: Vec<String> = if argumanlar[2..] == ["--none".to_string()] {
+                    let tag_list: Vec<String> = if cli_args[2..] == ["--none".to_string()] {
                         Vec::new()
                     } else {
-                        argumanlar[2..].iter().map(|s| s.to_string()).collect()
+                        cli_args[2..].iter().map(|s| s.to_string()).collect()
                     };
-                    if komut_gonder(
+                    if send_command(
                         port,
                         "SET_TAGS",
-                        serde_json::json!({ "id": h, "tags": etiketler }),
+                        serde_json::json!({ "id": h, "tags": tag_list }),
                     ) {
-                        if etiketler.is_empty() {
-                            tamam(&format!("{} tags cleared", h));
+                        if tag_list.is_empty() {
+                            print_ok(&format!("{} tags cleared", h));
                         } else {
-                            tamam(&format!("{} tags: {}", h, etiketler.join(", ")));
+                            print_ok(&format!("{} tags: {}", h, tag_list.join(", ")));
                         }
                         0
                     } else {
@@ -1664,27 +1664,27 @@ pub fn calistir(argumanlar: &[String]) -> Option<i32> {
                 }
             }
             None => {
-                hata("Usage: syncix tag <target> [tag ...]   (no tags = show)");
+                report_error("Usage: syncix tag <target> [tag ...]   (no tags = show)");
                 soluk("  Clear every tag with: syncix tag <target> --none");
                 1
             }
         },
-        "bind" => yer_bagla(argumanlar),
-        "config" | "settings" => yapilandirmayi_goster(),
-        "trash" => cop_listele(),
-        "restore" => cop_geri_al(arg(1)),
+        "bind" => bind_cmd(cli_args),
+        "config" | "settings" => show_config(),
+        "trash" => trash_list(),
+        "restore" => trash_restore(arg(1)),
         "selftest" => selftest(),
-        "init" => ilklendir(),
-        "up" | "start" => baslat(arg(1).and_then(|p| p.parse::<u16>().ok())),
-        "down" | "stop" => durdur(),
-        bilinmeyen => {
-            hata(&format!("Unknown command: {}", bilinmeyen));
+        "init" => init_project(),
+        "up" | "start" => launch(arg(1).and_then(|p| p.parse::<u16>().ok())),
+        "down" | "stop" => stop_core(),
+        unknown => {
+            report_error(&format!("Unknown command: {}", unknown));
             soluk("  Run syncix help to see the command list.");
             1
         }
     };
 
-    Some(sonuc)
+    Some(outcome)
 }
 
 #[cfg(test)]
@@ -1692,65 +1692,65 @@ mod tests {
     use super::*;
 
     #[test]
-    fn url_kodlama_bosluk_ve_nokta_yolu() {
-        assert_eq!(url_kodla("Workspace.Simulator"), "Workspace.Simulator");
-        assert_eq!(url_kodla("iki kelime"), "iki%20kelime");
-        assert_eq!(url_kodla("a&b=c"), "a%26b%3Dc");
+    fn url_encoding_of_spaces_and_dot_paths() {
+        assert_eq!(url_encode("Workspace.Simulator"), "Workspace.Simulator");
+        assert_eq!(url_encode("iki kelime"), "iki%20kelime");
+        assert_eq!(url_encode("a&b=c"), "a%26b%3Dc");
     }
 
     #[test]
-    fn port_dosyasi_yoksa_cokmez() {
+    fn missing_port_file_does_not_crash() {
         // Sadece panik olmadığını doğrular; ortama göre Some/None dönebilir.
-        let _ = port_dosyasindan();
+        let _ = from_port_file();
     }
 
     #[test]
-    fn dugum_bulma_isim_ve_kisa_uuid() {
-        let dugumler = vec![
-            Dugum {
+    fn find_node_by_name_and_short_uuid() {
+        let node_list = vec![
+            TreeRow {
                 id: "aabbccdd-1111-2222-3333-444455556666".into(),
-                ad: "Kutu".into(),
-                sinif: "Part".into(),
-                ebeveyn: None,
+                item_name: "Kutu".into(),
+                class_str: "Part".into(),
+                parent_ref: None,
             },
         ];
-        assert!(dugum_bul(&dugumler, "Kutu").is_some());
-        assert!(dugum_bul(&dugumler, "kutu").is_some());
-        assert!(dugum_bul(&dugumler, "aabbccdd").is_some());
-        assert!(dugum_bul(&dugumler, "yok").is_none());
+        assert!(find_node(&node_list, "Kutu").is_some());
+        assert!(find_node(&node_list, "kutu").is_some());
+        assert!(find_node(&node_list, "aabbccdd").is_some());
+        assert!(find_node(&node_list, "yok").is_none());
     }
 }
 
 #[cfg(test)]
-mod baslik_tests {
+mod header_tests {
     use super::*;
 
     #[test]
-    fn basliklar_kucuk_harfe_cevrilir() {
-        let ham = "HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\nX-Syncix-Skipped-Enums: 3";
-        let h = basliklari_ayristir(ham);
+    fn headers_are_lowercased() {
+        let raw = "HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\nX-Syncix-Skipped-Enums: 3";
+        let h = parse_headers(raw);
         assert_eq!(h.get("content-type").unwrap(), "text/xml");
         assert_eq!(h.get("x-syncix-skipped-enums").unwrap(), "3");
     }
 
-    /// Durum satiri baslik degildir; yanlislikla haritaya girerse
-    /// "http/1.1 200 ok" gibi anlamsiz bir anahtar olusurdu.
+    /// Durum satiri title degildir; yanlislikla haritaya girerse
+    /// "http/1.1 200 ok" gibi anlamsiz bir key_name olusurdu.
     #[test]
-    fn durum_satiri_baslik_sayilmaz() {
-        let h = basliklari_ayristir("HTTP/1.1 404 Not Found\r\nX-A: 1");
+    fn status_line_is_not_a_header() {
+        let h = parse_headers("HTTP/1.1 404 Not Found\r\nX-A: 1");
         assert_eq!(h.len(), 1);
         assert!(h.contains_key("x-a"));
     }
 
     #[test]
-    fn degerdeki_iki_nokta_korunur() {
-        let h = basliklari_ayristir("HTTP/1.1 200 OK\r\nLocation: https://a.b/c:1");
+    fn colon_in_value_is_kept() {
+        let h = parse_headers("HTTP/1.1 200 OK\r\nLocation: https://a.b/c:1");
         assert_eq!(h.get("location").unwrap(), "https://a.b/c:1");
     }
 
     #[test]
-    fn baslik_yoksa_bos_harita() {
-        assert!(basliklari_ayristir("HTTP/1.1 200 OK").is_empty());
-        assert!(basliklari_ayristir("").is_empty());
+    fn no_headers_gives_empty_map() {
+        assert!(parse_headers("HTTP/1.1 200 OK").is_empty());
+        assert!(parse_headers("").is_empty());
     }
 }

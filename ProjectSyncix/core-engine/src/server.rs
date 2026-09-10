@@ -32,22 +32,22 @@ pub struct AppState {
     pub actual_port: u16,
     /// Bu klasore BASKA bir place baglanmaya calistiysa burada durur.
     ///
-    /// Bir sync klasoru tek bir place'e aittir. Baska bir place baglandiginda
-    /// iki agac sessizce birlestiriliyordu: servis UUID'leri butun place'lerde
-    /// ayni oldugu icin StarterPlayerScripts gibi TEKIL objeler ikiser tane
+    /// Bir sync klasoru single bir place'e aittir. Baska bir place baglandiginda
+    /// iki tree sessizce birlestiriliyordu: service_name UUID'leri butun place'lerde
+    /// is_same oldugu icin StarterPlayerScripts gibi TEKIL objeler ikiser tane
     /// oluyordu. Artik birlestirmek yerine duruyoruz ve karari kullaniciya
     /// birakiyoruz.
-    pub place_catismasi: Arc<std::sync::Mutex<Option<PlaceCatismasi>>>,
+    pub place_clash_state: Arc<std::sync::Mutex<Option<PlaceConflict>>>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
-pub struct PlaceCatismasi {
-    /// Klasorun bagli oldugu place.
-    pub klasorun_place: String,
+pub struct PlaceConflict {
+    /// Klasorun is_bound oldugu place.
+    pub folder_place: String,
     /// Baglanmaya calisan place.
-    pub gelen_place: String,
-    pub gelen_ad: String,
-    pub gelen_place_id: String,
+    pub incoming_place: String,
+    pub incoming_name: String,
+    pub incoming_place_id: String,
 }
 
 /// İstenen porta bağlanmayı dener, doluysa sıradakileri dener.
@@ -57,21 +57,21 @@ pub struct PlaceCatismasi {
 pub fn bind_with_fallback(
     cfg: &crate::project::ProjectConfig,
 ) -> Option<(std::net::TcpListener, u16)> {
-    let ilk = cfg.wanted_port;
+    let first_item = cfg.wanted_port;
     // Port açıkça istendiyse devretme yok: yalnızca o port denenir.
-    let ust = if cfg.port_sabit {
-        ilk.saturating_add(1)
+    let upper = if cfg.port_fixed {
+        first_item.saturating_add(1)
     } else {
-        ilk.saturating_add(crate::project::PORT_SCAN_SPAN)
+        first_item.saturating_add(crate::project::PORT_SCAN_SPAN)
     };
-    for port in ilk..ust {
+    for port in first_item..upper {
         let addr = SocketAddr::from(([127, 0, 0, 1], port));
         match std::net::TcpListener::bind(addr) {
             Ok(listener) => {
-                if port != ilk {
+                if port != first_item {
                     warn!(
                         "Port {} is taken, using {} instead. The Studio plugin scans this range and will find it.",
-                        ilk, port
+                        first_item, port
                     );
                 }
                 return Some((listener, port));
@@ -83,22 +83,22 @@ pub fn bind_with_fallback(
             }
         }
     }
-    if cfg.port_sabit {
+    if cfg.port_fixed {
         error!(
             "Port {} is taken. It was requested explicitly, so no fallback was used. Free that port or pick another: syncix serve <port>",
-            ilk
+            first_item
         );
     } else {
         error!(
             "All ports in the range {}-{} are taken. Change the 'port' value in syncix.toml.",
-            ilk,
-            ust - 1
+            first_item,
+            upper - 1
         );
     }
     None
 }
 
-/// Dış istemcilerden (VS Code RPC, CLI) gelen komut adlarını çekirdek event'lerine çevirir.
+/// Dış istemcilerden (VS Code RPC, CLI) received command_name adlarını çekirdek event'lerine çevirir.
 fn map_command(event_type: &str) -> Option<EventType> {
     match event_type {
         "GET_TREE" => Some(EventType::GetTree),
@@ -148,7 +148,7 @@ pub async fn start_server(state: Arc<AppState>, listener: std::net::TcpListener)
 
 /// Düzgün kapanma. `syncix down` bunu çağırır.
 ///
-/// Eskiden core'u durdurmanın tek yolu süreç adından öldürmekti (taskkill /IM),
+/// Eskiden core'u durdurmanın single yolu süreç adından öldürmekti (taskkill /IM),
 /// bu da diğer projelerin core'unu da kapatıyordu ve yalnızca Windows'ta çalışıyordu.
 /// Sunucu 127.0.0.1'e bağlı olduğu için bu uç nokta yalnızca yerel makineden erişilebilir.
 async fn shutdown_handler(State(state): State<Arc<AppState>>) -> axum::response::Response {
@@ -165,12 +165,12 @@ async fn shutdown_handler(State(state): State<Arc<AppState>>) -> axum::response:
 /// sourcemap.json içeriğini döndürür (luau-lsp uyumlu).
 async fn sourcemap_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let dm = state.data_model.read().await;
-    let icerik = crate::sourcemap::json(&dm, &state.project.sync_dir, &state.project.root);
-    ([(axum::http::header::CONTENT_TYPE, "application/json")], icerik)
+    let file_content = crate::sourcemap::json(&dm, &state.project.sync_dir, &state.project.root);
+    ([(axum::http::header::CONTENT_TYPE, "application/json")], file_content)
 }
 
 /// Ağacı Roblox XML (.rbxmx / .rbxlx) olarak döndürür.
-/// `?target=<hedef>` verilirse yalnızca o alt ağaç yazılır.
+/// `?target=<hedef>` verilirse yalnızca o sub ağaç yazılır.
 async fn build_handler(
     State(state): State<Arc<AppState>>,
     axum::extract::Query(q): axum::extract::Query<std::collections::HashMap<String, String>>,
@@ -178,7 +178,7 @@ async fn build_handler(
     use crate::model::ResolveResult;
     let dm = state.data_model.read().await;
 
-    let kok = match q.get("target").filter(|t| !t.is_empty()) {
+    let root_dir = match q.get("target").filter(|t| !t.is_empty()) {
         None => None,
         Some(t) => match dm.resolve_target(t) {
             ResolveResult::One(u) => Some(u),
@@ -199,28 +199,28 @@ async fn build_handler(
         },
     };
 
-    let (xml, atlanan) = crate::rbxmx::disa_aktar(&dm, kok.as_ref());
-    if atlanan > 0 {
-        warn!("build: skipped {} unrecognised enum value(s).", atlanan);
+    let (xml, skipped) = crate::rbxmx::export_rbxmx(&dm, root_dir.as_ref());
+    if skipped > 0 {
+        warn!("build: skipped {} unrecognised enum value(s).", skipped);
     }
-    let mut cevap = xml.into_response();
-    let basliklar = cevap.headers_mut();
-    basliklar.insert(
+    let mut reply = xml.into_response();
+    let headers = reply.headers_mut();
+    headers.insert(
         axum::http::header::CONTENT_TYPE,
         axum::http::HeaderValue::from_static("text/xml"),
     );
     // Atlanan Enum sayısı başlıkla bildirilir ki CLI kullanıcıyı uyarabilsin.
-    basliklar.insert(
+    headers.insert(
         axum::http::HeaderName::from_static("x-syncix-skipped-enums"),
-        axum::http::HeaderValue::from_str(&atlanan.to_string())
+        axum::http::HeaderValue::from_str(&skipped.to_string())
             .unwrap_or(axum::http::HeaderValue::from_static("0")),
     );
-    cevap
+    reply
 }
 
 async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload>> {
     state.health_monitor.inc_messages();
-    // Poll gelmesi Studio'nun ayakta olduğunun tek kanıtı; bağlantı durumunu buradan biliyoruz.
+    // Poll gelmesi Studio'nun ayakta olduğunun single kanıtı; bağlantı durumunu buradan biliyoruz.
     state.health_monitor.touch_studio();
 
     if state.chaos_mode_enabled {
@@ -235,18 +235,18 @@ async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload
         }
     }
 
-    // Long-poll: kuyrukta mesaj varsa hemen döner, yoksa 10 saniyeye kadar bekler.
+    // Long-poll: kuyrukta message varsa hemen döner, yoksa 10 saniyeye kadar bekler.
     // 10 saniye sınırı önemli: Studio'nun HTTP istemcisi 30 saniyede timeout'a düşer ve
     // bağlantı kopmuş sanılarak gereksiz reconnect + FULL_SYNC döngüsü oluşur.
     // Outbox kuyruğu sayesinde iki poll arasında gönderilen mesajlar kaybolmaz.
-    let mesaj = state
+    let message = state
         .studio_outbox
         .pop_or_wait(std::time::Duration::from_secs(10))
         .await;
-    if mesaj.is_some() {
+    if message.is_some() {
         state.health_monitor.inc_outbound();
     }
-    Json(mesaj)
+    Json(message)
 }
 
 async fn push_handler(
@@ -285,39 +285,39 @@ async fn push_handler(
             .unwrap_or(0) as usize;
         state.health_monitor.set_plugin_metrics(queued, coalesced);
 
-        let sayi = |ad: &str| {
+        let number_value = |item_name: &str| {
             payload
                 .data
-                .get(ad)
+                .get(item_name)
                 .and_then(|x| x.as_u64())
                 .unwrap_or(0) as usize
         };
         // Eklenti sürümü denetimi.
         //
         // Sürüm kapısı şimdiye kadar yalnızca eklentinin kendisindeydi. Sürüm
-        // kontrolü YAPMAYAN eski bir eklenti bağlanırsa core sessizce kabul
+        // kontrolü YAPMAYAN previous_text bir eklenti bağlanırsa core sessizce kabul
         // ediyordu ve uyumsuzluk garip davranış olarak ortaya çıkıyordu.
-        if let Some(eklenti_surumu) = payload.data.get("plugin_version").and_then(|x| x.as_str()) {
-            if !crate::project::versions_compatible(eklenti_surumu, crate::project::VERSION) {
+        if let Some(plugin_version) = payload.data.get("plugin_version").and_then(|x| x.as_str()) {
+            if !crate::project::versions_compatible(plugin_version, crate::project::VERSION) {
                 warn!(
                     "Version mismatch: Studio plugin {}, core {}. The same major.minor is required; update the plugin.",
-                    eklenti_surumu,
+                    plugin_version,
                     crate::project::VERSION
                 );
             }
         }
 
         state.health_monitor.set_activity(
-            sayi("activity_total"),
-            sayi("activity_in"),
-            sayi("activity_out"),
-            sayi("conflicts"),
+            number_value("activity_total"),
+            number_value("activity_in"),
+            number_value("activity_out"),
+            number_value("conflicts"),
         );
         return (axum::http::StatusCode::OK, "OK").into_response();
     }
 
-    // Bu liste, eklentiden GELEN mesajlarin gecebildigi tek kapi. Listede
-    // olmayan bir mesaj sessizce dusuyor — yeni bir mesaj tipi eklerken buraya
+    // Bu liste, eklentiden GELEN mesajlarin gecebildigi single kapi. Listede
+    // olmayan bir message sessizce dusuyor — fresh bir message tipi eklerken buraya
     // eklemeyi unutmak, "gonderiyorum ama hicbir sey olmuyor" demek.
     if payload.event_type == EventType::ClientUpdate
         || payload.event_type == EventType::CompositeUpdate
@@ -332,7 +332,7 @@ async fn push_handler(
     (axum::http::StatusCode::OK, "OK").into_response()
 }
 
-/// CLI ve diğer HTTP istemcileri için komut endpoint'i.
+/// CLI ve diğer HTTP istemcileri için command_name endpoint'i.
 /// Body: { "event_type": "CREATE_INSTANCE" | "RENAME_INSTANCE" | "DELETE_INSTANCE" | "GET_TREE", "data": {...} }
 async fn command_handler(
     State(state): State<Arc<AppState>>,
@@ -343,32 +343,32 @@ async fn command_handler(
     let event_type = v.get("event_type").and_then(|e| e.as_str()).unwrap_or("");
 
     // FULL_SYNC / PULL: Studio'ya "ağacı yeniden gönder" isteği.
-    // Bu komut çekirdeğe DEĞİL doğrudan Studio'ya gider; cevabı normal FULL_SYNC
+    // Bu command_name çekirdeğe DEĞİL doğrudan Studio'ya gider; cevabı normal FULL_SYNC
     // yolundan işlenir ve modeli sıfırdan kurar.
-    // BIND: place catismasini cozer. Iki secenek var ve ikisi de veri kaybettirir,
+    // BIND: place catismasini cozer. Iki secenek exists_flag ve ikisi de veri kaybettirir,
     // o yuzden karar kullanicinin.
-    //   studio -> bu place dogru kabul edilir, klasor onun uzerine yazilir
-    //   disk   -> klasor dogru kabul edilir, icerigi bu place'e yuklenir
+    //   studio -> bu place dogru kabul edilir, folder_path onun uzerine yazilir
+    //   disk   -> folder_path dogru kabul edilir, icerigi bu place'e yuklenir
     if event_type == "BIND" {
-        let yon = v
+        let direction = v
             .get("data")
             .and_then(|d| d.get("side"))
             .and_then(|x| x.as_str())
             .unwrap_or("");
-        let catisma = state.place_catismasi.lock().ok().and_then(|c| c.clone());
-        let Some(c) = catisma else {
+        let place_clash = state.place_clash_state.lock().ok().and_then(|c| c.clone());
+        let Some(c) = place_clash else {
             return (axum::http::StatusCode::BAD_REQUEST, "There is no place conflict to resolve.")
                 .into_response();
         };
 
-        match yon {
+        match direction {
             "studio" => {
-                // Klasoru gelen place'e bagla ve senkronu ac. Bir sonraki
-                // FULL_SYNC'te agac Studio'dan yeniden kurulur; uzlastirici
+                // Klasoru received place'e bagla ve senkronu ac. Bir sonraki
+                // FULL_SYNC'te tree Studio'dan yeniden kurulur; uzlastirici
                 // klasoru ona uydurur (silinenler cop kutusuna gider).
-                state.project.place_bagla(&c.gelen_place);
-                crate::project::senkronu_askiya_al(false);
-                if let Ok(mut g) = state.place_catismasi.lock() {
+                state.project.bind_place(&c.incoming_place);
+                crate::project::set_sync_suspended(false);
+                if let Ok(mut g) = state.place_clash_state.lock() {
                     *g = None;
                 }
                 state.studio_outbox.push(Payload {
@@ -380,13 +380,13 @@ async fn command_handler(
                 return (axum::http::StatusCode::OK, "OK").into_response();
             }
             "disk" => {
-                // Klasor dogru kabul edildi: kimligi gelen place'e ceviriyoruz
-                // ki bundan sonra ayni sey tekrar catisma saymasin, ama agaci
-                // Studio'dan ISTEMIYORUZ; diskteki dosyalar izleyici uzerinden
+                // Klasor dogru kabul edildi: kimligi received place'e ceviriyoruz
+                // ki bundan sonra is_same sey again place_clash saymasin, ama agaci
+                // Studio'dan ISTEMIYORUZ; diskteki file_list izleyici uzerinden
                 // Studio'ya akacak.
-                state.project.place_bagla(&c.gelen_place);
-                crate::project::senkronu_askiya_al(false);
-                if let Ok(mut g) = state.place_catismasi.lock() {
+                state.project.bind_place(&c.incoming_place);
+                crate::project::set_sync_suspended(false);
+                if let Ok(mut g) = state.place_clash_state.lock() {
                     *g = None;
                 }
                 return (axum::http::StatusCode::OK, "OK").into_response();
@@ -426,7 +426,7 @@ async fn command_handler(
 
     // CREATE_INSTANCE: UUID'yi BURADA uretip cevapta donduruyoruz.
     // Boylece cagiran, olusturdugu objeyi ismiyle degil kimligiyle hedefleyebilir.
-    let mut uretilen_id: Option<String> = None;
+    let mut generated_id: Option<String> = None;
     if core_event == EventType::CreateInstance {
         let id = data
             .get("id")
@@ -434,11 +434,11 @@ async fn command_handler(
             .map(|s| s.to_string())
             .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         data["id"] = serde_json::json!(id);
-        uretilen_id = Some(id);
+        generated_id = Some(id);
     }
 
-    // Hedef doğrulama burada senkron yapılır ki CLI'ya anlamlı sonuç dönebilelim.
-    // Çözümlenen UUID data'ya geri yazılır; çekirdek her zaman kesin UUID alır.
+    // Hedef doğrulama burada syncing yapılır ki CLI'ya anlamlı sonuç dönebilelim.
+    // Çözümlenen UUID data'ya restored_count yazılır; çekirdek her zaman kesin UUID alır.
     match core_event {
         EventType::RenameInstance
         | EventType::DeleteInstance
@@ -528,7 +528,7 @@ async fn command_handler(
             }
         }
         EventType::ReparentInstance => {
-            // Hem taşınacak obje (id) hem de yeni ebeveyn (newParentId) çözümlenir.
+            // Hem taşınacak obje (id) hem de fresh parent_ref (newParentId) çözümlenir.
             let dm = state.data_model.read().await;
             for (field, label) in [("id", "Target"), ("newParentId", "New parent")] {
                 let target = data
@@ -594,7 +594,7 @@ async fn command_handler(
             .into_response();
     }
     info!("CLI command received: {}", event_type);
-    match uretilen_id {
+    match generated_id {
         Some(id) => (axum::http::StatusCode::OK, id).into_response(),
         None => (axum::http::StatusCode::OK, "OK").into_response(),
     }

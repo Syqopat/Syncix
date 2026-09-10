@@ -36,7 +36,7 @@ local function startSyncix()
     -- `plugin` global'i ModuleScript'lerde güvenilir biçimde bulunmuyor.
     -- Onay penceresi ve ayar saklama için buradan açıkça geçiriliyor.
     -- Tabloya sarılıyor: ServiceContainer kayıt sırasında service.OnInit'e bakıyor,
-    -- bir Instance üzerinde olmayan üyeyi aramak hata verir.
+    -- bir Instance üzerinde olmayan üyeyi aramak failure verir.
     container:Register("Plugin", { ref = plugin })
 
     container:Register("RuntimeCache", RuntimeCache.new())
@@ -72,7 +72,7 @@ end
 -- agaci yok, istemci tarafinda HTTP zaten kapali.
 --
 -- Kapi EN BASTA olmali. Ilk denememde startSyncix'in ICINE koymustum, ama
--- HTTP denetimi ondan once calisiyor: Play sirasinda istemci oturumu
+-- HTTP denetimi ondan once isRunning: Play sirasinda istemci oturumu
 -- "Allow HTTP Requests" uyarisini basmaya devam ediyordu.
 if not RunService:IsEdit() then
     return

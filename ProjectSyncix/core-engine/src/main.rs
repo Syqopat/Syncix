@@ -53,8 +53,8 @@ use crate::model::InstanceNode;
 use crate::server::AppState;
 use crate::transport::{EventType, Payload, StudioOutbox};
 
-/// Bir komut hedefini çözümler: tam UUID, kısa UUID öneki veya isim.
-/// İsim birden fazla objeyle eşleşirse belirsizlik nedeniyle None döner.
+/// Bir command_name hedefini çözümler: tam UUID, kısa UUID öneki veya isim.
+/// İsim birden extra objeyle eşleşirse belirsizlik nedeniyle None döner.
 fn resolve_id(dm: &model::DataModel, target: &str) -> Option<uuid::Uuid> {
     match dm.resolve_target(target) {
         model::ResolveResult::One(u) => Some(u),
@@ -70,7 +70,7 @@ fn resolve_id(dm: &model::DataModel, target: &str) -> Option<uuid::Uuid> {
     }
 }
 
-/// CLI'dan gelen string değeri uygun PropertyValue'ya çevirir.
+/// CLI'dan received string değeri uygun PropertyValue'ya çevirir.
 /// "true"/"false" -> Boolean, "x,y,z" -> Vector3, sayı -> Number, aksi -> String.
 fn parse_property_value(s: &str) -> model::PropertyValue {
     use model::PropertyValue;
@@ -83,7 +83,7 @@ fn parse_property_value(s: &str) -> model::PropertyValue {
     }
 
     // Hex renk: "#ff8800" veya "ff8800" -> Color3
-    // (Eskiden düz metin olarak Studio'ya gidip reddediliyordu.)
+    // (Eskiden düz text_value olarak Studio'ya gidip reddediliyordu.)
     let hex = t.strip_prefix('#').unwrap_or(t);
     if hex.len() == 6 && hex.chars().all(|c| c.is_ascii_hexdigit()) && t.starts_with('#') {
         if let (Ok(r), Ok(g), Ok(b)) = (
@@ -117,49 +117,49 @@ fn parse_property_value(s: &str) -> model::PropertyValue {
 /// Terminalden girilen metni, property'nin modeldeki MEVCUT değerinin tipine
 /// uydurur. Uyduramazsa None döner ve çağıran genel ayrıştırıcıya düşer.
 ///
-/// Neden var: `syncix set <part> BrickColor "Really red"` düz metin üretiyordu ve
+/// Neden exists_flag: `syncix set <part> BrickColor "Really red"` düz text_value üretiyordu ve
 /// Studio tarafında atama sessizce başarısız oluyordu. Aynı sorun CFrame, UDim2,
 /// NumberRange gibi tiplerde de vardı — terminalden hiç ayarlanamıyorlardı.
-fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model::PropertyValue> {
+fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &str) -> Option<model::PropertyValue> {
     use model::PropertyValue as P;
-    let t = metin.trim();
+    let t = text_value.trim();
 
     /// "1, 2, 3" -> [1.0, 2.0, 3.0]; sayı olmayan varsa None.
-    fn sayilar(t: &str) -> Option<Vec<f32>> {
+    fn numbers(t: &str) -> Option<Vec<f32>> {
         t.split(',')
             .map(|p| p.trim().parse::<f32>().ok())
             .collect::<Option<Vec<f32>>>()
     }
 
-    match mevcut {
+    match current_value {
         P::BrickColor(_) => Some(P::BrickColor(t.to_string())),
         // Ref hedefi UUID ya da kısa tutamaç olabilir; çözümleme Studio tarafında.
         P::Ref(_) => Some(P::Ref(t.to_string())),
         P::String(_) => Some(P::String(t.to_string())),
-        // Asset id'si metin olarak yaziliyor: "rbxassetid://123".
+        // Asset id'si text_value olarak yaziliyor: "rbxassetid://123".
         P::Content(_) => Some(P::Content(t.to_string())),
-        P::Vector2 { .. } => match sayilar(t)?[..] {
+        P::Vector2 { .. } => match numbers(t)?[..] {
             [x, y] => Some(P::Vector2 { x, y }),
             _ => None,
         },
-        P::UDim { .. } => match sayilar(t)?[..] {
+        P::UDim { .. } => match numbers(t)?[..] {
             [scale, offset] => Some(P::UDim { scale, offset }),
             _ => None,
         },
-        P::NumberRange { .. } => match sayilar(t)?[..] {
+        P::NumberRange { .. } => match numbers(t)?[..] {
             [min, max] => Some(P::NumberRange { min, max }),
             // Tek sayı verilirse aralık o noktaya sabitlenir.
-            [tek] => Some(P::NumberRange { min: tek, max: tek }),
+            [single] => Some(P::NumberRange { min: single, max: single }),
             _ => None,
         },
-        P::UDim2 { .. } => match sayilar(t)?[..] {
+        P::UDim2 { .. } => match numbers(t)?[..] {
             [xs, xo, ys, yo] => Some(P::UDim2 { xs, xo, ys, yo }),
             _ => None,
         },
         P::CFrame { rot, .. } => {
-            let s = sayilar(t)?;
+            let s = numbers(t)?;
             match s.len() {
-                // Sadece konum verildi: mevcut dönme korunur. En sık istenen bu.
+                // Sadece konum verildi: current_value dönme korunur. En sık istenen bu.
                 3 => Some(P::CFrame {
                     pos: [s[0], s[1], s[2]],
                     rot: *rot,
@@ -176,19 +176,19 @@ fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model
             if let P::Color3 { r, g, b } = parse_property_value(t) {
                 return Some(P::Color3 { r, g, b });
             }
-            match sayilar(t)?[..] {
+            match numbers(t)?[..] {
                 [r, g, b] => Some(P::Color3 { r, g, b }),
                 _ => None,
             }
         }
-        P::Rect { .. } => match sayilar(t)?[..] {
+        P::Rect { .. } => match numbers(t)?[..] {
             [x0, y0, x1, y1] => Some(P::Rect {
                 min: [x0, y0],
                 max: [x1, y1],
             }),
             _ => None,
         },
-        P::PhysicalProperties { .. } => match sayilar(t)?[..] {
+        P::PhysicalProperties { .. } => match numbers(t)?[..] {
             [d, f, e, fw, ew] => Some(P::PhysicalProperties {
                 density: d,
                 friction: f,
@@ -206,20 +206,20 @@ fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model
             }),
             _ => None,
         },
-        // Eğri tipleri terminalden nokta nokta yazılamaz; verilen değerler
+        // Eğri tipleri terminalden nokta nokta yazılamaz; given değerler
         // zaman ekseninde EŞİT aralıklarla dağıtılır. "1,0" = baştan sona sönme.
         P::NumberSequence(_) => {
-            let v = sayilar(t)?;
+            let v = numbers(t)?;
             if v.is_empty() {
                 return None;
             }
-            let son = (v.len() - 1).max(1) as f32;
+            let last_item = (v.len() - 1).max(1) as f32;
             Some(P::NumberSequence(
                 v.iter()
                     .enumerate()
-                    .map(|(i, deger)| model::NumberKeypoint {
-                        t: i as f32 / son,
-                        v: *deger,
+                    .map(|(i, raw_value)| model::NumberKeypoint {
+                        t: i as f32 / last_item,
+                        v: *raw_value,
                         envelope: 0.0,
                     })
                     .collect(),
@@ -227,13 +227,13 @@ fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model
         }
         // "#ff0000,#0000ff" gibi: renkler eşit aralıklarla dağıtılır.
         P::ColorSequence(_) => {
-            let mut noktalar = Vec::new();
-            let parcalar: Vec<&str> = t.split(',').map(|x| x.trim()).collect();
-            let son = (parcalar.len().saturating_sub(1)).max(1) as f32;
-            for (i, parca) in parcalar.iter().enumerate() {
-                match parse_property_value(parca) {
-                    P::Color3 { r, g, b } => noktalar.push(model::ColorKeypoint {
-                        t: i as f32 / son,
+            let mut points = Vec::new();
+            let pieces: Vec<&str> = t.split(',').map(|x| x.trim()).collect();
+            let last_item = (pieces.len().saturating_sub(1)).max(1) as f32;
+            for (i, piece) in pieces.iter().enumerate() {
+                match parse_property_value(piece) {
+                    P::Color3 { r, g, b } => points.push(model::ColorKeypoint {
+                        t: i as f32 / last_item,
                         r,
                         g,
                         b,
@@ -243,9 +243,9 @@ fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model
                     _ => return None,
                 }
             }
-            (!noktalar.is_empty()).then_some(P::ColorSequence(noktalar))
+            (!points.is_empty()).then_some(P::ColorSequence(points))
         }
-        // Yalnızca aile değiştirilir; kalınlık ve stil mevcut haliyle korunur.
+        // Yalnızca aile değiştirilir; kalınlık ve stil current_value haliyle korunur.
         P::Font { weight, style, .. } => Some(P::Font {
             family: t.to_string(),
             weight: weight.clone(),
@@ -257,7 +257,7 @@ fn mevcut_tipe_uydur(mevcut: &model::PropertyValue, metin: &str) -> Option<model
 }
 
 /// Tel formatındaki bir JSON değeri PropertyValue'ya çevirir.
-/// Hem ham skalerleri (5, "hi", true) hem de {Vector3:{..}}/{Color3:{..}} tablolarını
+/// Hem raw skalerleri (5, "hi", true) hem de {Vector3:{..}}/{Color3:{..}} tablolarını
 /// hem de serde enum formatını ({"Number":5}) kabul eder.
 fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
     use model::PropertyValue;
@@ -322,26 +322,26 @@ fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
             } else if let Some(c) = o.get("Content") {
                 Some(PropertyValue::Content(c.as_str()?.to_string()))
             } else if let Some(a) = o.get("ColorSequence") {
-                let mut noktalar = Vec::new();
+                let mut points = Vec::new();
                 for k in a.as_array()? {
-                    noktalar.push(model::ColorKeypoint {
+                    points.push(model::ColorKeypoint {
                         t: k.get("t")?.as_f64()? as f32,
                         r: k.get("r")?.as_f64()? as f32,
                         g: k.get("g")?.as_f64()? as f32,
                         b: k.get("b")?.as_f64()? as f32,
                     });
                 }
-                Some(PropertyValue::ColorSequence(noktalar))
+                Some(PropertyValue::ColorSequence(points))
             } else if let Some(a) = o.get("NumberSequence") {
-                let mut noktalar = Vec::new();
+                let mut points = Vec::new();
                 for k in a.as_array()? {
-                    noktalar.push(model::NumberKeypoint {
+                    points.push(model::NumberKeypoint {
                         t: k.get("t")?.as_f64()? as f32,
                         v: k.get("v")?.as_f64()? as f32,
                         envelope: k.get("envelope").and_then(|e| e.as_f64()).unwrap_or(0.0) as f32,
                     });
                 }
-                Some(PropertyValue::NumberSequence(noktalar))
+                Some(PropertyValue::NumberSequence(points))
             } else if let Some(r) = o.get("Rect") {
                 let mn = r.get("min")?.as_array()?;
                 let mx = r.get("max")?.as_array()?;
@@ -374,8 +374,8 @@ fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
     }
 }
 
-/// PropertyValue'yu Studio plugininin (PatchExecutor) beklediği tel formatına çevirir.
-/// Skalarlar ham gönderilir; Vector3/Color3 tablo olarak sarılır.
+/// PropertyValue'yu Studio plugininin (PatchExecutor) beklediği on_wire formatına çevirir.
+/// Skalarlar raw gönderilir; Vector3/Color3 tablo olarak sarılır.
 pub fn pv_to_wire(pv: &model::PropertyValue) -> serde_json::Value {
     use model::PropertyValue;
     match pv {
@@ -398,7 +398,7 @@ pub fn pv_to_wire(pv: &model::PropertyValue) -> serde_json::Value {
             serde_json::json!({ "NumberRange": { "min": min, "max": max } })
         }
         PropertyValue::Ref(id) => serde_json::json!({ "Ref": id }),
-        PropertyValue::BrickColor(ad) => serde_json::json!({ "BrickColor": ad }),
+        PropertyValue::BrickColor(item_name) => serde_json::json!({ "BrickColor": item_name }),
         PropertyValue::Content(u) => serde_json::json!({ "Content": u }),
         PropertyValue::ColorSequence(k) => serde_json::json!({ "ColorSequence": k }),
         PropertyValue::NumberSequence(k) => serde_json::json!({ "NumberSequence": k }),
@@ -434,13 +434,13 @@ pub fn pv_to_wire(pv: &model::PropertyValue) -> serde_json::Value {
 async fn main() {
     // CLI kipi: argüman verilmişse istemci gibi davran, sunucu açma.
     // Aynı binary hem sunucu hem CLI olduğu için PowerShell/Node bağımlılığı yok.
-    let argumanlar: Vec<String> = std::env::args().skip(1).collect();
-    if let Some(kod) = cli::calistir(&argumanlar) {
-        std::process::exit(kod);
+    let cli_args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(script_code) = cli::execute_run(&cli_args) {
+        std::process::exit(script_code);
     }
 
     // Log filtresi: hyper/tower gibi bağımlılıkların DEBUG gürültüsünü kapat,
-    // Syncix'in kendi olayları DEBUG seviyesine kadar görünsün.
+    // Syncix'in own olayları DEBUG seviyesine kadar görünsün.
     // İstenirse RUST_LOG ortam değişkeni ile ezilebilir.
     // Loglar hem konsola hem dosyaya yazılır (../syncix-core.log); çünkü core
     // artık VS Code tarafından arka planda başlatılabiliyor ve konsolu görünmüyor.
@@ -466,21 +466,21 @@ async fn main() {
         project::PROTOCOL_VERSION
     );
 
-    // Proje yapılandırması: senkron klasörü, port ve proje kimliği.
+    // Proje yapılandırması: syncing klasörü, port ve proje kimliği.
     // `syncix serve 25565` biçiminde açık port verilmişse ayarın önüne geçer.
-    let mut cfg_ham = project::ProjectConfig::load();
-    if let Some(p) = argumanlar
+    let mut cfg_raw = project::ProjectConfig::load();
+    if let Some(p) = cli_args
         .get(1)
         .and_then(|s| s.parse::<u16>().ok())
-        .filter(|_| argumanlar.first().map(|s| s.as_str()) == Some("serve"))
+        .filter(|_| cli_args.first().map(|s| s.as_str()) == Some("serve"))
     {
         info!("Port requested on the command line: {}", p);
-        cfg_ham.wanted_port = p;
+        cfg_raw.wanted_port = p;
         // Açıkça istenen port SABİTTİR: doluysa sıradakine kaymaz.
         // Aksi halde Studio eklentisine yazdığın port ile core'un portu ayrışırdı.
-        cfg_ham.port_sabit = true;
+        cfg_raw.port_fixed = true;
     }
-    let cfg = Arc::new(cfg_ham);
+    let cfg = Arc::new(cfg_raw);
     let sync_dir: &'static str = Box::leak(cfg.sync_dir.clone().into_boxed_str());
     info!("Project: {} ({})", cfg.name, cfg.root.display());
     info!("Sync folder: {}", sync_dir);
@@ -499,7 +499,7 @@ async fn main() {
     let data_model = model::create_shared_model();
 
     // Transport (HTTP) kanalları
-    // Studio'ya giden mesajlar kayıpsız teslimat için kuyruğa (Outbox) alınır.
+    // Studio'ya outgoing mesajlar kayıpsız teslimat için kuyruğa (Outbox) alınır.
     let studio_outbox = Arc::new(StudioOutbox::new());
     let (tx_to_core, mut rx_from_studio) = mpsc::channel::<Payload>(100);
 
@@ -517,7 +517,7 @@ async fn main() {
         chaos_mode_enabled: false, // Normalde Config'den alınmalı
         project: cfg.clone(),
         actual_port,
-        place_catismasi: Arc::new(std::sync::Mutex::new(None)),
+        place_clash_state: Arc::new(std::sync::Mutex::new(None)),
     });
 
     // 2. Disk Yazıcısı (Debounced): Model her değiştiğinde tetiklenir; kısa bir sessizlik
@@ -526,18 +526,18 @@ async fn main() {
     // NOT: Diske YAZMAK yalnızca burasının işidir; file_sync sadece okur.
     let disk_notify = Arc::new(tokio::sync::Notify::new());
     // Model, Studio bu oturumda FULL_SYNC'i tamamlayana kadar diskin otoritesi
-    // DEGILDIR. O ana kadar yazici diske yazabilir ama hicbir dosya silemez;
-    // bos modelle uzlastirma butun senkron klasorunu cope tasiyordu.
-    let model_otoritede = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    // DEGILDIR. O ana kadar yazici diske yazabilir ama hicbir file_path silemez;
+    // bos modelle uzlastirma butun syncing klasorunu cope tasiyordu.
+    let model_authoritative = Arc::new(std::sync::atomic::AtomicBool::new(false));
     {
-        let model_otoritede_yazici = model_otoritede.clone();
+        let model_authoritative_writer = model_authoritative.clone();
         let data_model_for_writer = data_model.clone();
         let notify_for_writer = disk_notify.clone();
         let cfg_for_writer = cfg.clone();
         tokio::spawn(async move {
             loop {
                 notify_for_writer.notified().await;
-                // Sessizlik olana kadar bekle (art arda gelen değişiklikleri birleştir)
+                // Sessizlik olana kadar bekle (art arda received değişiklikleri birleştir)
                 loop {
                     tokio::select! {
                         _ = notify_for_writer.notified() => continue,
@@ -549,25 +549,25 @@ async fn main() {
                 // Askidayken diske DOKUNMA. Uzlastirici modeli dogruluk sayar;
                 // model askidayken eksik ya da yanlis olabilecegi icin diski
                 // ona uydurmak dosyalari silmek demek olurdu.
-                if crate::project::senkron_askida() {
+                if crate::project::is_sync_suspended() {
                     continue;
                 }
                 let dm = data_model_for_writer.read().await;
-                let silme_izni =
-                    model_otoritede_yazici.load(std::sync::atomic::Ordering::SeqCst);
-                layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore, silme_izni);
+                let allow_removal =
+                    model_authoritative_writer.load(std::sync::atomic::Ordering::SeqCst);
+                layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore, allow_removal);
 
                 // sourcemap.json: luau-lsp'nin otomatik tamamlama yapabilmesi için
                 // hangi dosyanın DataModel'de nereye karşılık geldiğini bildirir.
                 // Ağaç her değiştiğinde tazelenir; ayrı bir izleyici sürece gerek yok.
                 if cfg_for_writer.sourcemap {
-                    let icerik = sourcemap::json(&dm, sync_dir, &cfg_for_writer.root);
-                    let hedef = cfg_for_writer.sourcemap_file();
-                    let ayni = std::fs::read_to_string(&hedef)
-                        .map(|m| m == icerik)
+                    let file_content = sourcemap::json(&dm, sync_dir, &cfg_for_writer.root);
+                    let dest = cfg_for_writer.sourcemap_file();
+                    let is_same = std::fs::read_to_string(&dest)
+                        .map(|m| m == file_content)
                         .unwrap_or(false);
-                    if !ayni {
-                        if let Err(e) = std::fs::write(&hedef, icerik) {
+                    if !is_same {
+                        if let Err(e) = std::fs::write(&dest, file_content) {
                             tracing::warn!("Could not write sourcemap.json: {}", e);
                         }
                     }
@@ -620,61 +620,61 @@ async fn main() {
     // durumunu tesis etmenin en ucuz yolu.
     tracing::info!(
         "Sync mode: {} | play: {} | debounce: {} ms | trash: {} (keep {}) | undo: {}",
-        cfg.mod_.adi(),
-        cfg.play.adi(),
+        cfg.mode_value.name_of(),
+        cfg.play.name_of(),
         cfg.debounce_ms,
-        cfg.guvenlik.cop_kutusu,
-        cfg.guvenlik.cop_tur_sayisi,
-        cfg.geri_al
+        cfg.safety_settings.trash_enabled,
+        cfg.safety_settings.trash_keep_runs,
+        cfg.restore_cmd
     );
-    layout::cop_ayarini_kur(cfg.guvenlik.cop_kutusu, cfg.guvenlik.cop_tur_sayisi);
-    layout::meta_ayarini_kur(cfg.meta_dosyalari);
+    layout::configure_trash(cfg.safety_settings.trash_enabled, cfg.safety_settings.trash_keep_runs);
+    layout::configure_meta(cfg.meta_files);
 
     // 4. Message Dispatcher (Event Bus'ı dinleyip yönlendirme yapar)
     // Production-Ready: Çekirdek transport'u bilmez, sadece kanaldan Payload okur.
     while let Some(payload) = rx_from_studio.recv().await {
-        // Studio -> disk yonu kapaliysa Studio'dan gelen higbir degisiklik
+        // Studio -> disk yonu kapaliysa Studio'dan received higbir degisiklik
         // modele islenmez. Tek istisna FULL_SYNC: disk_to_studio modunda bile
         // core'un Studio'daki UUID'leri bilmesi gerekiyor, yoksa hangi objeye
         // yazacagini bulamaz.
-        if !cfg_for_loop.mod_.studiodan_kabul() && payload.event_type != EventType::FullSync {
+        if !cfg_for_loop.mode_value.accepts_from_studio() && payload.event_type != EventType::FullSync {
             continue;
         }
 
         if payload.event_type == EventType::FullSync {
             // PLACE KIMLIGI KAPISI
             //
-            // Bir sync klasoru TEK bir place'e aittir. Baska bir place ayni
-            // klasore baglandiginda eskiden iki agac sessizce birlesiyordu:
-            // servis UUID'leri butun place'lerde ayni oldugu icin ikisi ayni
+            // Bir sync klasoru TEK bir place'e aittir. Baska bir place is_same
+            // klasore baglandiginda eskiden iki tree sessizce birlesiyordu:
+            // service_name UUID'leri butun place'lerde is_same oldugu icin ikisi is_same
             // iskelete oturuyor, StarterPlayerScripts gibi TEKIL objeler ikiser
-            // tane oluyordu. Ustelik diskteki eski dosyalar "yeni obje" sanilip
-            // yeni place'in icine yaratiliyordu.
+            // tane oluyordu. Ustelik diskteki previous_text file_list "yeni obje" sanilip
+            // fresh place'in icine yaratiliyordu.
             //
             // Artik birlestirmiyoruz: farkli bir place gelirse duruyoruz ve
             // karari kullaniciya birakiyoruz (syncix bind).
-            let gelen_place = payload
+            let incoming_place = payload
                 .data
                 .get("place_key")
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
 
-            if !gelen_place.is_empty() {
-                match cfg_for_loop.bagli_place() {
-                    // Klasor bos ya da ilk kez baglaniyor: sahiplen.
+            if !incoming_place.is_empty() {
+                match cfg_for_loop.linked_place() {
+                    // Klasor bos ya da first_item kez baglaniyor: sahiplen.
                     None => {
-                        cfg_for_loop.place_bagla(&gelen_place);
+                        cfg_for_loop.bind_place(&incoming_place);
                         tracing::info!("This folder is now bound to the connected place.");
                     }
-                    Some(mevcut) if mevcut == gelen_place => {
+                    Some(current_value) if current_value == incoming_place => {
                         // Ayni place, sorun yok.
-                        if let Ok(mut c) = app_state.place_catismasi.lock() {
+                        if let Ok(mut c) = app_state.place_clash_state.lock() {
                             *c = None;
                         }
                     }
-                    Some(mevcut) => {
-                        let ad = payload
+                    Some(current_value) => {
+                        let item_name = payload
                             .data
                             .get("place_name")
                             .and_then(|v| v.as_str())
@@ -693,20 +693,20 @@ async fn main() {
                                place connecting   : {} (\"{}\", id {})
                                Decide with: syncix bind --studio  (write this place into the folder)
                                or:          syncix bind --disk    (load the folder into this place)",
-                            mevcut, gelen_place, ad, pid
+                            current_value, incoming_place, item_name, pid
                         );
 
-                        if let Ok(mut c) = app_state.place_catismasi.lock() {
-                            *c = Some(crate::server::PlaceCatismasi {
-                                klasorun_place: mevcut,
-                                gelen_place,
-                                gelen_ad: ad,
-                                gelen_place_id: pid,
+                        if let Ok(mut c) = app_state.place_clash_state.lock() {
+                            *c = Some(crate::server::PlaceConflict {
+                                folder_place: current_value,
+                                incoming_place,
+                                incoming_name: item_name,
+                                incoming_place_id: pid,
                             });
                         }
-                        // Modele DOKUNMA ve her yonu durdur: karar verilene
+                        // Modele DOKUNMA ve her yonu stop_core: karar verilene
                         // kadar iki taraf da oldugu gibi kalmali.
-                        crate::project::senkronu_askiya_al(true);
+                        crate::project::set_sync_suspended(true);
                         continue;
                     }
                 }
@@ -719,7 +719,7 @@ async fn main() {
                 
                 {
                     let mut dm = data_model.write().await;
-                    // Recovery: FULL_SYNC geldiğinde eski state tamamen atılır.
+                    // Recovery: FULL_SYNC geldiğinde previous_text state tamamen atılır.
                     // Böylece Studio tarafında silinmiş objeler bellekte kalmaz.
                     *dm = crate::model::DataModel::new();
                     for node_data in instances {
@@ -730,11 +730,11 @@ async fn main() {
                         ) {
                             // Kullanicinin disladigi siniflar modele hic girmez.
                             //
-                            // Ayni suzgec eklentide de var; buradaki ikinci kapi
-                            // eski bir eklenti baglandiginda ayarin yine de
+                            // Ayni suzgec eklentide de exists_flag; buradaki ikinci kapi
+                            // previous_text bir eklenti baglandiginda ayarin yine de
                             // gecerli olmasi icin. Ayar iki taraftan birinde
                             // uygulanmazsa "disladim ama geliyor" durumu olusur.
-                            if !cfg_for_loop.sinif_izinli(class_name) {
+                            if !cfg_for_loop.class_allowed(class_name) {
                                 continue;
                             }
                             if let Ok(uuid) = uuid::Uuid::parse_str(syncix_id) {
@@ -748,7 +748,7 @@ async fn main() {
                                     }
                                 }
 
-                                // Script kaynak kodu
+                                // Script origin kodu
                                 if let Some(src) = node_data.get("source").and_then(|v| v.as_str()) {
                                     instance.source = Some(src.to_string());
                                 }
@@ -770,10 +770,10 @@ async fn main() {
                                         .collect();
                                 }
 
-                                // Property'ler (geniş kapsam — generic properties objesi)
+                                // Property'ler (geniş scope_settings — generic properties objesi)
                                 if let Some(props) = node_data.get("properties").and_then(|v| v.as_object()) {
                                     for (k, val) in props {
-                                        if !cfg_for_loop.property_izinli(k) {
+                                        if !cfg_for_loop.property_allowed(k) {
                                             continue;
                                         }
                                         if let Some(pv) = parse_wire_value(val) {
@@ -804,7 +804,7 @@ async fn main() {
                 
                 tracing::info!("FULL_SYNC complete. {} instances added or updated.", added_count);
                 // Artik model Studio'nun agaci: uzlastirici fazlaliklari silebilir.
-                model_otoritede.store(true, std::sync::atomic::Ordering::SeqCst);
+                model_authoritative.store(true, std::sync::atomic::Ordering::SeqCst);
                 
                 // Notify VS Code with FULL_SYNC
                 let ws_msg = serde_json::json!({
@@ -916,7 +916,7 @@ async fn main() {
             // UUID yalnızca burada, CREATE anında üretilir (Data Integrity kuralı).
             let class_name = payload.data.get("className").and_then(|v| v.as_str()).unwrap_or("");
             let parent_id = payload.data.get("parentId").and_then(|v| v.as_str()).unwrap_or("");
-            // İsim verilmemişse sınıf adı kullanılır (eski davranış korunur).
+            // İsim verilmemişse sınıf adı kullanılır (previous_text davranış korunur).
             let node_name = payload
                 .data
                 .get("name")
@@ -929,13 +929,13 @@ async fn main() {
                 let mut instance = InstanceNode::new(class_name, node_name);
                 // Istemci bir UUID verdiyse onu kullan; ice aktarma bu sayede
                 // olusturdugu objeyi ismiyle degil kimligiyle hedefleyebiliyor.
-                if let Some(verilen) = payload
+                if let Some(given) = payload
                     .data
                     .get("id")
                     .and_then(|v| v.as_str())
                     .and_then(|s| uuid::Uuid::parse_str(s).ok())
                 {
-                    instance.syncix_id = verilen;
+                    instance.syncix_id = given;
                 }
                 {
                     // Parent çözümlemesi: UUID veya isim (örn. "Workspace").
@@ -1139,21 +1139,21 @@ async fn main() {
             if property.is_empty() {
                 tracing::warn!("SET_PROPERTY: the property name was empty.");
             } else if let Some(uuid) = resolved {
-                // Terminalden gelen değer düz metindir; tip bilgisi taşımaz.
+                // Terminalden received değer düz metindir; type_name bilgisi taşımaz.
                 // O yüzden önce property'nin MEVCUT değerinin tipine uydurulmaya
-                // çalışılır: `set X BrickColor "Really red"` metin değil BrickColor,
-                // `set X CFrame 0,10,0` metin değil CFrame olur.
+                // çalışılır: `set X BrickColor "Really red"` text_value değil BrickColor,
+                // `set X CFrame 0,10,0` text_value değil CFrame olur.
                 // Tip kararı yine değere göre veriliyor — sadece kıyaslanan değer
                 // modelde zaten duran değer.
-                let mevcut = {
+                let current_value = {
                     let dm = data_model.read().await;
                     dm.get_instance(&uuid)
                         .and_then(|i| i.properties.get(&property).cloned())
                 };
                 let mut pv = match &value_json {
-                    serde_json::Value::String(s) => mevcut
+                    serde_json::Value::String(s) => current_value
                         .as_ref()
-                        .and_then(|m| mevcut_tipe_uydur(m, s))
+                        .and_then(|m| coerce_to_existing_type(m, s))
                         .unwrap_or_else(|| parse_property_value(s)),
                     other => parse_wire_value(other)
                         .unwrap_or_else(|| model::PropertyValue::String(value_str.clone())),
@@ -1163,18 +1163,18 @@ async fn main() {
                 // tutamaç ya da isim yazabiliyor ("syncix set door Part0 hinge"),
                 // ama Studio'daki önbellek yalnızca tam UUID ile aranıyor;
                 // çözülmeden gönderilirse referans sessizce nil kalırdı.
-                if let model::PropertyValue::Ref(hedef) = &pv {
-                    if !hedef.is_empty() {
-                        let cozulen = {
+                if let model::PropertyValue::Ref(dest) = &pv {
+                    if !dest.is_empty() {
+                        let resolved_n = {
                             let dm = data_model.read().await;
-                            resolve_id(&dm, hedef)
+                            resolve_id(&dm, dest)
                         };
-                        match cozulen {
+                        match resolved_n {
                             Some(u) => pv = model::PropertyValue::Ref(u.to_string()),
                             None => {
                                 tracing::warn!(
                                     "SET_PROPERTY: reference target '{}' was not found; the property was left unchanged.",
-                                    hedef
+                                    dest
                                 );
                                 return;
                             }
@@ -1247,9 +1247,9 @@ async fn main() {
             // editorde tiklanan obje Studio'da secilir.
             //
             // Model'e yazilmiyor cunku secim projenin icerigi degil, anlik bir
-            // durum. Diske yazilsaydi her tiklama bir dosya degisikligi olur,
+            // status_info. Diske yazilsaydi her tiklama bir file_path degisikligi olur,
             // surum kontrolu gurultuye bogulurdu.
-            let kimlikler: Vec<String> = payload
+            let identities: Vec<String> = payload
                 .data
                 .get("ids")
                 .and_then(|v| v.as_array())
@@ -1260,25 +1260,25 @@ async fn main() {
                 })
                 .unwrap_or_default();
 
-            // Kaynak, mesajin geri donmesini onlemek icin tasiniyor: Studio'dan
-            // gelen secimi Studio'ya geri gondermek sonsuz bir ping-pong olurdu.
-            let kaynak = payload
+            // Kaynak, mesajin restored_count donmesini onlemek icin tasiniyor: Studio'dan
+            // received secimi Studio'ya restored_count gondermek sonsuz bir ping-pong olurdu.
+            let origin = payload
                 .data
                 .get("source")
                 .and_then(|v| v.as_str())
                 .unwrap_or("studio");
 
-            if kaynak == "studio" {
+            if origin == "studio" {
                 let ws = serde_json::json!({
                     "event_type": "SELECTION",
-                    "data": { "ids": kimlikler }
+                    "data": { "ids": identities }
                 });
                 let _ = app_state.tx_to_vscode.send(ws.to_string());
             } else {
                 // Editorden geldi: Studio'ya uygula.
-                let cozulmus: Vec<String> = {
+                let already_resolved: Vec<String> = {
                     let dm = data_model.read().await;
-                    kimlikler
+                    identities
                         .iter()
                         .filter_map(|h| resolve_id(&dm, h).map(|u| u.to_string()))
                         .collect()
@@ -1289,14 +1289,14 @@ async fn main() {
                     data: serde_json::json!({
                         "patches": [{
                             "event_type": "SELECTION_UPDATE",
-                            "data": { "ids": cozulmus }
+                            "data": { "ids": already_resolved }
                         }]
                     }),
                 });
             }
         } else if payload.event_type == EventType::SetTags {
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
-            let mut etiketler: Vec<String> = payload
+            let mut tag_list: Vec<String> = payload
                 .data
                 .get("tags")
                 .and_then(|v| v.as_array())
@@ -1307,10 +1307,10 @@ async fn main() {
                         .collect()
                 })
                 .unwrap_or_default();
-            // Siralanmis ve tekrarsiz: iki taraf ayni listeyi ayni sirada gorsun,
+            // Siralanmis ve tekrarsiz: iki taraf is_same listeyi is_same sirada gorsun,
             // yoksa her karsilastirma "degisti" der ve gereksiz yama uretilir.
-            etiketler.sort();
-            etiketler.dedup();
+            tag_list.sort();
+            tag_list.dedup();
 
             let resolved = {
                 let dm = data_model.read().await;
@@ -1318,29 +1318,29 @@ async fn main() {
             };
 
             if let Some(uuid) = resolved {
-                let uygulandi = {
+                let was_applied = {
                     let mut dm = data_model.write().await;
                     match dm.get_mut_instance(&uuid) {
                         Some(inst) => {
-                            inst.tags = etiketler.clone();
+                            inst.tags = tag_list.clone();
                             inst.last_updated = chrono::Utc::now().timestamp_millis();
                             true
                         }
                         None => false,
                     }
                 };
-                if uygulandi {
+                if was_applied {
                     studio_outbox.push(Payload {
                         version: "v1".to_string(),
                         event_type: EventType::CompositeUpdate,
                         data: serde_json::json!({
                             "patches": [{
                                 "event_type": "TAGS_UPDATE",
-                                "data": { "syncix_id": uuid, "tags": etiketler }
+                                "data": { "syncix_id": uuid, "tags": tag_list }
                             }]
                         }),
                     });
-                    tracing::info!("SET_TAGS handled: {} -> {:?}", id, etiketler);
+                    tracing::info!("SET_TAGS handled: {} -> {:?}", id, tag_list);
                 }
             } else {
                 tracing::warn!("SET_TAGS target not found: {}", id);
@@ -1355,9 +1355,9 @@ async fn main() {
                 .unwrap_or("")
                 .to_string();
             // value alani JSON null ise bu bir SILME istegidir.
-            // Studio tarafinda SetAttribute(ad, nil) attribute'u kaldirir; ayni
-            // anlami tel uzerinde null ile tasiyoruz, ayri bir event tipi gerekmiyor.
-            let silme = payload
+            // Studio tarafinda SetAttribute(item_name, nil) attribute'u kaldirir; is_same
+            // anlami on_wire uzerinde null ile tasiyoruz, ayri bir event tipi gerekmiyor.
+            let deletion = payload
                 .data
                 .get("value")
                 .map(|v| v.is_null())
@@ -1382,7 +1382,7 @@ async fn main() {
                 {
                     let mut dm = data_model.write().await;
                     if let Some(inst) = dm.get_mut_instance(&uuid) {
-                        if silme {
+                        if deletion {
                             inst.attributes.remove(&name);
                         } else {
                             inst.attributes.insert(name.clone(), pv.clone());
@@ -1401,7 +1401,7 @@ async fn main() {
                                 "data": {
                                     "syncix_id": uuid,
                                     "name": name,
-                                    "value": if silme { serde_json::Value::Null } else { pv_to_wire(&pv) }
+                                    "value": if deletion { serde_json::Value::Null } else { pv_to_wire(&pv) }
                                 }
                             }]
                         }),
@@ -1440,7 +1440,7 @@ async fn main() {
                                     }
                                 }
 
-                                // Script kaynak kodu
+                                // Script origin kodu
                                 if let Some(src) = patch
                                     .get("data")
                                     .and_then(|d| d.get("source"))
@@ -1462,7 +1462,7 @@ async fn main() {
                                     }
                                 }
 
-                                // Property'ler (geniş kapsam)
+                                // Property'ler (geniş scope_settings)
                                 if let Some(props) = patch
                                     .get("data")
                                     .and_then(|d| d.get("properties"))
@@ -1518,7 +1518,7 @@ async fn main() {
                                 // tamamen sessizdi; artık hangi property olduğu loga düşer.
                                 if health_monitor
                                     .loop_detector
-                                    .kaydet(syncix_id, property)
+                                    .persist(syncix_id, property)
                                 {
                                     tracing::warn!(
                                         "Suspected echo loop: {} .{} was updated many times in a short window. Studio and the core may be writing the same value back and forth.",
@@ -1704,12 +1704,12 @@ async fn main() {
 // ===========================================================================
 // PROPERTY TİP DÖNÜŞÜMÜ TESTLERİ
 //
-// Neden burası: projedeki iki gerçek hata da tam olarak bu katmandan geçti.
-//   1. Position hatası — Vector3 değerler Studio'ya ulaşıyordu ama tel formatı
+// Neden burası: projedeki iki gerçek report_error da tam olarak bu katmandan geçti.
+//   1. Position hatası — Vector3 değerler Studio'ya ulaşıyordu ama on_wire formatı
 //      yanlış yorumlanınca sessizce düşüyordu, tüm objeler 0,0,0'da kaldı.
 //   2. Renk hatası — "#5aa832" düz String olarak gidiyordu, Studio reddediyordu.
 // İkisi de model testleriyle yakalanamazdı; ağaç mantığı kusursuzdu.
-// Buradaki testler tel formatını KİLİTLER: biçim değişirse test kırılır.
+// Buradaki testler on_wire formatını KİLİTLER: biçim değişirse test kırılır.
 // ===========================================================================
 #[cfg(test)]
 mod property_tests {
@@ -1717,10 +1717,10 @@ mod property_tests {
     use model::PropertyValue;
 
     /// Tel formatı gidiş-dönüşü: pv -> wire -> pv aynı değeri vermeli.
-    /// Bir tip bu döngüde kaybolursa senkron sessizce veri kaybeder.
+    /// Bir type_name bu döngüde kaybolursa syncing sessizce veri kaybeder.
     #[test]
-    fn tel_formati_gidis_donus_tum_tipler() {
-        let ornekler = vec![
+    fn wire_format_round_trip_all_types() {
+        let samples = vec![
             PropertyValue::String("Merhaba".into()),
             PropertyValue::Number(42.5),
             PropertyValue::Boolean(true),
@@ -1730,19 +1730,19 @@ mod property_tests {
             PropertyValue::UDim2 { xs: 0.5, xo: 10.0, ys: 1.0, yo: -4.0 },
         ];
 
-        for ornek in ornekler {
-            let wire = pv_to_wire(&ornek);
-            let geri = parse_wire_value(&wire)
-                .unwrap_or_else(|| panic!("tel degeri cozulemedi: {:?} -> {}", ornek, wire));
-            assert_eq!(geri, ornek, "gidis-donus bozuldu: {}", wire);
+        for sample in samples {
+            let wire = pv_to_wire(&sample);
+            let restored_count = parse_wire_value(&wire)
+                .unwrap_or_else(|| panic!("tel degeri cozulemedi: {:?} -> {}", sample, wire));
+            assert_eq!(restored_count, sample, "gidis-donus bozuldu: {}", wire);
         }
     }
 
-    /// Vector3 tel üzerinde ASLA düz metin olmamalı.
-    /// Düz metin gönderilirse Studio "Vector3 expected" diyerek reddeder ve
+    /// Vector3 on_wire üzerinde ASLA düz text_value olmamalı.
+    /// Düz text_value gönderilirse Studio "Vector3 expected" diyerek reddeder ve
     /// obje 0,0,0'da kalır — Position hatasının tam olarak yaptığı şey.
     #[test]
-    fn vector3_tel_uzerinde_tablo_olarak_gider() {
+    fn vector3_goes_as_table_on_wire() {
         let wire = pv_to_wire(&PropertyValue::Vector3 { x: 1.0, y: 2.0, z: 3.0 });
         assert!(wire.is_object(), "Vector3 tablo olmali, duz deger degil: {}", wire);
         assert!(wire.get("Vector3").is_some(), "Vector3 anahtari bulunmali: {}", wire);
@@ -1750,15 +1750,15 @@ mod property_tests {
     }
 
     #[test]
-    fn color3_tel_uzerinde_tablo_olarak_gider() {
+    fn color3_goes_as_table_on_wire() {
         let wire = pv_to_wire(&PropertyValue::Color3 { r: 1.0, g: 0.0, b: 0.5 });
         assert!(wire.get("Color3").is_some(), "Color3 anahtari bulunmali: {}", wire);
     }
 
-    /// CLI ve HTTP'den gelen metinlerin doğru tipe çevrilmesi.
-    /// "0,0.5,-60" String kalırsa konum uygulanmaz; hatanın girdi tarafı budur.
+    /// CLI ve HTTP'den received metinlerin doğru tipe çevrilmesi.
+    /// "0,0.5,-60" String kalırsa konum uygulanmaz; hatanın input_value tarafı budur.
     #[test]
-    fn metin_vector3_olarak_cozulur() {
+    fn text_parses_as_vector3() {
         assert_eq!(
             parse_property_value("0,0.5,-60"),
             PropertyValue::Vector3 { x: 0.0, y: 0.5, z: -60.0 }
@@ -1777,7 +1777,7 @@ mod property_tests {
 
     /// Hex renk hatası: "#5aa832" String kalırsa Studio reddeder.
     #[test]
-    fn hex_renk_color3_olarak_cozulur() {
+    fn hex_color_parses_as_color3() {
         match parse_property_value("#5aa832") {
             PropertyValue::Color3 { r, g, b } => {
                 assert_eq!((r * 255.0).round() as u8, 0x5a);
@@ -1791,13 +1791,13 @@ mod property_tests {
     /// Diyez olmadan hex sayılmaz: "abcdef" bir isim olabilir, "123456" bir sayıdır.
     /// Bu ayrım olmazsa isim alanları yanlışlıkla renge dönüşür.
     #[test]
-    fn diyezsiz_metin_renge_donusmez() {
+    fn text_without_hash_is_not_a_color() {
         assert_eq!(parse_property_value("abcdef"), PropertyValue::String("abcdef".into()));
         assert_eq!(parse_property_value("123456"), PropertyValue::Number(123456.0));
     }
 
     #[test]
-    fn skaler_tipler_dogru_cozulur() {
+    fn scalar_types_parse_correctly() {
         assert_eq!(parse_property_value("true"), PropertyValue::Boolean(true));
         assert_eq!(parse_property_value("False"), PropertyValue::Boolean(false));
         assert_eq!(parse_property_value("5"), PropertyValue::Number(5.0));
@@ -1805,11 +1805,11 @@ mod property_tests {
         assert_eq!(parse_property_value("Kutu"), PropertyValue::String("Kutu".into()));
     }
 
-    /// Enum değerleri metin olarak geçmeli; çözümlemeyi Studio tarafı yapar.
+    /// Enum değerleri text_value olarak geçmeli; çözümlemeyi Studio tarafı yapar.
     /// Burada sayıya ya da başka bir tipe dönüşürse Material/Font gibi
     /// property'ler sessizce uygulanmaz.
     #[test]
-    fn enum_metni_oldugu_gibi_gecer() {
+    fn enum_text_passes_through() {
         assert_eq!(
             parse_property_value("Enum.Material.Neon"),
             PropertyValue::String("Enum.Material.Neon".into())
@@ -1818,10 +1818,10 @@ mod property_tests {
         assert_eq!(wire.as_str(), Some("Enum.Material.Neon"));
     }
 
-    /// Studio'dan ham skaler de gelebilir, serde enum biçimi de.
+    /// Studio'dan raw skaler de gelebilir, serde enum biçimi de.
     /// İkisi de kabul edilmezse Studio kaynaklı güncellemeler düşer.
     #[test]
-    fn ham_ve_serde_bicimleri_kabul_edilir() {
+    fn raw_and_serde_forms_are_accepted() {
         assert_eq!(
             parse_wire_value(&serde_json::json!(7)),
             Some(PropertyValue::Number(7.0))
@@ -1842,31 +1842,31 @@ mod property_tests {
 }
 
 #[cfg(test)]
-mod tip_uydurma_testleri {
+mod type_coercion_tests {
     use super::*;
     use model::PropertyValue as P;
 
-    /// Asıl hata buydu: `set <part> BrickColor "Really red"` düz String üretiyor,
+    /// Asıl report_error buydu: `set <part> BrickColor "Really red"` düz String üretiyor,
     /// Studio'da atama sessizce başarısız oluyordu.
     #[test]
-    fn brickcolor_metni_brickcolor_kalir() {
-        let mevcut = P::BrickColor("Medium stone grey".into());
+    fn brickcolor_text_stays_brickcolor() {
+        let current_value = P::BrickColor("Medium stone grey".into());
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "Really red"),
+            coerce_to_existing_type(&current_value, "Really red"),
             Some(P::BrickColor("Really red".into()))
         );
     }
 
     /// Üç sayı verildiğinde dönme korunmalı: kullanıcı sadece taşımak istiyor.
     #[test]
-    fn cframe_uc_sayi_donmeyi_korur() {
+    fn cframe_three_numbers_keep_rotation() {
         let rot = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
-        let mevcut = P::CFrame {
+        let current_value = P::CFrame {
             pos: [1.0, 2.0, 3.0],
             rot,
         };
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "10, 0, -5"),
+            coerce_to_existing_type(&current_value, "10, 0, -5"),
             Some(P::CFrame {
                 pos: [10.0, 0.0, -5.0],
                 rot
@@ -1875,15 +1875,15 @@ mod tip_uydurma_testleri {
     }
 
     #[test]
-    fn udim2_dort_sayi() {
-        let mevcut = P::UDim2 {
+    fn udim2_four_numbers() {
+        let current_value = P::UDim2 {
             xs: 0.0,
             xo: 0.0,
             ys: 0.0,
             yo: 0.0,
         };
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "0.5,10,0.25,-4"),
+            coerce_to_existing_type(&current_value, "0.5,10,0.25,-4"),
             Some(P::UDim2 {
                 xs: 0.5,
                 xo: 10.0,
@@ -1896,31 +1896,31 @@ mod tip_uydurma_testleri {
     /// Metin property'sine sayı benzeri bir değer yazılabilmeli:
     /// genel ayrıştırıcı "5"i Number yapardı ve Studio metni reddederdi.
     #[test]
-    fn metin_propertysi_sayiya_donusmez() {
-        let mevcut = P::String("merhaba".into());
+    fn string_property_does_not_become_number() {
+        let current_value = P::String("merhaba".into());
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "5"),
+            coerce_to_existing_type(&current_value, "5"),
             Some(P::String("5".into()))
         );
     }
 
-    /// Uydurulamayan girdi None dönmeli ki çağıran genel ayrıştırıcıya düşsün.
+    /// Uydurulamayan input_value None dönmeli ki çağıran genel ayrıştırıcıya düşsün.
     #[test]
-    fn bozuk_girdi_none_doner() {
-        let mevcut = P::Vector2 { x: 0.0, y: 0.0 };
-        assert_eq!(mevcut_tipe_uydur(&mevcut, "abc"), None);
-        assert_eq!(mevcut_tipe_uydur(&mevcut, "1,2,3"), None);
+    fn bad_input_returns_none() {
+        let current_value = P::Vector2 { x: 0.0, y: 0.0 };
+        assert_eq!(coerce_to_existing_type(&current_value, "abc"), None);
+        assert_eq!(coerce_to_existing_type(&current_value, "1,2,3"), None);
     }
 
     #[test]
-    fn color3_hem_hex_hem_ucluyu_kabul_eder() {
-        let mevcut = P::Color3 {
+    fn color3_accepts_hex_and_triplet() {
+        let current_value = P::Color3 {
             r: 0.0,
             g: 0.0,
             b: 0.0,
         };
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "#ff0000"),
+            coerce_to_existing_type(&current_value, "#ff0000"),
             Some(P::Color3 {
                 r: 1.0,
                 g: 0.0,
@@ -1928,7 +1928,7 @@ mod tip_uydurma_testleri {
             })
         );
         assert_eq!(
-            mevcut_tipe_uydur(&mevcut, "0,0.5,1"),
+            coerce_to_existing_type(&current_value, "0,0.5,1"),
             Some(P::Color3 {
                 r: 0.0,
                 g: 0.5,
@@ -1939,27 +1939,27 @@ mod tip_uydurma_testleri {
 }
 
 #[cfg(test)]
-mod tel_formati_testleri {
+mod wire_format_tests {
     use super::*;
     use model::{ColorKeypoint, NumberKeypoint, PropertyValue as P};
 
-    /// Bir tip yalnızca yazılıp okunabildiğinde gerçekten taşınmış olur.
+    /// Bir type_name yalnızca yazılıp okunabildiğinde gerçekten taşınmış olur.
     /// Tek yönlü eklenen tipler "gönderildi ama karşı tarafta kayboldu"
     /// durumunun kaynağıydı.
-    fn gidis_donus(pv: P) {
-        let tel = pv_to_wire(&pv);
-        let geri = parse_wire_value(&tel);
-        assert_eq!(geri, Some(pv.clone()), "tel formatı: {:?}", tel);
+    fn round_trip(pv: P) {
+        let on_wire = pv_to_wire(&pv);
+        let restored_count = parse_wire_value(&on_wire);
+        assert_eq!(restored_count, Some(pv.clone()), "tel formatı: {:?}", on_wire);
     }
 
     #[test]
-    fn asset_id_gidis_donus() {
-        gidis_donus(P::Content("rbxassetid://123456".into()));
+    fn asset_id_round_trip() {
+        round_trip(P::Content("rbxassetid://123456".into()));
     }
 
     #[test]
-    fn renk_egrisi_gidis_donus() {
-        gidis_donus(P::ColorSequence(vec![
+    fn color_sequence_round_trip() {
+        round_trip(P::ColorSequence(vec![
             ColorKeypoint { t: 0.0, r: 1.0, g: 0.0, b: 0.0 },
             ColorKeypoint { t: 1.0, r: 0.0, g: 0.0, b: 1.0 },
         ]));
@@ -1967,22 +1967,22 @@ mod tel_formati_testleri {
 
     /// Envelope Roblox'un rastgelelik payı; düşerse parçacık efekti düzleşir.
     #[test]
-    fn sayi_egrisi_envelope_korunur() {
+    fn number_sequence_keeps_envelope() {
         let pv = P::NumberSequence(vec![
             NumberKeypoint { t: 0.0, v: 1.0, envelope: 0.25 },
             NumberKeypoint { t: 1.0, v: 0.0, envelope: 0.0 },
         ]);
-        let geri = parse_wire_value(&pv_to_wire(&pv));
-        match geri {
+        let restored_count = parse_wire_value(&pv_to_wire(&pv));
+        match restored_count {
             Some(P::NumberSequence(k)) => assert_eq!(k[0].envelope, 0.25),
             other => panic!("beklenmeyen: {:?}", other),
         }
     }
 
     #[test]
-    fn dikdortgen_ve_yazi_tipi_gidis_donus() {
-        gidis_donus(P::Rect { min: [4.0, 4.0], max: [12.0, 12.0] });
-        gidis_donus(P::Font {
+    fn rect_and_font_round_trip() {
+        round_trip(P::Rect { min: [4.0, 4.0], max: [12.0, 12.0] });
+        round_trip(P::Font {
             family: "rbxasset://fonts/families/SourceSansPro.json".into(),
             weight: "Enum.FontWeight.Bold".into(),
             style: "Enum.FontStyle.Normal".into(),
@@ -1990,8 +1990,8 @@ mod tel_formati_testleri {
     }
 
     #[test]
-    fn fizik_ozellikleri_gidis_donus() {
-        gidis_donus(P::PhysicalProperties {
+    fn physical_properties_round_trip() {
+        round_trip(P::PhysicalProperties {
             density: 0.7,
             friction: 0.3,
             elasticity: 0.5,
@@ -2000,45 +2000,45 @@ mod tel_formati_testleri {
         });
     }
 
-    /// Studio'ya giden değer serde'nin etiketli biçiminde OLMAMALI.
+    /// Studio'ya outgoing değer serde'nin etiketli biçiminde OLMAMALI.
     ///
     /// Bu bir regresyon testi: disk tarafı bir süre `PropertyValue`'yu doğrudan
     /// JSON'a koyuyordu, serde de onu {"Number":0.5} diye yazıyordu. Eklenti düz
     /// biçimi beklediği için "unsupported table value for property: Transparency"
     /// diyerek reddediyordu — canlı kullanımda yakalandı.
     #[test]
-    fn tel_formati_serde_etiketi_uretmez() {
+    fn wire_format_has_no_serde_tag() {
         for pv in [
             P::Number(0.5),
             P::String("merhaba".into()),
             P::Boolean(true),
         ] {
-            let tel = pv_to_wire(&pv);
+            let on_wire = pv_to_wire(&pv);
             assert!(
-                !tel.is_object(),
+                !on_wire.is_object(),
                 "ilkel değer düz gitmeli, tablo değil: {:?} -> {}",
                 pv,
-                tel
+                on_wire
             );
-            // Serde'nin hali gerçekten farklı olmalı; test kendi varsayımını doğrulasın.
-            let serde_hali = serde_json::to_value(&pv).unwrap();
-            assert!(serde_hali.is_object(), "serde etiketli yazmalı: {}", serde_hali);
-            assert_ne!(tel, serde_hali);
+            // Serde'nin hali gerçekten farklı olmalı; test own varsayımını doğrulasın.
+            let serde_form = serde_json::to_value(&pv).unwrap();
+            assert!(serde_form.is_object(), "serde etiketli yazmalı: {}", serde_form);
+            assert_ne!(on_wire, serde_form);
         }
     }
 
-    /// Daha önce eklenen tipler de kırılmamalı: yeni dallar sıralı if/else
-    /// zincirine giriyor ve yanlış sırada eklenen bir dal öncekini gölgeleyebilir.
+    /// Daha önce eklenen tipler de kırılmamalı: fresh dallar sıralı if/else
+    /// zincirine giriyor ve yanlış sırada eklenen bir branch öncekini gölgeleyebilir.
     #[test]
-    fn onceki_tipler_hala_calisiyor() {
-        gidis_donus(P::BrickColor("Really red".into()));
-        gidis_donus(P::Ref("11111111-2222-4333-8444-555555555555".into()));
-        gidis_donus(P::CFrame {
+    fn legacy_types_still_work() {
+        round_trip(P::BrickColor("Really red".into()));
+        round_trip(P::Ref("11111111-2222-4333-8444-555555555555".into()));
+        round_trip(P::CFrame {
             pos: [1.0, 2.0, 3.0],
             rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
         });
-        gidis_donus(P::NumberRange { min: 1.0, max: 5.0 });
-        gidis_donus(P::UDim { scale: 0.5, offset: 10.0 });
-        gidis_donus(P::Vector2 { x: 1.0, y: 2.0 });
+        round_trip(P::NumberRange { min: 1.0, max: 5.0 });
+        round_trip(P::UDim { scale: 0.5, offset: 10.0 });
+        round_trip(P::Vector2 { x: 1.0, y: 2.0 });
     }
 }

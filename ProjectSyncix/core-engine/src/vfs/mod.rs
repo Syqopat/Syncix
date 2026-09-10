@@ -2,7 +2,7 @@ use std::io::Result;
 use std::path::{Path, PathBuf};
 
 /// Sanal Dosya Sistemi (VFS) Provider Arayüzü
-/// Bütün dosya okuma/yazma/listeleme işlemleri bu trait üzerinden yapılır.
+/// Bütün file_path okuma/yazma/listeleme işlemleri bu trait üzerinden yapılır.
 /// LocalDisk, In-Memory, veya Cloud storage gibi sistemlere genişletilebilir.
 pub trait FileSystemProvider: Send + Sync {
     fn read_to_string(&self, path: &Path) -> Result<String>;

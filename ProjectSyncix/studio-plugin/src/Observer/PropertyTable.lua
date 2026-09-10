@@ -8,8 +8,8 @@
 -- olarak senkron oluyor, tek bir ayari bile gitmiyordu.
 --
 -- Bicim: ["Sinif"] = { u = ustSinif, p = { ["Property"] = tipKodu } }
---   p = ilkel (string/bool/sayi)   d = veri tipi (Vector3, CFrame, ...)
---   e = enum (metin olarak)        r = baska bir instance'a referans
+--   p = ilkel (string/bool/numValue)   d = veri tipi (Vector3, CFrame, ...)
+--   e = enum (text olarak)        r = baska bir instance'a referans
 --
 -- Ust siniftaki property'ler calisma aninda birlestirilir (bkz. PatchBuilder).
 

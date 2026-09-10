@@ -46,7 +46,7 @@ export class DiagnosticsPanel {
     }
 
     private _getHtmlForWebview() {
-        // Webview kendi surecinde calisir; core adresi HTML'e gomulur cunku
+        // Webview ownVersion surecinde calisir; core adresi HTML'e gomulur cunku
         // port artik sabit degil (core dolu portu atlayabiliyor).
         const base = getBaseUrl();
         return `

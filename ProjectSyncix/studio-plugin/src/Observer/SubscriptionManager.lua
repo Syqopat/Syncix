@@ -18,7 +18,7 @@ function SubscriptionManager:OnInit(container)
     -- İhtiyaç duyulursa diğer servisler çekilir
 end
 
--- Bir instance için yeni bir event aboneliği oluşturur.
+-- Bir instance için fresh bir event aboneliği oluşturur.
 function SubscriptionManager:Subscribe(uuid: string, signal: RBXScriptSignal, callback: (...any) -> ())
     local connection = signal:Connect(callback)
     

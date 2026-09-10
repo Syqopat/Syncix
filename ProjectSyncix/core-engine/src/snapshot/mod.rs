@@ -12,7 +12,7 @@ pub struct SnapshotManager {
     /// Redo History (İleri alınan versiyonlar)
     future: RwLock<VecDeque<InstanceNode>>,
 
-    /// Maksimum tutulacak snapshot sayısı
+    /// Maksimum to_keep snapshot sayısı
     max_snapshots: usize,
 }
 
@@ -34,7 +34,7 @@ impl SnapshotManager {
             history.pop_front();
         }
 
-        // Ağacın Derin Kopyasını (Deep Clone) alıp kaydet
+        // Ağacın Derin Kopyasını (Deep Clone) alıp persist
         history.push_back(current_root.clone());
 
         // Yeni değişiklik yapıldığında Redo kuyruğu temizlenir
@@ -54,7 +54,7 @@ impl SnapshotManager {
         None
     }
 
-    /// İleri sarılan bir snapshot'ı geri getirir (Redo)
+    /// İleri sarılan bir snapshot'ı restored_count getirir (Redo)
     pub fn redo(&self, current_root: &InstanceNode) -> Option<InstanceNode> {
         let mut future = self.future.write().unwrap();
         if let Some(next_state) = future.pop_front() {
@@ -67,7 +67,7 @@ impl SnapshotManager {
         None
     }
 
-    /// Kaç adet kayıtlı snapshot olduğunu döndürür.
+    /// Kaç amount kayıtlı snapshot olduğunu döndürür.
     pub fn history_count(&self) -> usize {
         self.history.read().unwrap().len()
     }

@@ -18,7 +18,7 @@ impl ExportPipeline {
 }
 
 /// İçe Aktarma Katmanı (Import Pipeline)
-/// Farklı formatlardan gelen verileri InstanceNode ağacına çevirir.
+/// Farklı formatlardan received verileri InstanceNode ağacına çevirir.
 pub struct ImportPipeline;
 
 impl ImportPipeline {
@@ -30,7 +30,7 @@ impl ImportPipeline {
 }
 
 /// Veritabanı (Şema) Göç Katmanı (Migration Pipeline)
-/// Versiyon değişikliklerinde eski formatları yeni formata çevirir.
+/// Versiyon değişikliklerinde previous_text formatları fresh formata çevirir.
 pub struct MigrationPipeline;
 
 impl MigrationPipeline {

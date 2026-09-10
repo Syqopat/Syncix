@@ -1,13 +1,13 @@
 -- Senkron edilen servislerin TEK kaynagi.
 --
--- Neden ayri bir dosya: bu liste GenericObserver ve PatchBuilder icinde iki kez
--- elle yazilmisti. Birine servis eklenip digerine eklenmediginde obje agacta
--- gorunuyor ama degisiklikleri izlenmiyordu — sessiz ve tesisi zor bir hata.
+-- Neden ayri bir dosya: bu list GenericObserver ve PatchBuilder icinde iki kez
+-- elle yazilmisti. Birine svc eklenip digerine eklenmediginde object agacta
+-- gorunuyor ama degisiklikleri izlenmiyordu — sessiz ve tesisi zor bir failure.
 --
 -- Sabit UUID'ler: servislerin kimligi core yeniden basladiginda da ayni kalmali,
--- yoksa her acilisita agacin kokleri degisir ve tum alt agac yeniden yazilir.
+-- yoksa her acilisita agacin kokleri degisir ve tum subItem agac yeniden yazilir.
 
-local Ayarlar = require(script.Parent.Parent.Core.Ayarlar)
+local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
 
 local Services = {}
 
@@ -28,12 +28,12 @@ Services.UUIDS = {
 	MaterialService     = "00000000-0000-4000-8000-00000000000e",
 }
 
--- Sirali liste: agacin kok siralamasi her acilista ayni olsun.
+-- Sirali list: agacin kok siralamasi her acilista ayni olsun.
 --
 -- Players, Chat ve TestService bilerek disarida. Players calisma aninda dolan
--- bir servis; icerigi yazarin urunu degil, oyuncularin. Chat eski sohbet
+-- bir svc; icerigi yazarin urunu degil, oyuncularin. Chat eski sohbet
 -- sistemi, yerini TextChatService aldi. TestService yalnizca test kosmak icin.
-local ADLAR = {
+local NAMES = {
 	"Workspace",
 	"ReplicatedStorage",
 	"ReplicatedFirst",
@@ -54,21 +54,21 @@ local ADLAR = {
 }
 
 --- Senkron edilecek servisleri dondurur.
---- GetService bir servis bu Studio surumunde yoksa hata atiyor; o yuzden her
---- cagri korumali ve eksik servis sessizce atlaniyor.
+--- GetService bir svc bu Studio surumunde yoksa failure atiyor; o yuzden her
+--- cagri korumali ve eksik svc sessizce atlaniyor.
 function Services.List(): { Instance }
-	local liste = {}
+	local list = {}
 	-- Kullanici syncix.toml'da kendi listesini verdiyse o gecerli.
-	local istenen = Ayarlar.Servisler() or ADLAR
-	for _, ad in ipairs(istenen) do
-		local ok, servis = pcall(function()
+	local requested = SyncConfig.ServiceList() or NAMES
+	for _, ad in ipairs(requested) do
+		local ok, svc = pcall(function()
 			return game:GetService(ad)
 		end)
-		if ok and servis then
-			table.insert(liste, servis)
+		if ok and svc then
+			table.insert(list, svc)
 		end
 	end
-	return liste
+	return list
 end
 
 return Services

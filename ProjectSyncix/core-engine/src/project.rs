@@ -3,35 +3,35 @@
 //! Buradaki iki şey release için kritik:
 //!  1. Port artık sabit değil. syncix.toml'dan okunur, doluysa sıradaki denenir ve
 //!     SEÇİLEN port diske yazılır. Editör ve CLI o dosyadan okur, tahmin etmez.
-//!  2. Core artık kendini tanıtır (proje adı, kök dizin, sürüm). Studio eklentisi
+//!  2. Core artık kendini tanıtır (proje adı, kök directory, sürüm). Studio eklentisi
 //!     hangi projeye bağlandığını kullanıcıya gösterebilsin diye gerekli.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Place kimligi uyusmadiginda senkron askiya alinir.
+/// Place kimligi uyusmadiginda syncing askiya alinir.
 ///
 /// Global tutulmasinin sebebi: bayragi okumasi gereken uc yer birbirinden
-/// bagimsiz calisiyor (dosya izleyici kendi thread'inde, disk yazicisi kendi
-/// gorevinde, komut dongusu ana gorevde). Her birine ayri kanal cekmek yerine
-/// tek bir atomik bayrak, bu uc yerin de ayni anda susmasini garanti ediyor.
-static SENKRON_ASKIDA: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+/// bagimsiz calisiyor (file_path izleyici own thread'inde, disk yazicisi own
+/// gorevinde, command_name dongusu ana gorevde). Her birine ayri kanal cekmek yerine
+/// single bir atomik bayrak, bu uc yerin de is_same anda susmasini garanti ediyor.
+static SYNC_SUSPENDED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-pub fn senkronu_askiya_al(askida: bool) {
-    SENKRON_ASKIDA.store(askida, std::sync::atomic::Ordering::SeqCst);
+pub fn set_sync_suspended(suspended: bool) {
+    SYNC_SUSPENDED.store(suspended, std::sync::atomic::Ordering::SeqCst);
 }
 
-/// Senkron askida mi? Askidayken HICBIR yon calismaz: ne disk okunur, ne
-/// diske yazilir, ne Studio'ya komut gider. Amac, karar verilene kadar iki
+/// Senkron suspended mi? Askidayken HICBIR direction calismaz: ne disk okunur, ne
+/// diske yazilir, ne Studio'ya command_name gider. Amac, karar verilene kadar iki
 /// tarafi da oldugu gibi birakmak.
-pub fn senkron_askida() -> bool {
-    SENKRON_ASKIDA.load(std::sync::atomic::Ordering::SeqCst)
+pub fn is_sync_suspended() -> bool {
+    SYNC_SUSPENDED.load(std::sync::atomic::Ordering::SeqCst)
 }
 
-/// Core'un kendi sürümü (Cargo.toml'dan gelir; tek kaynak).
+/// Core'un own sürümü (Cargo.toml'dan gelir; single origin).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Tel protokolü sürümü. Studio eklentisi ile core arasındaki mesaj biçimi
+/// Tel protokolü sürümü. Studio eklentisi ile core arasındaki message biçimi
 /// uyumsuz hale geldiğinde ARTTIRILIR. Sürüm numarasından bağımsızdır:
 /// 0.3.1 -> 0.3.2 gibi bir yama protokolü bozmaz, bu sayı aynı kalır.
 pub const PROTOCOL_VERSION: u32 = 1;
@@ -43,27 +43,27 @@ pub const DEFAULT_PORT: u16 = 8080;
 
 /// Senkronun hangi yonlerde aktif oldugu.
 ///
-/// Rojo tek yonlu calisiyor: dosya sistemi tek dogruluk kaynagi, Studio yalnizca
-/// alici. Syncix varsayilan olarak cift yonlu, ama herkes bunu istemiyor —
+/// Rojo single yonlu calisiyor: file_path sistemi single dogruluk kaynagi, Studio yalnizca
+/// alici. Syncix fallback_value olarak cift yonlu, ama herkes bunu istemiyor —
 /// takim halinde calisan biri Studio'yu salt okunur tutmak, tersine bir tasarimci
-/// diskin ezilmesini istemeyebilir. Bu yuzden yon bir ayar.
+/// diskin ezilmesini istemeyebilir. Bu yuzden direction bir ayar.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SyncMode {
-    /// Iki yon de acik. Varsayilan.
+    /// Iki direction de is_enabled. Varsayilan.
     TwoWay,
     /// Studio -> disk. Studio'da yapilan degisiklik diske yazilir; diskteki
     /// degisiklik Studio'ya GITMEZ. Sahne tasarimini Studio'da yapip kodu
     /// surum kontrolunde tutmak isteyenler icin.
     StudioToDisk,
-    /// Disk -> Studio. Rojo'nun calisma sekli: dosya sistemi dogruluk kaynagi.
+    /// Disk -> Studio. Rojo'nun calisma sekli: file_path sistemi dogruluk kaynagi.
     DiskToStudio,
-    /// Hicbir yon otomatik degil; yalnizca acikca verilen komutlar islenir
+    /// Hicbir direction otomatik degil; yalnizca acikca given komutlar islenir
     /// (syncix pull, syncix set, ...). Riskli bir sahnede gozetimli calismak icin.
     Manual,
 }
 
 impl SyncMode {
-    fn coz(s: &str) -> Option<Self> {
+    fn resolve_arg(s: &str) -> Option<Self> {
         match s.trim().to_ascii_lowercase().replace('-', "_").as_str() {
             "two_way" | "twoway" | "both" => Some(Self::TwoWay),
             "studio_to_disk" | "studio" | "pull" => Some(Self::StudioToDisk),
@@ -73,7 +73,7 @@ impl SyncMode {
         }
     }
 
-    pub fn adi(&self) -> &'static str {
+    pub fn name_of(&self) -> &'static str {
         match self {
             Self::TwoWay => "two_way",
             Self::StudioToDisk => "studio_to_disk",
@@ -83,81 +83,81 @@ impl SyncMode {
     }
 
     /// Studio'da olan bir degisiklik modele ve diske yansitilsin mi?
-    pub fn studiodan_kabul(&self) -> bool {
+    pub fn accepts_from_studio(&self) -> bool {
         matches!(self, Self::TwoWay | Self::StudioToDisk)
     }
 
     /// Diskte olan bir degisiklik Studio'ya gonderilsin mi?
-    pub fn diskten_kabul(&self) -> bool {
+    pub fn accepts_from_disk(&self) -> bool {
         matches!(self, Self::TwoWay | Self::DiskToStudio)
     }
 }
 
-/// Oyun calisirken (Play) editorden gelen degisikliklere ne olacak.
+/// Oyun calisirken (Play) editorden received degisikliklere ne olacak.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PlayDavranisi {
+pub enum PlayBehavior {
     /// Kuyruga alinir, Play bitince uygulanir. Varsayilan.
-    Kuyruk,
+    Queue,
     /// Atilir. Play sirasinda hicbir sey olmasin diyenler icin.
-    Yoksay,
+    Ignore,
     /// Dogrudan uygulanir. Play bitince Studio oturumla birlikte atacagi icin
     /// degisiklik kaybolur; yalnizca bilerek isteyen acsin.
-    Uygula,
+    Apply,
 }
 
-impl PlayDavranisi {
-    fn coz(s: &str) -> Option<Self> {
+impl PlayBehavior {
+    fn resolve_arg(s: &str) -> Option<Self> {
         match s.trim().to_ascii_lowercase().as_str() {
-            "queue" | "kuyruk" => Some(Self::Kuyruk),
-            "ignore" | "yoksay" | "drop" => Some(Self::Yoksay),
-            "apply" | "uygula" => Some(Self::Uygula),
+            "queue" | "kuyruk" => Some(Self::Queue),
+            "ignore" | "yoksay" | "drop" => Some(Self::Ignore),
+            "apply" | "uygula" => Some(Self::Apply),
             _ => None,
         }
     }
 
-    pub fn adi(&self) -> &'static str {
+    pub fn name_of(&self) -> &'static str {
         match self {
-            Self::Kuyruk => "queue",
-            Self::Yoksay => "ignore",
-            Self::Uygula => "apply",
+            Self::Queue => "queue",
+            Self::Ignore => "ignore",
+            Self::Apply => "apply",
         }
     }
 }
 
-/// Silmeye dair guvenlik ayarlari.
+/// Silmeye dair safety_settings ayarlari.
 #[derive(Clone, Debug)]
-pub struct GuvenlikAyarlari {
+pub struct SafetySettings {
     /// Uzlastirici sildigi dosyalari cop kutusuna tasisin mi.
-    /// Kapatilirsa dosyalar dogrudan silinir ve geri donusu olmaz.
-    pub cop_kutusu: bool,
-    /// Cop kutusunda saklanacak tur sayisi.
-    pub cop_tur_sayisi: usize,
-    /// Diskten silinen bir dosyanin gercek silme sayilmasi icin beklenecek sure.
-    /// Tasima islemleri isletim sisteminde sil+olustur olarak goruldugu icin
-    /// bu pencere gerekiyor. Yavas disklerde arttirilabilir.
-    pub silme_bekleme_ms: u64,
+    /// Kapatilirsa file_list dogrudan silinir ve restored_count donusu olmaz.
+    pub trash_enabled: bool,
+    /// Cop kutusunda saklanacak run_name sayisi.
+    pub trash_keep_runs: usize,
+    /// Diskten silinen bir dosyanin gercek deletion sayilmasi icin beklenecek sure.
+    /// Tasima islemleri isletim sisteminde sil+generate olarak goruldugu icin
+    /// bu time_window gerekiyor. Yavas disklerde arttirilabilir.
+    pub delete_grace_ms: u64,
     /// `syncix rm` onay istesin mi.
-    pub silmeyi_onayla: bool,
+    pub confirm_delete: bool,
 }
 
-/// Neyin senkron edilecegini belirleyen ayarlar.
+/// Neyin syncing edilecegini belirleyen ayarlar.
 #[derive(Clone, Debug)]
 #[derive(Default)]
-pub struct KapsamAyarlari {
-    /// Izlenecek servisler. Bos birakilirsa eklentinin varsayilan listesi gecerli.
-    pub servisler: Vec<String>,
-    /// Bu siniflar hic senkron edilmez (ornegin "Camera", "Terrain").
-    pub sinif_disla: Vec<String>,
-    /// Bu property'ler hic senkron edilmez. Gurultulu ya da makineye ozel
+pub struct ScopeSettings {
+    /// Izlenecek service_list. Bos birakilirsa eklentinin fallback_value listesi gecerli.
+    pub service_list: Vec<String>,
+    /// Bu siniflar hic syncing edilmez (ornegin "Camera", "Terrain").
+    pub class_ignore_list: Vec<String>,
+    /// Bu property'ler hic syncing edilmez. Gurultulu ya da makineye ozel
     /// alanlari elemek icin.
-    pub property_disla: Vec<String>,
+    pub property_ignore_list: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
 pub struct ProjectConfig {
     /// Senkron klasörü, core'un çalışma dizinine göre (ör. "../src").
     pub sync_dir: String,
-    /// syncix.toml'un bulunduğu dizin, mutlak yol.
+    /// syncix.toml'un bulunduğu directory, absolute fs_path.
     pub root: PathBuf,
     /// Kullanıcıya gösterilecek proje adı (kök klasörün adı).
     pub name: String,
@@ -166,46 +166,46 @@ pub struct ProjectConfig {
     pub wanted_port: u16,
     /// sourcemap.json her senkronda güncellensin mi (luau-lsp için).
     pub sourcemap: bool,
-    /// Senkron dışı bırakılacak yollar (glob). Bu dosyalar ne okunur ne silinir.
+    /// Senkron dışı bırakılacak yollar (glob). Bu file_list ne okunur ne silinir.
     pub ignore: Vec<String>,
-    /// Port komut satırından açıkça istendiyse true olur ve devretme yapılmaz.
+    /// Port command_name satırından açıkça istendiyse true olur ve devretme yapılmaz.
     /// Sebep: kullanıcı Studio eklentisine de aynı portu yazıyor; core sessizce
     /// başka bir porta kayarsa iki taraf ayrışır ve sebebi anlaşılmaz.
-    pub port_sabit: bool,
+    pub port_fixed: bool,
 
     /// Senkron yonu.
-    pub mod_: SyncMode,
-    /// Disk yazicisinin bekleme suresi. Kucuk deger daha hizli yansitir ama
+    pub mode_value: SyncMode,
+    /// Disk yazicisinin bekleme suresi. Kucuk raw_value daha hizli yansitir ama
     /// yazim sayisini arttirir.
     pub debounce_ms: u64,
-    /// Play sirasinda gelen degisikliklerin akibeti.
-    pub play: PlayDavranisi,
+    /// Play sirasinda received degisikliklerin akibeti.
+    pub play: PlayBehavior,
     /// Ilk baglantida Studio'da izin sorulsun mu.
-    pub izin_sor: bool,
-    /// Syncix'in yaptigi degisiklikler Studio'nun geri al yigina girsin mi.
-    pub geri_al: bool,
+    pub prompt_permission: bool,
+    /// Syncix'in yaptigi degisiklikler Studio'nun restored_count al yigina girsin mi.
+    pub restore_cmd: bool,
     /// Script'lerin yanina .meta.json yazilsin mi. Kapatilirsa script'lerin
     /// property ve attribute'lari diske hic yazilmaz.
-    pub meta_dosyalari: bool,
-    pub guvenlik: GuvenlikAyarlari,
-    pub kapsam: KapsamAyarlari,
+    pub meta_files: bool,
+    pub safety_settings: SafetySettings,
+    pub scope_settings: ScopeSettings,
 }
 
-impl Default for GuvenlikAyarlari {
+impl Default for SafetySettings {
     fn default() -> Self {
         Self {
-            cop_kutusu: true,
-            cop_tur_sayisi: 10,
-            silme_bekleme_ms: 800,
-            silmeyi_onayla: true,
+            trash_enabled: true,
+            trash_keep_runs: 10,
+            delete_grace_ms: 800,
+            confirm_delete: true,
         }
     }
 }
 
 
 /// TOML'dan bir bolumu okumak icin kucuk yardimcilar.
-/// Bilinmeyen anahtarlar sessizce yutulmaz; cagiran taraf uyari basar.
-fn metin_listesi(v: Option<&toml::Value>) -> Vec<String> {
+/// Bilinmeyen key_names sessizce yutulmaz; cagiran taraf warning basar.
+fn string_list(v: Option<&toml::Value>) -> Vec<String> {
     v.and_then(|x| x.as_array())
         .map(|a| {
             a.iter()
@@ -215,19 +215,19 @@ fn metin_listesi(v: Option<&toml::Value>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn bool_oku(bolum: Option<&toml::Value>, anahtar: &str, varsayilan: bool) -> bool {
-    bolum
-        .and_then(|b| b.get(anahtar))
+fn read_bool(section: Option<&toml::Value>, key_name: &str, fallback_value: bool) -> bool {
+    section
+        .and_then(|b| b.get(key_name))
         .and_then(|x| x.as_bool())
-        .unwrap_or(varsayilan)
+        .unwrap_or(fallback_value)
 }
 
-fn sayi_oku(bolum: Option<&toml::Value>, anahtar: &str, varsayilan: u64) -> u64 {
-    bolum
-        .and_then(|b| b.get(anahtar))
+fn read_number(section: Option<&toml::Value>, key_name: &str, fallback_value: u64) -> u64 {
+    section
+        .and_then(|b| b.get(key_name))
         .and_then(|x| x.as_integer())
         .and_then(|x| u64::try_from(x).ok())
-        .unwrap_or(varsayilan)
+        .unwrap_or(fallback_value)
 }
 
 impl ProjectConfig {
@@ -246,18 +246,18 @@ impl ProjectConfig {
                     continue;
                 }
             };
-            return Self::coz(&value, base);
+            return Self::resolve_arg(&value, base);
         }
 
         // syncix.toml yoksa taşınabilir varsayılanlar.
-        Self::coz(&toml::Value::Table(Default::default()), "..")
+        Self::resolve_arg(&toml::Value::Table(Default::default()), "..")
     }
 
     /// Ayrıştırma testten de çağrılabilsin diye ayrı: yapılandırma davranışı
-    /// dosya sistemine bağlı olmadan doğrulanabilmeli.
-    pub fn coz(value: &toml::Value, base: &str) -> Self {
+    /// file_path sistemine bağlı olmadan doğrulanabilmeli.
+    pub fn resolve_arg(value: &toml::Value, base: &str) -> Self {
         // Anahtarlar hem kök seviyede hem bölüm içinde kabul ediliyor.
-        // Sebep: eski syncix.toml'lar düz yazılmıştı ve bir yükseltme kimsenin
+        // Sebep: previous_text syncix.toml'lar düz yazılmıştı ve bir yükseltme kimsenin
         // dosyasını bozmamalı. Bölüm varsa o kazanır.
         let sync = value.get("sync");
         let files = value.get("files");
@@ -266,10 +266,10 @@ impl ProjectConfig {
         let server = value.get("server");
         let editor = value.get("editor");
 
-        let al = |bolum: Option<&toml::Value>, anahtar: &str| -> Option<toml::Value> {
-            bolum
-                .and_then(|b| b.get(anahtar))
-                .or_else(|| value.get(anahtar))
+        let al = |section: Option<&toml::Value>, key_name: &str| -> Option<toml::Value> {
+            section
+                .and_then(|b| b.get(key_name))
+                .or_else(|| value.get(key_name))
                 .cloned()
         };
 
@@ -282,10 +282,10 @@ impl ProjectConfig {
             .and_then(|x| u16::try_from(x).ok())
             .unwrap_or(DEFAULT_PORT);
 
-        let mod_ = al(sync, "mode")
+        let mode_value = al(sync, "mode")
             .and_then(|x| x.as_str().map(|s| s.to_string()))
             .and_then(|s| {
-                let m = SyncMode::coz(&s);
+                let m = SyncMode::resolve_arg(&s);
                 if m.is_none() {
                     tracing::warn!(
                         "Unknown sync mode '{}'; falling back to two_way.                          Valid values: two_way, studio_to_disk, disk_to_studio, manual.",
@@ -299,7 +299,7 @@ impl ProjectConfig {
         let play = al(sync, "play_mode")
             .and_then(|x| x.as_str().map(|s| s.to_string()))
             .and_then(|s| {
-                let p = PlayDavranisi::coz(&s);
+                let p = PlayBehavior::resolve_arg(&s);
                 if p.is_none() {
                     tracing::warn!(
                         "Unknown play_mode '{}'; falling back to queue.                          Valid values: queue, ignore, apply.",
@@ -308,9 +308,9 @@ impl ProjectConfig {
                 }
                 p
             })
-            .unwrap_or(PlayDavranisi::Kuyruk);
+            .unwrap_or(PlayBehavior::Queue);
 
-        let root = yolu_temizle(fs::canonicalize(base).unwrap_or_else(|_| PathBuf::from(base)));
+        let root = clean_path(fs::canonicalize(base).unwrap_or_else(|_| PathBuf::from(base)));
 
         Self {
             sync_dir: format!("{}/{}", base, dir),
@@ -320,62 +320,62 @@ impl ProjectConfig {
                 .unwrap_or_else(|| "Syncix".to_string()),
             root,
             wanted_port: port,
-            sourcemap: bool_oku(editor, "sourcemap", true)
+            sourcemap: read_bool(editor, "sourcemap", true)
                 && value.get("sourcemap").and_then(|x| x.as_bool()).unwrap_or(true),
-            ignore: metin_listesi(al(files, "ignore").as_ref()),
-            port_sabit: false,
+            ignore: string_list(al(files, "ignore").as_ref()),
+            port_fixed: false,
 
-            mod_,
-            debounce_ms: sayi_oku(sync, "debounce_ms", 120).clamp(10, 10_000),
+            mode_value,
+            debounce_ms: read_number(sync, "debounce_ms", 120).clamp(10, 10_000),
             play,
-            izin_sor: bool_oku(sync, "ask_permission", false),
-            geri_al: bool_oku(sync, "undo", true),
-            meta_dosyalari: bool_oku(files, "meta_files", true),
+            prompt_permission: read_bool(sync, "ask_permission", false),
+            restore_cmd: read_bool(sync, "undo", true),
+            meta_files: read_bool(files, "meta_files", true),
 
-            guvenlik: GuvenlikAyarlari {
-                cop_kutusu: bool_oku(safety, "trash", true),
-                cop_tur_sayisi: sayi_oku(safety, "trash_keep", 10).clamp(1, 500) as usize,
-                silme_bekleme_ms: sayi_oku(safety, "delete_grace_ms", 800).clamp(0, 30_000),
-                silmeyi_onayla: bool_oku(safety, "confirm_delete", true),
+            safety_settings: SafetySettings {
+                trash_enabled: read_bool(safety, "trash", true),
+                trash_keep_runs: read_number(safety, "trash_keep", 10).clamp(1, 500) as usize,
+                delete_grace_ms: read_number(safety, "delete_grace_ms", 800).clamp(0, 30_000),
+                confirm_delete: read_bool(safety, "confirm_delete", true),
             },
-            kapsam: KapsamAyarlari {
-                servisler: metin_listesi(al(scope, "services").as_ref()),
-                sinif_disla: metin_listesi(al(scope, "ignore_classes").as_ref()),
-                property_disla: metin_listesi(al(scope, "ignore_properties").as_ref()),
+            scope_settings: ScopeSettings {
+                service_list: string_list(al(scope, "services").as_ref()),
+                class_ignore_list: string_list(al(scope, "ignore_classes").as_ref()),
+                property_ignore_list: string_list(al(scope, "ignore_properties").as_ref()),
             },
         }
     }
 
-    /// Bu sinif senkron edilecek mi?
-    pub fn sinif_izinli(&self, sinif: &str) -> bool {
-        !self.kapsam.sinif_disla.iter().any(|d| d == sinif)
+    /// Bu class_str syncing edilecek mi?
+    pub fn class_allowed(&self, class_str: &str) -> bool {
+        !self.scope_settings.class_ignore_list.iter().any(|d| d == class_str)
     }
 
-    /// Bu property senkron edilecek mi?
-    pub fn property_izinli(&self, ad: &str) -> bool {
-        !self.kapsam.property_disla.iter().any(|d| d == ad)
+    /// Bu property syncing edilecek mi?
+    pub fn property_allowed(&self, item_name: &str) -> bool {
+        !self.scope_settings.property_ignore_list.iter().any(|d| d == item_name)
     }
 
-    /// Bu klasorun bagli oldugu place'in kimlik dosyasi: <proje>/.syncix/place
+    /// Bu klasorun is_bound oldugu place'in identity dosyasi: <proje>/.syncix/place
     pub fn place_file(&self) -> PathBuf {
         self.runtime_dir().join("place")
     }
 
     /// Klasore daha once hangi place baglanmis? Hic baglanmadiysa None.
-    pub fn bagli_place(&self) -> Option<String> {
-        let icerik = fs::read_to_string(self.place_file()).ok()?;
-        let k = icerik.trim().to_string();
+    pub fn linked_place(&self) -> Option<String> {
+        let file_content = fs::read_to_string(self.place_file()).ok()?;
+        let k = file_content.trim().to_string();
         (!k.is_empty()).then_some(k)
     }
 
     /// Klasoru bir place'e baglar.
-    pub fn place_bagla(&self, kimlik: &str) {
+    pub fn bind_place(&self, identity: &str) {
         let dir = self.runtime_dir();
         if let Err(e) = fs::create_dir_all(&dir) {
             tracing::warn!("Could not create the .syncix folder: {}", e);
             return;
         }
-        if let Err(e) = fs::write(self.place_file(), kimlik) {
+        if let Err(e) = fs::write(self.place_file(), identity) {
             tracing::warn!("Could not write the place identity: {}", e);
         }
     }
@@ -413,11 +413,11 @@ impl ProjectConfig {
 }
 
 /// Windows'ta `fs::canonicalize` yolun başına `\\?\` (extended-length) öneki koyar.
-/// Bu yol Studio'daki onay penceresinde kullanıcıya gösterildiği için temizlenir.
-fn yolu_temizle(p: PathBuf) -> PathBuf {
+/// Bu fs_path Studio'daki onay penceresinde kullanıcıya gösterildiği için temizlenir.
+fn clean_path(p: PathBuf) -> PathBuf {
     let s = p.to_string_lossy();
-    if let Some(kalan) = s.strip_prefix(r"\\?\") {
-        return PathBuf::from(kalan);
+    if let Some(remaining) = s.strip_prefix(r"\\?\") {
+        return PathBuf::from(remaining);
     }
     p
 }
@@ -440,7 +440,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn yama_farki_uyumlu_minor_farki_degil() {
+    fn patch_diff_compatible_minor_diff_not() {
         assert!(versions_compatible("0.3.1", "0.3.9"));
         assert!(versions_compatible("1.0.0", "1.0.0"));
         assert!(!versions_compatible("0.3.0", "0.4.0"));
@@ -448,157 +448,157 @@ mod tests {
     }
 
     #[test]
-    fn bozuk_surum_metni_cokmez() {
+    fn bad_version_text_does_not_crash() {
         assert!(versions_compatible("abc", "abc"));
         assert!(!versions_compatible("0.3.0", "abc"));
     }
 }
 
 #[cfg(test)]
-mod yapilandirma_testleri {
+mod config_tests {
     use super::*;
 
-    fn coz(toml_metni: &str) -> ProjectConfig {
-        ProjectConfig::coz(&toml_metni.parse::<toml::Value>().unwrap(), ".")
+    fn resolve_arg(toml_text: &str) -> ProjectConfig {
+        ProjectConfig::resolve_arg(&toml_text.parse::<toml::Value>().unwrap(), ".")
     }
 
     #[test]
-    fn bos_dosya_varsayilanlari_verir() {
-        let c = coz("");
-        assert_eq!(c.mod_, SyncMode::TwoWay);
-        assert_eq!(c.play, PlayDavranisi::Kuyruk);
+    fn empty_file_gives_defaults() {
+        let c = resolve_arg("");
+        assert_eq!(c.mode_value, SyncMode::TwoWay);
+        assert_eq!(c.play, PlayBehavior::Queue);
         assert_eq!(c.wanted_port, DEFAULT_PORT);
-        assert!(c.guvenlik.cop_kutusu);
-        assert!(c.guvenlik.silmeyi_onayla);
-        assert!(c.geri_al);
+        assert!(c.safety_settings.trash_enabled);
+        assert!(c.safety_settings.confirm_delete);
+        assert!(c.restore_cmd);
     }
 
-    /// Asıl istenen ayar: Rojo gibi tek yönlü çalışabilmek.
+    /// Asıl istenen ayar: Rojo gibi single yönlü çalışabilmek.
     #[test]
-    fn tek_yonlu_mod() {
-        let c = coz("[sync]\nmode = \"disk_to_studio\"\n");
-        assert_eq!(c.mod_, SyncMode::DiskToStudio);
-        assert!(c.mod_.diskten_kabul(), "disk -> Studio açık olmalı");
-        assert!(!c.mod_.studiodan_kabul(), "Studio -> disk kapalı olmalı");
+    fn one_way_mode() {
+        let c = resolve_arg("[sync]\nmode = \"disk_to_studio\"\n");
+        assert_eq!(c.mode_value, SyncMode::DiskToStudio);
+        assert!(c.mode_value.accepts_from_disk(), "disk -> Studio açık olmalı");
+        assert!(!c.mode_value.accepts_from_studio(), "Studio -> disk kapalı olmalı");
 
-        let t = coz("[sync]\nmode = \"studio_to_disk\"\n");
-        assert!(t.mod_.studiodan_kabul());
-        assert!(!t.mod_.diskten_kabul());
+        let t = resolve_arg("[sync]\nmode = \"studio_to_disk\"\n");
+        assert!(t.mode_value.accepts_from_studio());
+        assert!(!t.mode_value.accepts_from_disk());
     }
 
     /// "rojo" ve "push" gibi takma adlar aynı modu vermeli: kullanıcı hangi
     /// kelimeyi aklında tutuyorsa onu yazabilmeli.
     #[test]
-    fn mod_takma_adlari() {
-        assert_eq!(SyncMode::coz("rojo"), Some(SyncMode::DiskToStudio));
-        assert_eq!(SyncMode::coz("push"), Some(SyncMode::DiskToStudio));
-        assert_eq!(SyncMode::coz("PULL"), Some(SyncMode::StudioToDisk));
-        assert_eq!(SyncMode::coz("Two-Way"), Some(SyncMode::TwoWay));
-        assert_eq!(SyncMode::coz("off"), Some(SyncMode::Manual));
+    fn mode_aliases() {
+        assert_eq!(SyncMode::resolve_arg("rojo"), Some(SyncMode::DiskToStudio));
+        assert_eq!(SyncMode::resolve_arg("push"), Some(SyncMode::DiskToStudio));
+        assert_eq!(SyncMode::resolve_arg("PULL"), Some(SyncMode::StudioToDisk));
+        assert_eq!(SyncMode::resolve_arg("Two-Way"), Some(SyncMode::TwoWay));
+        assert_eq!(SyncMode::resolve_arg("off"), Some(SyncMode::Manual));
     }
 
     /// Manual modda hiçbir yön otomatik çalışmamalı.
     #[test]
-    fn manual_mod_iki_yonu_de_kapatir() {
-        let c = coz("[sync]\nmode = \"manual\"\n");
-        assert!(!c.mod_.studiodan_kabul());
-        assert!(!c.mod_.diskten_kabul());
+    fn manual_mode_disables_both_directions() {
+        let c = resolve_arg("[sync]\nmode = \"manual\"\n");
+        assert!(!c.mode_value.accepts_from_studio());
+        assert!(!c.mode_value.accepts_from_disk());
     }
 
     /// Yazım hatası senkronu kırmamalı; varsayılana düşüp uyarmalı.
     #[test]
-    fn bilinmeyen_mod_varsayilana_duser() {
-        let c = coz("[sync]\nmode = \"disk-to-studioo\"\n");
-        assert_eq!(c.mod_, SyncMode::TwoWay);
+    fn unknown_mode_falls_back_to_default() {
+        let c = resolve_arg("[sync]\nmode = \"disk-to-studioo\"\n");
+        assert_eq!(c.mode_value, SyncMode::TwoWay);
     }
 
     #[test]
-    fn guvenlik_ve_kapsam_okunur() {
-        let c = coz(
+    fn safety_and_scope_are_read() {
+        let c = resolve_arg(
             "[safety]\ntrash = false\ntrash_keep = 3\ndelete_grace_ms = 1500\nconfirm_delete = false\n\
              \n[scope]\nservices = [\"Workspace\", \"Lighting\"]\nignore_classes = [\"Camera\"]\n\
              ignore_properties = [\"Transparency\"]\n",
         );
-        assert!(!c.guvenlik.cop_kutusu);
-        assert_eq!(c.guvenlik.cop_tur_sayisi, 3);
-        assert_eq!(c.guvenlik.silme_bekleme_ms, 1500);
-        assert!(!c.guvenlik.silmeyi_onayla);
-        assert_eq!(c.kapsam.servisler, vec!["Workspace", "Lighting"]);
-        assert!(!c.sinif_izinli("Camera"));
-        assert!(c.sinif_izinli("Part"));
-        assert!(!c.property_izinli("Transparency"));
-        assert!(c.property_izinli("Anchored"));
+        assert!(!c.safety_settings.trash_enabled);
+        assert_eq!(c.safety_settings.trash_keep_runs, 3);
+        assert_eq!(c.safety_settings.delete_grace_ms, 1500);
+        assert!(!c.safety_settings.confirm_delete);
+        assert_eq!(c.scope_settings.service_list, vec!["Workspace", "Lighting"]);
+        assert!(!c.class_allowed("Camera"));
+        assert!(c.class_allowed("Part"));
+        assert!(!c.property_allowed("Transparency"));
+        assert!(c.property_allowed("Anchored"));
     }
 
     /// Eski syncix.toml'lar düz yazılmıştı (bölümsüz). Bir yükseltme kimsenin
     /// dosyasını bozmamalı.
     #[test]
-    fn bolumsuz_eski_bicim_hala_okunur() {
-        let c = coz("sync_dir = \"kaynak\"\nport = 25565\n");
+    fn flat_legacy_format_still_parses() {
+        let c = resolve_arg("sync_dir = \"kaynak\"\nport = 25565\n");
         assert_eq!(c.wanted_port, 25565);
         assert!(c.sync_dir.ends_with("kaynak"), "sync_dir: {}", c.sync_dir);
     }
 
     /// Saçma değerler kabul edilmemeli: 0 ms debounce sonsuz yazım demek.
     #[test]
-    fn sinir_disi_degerler_kirpilir() {
-        let c = coz("[sync]\ndebounce_ms = 0\n\n[safety]\ntrash_keep = 0\n");
+    fn out_of_range_values_are_clamped() {
+        let c = resolve_arg("[sync]\ndebounce_ms = 0\n\n[safety]\ntrash_keep = 0\n");
         assert!(c.debounce_ms >= 10);
-        assert!(c.guvenlik.cop_tur_sayisi >= 1);
+        assert!(c.safety_settings.trash_keep_runs >= 1);
     }
 }
 
 #[cfg(test)]
-mod place_kimligi_testleri {
+mod place_identity_tests {
     use super::*;
 
-    fn gecici(ad: &str) -> ProjectConfig {
-        let kok = std::env::temp_dir().join(format!("syncix-place-{}", ad));
-        let _ = fs::remove_dir_all(&kok);
-        fs::create_dir_all(&kok).unwrap();
-        let mut c = ProjectConfig::coz(&toml::Value::Table(Default::default()), ".");
-        c.root = kok;
+    fn scratch_dir(item_name: &str) -> ProjectConfig {
+        let root_dir = std::env::temp_dir().join(format!("syncix-place-{}", item_name));
+        let _ = fs::remove_dir_all(&root_dir);
+        fs::create_dir_all(&root_dir).unwrap();
+        let mut c = ProjectConfig::resolve_arg(&toml::Value::Table(Default::default()), ".");
+        c.root = root_dir;
         c
     }
 
     /// İlk bağlanan place klasörü sahiplenir.
     #[test]
-    fn ilk_baglanan_sahiplenir() {
-        let c = gecici("ilk");
-        assert_eq!(c.bagli_place(), None, "yeni klasör bir place'e bağlı olmamalı");
-        c.place_bagla("place-A");
-        assert_eq!(c.bagli_place(), Some("place-A".to_string()));
+    fn first_connected_place_claims_folder() {
+        let c = scratch_dir("ilk");
+        assert_eq!(c.linked_place(), None, "yeni klasör bir place'e bağlı olmamalı");
+        c.bind_place("place-A");
+        assert_eq!(c.linked_place(), Some("place-A".to_string()));
     }
 
     /// Kimlik core yeniden başlasa da kalmalı: dosyadan okunuyor.
     #[test]
-    fn kimlik_kalici() {
-        let c = gecici("kalici");
-        c.place_bagla("place-A");
+    fn identity_is_stable() {
+        let c = scratch_dir("kalici");
+        c.bind_place("place-A");
         // Aynı köke bakan ikinci bir yapılandırma nesnesi
-        let mut c2 = ProjectConfig::coz(&toml::Value::Table(Default::default()), ".");
+        let mut c2 = ProjectConfig::resolve_arg(&toml::Value::Table(Default::default()), ".");
         c2.root = c.root.clone();
-        assert_eq!(c2.bagli_place(), Some("place-A".to_string()));
+        assert_eq!(c2.linked_place(), Some("place-A".to_string()));
     }
 
     /// Asıl mesele: farklı bir place aynı klasöre bağlanırsa fark edilmeli.
     #[test]
-    fn farkli_place_fark_edilir() {
-        let c = gecici("farkli");
-        c.place_bagla("place-A");
-        let bagli = c.bagli_place().unwrap();
-        assert_ne!(bagli, "place-B", "B, A'ya bağlı klasöre girmemeli");
-        // Karar verildikten sonra yeni sahip yazılabilmeli.
-        c.place_bagla("place-B");
-        assert_eq!(c.bagli_place(), Some("place-B".to_string()));
+    fn different_place_is_detected() {
+        let c = scratch_dir("farkli");
+        c.bind_place("place-A");
+        let is_bound = c.linked_place().unwrap();
+        assert_ne!(is_bound, "place-B", "B, A'ya bağlı klasöre girmemeli");
+        // Karar verildikten sonra fresh sahip yazılabilmeli.
+        c.bind_place("place-B");
+        assert_eq!(c.linked_place(), Some("place-B".to_string()));
     }
 
-    /// Süzgeçler hem eklentide hem core'da uygulanıyor. Core tarafı, eski bir
+    /// Süzgeçler hem eklentide hem core'da uygulanıyor. Core tarafı, previous_text bir
     /// eklenti bağlandığında ayarın yine de geçerli olması için gerekli —
     /// bir süre yalnızca eklentide vardı ve o hâlde ayar sessizce etkisizdi.
     #[test]
-    fn suzgecler_dislanani_reddeder() {
-        let c = ProjectConfig::coz(
+    fn filters_reject_excluded() {
+        let c = ProjectConfig::resolve_arg(
             &"[scope]
 ignore_classes = [\"Camera\", \"Terrain\"]
 ignore_properties = [\"Transparency\"]
@@ -607,30 +607,30 @@ ignore_properties = [\"Transparency\"]
                 .unwrap(),
             ".",
         );
-        assert!(!c.sinif_izinli("Camera"));
-        assert!(!c.sinif_izinli("Terrain"));
-        assert!(c.sinif_izinli("Part"), "listede olmayan sınıf geçmeli");
+        assert!(!c.class_allowed("Camera"));
+        assert!(!c.class_allowed("Terrain"));
+        assert!(c.class_allowed("Part"), "listede olmayan sınıf geçmeli");
 
-        assert!(!c.property_izinli("Transparency"));
-        assert!(c.property_izinli("Anchored"), "listede olmayan property geçmeli");
+        assert!(!c.property_allowed("Transparency"));
+        assert!(c.property_allowed("Anchored"), "listede olmayan property geçmeli");
     }
 
     /// Boş liste "hiçbir şey geçmesin" değil, "kısıtlama yok" demek.
     #[test]
-    fn bos_suzgec_her_seye_izin_verir() {
-        let c = ProjectConfig::coz(&toml::Value::Table(Default::default()), ".");
-        assert!(c.sinif_izinli("Camera"));
-        assert!(c.property_izinli("Transparency"));
+    fn empty_filter_allows_everything() {
+        let c = ProjectConfig::resolve_arg(&toml::Value::Table(Default::default()), ".");
+        assert!(c.class_allowed("Camera"));
+        assert!(c.property_allowed("Transparency"));
     }
 
-    /// Askıya alma üç yerden de görülebilmeli ve geri alınabilmeli.
+    /// Askıya alma üç yerden de görülebilmeli ve restored_count alınabilmeli.
     #[test]
-    fn askiya_alma_calisir() {
-        senkronu_askiya_al(false);
-        assert!(!senkron_askida());
-        senkronu_askiya_al(true);
-        assert!(senkron_askida());
-        senkronu_askiya_al(false);
-        assert!(!senkron_askida());
+    fn suspension_works() {
+        set_sync_suspended(false);
+        assert!(!is_sync_suspended());
+        set_sync_suspended(true);
+        assert!(is_sync_suspended());
+        set_sync_suspended(false);
+        assert!(!is_sync_suspended());
     }
 }

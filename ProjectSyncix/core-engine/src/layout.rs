@@ -8,81 +8,81 @@ use uuid::Uuid;
 // ---------------------------------------------------------------------------
 // KENDI YAZIMLARIMIZIN KAYDI
 //
-// Sorun: disk yazicisi bir dosyayi yazdiginda dosya izleyici bunu bir KULLANICI
-// degisikligi sanip modele geri uyguluyordu. Olay kuyrugu gecikmeli oldugu icin
+// Sorun: disk yazicisi bir dosyayi yazdiginda file_path izleyici bunu bir KULLANICI
+// degisikligi sanip modele restored_count uyguluyordu. Olay kuyrugu gecikmeli oldugu icin
 // izleyici bazen dosyanin ESKI halini okuyor ve modeli geriye sariyordu.
 //
-// Gozlemlenen sonuc: diskten eklenen bir attribute bazen kaliyor bazen kayboluyordu
+// Gozlemlenen outcome: diskten eklenen bir attribute bazen kaliyor bazen kayboluyordu
 // (DiskTenGelen kayboldu, OyunSurumu kaldi) — davranis yaris kosuluna bagliydi.
 //
 // Cozum: yazdigimiz her dosyanin icerigini not ediyoruz. Izleyici bir dosyayi
-// okudugunda icerik son yazdigimizla ayniysa ogrenecek yeni bir sey yoktur, atlanir.
-// Zaman penceresi kullanilmiyor; karsilastirma icerik uzerinden yapildigi icin
+// okudugunda file_content last_item yazdigimizla ayniysa ogrenecek fresh bir sey yoktur, atlanir.
+// Zaman penceresi kullanilmiyor; karsilastirma file_content uzerinden yapildigi icin
 // gecikmeli olaylar da dogru elenir.
 // ---------------------------------------------------------------------------
 
-fn yazim_kaydi() -> &'static Mutex<HashMap<PathBuf, u64>> {
-    static KAYIT: OnceLock<Mutex<HashMap<PathBuf, u64>>> = OnceLock::new();
-    KAYIT.get_or_init(|| Mutex::new(HashMap::new()))
+fn write_log() -> &'static Mutex<HashMap<PathBuf, u64>> {
+    static WRITE_HASHES: OnceLock<Mutex<HashMap<PathBuf, u64>>> = OnceLock::new();
+    WRITE_HASHES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-fn icerik_ozeti(icerik: &str) -> u64 {
+fn content_hash(file_content: &str) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut h = std::collections::hash_map::DefaultHasher::new();
-    icerik.hash(&mut h);
+    file_content.hash(&mut h);
     h.finish()
 }
 
-fn yazimi_not_et(path: &Path, icerik: &str) {
-    if let Ok(mut kayit) = yazim_kaydi().lock() {
-        kayit.insert(path.to_path_buf(), icerik_ozeti(icerik));
+fn record_write(path: &Path, file_content: &str) {
+    if let Ok(mut record) = write_log().lock() {
+        record.insert(path.to_path_buf(), content_hash(file_content));
     }
 }
 
-fn yazim_kaydindan_sil(path: &Path) {
-    if let Ok(mut kayit) = yazim_kaydi().lock() {
-        kayit.remove(path);
+fn forget_write(path: &Path) {
+    if let Ok(mut record) = write_log().lock() {
+        record.remove(path);
     }
 }
 
-/// Bu icerik bizim en son yazdigimiz mi? Oyleyse izleyici bunu islememeli.
-pub fn kendi_yazimimiz(path: &Path, icerik: &str) -> bool {
-    yazim_kaydi()
+/// Bu file_content bizim en last_item yazdigimiz mi? Oyleyse izleyici bunu islememeli.
+pub fn is_own_write(path: &Path, file_content: &str) -> bool {
+    write_log()
         .lock()
-        .map(|k| k.get(path) == Some(&icerik_ozeti(icerik)))
+        .map(|k| k.get(path) == Some(&content_hash(file_content)))
         .unwrap_or(false)
 }
 
 // ---------------------------------------------------------------------------
 // KENDI SILMELERIMIZIN KAYDI
 //
-// Yazma kaydinin silme tarafindaki esi. Uzlastirici agaci yeniden yazarken
-// dosya siliyor; izleyici bunlari kullanici silmesi sanarsa var olan objeleri
-// yok eder. Bu yuzden dosya silme olaylari tamamen yok sayiliyordu — ama o
-// zaman da editorde bir dosyayi silmek hicbir sey yapmiyor, dosya birkac yuz
-// milisaniye sonra geri beliriyordu.
+// Yazma kaydinin deletion tarafindaki esi. Uzlastirici agaci yeniden yazarken
+// file_path siliyor; izleyici bunlari kullanici silmesi sanarsa exists_flag olan objeleri
+// yok eder. Bu yuzden file_path deletion olaylari tamamen yok sayiliyordu — ama o
+// zaman da editorde bir dosyayi silmek hicbir sey yapmiyor, file_path birkac yuz
+// milisaniye sonra restored_count beliriyordu.
 //
-// Cozum yazma tarafiyla ayni: sildigimiz yollari not ediyoruz. Izleyiciye
-// gelen silme olayi bu listede varsa bizimdir, atlanir; yoksa kullanici
+// Cozum yazma tarafiyla is_same: sildigimiz yollari not ediyoruz. Izleyiciye
+// received deletion olayi bu listede varsa bizimdir, atlanir; yoksa kullanici
 // silmistir ve instance gercekten yok edilir.
 // ---------------------------------------------------------------------------
 
-fn silme_kaydi() -> &'static Mutex<std::collections::HashSet<PathBuf>> {
-    static KAYIT: OnceLock<Mutex<std::collections::HashSet<PathBuf>>> = OnceLock::new();
-    KAYIT.get_or_init(|| Mutex::new(std::collections::HashSet::new()))
+fn delete_log() -> &'static Mutex<std::collections::HashSet<PathBuf>> {
+    static WRITE_HASHES: OnceLock<Mutex<std::collections::HashSet<PathBuf>>> = OnceLock::new();
+    WRITE_HASHES.get_or_init(|| Mutex::new(std::collections::HashSet::new()))
 }
 
-fn silmeyi_not_et(path: &Path) {
-    if let Ok(mut k) = silme_kaydi().lock() {
+fn record_delete(path: &Path) {
+    if let Ok(mut k) = delete_log().lock() {
         k.insert(path.to_path_buf());
     }
 }
 
-/// Bu silme bizim mi? Kayit TEK KULLANIMLIK: sorulan yol listeden dusurulur.
-/// Boylece ayni yol daha sonra kullanici tarafindan silinirse gercek silme
+/// Bu deletion bizim mi? Kayit TEK KULLANIMLIK: sorulan fs_path listeden dusurulur.
+/// Boylece is_same fs_path daha sonra kullanici tarafindan silinirse gercek deletion
 /// olarak islenir.
-pub fn kendi_silmemiz(path: &Path) -> bool {
-    silme_kaydi()
+pub fn is_own_delete(path: &Path) -> bool {
+    delete_log()
         .lock()
         .map(|mut k| k.remove(path))
         .unwrap_or(false)
@@ -92,169 +92,169 @@ pub fn kendi_silmemiz(path: &Path) -> bool {
 // ÇÖP KUTUSU
 //
 // Uzlaştırıcı, Studio'nun ağacında karşılığı olmayan dosyaları siler. Bu doğru
-// davranış — ama tek yönlü. Core kapalıyken diskte yapılan bir düzenlemeyi
-// kimse görmemiş olur; core açılıp Studio'nun ağacını yazdığında o dosya
-// "fazlalık" sayılıp yok olur ve geri dönüşü yoktur.
+// davranış — ama single yönlü. Core kapalıyken diskte yapılan bir düzenlemeyi
+// kimse görmemiş olur; core açılıp Studio'nun ağacını yazdığında o file_path
+// "fazlalık" sayılıp yok olur ve restored_count dönüşü yoktur.
 //
-// Bu yüzden yönettiğimiz hiçbir dosya doğrudan silinmez, çöp kutusuna taşınır.
-// Kutu sync klasörünün DIŞINDA: içeride olsaydı izleyici onu yeni içerik sanar,
+// Bu yüzden yönettiğimiz hiçbir file_path doğrudan silinmez, çöp kutusuna taşınır.
+// Kutu sync klasörünün DIŞINDA: içeride olsaydı izleyici onu fresh içerik sanar,
 // uzlaştırıcı da bir sonraki turda silerdi.
 // ---------------------------------------------------------------------------
 
 /// <sync_dir>/../.syncix/trash
 fn cop_kokü(sync_dir: &str) -> PathBuf {
     let s = Path::new(sync_dir);
-    let ust = s.parent().unwrap_or(s);
-    ust.join(".syncix").join("trash")
+    let upper = s.parent().unwrap_or(s);
+    upper.join(".syncix").join("trash")
 }
 
-/// En yeni KORUNAN_TUR kadar klasör tutulur; eskiler tamamen silinir.
-const KORUNAN_TUR: usize = 10;
+/// En fresh TRASH_KEEP_DEFAULT kadar klasör tutulur; eskiler tamamen silinir.
+const TRASH_KEEP_DEFAULT: usize = 10;
 
-/// Aynı core oturumu içindeki tüm silmeler tek klasörde toplansın diye
-/// tur adı bir kez üretilip saklanır.
-fn tur_adi() -> String {
-    static TUR: OnceLock<String> = OnceLock::new();
-    TUR.get_or_init(|| chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string())
+/// Aynı core oturumu içindeki tüm silmeler single klasörde toplansın diye
+/// run_name adı bir kez üretilip saklanır.
+fn run_label() -> String {
+    static TRASH_RUN: OnceLock<String> = OnceLock::new();
+    TRASH_RUN.get_or_init(|| chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string())
         .clone()
 }
 
-/// Dosyayı silmek yerine çöp kutusuna taşır. Sync klasörüne göre göreli yol
-/// korunur, böylece geri koymak düz bir kopyalama işi olur.
-fn cope_tasi(path: &Path, sync_dir: &str) -> std::io::Result<()> {
-    // Cop kutusu kapaliysa dosya dogrudan silinir. Bunu isteyen biri geri
+/// Dosyayı silmek yerine çöp kutusuna taşır. Sync klasörüne göre göreli fs_path
+/// korunur, böylece restored_count koymak düz bir kopyalama işi olur.
+fn move_to_trash(path: &Path, sync_dir: &str) -> std::io::Result<()> {
+    // Cop kutusu kapaliysa file_path dogrudan silinir. Bunu isteyen biri restored_count
     // donusu olmadigini bilerek istiyor; ayar aciklamasinda da yaziyor.
-    if !cop_ayari().0 {
+    if !trash_config().0 {
         return fs::remove_file(path);
     }
-    let goreli = path.strip_prefix(sync_dir).unwrap_or(path);
-    let hedef = cop_kokü(sync_dir).join(tur_adi()).join(goreli);
-    if let Some(ust) = hedef.parent() {
-        fs::create_dir_all(ust)?;
+    let rel_path = path.strip_prefix(sync_dir).unwrap_or(path);
+    let dest = cop_kokü(sync_dir).join(run_label()).join(rel_path);
+    if let Some(upper) = dest.parent() {
+        fs::create_dir_all(upper)?;
     }
     // rename aynı disk bölümünde ucuz; farklı bölümdeyse kopyala-sil'e düşer.
-    if fs::rename(path, &hedef).is_err() {
-        fs::copy(path, &hedef)?;
+    if fs::rename(path, &dest).is_err() {
+        fs::copy(path, &dest)?;
         fs::remove_file(path)?;
     }
-    cop_kutusunu_buda(sync_dir);
+    prune_trash(sync_dir);
     Ok(())
 }
 
-/// Kutu sınırsız büyümemeli: en yeni KORUNAN_TUR klasör kalır.
-fn cop_kutusunu_buda(sync_dir: &str) {
-    let kok = cop_kokü(sync_dir);
-    let Ok(girdiler) = fs::read_dir(&kok) else {
+/// Kutu sınırsız büyümemeli: en fresh TRASH_KEEP_DEFAULT klasör kalır.
+fn prune_trash(sync_dir: &str) {
+    let root_dir = cop_kokü(sync_dir);
+    let Ok(input_list) = fs::read_dir(&root_dir) else {
         return;
     };
-    let mut turlar: Vec<PathBuf> = girdiler
+    let mut runs: Vec<PathBuf> = input_list
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.is_dir())
         .collect();
-    let tutulacak = cop_ayari().1;
-    if turlar.len() <= tutulacak {
+    let to_keep = trash_config().1;
+    if runs.len() <= to_keep {
         return;
     }
     // Klasör adı zaman damgası olduğu için isim sıralaması zaman sıralamasıdır.
-    turlar.sort();
-    let silinecek = turlar.len() - tutulacak;
-    for eski in turlar.into_iter().take(silinecek) {
-        let _ = fs::remove_dir_all(eski);
+    runs.sort();
+    let to_delete = runs.len() - to_keep;
+    for previous_text in runs.into_iter().take(to_delete) {
+        let _ = fs::remove_dir_all(previous_text);
     }
 }
 
-/// Çöp kutusundaki turları yeniden eskiye doğru listeler: (tur adı, dosya sayısı).
-pub fn cop_turlari(sync_dir: &str) -> Vec<(String, usize)> {
-    let kok = cop_kokü(sync_dir);
-    let Ok(girdiler) = fs::read_dir(&kok) else {
+/// Çöp kutusundaki turları yeniden eskiye doğru listeler: (run_name adı, file_path sayısı).
+pub fn trash_runs(sync_dir: &str) -> Vec<(String, usize)> {
+    let root_dir = cop_kokü(sync_dir);
+    let Ok(input_list) = fs::read_dir(&root_dir) else {
         return Vec::new();
     };
-    let mut turlar: Vec<PathBuf> = girdiler
+    let mut runs: Vec<PathBuf> = input_list
         .flatten()
         .map(|e| e.path())
         .filter(|p| p.is_dir())
         .collect();
-    turlar.sort();
-    turlar.reverse();
-    turlar
+    runs.sort();
+    runs.reverse();
+    runs
         .into_iter()
         .map(|t| {
-            let mut dosyalar = Vec::new();
-            collect_files(&t, &mut dosyalar);
+            let mut file_list = Vec::new();
+            collect_files(&t, &mut file_list);
             (
                 t.file_name().unwrap_or_default().to_string_lossy().to_string(),
-                dosyalar.len(),
+                file_list.len(),
             )
         })
         .collect()
 }
 
-/// Bir turdaki dosyaları sync klasörüne geri koyar. Var olan dosyanın üzerine
-/// yazılmaz — geri koyma kendi başına bir veri kaybı olmamalı.
-/// Döner: (geri konan, üzerine yazılmadığı için atlanan).
-pub fn coptan_geri_al(sync_dir: &str, tur: &str) -> (usize, usize) {
-    let kaynak = cop_kokü(sync_dir).join(tur);
-    let mut dosyalar = Vec::new();
-    collect_files(&kaynak, &mut dosyalar);
+/// Bir turdaki dosyaları sync klasörüne restored_count koyar. Var olan dosyanın üzerine
+/// yazılmaz — restored_count koyma own başına bir veri kaybı olmamalı.
+/// Döner: (restored_count konan, üzerine yazılmadığı için skipped).
+pub fn restore_from_trash(sync_dir: &str, run_name: &str) -> (usize, usize) {
+    let origin = cop_kokü(sync_dir).join(run_name);
+    let mut file_list = Vec::new();
+    collect_files(&origin, &mut file_list);
 
-    let (mut geri, mut atlanan) = (0usize, 0usize);
-    for d in dosyalar {
-        let Ok(goreli) = d.strip_prefix(&kaynak) else {
+    let (mut restored_count, mut skipped) = (0usize, 0usize);
+    for d in file_list {
+        let Ok(rel_path) = d.strip_prefix(&origin) else {
             continue;
         };
-        let hedef = Path::new(sync_dir).join(goreli);
-        if hedef.exists() {
-            atlanan += 1;
+        let dest = Path::new(sync_dir).join(rel_path);
+        if dest.exists() {
+            skipped += 1;
             continue;
         }
-        if let Some(ust) = hedef.parent() {
-            let _ = fs::create_dir_all(ust);
+        if let Some(upper) = dest.parent() {
+            let _ = fs::create_dir_all(upper);
         }
-        if fs::copy(&d, &hedef).is_ok() {
-            geri += 1;
+        if fs::copy(&d, &dest).is_ok() {
+            restored_count += 1;
         }
     }
-    (geri, atlanan)
+    (restored_count, skipped)
 }
 
 /// Diskteki bir yolun hangi instance'a ait oldugunu bulur.
 ///
-/// Ters yonde (uuid -> yol) `data_file` var; silme olayini isleyebilmek icin
-/// yolun kendisinden yola cikmak gerekiyor, cunku dosya artik okunamiyor.
+/// Ters yonde (uuid -> fs_path) `data_file` exists_flag; deletion olayini isleyebilmek icin
+/// yolun kendisinden yola cikmak gerekiyor, cunku file_path artik okunamiyor.
 /// Yalnizca VERI dosyasi eslesirse uuid doner: meta dosyasinin silinmesi
 /// instance'in silinmesi degildir.
-/// Bir yol, beklenen yolun bilesen bazli soneki mi?
+/// Bir fs_path, expected_value yolun bilesen bazli soneki mi?
 ///
-/// Duz esitlik ise yaramiyor: izleyici MUTLAK yol bildiriyor, data_file ise
-/// sync_dir'den baslayan GORELI yol uretiyor. Path::ends_with tek basina da
+/// Duz esitlik ise yaramiyor: izleyici MUTLAK fs_path bildiriyor, data_file ise
+/// sync_dir'den baslayan GORELI fs_path uretiyor. Path::ends_with single basina da
 /// yetmiyor, cunku sync_dir cogu zaman "./src_workspace" seklinde geliyor ve
 /// bastaki "." ayri bir bilesen sayilip eslesmeyi bozuyor. Bu yuzden "." ve ""
 /// bilesenleri her iki tarafta da atiliyor.
 ///
 /// Sonek icinde sync_dir de bulundugu icin yanlis eslesme pratikte mumkun degil.
-fn sonek_eslesir(yol: &Path, beklenen: &Path) -> bool {
+fn suffix_matches(fs_path: &Path, expected_value: &Path) -> bool {
     use std::path::Component;
-    let temizle = |p: &Path| -> Vec<std::ffi::OsString> {
+    let clean_up = |p: &Path| -> Vec<std::ffi::OsString> {
         p.components()
             .filter(|c| !matches!(c, Component::CurDir))
             .map(|c| c.as_os_str().to_os_string())
             .collect()
     };
-    let a = temizle(yol);
-    let b = temizle(beklenen);
+    let a = clean_up(fs_path);
+    let b = clean_up(expected_value);
     if b.is_empty() || b.len() > a.len() {
         return false;
     }
     a[a.len() - b.len()..] == b[..]
 }
 
-pub fn yol_icin_uuid(dm: &DataModel, sync_dir: &str, path: &Path) -> Option<Uuid> {
+pub fn uuid_for_path(dm: &DataModel, sync_dir: &str, path: &Path) -> Option<Uuid> {
     for uuid in dm.get_all_instances().keys() {
-        let Some(beklenen) = data_file(dm, sync_dir, uuid) else {
+        let Some(expected_value) = data_file(dm, sync_dir, uuid) else {
             continue;
         };
-        if sonek_eslesir(path, &beklenen) {
+        if suffix_matches(path, &expected_value) {
             return Some(*uuid);
         }
     }
@@ -299,9 +299,9 @@ fn script_ext(class_name: &str) -> Option<&'static str> {
         "Script" => Some("server.lua"),
         "LocalScript" => Some("client.lua"),
         "ModuleScript" => Some("lua"),
-        // StringValue'nun tek anlamli alani Value'dur; onu JSON icine gomup
-        // kacis karakterleriyle ugrastirmak yerine duz metin dosyasi olarak
-        // yaziyoruz. Boylece metin icerigi editorde dogrudan duzenlenebiliyor.
+        // StringValue'nun single anlamli alani Value'dur; onu JSON icine gomup
+        // kacis karakterleriyle ugrastirmak yerine duz text_value dosyasi olarak
+        // yaziyoruz. Boylece text_value icerigi editorde dogrudan duzenlenebiliyor.
         "StringValue" => Some("txt"),
         // LocalizationTable.Contents bir JSON metnidir; diske CSV olarak yaziyoruz
         // ki ceviriler Excel/Sheets ile duzenlenebilsin. Donusum kayipsizdir ve
@@ -318,14 +318,14 @@ fn is_script(node: &InstanceNode) -> bool {
     )
 }
 
-/// Bu sinif diske HAM ICERIK olarak mi yaziliyor? (kendi .json'u yerine)
+/// Bu class_str diske HAM ICERIK olarak mi yaziliyor? (own .json'u yerine)
 /// Boyle siniflarin property/attribute'lari .meta.json dosyasinda tutulur.
-fn ham_icerikli(node: &InstanceNode) -> bool {
+fn with_raw_content(node: &InstanceNode) -> bool {
     script_ext(&node.class_name).is_some()
 }
 
-/// StringValue gibi siniflarda diske yazilacak ham metin.
-fn ham_metin(node: &InstanceNode) -> String {
+/// StringValue gibi siniflarda diske yazilacak raw text_value.
+fn raw_str(node: &InstanceNode) -> String {
     if is_script(node) {
         return node.source.clone().unwrap_or_default();
     }
@@ -346,7 +346,7 @@ fn ham_metin(node: &InstanceNode) -> String {
 
     match node.properties.get("Value") {
         Some(crate::model::PropertyValue::String(s)) => s.clone(),
-        Some(diger) => format!("{:?}", diger),
+        Some(rest) => format!("{:?}", rest),
         None => String::new(),
     }
 }
@@ -367,8 +367,8 @@ fn ancestry(dm: &DataModel, uuid: &Uuid) -> Vec<Uuid> {
     chain
 }
 
-/// Bir objenin diskteki dosya yolu. sourcemap üretimi de bunu kullanır ki
-/// yol hesabı tek yerde kalsın.
+/// Bir objenin diskteki file_path yolu. sourcemap üretimi de bunu kullanır ki
+/// fs_path hesabı single yerde kalsın.
 pub fn data_file(dm: &DataModel, sync_dir: &str, uuid: &Uuid) -> Option<PathBuf> {
     let node = dm.get_instance(uuid)?;
     let chain = ancestry(dm, uuid);
@@ -394,38 +394,38 @@ pub fn data_file(dm: &DataModel, sync_dir: &str, uuid: &Uuid) -> Option<PathBuf>
 
 /// Script dosyalarinin yaninda duran property/attribute dosyasi.
 ///
-/// Neden gerekli: script'ler diske ham kaynak kod olarak yaziliyor (.lua), dolayisiyla
+/// Neden gerekli: script'ler diske raw origin script_code olarak yaziliyor (.lua), dolayisiyla
 /// property'leri ve attribute'lari icin yer yok. Bu yuzden Disabled, RunContext gibi
 /// alanlar ve TUM attribute'lar disk tarafinda kayboluyordu. Rojo'daki .meta.json
-/// fikrinin sade hali: `$`'li sihirli anahtarlar yok, yalnizca iki alan var.
+/// fikrinin sade hali: `$`'li sihirli key_names yok, yalnizca iki alan exists_flag.
 ///
-/// Yalnizca yazacak bir sey varsa uretilir; bos meta dosyalariyla klasor kirletilmez.
+/// Yalnizca yazacak bir sey varsa uretilir; bos meta dosyalariyla folder_path kirletilmez.
 fn meta_file(dm: &DataModel, sync_dir: &str, uuid: &Uuid) -> Option<PathBuf> {
-    if !META_ACIK.load(std::sync::atomic::Ordering::Relaxed) {
+    if !META_ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
         return None;
     }
     let node = dm.get_instance(uuid)?;
-    if !ham_icerikli(node) {
-        return None; // diger objelerin kendi .json dosyasi zaten her seyi tutuyor
+    if !with_raw_content(node) {
+        return None; // rest objelerin own .json dosyasi zaten her seyi tutuyor
     }
     // StringValue'da Value zaten .txt dosyasinda; meta'da tekrarlanmasi anlamsiz.
-    let deger_disi_property = node
+    let non_value_property = node
         .properties
         .keys()
         .any(|k| is_script(node) || (k != "Value" && k != "Contents"));
     // Etiketler de yazilacak bir sey: yalnizca etiketi olan bir script'in meta
-    // dosyasi uretilmezse etiket diske hic ulasmaz.
-    if !deger_disi_property && node.attributes.is_empty() && node.tags.is_empty() {
+    // dosyasi uretilmezse tag_text diske hic ulasmaz.
+    if !non_value_property && node.attributes.is_empty() && node.tags.is_empty() {
         return None;
     }
     let script_path = data_file(dm, sync_dir, uuid)?;
     let dir = script_path.parent()?;
-    let ad = if node.children.is_empty() {
+    let item_name = if node.children.is_empty() {
         format!("{}.meta.json", seg(dm, node))
     } else {
         "init.meta.json".to_string()
     };
-    Some(dir.join(ad))
+    Some(dir.join(item_name))
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Default)]
@@ -444,8 +444,8 @@ fn meta_content(node: &InstanceNode) -> String {
     // StringValue'nun Value'su .txt dosyasinda tutuluyor; iki yerde tutmak
     // ikisinin ayrisma riskini dogurur.
     if !is_script(node) {
-        // Ham icerik dosyasinda tutulan alanlar meta'da TEKRARLANMAZ;
-        // ayni veriyi iki yerde tutmak ikisinin ayrisma riskini dogurur.
+        // Ham file_content dosyasinda tutulan alanlar meta'da TEKRARLANMAZ;
+        // is_same veriyi iki yerde tutmak ikisinin ayrisma riskini dogurur.
         properties.remove("Value");
         properties.remove("Contents");
     }
@@ -458,49 +458,49 @@ fn meta_content(node: &InstanceNode) -> String {
 }
 
 fn node_content(node: &InstanceNode) -> String {
-    if ham_icerikli(node) {
-        ham_metin(node)
+    if with_raw_content(node) {
+        raw_str(node)
     } else {
         serde_json::to_string_pretty(node).unwrap_or_default()
     }
 }
 
-/// Bu dosya Syncix'in ÜRETEBİLECEĞİ bir dosya mı?
+/// Bu file_path Syncix'in ÜRETEBİLECEĞİ bir file_path mı?
 ///
-/// Reconcile yazıcısı beklenen listede olmayan dosyaları siliyordu; bu yüzden
-/// senkron klasörüne konan herhangi bir dosya (README, .gitkeep, kişisel not)
-/// sessizce yok oluyordu. Ölçüldü ve doğrulandı: NOTLAR.md dosyası ilk yazımda
+/// Reconcile yazıcısı expected_value listede olmayan dosyaları siliyordu; bu yüzden
+/// syncing klasörüne konan herhangi bir file_path (README, .gitkeep, kişisel not)
+/// sessizce yok oluyordu. Ölçüldü ve doğrulandı: NOTLAR.md dosyası first_item yazımda
 /// silindi.
 ///
-/// Rojo'da bu sorun yok çünkü Rojo diske hiç yazmıyor. Bizde tek yönlü bir
-/// "ignore listesi" yetmez; ASIL kural şudur: yalnızca kendi üretebileceğimiz
-/// biçimdeki dosyalara dokunuruz. Tanımadığımız hiçbir dosya silinmez.
-fn yonettigimiz_dosya(path: &Path) -> bool {
-    let Some(ad) = path.file_name().and_then(|f| f.to_str()) else {
+/// Rojo'da bu sorun yok çünkü Rojo diske hiç yazmıyor. Bizde single yönlü bir
+/// "ignore listesi" yetmez; ASIL kural şudur: yalnızca own üretebileceğimiz
+/// biçimdeki dosyalara dokunuruz. Tanımadığımız hiçbir file_path silinmez.
+fn is_managed_file(path: &Path) -> bool {
+    let Some(item_name) = path.file_name().and_then(|f| f.to_str()) else {
         return false;
     };
-    ad.ends_with(".meta.json")
-        || ad.ends_with(".server.lua")
-        || ad.ends_with(".client.lua")
-        || ad.ends_with(".lua")
-        || ad.ends_with(".luau")
-        || ad.ends_with(".txt")
-        || ad.ends_with(".csv")
-        || ad.ends_with(".json")
+    item_name.ends_with(".meta.json")
+        || item_name.ends_with(".server.lua")
+        || item_name.ends_with(".client.lua")
+        || item_name.ends_with(".lua")
+        || item_name.ends_with(".luau")
+        || item_name.ends_with(".txt")
+        || item_name.ends_with(".csv")
+        || item_name.ends_with(".json")
 }
 
 /// Yol, kullanıcının belirlediği ignore desenlerinden birine uyuyor mu?
-/// Desenler senkron klasörüne göre değerlendirilir (ör. "notlar/**", "*.md").
-pub fn yok_sayilir(path: &Path, sync_dir: &str, desenler: &[String]) -> bool {
-    if desenler.is_empty() {
+/// Desenler syncing klasörüne göre değerlendirilir (ör. "notlar/**", "*.md").
+pub fn is_ignored(path: &Path, sync_dir: &str, patterns: &[String]) -> bool {
+    if patterns.is_empty() {
         return false;
     }
-    let gorece = path.strip_prefix(sync_dir).unwrap_or(path);
-    let metin = gorece.to_string_lossy().replace('\\', "/");
+    let rel = path.strip_prefix(sync_dir).unwrap_or(path);
+    let text_value = rel.to_string_lossy().replace('\\', "/");
 
-    desenler.iter().any(|d| {
+    patterns.iter().any(|d| {
         glob::Pattern::new(d)
-            .map(|p| p.matches(&metin))
+            .map(|p| p.matches(&text_value))
             .unwrap_or(false)
     })
 }
@@ -540,44 +540,44 @@ fn remove_empty_dirs(dir: &Path, root: &Path) {
 
 /// Modeli diske yansıtır — RECONCILE yöntemiyle.
 /// Eskiden tüm klasör silinip yeniden yazılıyordu; bu hem büyük sahnelerde yavaştı
-/// hem de her yazımda dosya izleyiciyi gereksiz tetikliyordu. Artık yalnızca fark
+/// hem de her yazımda file_path izleyiciyi gereksiz tetikliyordu. Artık yalnızca fark
 /// uygulanır: içeriği aynı olan dosyalara hiç dokunulmaz.
 /// Cop kutusu davranisi yapilandirmadan geliyor. Global tutulmasinin sebebi
-/// write_full_tree'nin cagri zincirinin uzun olmasi ve tek bir ayar icin her
+/// write_full_tree'nin cagri zincirinin uzun olmasi ve single bir ayar icin her
 /// halkaya parametre eklemenin kodu okunmaz hale getirmesi.
-static COP_AYARI: OnceLock<Mutex<(bool, usize)>> = OnceLock::new();
+static TRASH_CONFIG: OnceLock<Mutex<(bool, usize)>> = OnceLock::new();
 
 /// .meta.json dosyalari yazilsin mi. Kapaliysa script'lerin property ve
-/// attribute'lari diske hic yazilmaz; yalnizca kaynak kod dosyasi kalir.
-static META_ACIK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+/// attribute'lari diske hic yazilmaz; yalnizca origin script_code dosyasi kalir.
+static META_ENABLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
-pub fn meta_ayarini_kur(acik: bool) {
-    META_ACIK.store(acik, std::sync::atomic::Ordering::Relaxed);
+pub fn configure_meta(is_enabled: bool) {
+    META_ENABLED.store(is_enabled, std::sync::atomic::Ordering::Relaxed);
 }
 
-pub fn cop_ayarini_kur(acik: bool, tur_sayisi: usize) {
-    let h = COP_AYARI.get_or_init(|| Mutex::new((true, KORUNAN_TUR)));
+pub fn configure_trash(is_enabled: bool, run_count: usize) {
+    let h = TRASH_CONFIG.get_or_init(|| Mutex::new((true, TRASH_KEEP_DEFAULT)));
     if let Ok(mut a) = h.lock() {
-        *a = (acik, tur_sayisi.max(1));
+        *a = (is_enabled, run_count.max(1));
     }
 }
 
-fn cop_ayari() -> (bool, usize) {
-    COP_AYARI
+fn trash_config() -> (bool, usize) {
+    TRASH_CONFIG
         .get()
         .and_then(|h| h.lock().ok().map(|a| *a))
-        .unwrap_or((true, KORUNAN_TUR))
+        .unwrap_or((true, TRASH_KEEP_DEFAULT))
 }
 
 /// `silme_izni`: modelin Studio'nun gercek agacini yansittigi kesinlesmeden
-/// (bu oturumda FULL_SYNC tamamlanmadan) diskten HICBIR dosya kaldirilmaz.
+/// (bu oturumda FULL_SYNC tamamlanmadan) diskten HICBIR file_path kaldirilmaz.
 /// Aksi halde bos model "diskteki her sey fazla" demek olur: Studio kapaliyken
-/// editor acildiginda senkron klasorundeki butun dosyalar cope tasiniyordu.
-pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], silme_izni: bool) {
+/// editor acildiginda syncing klasorundeki butun file_list cope tasiniyordu.
+pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], allow_removal: bool) {
     let root = Path::new(sync_dir);
     let _ = fs::create_dir_all(root);
 
-    // 1) Olması gereken dosyalar
+    // 1) Olması gereken file_list
     let mut expected: std::collections::HashMap<PathBuf, String> = std::collections::HashMap::new();
     for (uuid, node) in dm.get_all_instances() {
         if node.class_name == "DataModel" {
@@ -592,32 +592,32 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], silme_
         }
     }
 
-    // 2) Diskte olan dosyalar
+    // 2) Diskte olan file_list
     let mut existing = Vec::new();
     collect_files(root, &mut existing);
 
-    // 3) Fazlalıkları sil — yalnızca model otoriteyse (bkz. silme_izni).
+    // 3) Fazlalıkları sil — yalnızca model otoriteyse (bkz. allow_removal).
     let mut removed = 0usize;
-    let mut korunan = 0usize;
+    let mut kept = 0usize;
     for path in &existing {
         if expected.contains_key(path) {
             continue;
         }
         // Tanımadığımız dosyalara ASLA dokunma (README, .gitkeep, kişisel notlar).
-        if !yonettigimiz_dosya(path) {
+        if !is_managed_file(path) {
             continue;
         }
         // Kullanıcının yok saydırdığı yollar da korunur.
-        if yok_sayilir(path, sync_dir, ignore) {
+        if is_ignored(path, sync_dir, ignore) {
             continue;
         }
-        if !silme_izni {
-            korunan += 1;
+        if !allow_removal {
+            kept += 1;
             continue;
         }
-        if cope_tasi(path, sync_dir).is_ok() {
-            yazim_kaydindan_sil(path);
-            silmeyi_not_et(path);
+        if move_to_trash(path, sync_dir).is_ok() {
+            forget_write(path);
+            record_delete(path);
             removed += 1;
         }
     }
@@ -636,20 +636,20 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], silme_
         }
         match fs::write(path, content) {
             Ok(_) => {
-                yazimi_not_et(path, content);
+                record_write(path, content);
                 written += 1;
             }
             Err(e) => tracing::error!("layout: could not write file ({:?}): {}", path, e),
         }
     }
 
-    // 5) Boşalan klasörleri temizle
+    // 5) Boşalan klasörleri clean_up
     remove_empty_dirs(root, root);
 
-    if korunan > 0 {
+    if kept > 0 {
         tracing::debug!(
             "layout: {} file(s) not in the model were kept — Studio has not synced yet",
-            korunan
+            kept
         );
     }
     if written > 0 || removed > 0 {
@@ -666,7 +666,7 @@ mod meta_tests {
     use super::*;
     use crate::model::PropertyValue;
 
-    fn ekle(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
+    fn add_instance(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut n = InstanceNode::new(class, name);
         n.parent = parent;
         let id = n.syncix_id;
@@ -677,19 +677,19 @@ mod meta_tests {
     /// Ozelligi olmayan script icin meta dosyasi URETILMEZ.
     /// Aksi halde her script'in yaninda bos bir .meta.json birikirdi.
     #[test]
-    fn ozelliksiz_script_meta_dosyasi_uretmez() {
+    fn script_without_properties_has_no_meta() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         assert!(meta_file(&m, "src", &s).is_none());
     }
 
     /// Property ya da attribute varsa meta dosyasi script'in YANINDA olusur.
     #[test]
-    fn property_varsa_meta_dosyasi_script_yaninda_olusur() {
+    fn meta_file_created_next_to_script_with_properties() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         m.get_mut_instance(&s)
             .unwrap()
             .properties
@@ -702,10 +702,10 @@ mod meta_tests {
     }
 
     #[test]
-    fn attribute_tek_basina_da_meta_uretir() {
+    fn attribute_alone_produces_meta() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         m.get_mut_instance(&s)
             .unwrap()
             .attributes
@@ -714,13 +714,13 @@ mod meta_tests {
         assert!(meta_file(&m, "src", &s).is_some());
     }
 
-    /// Cocugu olan script konteyner klasore doner; meta adi da init.meta.json olur.
+    /// Cocugu olan script konteyner klasore doner; meta name_of da init.meta.json olur.
     #[test]
-    fn konteyner_script_init_meta_kullanir() {
+    fn container_script_uses_init_meta() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
-        ekle(&mut m, "ModuleScript", "Alt", Some(s));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
+        add_instance(&mut m, "ModuleScript", "Alt", Some(s));
         m.get_mut_instance(&s)
             .unwrap()
             .properties
@@ -730,13 +730,13 @@ mod meta_tests {
         assert!(meta.to_string_lossy().ends_with("init.meta.json"), "{:?}", meta);
     }
 
-    /// Script olmayan objeler icin meta URETILMEZ: onlarin kendi .json dosyasi
-    /// zaten property ve attribute'lari tutuyor, ikinci bir dosya kafa karistirir.
+    /// Script olmayan objeler icin meta URETILMEZ: onlarin own .json dosyasi
+    /// zaten property ve attribute'lari tutuyor, ikinci bir file_path kafa karistirir.
     #[test]
-    fn script_disi_obje_meta_uretmez() {
+    fn non_script_object_has_no_meta() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        let p = ekle(&mut m, "Part", "Kutu", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        let p = add_instance(&mut m, "Part", "Kutu", Some(ws));
         m.get_mut_instance(&p)
             .unwrap()
             .properties
@@ -747,10 +747,10 @@ mod meta_tests {
 
     /// Meta icerigi gidis-donus yapabilmeli.
     #[test]
-    fn meta_icerigi_gidis_donus() {
+    fn meta_content_round_trip() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         {
             let n = m.get_mut_instance(&s).unwrap();
             n.properties.insert("Disabled".into(), PropertyValue::Boolean(true));
@@ -761,14 +761,14 @@ mod meta_tests {
             n.attributes.insert("Surum".into(), PropertyValue::Number(2.0));
         }
 
-        let metin = meta_content(m.get_instance(&s).unwrap());
-        let geri: ScriptMeta = serde_json::from_str(&metin).expect("cozulemedi");
-        assert_eq!(geri.properties.len(), 2);
+        let text_value = meta_content(m.get_instance(&s).unwrap());
+        let restored_count: ScriptMeta = serde_json::from_str(&text_value).expect("cozulemedi");
+        assert_eq!(restored_count.properties.len(), 2);
         assert_eq!(
-            geri.properties.get("RunContext"),
+            restored_count.properties.get("RunContext"),
             Some(&PropertyValue::String("Enum.RunContext.Server".into()))
         );
-        assert_eq!(geri.attributes.get("Surum"), Some(&PropertyValue::Number(2.0)));
+        assert_eq!(restored_count.attributes.get("Surum"), Some(&PropertyValue::Number(2.0)));
     }
 }
 
@@ -777,7 +777,7 @@ mod txt_tests {
     use super::*;
     use crate::model::PropertyValue;
 
-    fn ekle(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
+    fn add_instance(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut n = InstanceNode::new(class, name);
         n.parent = parent;
         let id = n.syncix_id;
@@ -787,41 +787,41 @@ mod txt_tests {
 
     /// StringValue diske .txt olarak yazilir, .json olarak degil.
     #[test]
-    fn stringvalue_txt_dosyasina_yazilir() {
+    fn stringvalue_is_written_as_txt() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let sv = ekle(&mut m, "StringValue", "Mesaj", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let sv = add_instance(&mut m, "StringValue", "Mesaj", Some(rs));
         m.get_mut_instance(&sv)
             .unwrap()
             .properties
             .insert("Value".into(), PropertyValue::String("merhaba".into()));
 
-        let yol = data_file(&m, "src", &sv).unwrap();
-        assert!(yol.to_string_lossy().ends_with("Mesaj.txt"), "{:?}", yol);
+        let fs_path = data_file(&m, "src", &sv).unwrap();
+        assert!(fs_path.to_string_lossy().ends_with("Mesaj.txt"), "{:?}", fs_path);
     }
 
     /// Dosyanin icerigi dogrudan Value'dur; JSON sarmalayici yok.
     #[test]
-    fn txt_icerigi_dogrudan_degerdir() {
+    fn txt_content_is_the_value() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let sv = ekle(&mut m, "StringValue", "Mesaj", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let sv = add_instance(&mut m, "StringValue", "Mesaj", Some(rs));
         m.get_mut_instance(&sv)
             .unwrap()
             .properties
             .insert("Value".into(), PropertyValue::String("satir1\nsatir2".into()));
 
-        let icerik = node_content(m.get_instance(&sv).unwrap());
-        assert_eq!(icerik, "satir1\nsatir2");
+        let file_content = node_content(m.get_instance(&sv).unwrap());
+        assert_eq!(file_content, "satir1\nsatir2");
     }
 
     /// Value .txt dosyasinda oldugu icin meta dosyasinda TEKRARLANMAZ;
     /// iki yerde tutmak ikisinin ayrisma riskini dogurur.
     #[test]
-    fn value_meta_dosyasinda_tekrarlanmaz() {
+    fn value_not_repeated_in_meta_file() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let sv = ekle(&mut m, "StringValue", "Mesaj", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let sv = add_instance(&mut m, "StringValue", "Mesaj", Some(rs));
         m.get_mut_instance(&sv)
             .unwrap()
             .properties
@@ -837,91 +837,91 @@ mod txt_tests {
             .insert("Dil".into(), PropertyValue::String("tr".into()));
         assert!(meta_file(&m, "src", &sv).is_some());
 
-        let icerik = meta_content(m.get_instance(&sv).unwrap());
-        assert!(!icerik.contains("Value"), "Value meta'da olmamali: {}", icerik);
-        assert!(icerik.contains("Dil"));
+        let file_content = meta_content(m.get_instance(&sv).unwrap());
+        assert!(!file_content.contains("Value"), "Value meta'da olmamali: {}", file_content);
+        assert!(file_content.contains("Dil"));
     }
 
     /// Script'lerde Source ayri bir alan oldugu icin property'ler meta'da kalir.
     #[test]
-    fn scriptte_propertyler_meta_da_kalir() {
+    fn script_properties_stay_in_meta() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         m.get_mut_instance(&s)
             .unwrap()
             .properties
             .insert("Disabled".into(), PropertyValue::Boolean(true));
 
-        let icerik = meta_content(m.get_instance(&s).unwrap());
-        assert!(icerik.contains("Disabled"));
+        let file_content = meta_content(m.get_instance(&s).unwrap());
+        assert!(file_content.contains("Disabled"));
     }
 
     /// StringValue disindaki ValueBase siniflari hala .json kullanir:
-    /// sayisal bir degeri duz metne cevirmek tip bilgisini kaybettirirdi.
+    /// sayisal bir degeri duz metne cevirmek type_name bilgisini kaybettirirdi.
     #[test]
-    fn intvalue_json_kalir() {
+    fn intvalue_stays_json() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let iv = ekle(&mut m, "IntValue", "Sayac", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let iv = add_instance(&mut m, "IntValue", "Sayac", Some(rs));
 
-        let yol = data_file(&m, "src", &iv).unwrap();
-        assert!(yol.to_string_lossy().ends_with("Sayac.json"), "{:?}", yol);
+        let fs_path = data_file(&m, "src", &iv).unwrap();
+        assert!(fs_path.to_string_lossy().ends_with("Sayac.json"), "{:?}", fs_path);
     }
 }
 
 #[cfg(test)]
-mod koruma_tests {
+mod protection_tests {
     use super::*;
 
     /// Tanimadigimiz dosyalara ASLA dokunulmaz.
-    /// Bu, senkron klasorune konan README/not dosyalarinin silinmesi bugunun testi.
+    /// Bu, syncing klasorune konan README/not dosyalarinin silinmesi bugunun testi.
     #[test]
-    fn yabanci_dosyalar_yonetilmez() {
-        assert!(!yonettigimiz_dosya(Path::new("src/NOTLAR.md")));
-        assert!(!yonettigimiz_dosya(Path::new("src/.gitkeep")));
-        assert!(!yonettigimiz_dosya(Path::new("src/resim.png")));
-        assert!(!yonettigimiz_dosya(Path::new("src/rapor.pdf")));
+    fn foreign_files_are_not_managed() {
+        assert!(!is_managed_file(Path::new("src/NOTLAR.md")));
+        assert!(!is_managed_file(Path::new("src/.gitkeep")));
+        assert!(!is_managed_file(Path::new("src/resim.png")));
+        assert!(!is_managed_file(Path::new("src/rapor.pdf")));
     }
 
     /// Kendi uretebilecegimiz bicimler yonetilir.
     #[test]
-    fn kendi_bicimlerimiz_yonetilir() {
-        assert!(yonettigimiz_dosya(Path::new("src/Kutu.json")));
-        assert!(yonettigimiz_dosya(Path::new("src/Ana.server.lua")));
-        assert!(yonettigimiz_dosya(Path::new("src/Hud.client.lua")));
-        assert!(yonettigimiz_dosya(Path::new("src/Modul.lua")));
-        assert!(yonettigimiz_dosya(Path::new("src/Modul.luau")));
-        assert!(yonettigimiz_dosya(Path::new("src/Mesaj.txt")));
-        assert!(yonettigimiz_dosya(Path::new("src/Ana.meta.json")));
+    fn our_formats_are_managed() {
+        assert!(is_managed_file(Path::new("src/Kutu.json")));
+        assert!(is_managed_file(Path::new("src/Ana.server.lua")));
+        assert!(is_managed_file(Path::new("src/Hud.client.lua")));
+        assert!(is_managed_file(Path::new("src/Modul.lua")));
+        assert!(is_managed_file(Path::new("src/Modul.luau")));
+        assert!(is_managed_file(Path::new("src/Mesaj.txt")));
+        assert!(is_managed_file(Path::new("src/Ana.meta.json")));
     }
 
     #[test]
-    fn ignore_desenleri_esler() {
-        let desenler = vec!["*.md".to_string(), "notlar/**".to_string()];
-        assert!(yok_sayilir(Path::new("src/OKU.md"), "src", &desenler));
-        assert!(yok_sayilir(Path::new("src/notlar/a/b.lua"), "src", &desenler));
-        assert!(!yok_sayilir(Path::new("src/Kutu.json"), "src", &desenler));
+    fn ignore_patterns_match() {
+        let patterns = vec!["*.md".to_string(), "notlar/**".to_string()];
+        assert!(is_ignored(Path::new("src/OKU.md"), "src", &patterns));
+        assert!(is_ignored(Path::new("src/notlar/a/b.lua"), "src", &patterns));
+        assert!(!is_ignored(Path::new("src/Kutu.json"), "src", &patterns));
     }
 
     #[test]
-    fn bos_desen_listesi_hicbir_seyi_yok_saymaz() {
-        assert!(!yok_sayilir(Path::new("src/OKU.md"), "src", &[]));
+    fn empty_pattern_list_ignores_nothing() {
+        assert!(!is_ignored(Path::new("src/OKU.md"), "src", &[]));
     }
 
     /// Windows ters egik cizgileri de eslesmeli.
     #[test]
-    fn ters_egik_cizgi_normallestirilir() {
-        let desenler = vec!["notlar/**".to_string()];
+    fn backslashes_are_normalised() {
+        let patterns = vec!["notlar/**".to_string()];
         let p = PathBuf::from("src").join("notlar").join("gizli.lua");
-        assert!(yok_sayilir(&p, "src", &desenler));
+        assert!(is_ignored(&p, "src", &patterns));
     }
 
-    /// Bozuk desen cokmeye yol acmamali.
+    /// Bozuk desen cokmeye fs_path acmamali.
     #[test]
-    fn bozuk_desen_cokmez() {
-        let desenler = vec!["[".to_string()];
-        assert!(!yok_sayilir(Path::new("src/Kutu.json"), "src", &desenler));
+    fn broken_pattern_does_not_crash() {
+        let patterns = vec!["[".to_string()];
+        assert!(!is_ignored(Path::new("src/Kutu.json"), "src", &patterns));
     }
 }
 
@@ -930,7 +930,7 @@ mod csv_tests {
     use super::*;
     use crate::model::PropertyValue;
 
-    fn ekle(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
+    fn add_instance(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut n = InstanceNode::new(class, name);
         n.parent = parent;
         let id = n.syncix_id;
@@ -941,18 +941,18 @@ mod csv_tests {
     #[test]
     fn localizationtable_csv_dosyasina_yazilir() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let lt = ekle(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let lt = add_instance(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
 
-        let yol = data_file(&m, "src", &lt).unwrap();
-        assert!(yol.to_string_lossy().ends_with("Ceviriler.csv"), "{:?}", yol);
+        let fs_path = data_file(&m, "src", &lt).unwrap();
+        assert!(fs_path.to_string_lossy().ends_with("Ceviriler.csv"), "{:?}", fs_path);
     }
 
     #[test]
-    fn csv_icerigi_baslik_satiri_ile_baslar() {
+    fn csv_content_starts_with_header_row() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let lt = ekle(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let lt = add_instance(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
         m.get_mut_instance(&lt).unwrap().properties.insert(
             "Contents".into(),
             PropertyValue::String(
@@ -961,18 +961,18 @@ mod csv_tests {
             ),
         );
 
-        let icerik = node_content(m.get_instance(&lt).unwrap());
-        let satirlar: Vec<&str> = icerik.lines().collect();
-        assert_eq!(satirlar[0], "Key,Source,Context,Example,tr");
-        assert!(satirlar[1].contains("Merhaba"), "{}", icerik);
+        let file_content = node_content(m.get_instance(&lt).unwrap());
+        let line_list: Vec<&str> = file_content.lines().collect();
+        assert_eq!(line_list[0], "Key,Source,Context,Example,tr");
+        assert!(line_list[1].contains("Merhaba"), "{}", file_content);
     }
 
     /// Contents .csv dosyasinda tutuldugu icin meta'da TEKRARLANMAZ.
     #[test]
-    fn contents_meta_dosyasinda_tekrarlanmaz() {
+    fn contents_not_repeated_in_meta_file() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let lt = ekle(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let lt = add_instance(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
         {
             let n = m.get_mut_instance(&lt).unwrap();
             n.properties
@@ -985,222 +985,222 @@ mod csv_tests {
             .unwrap()
             .attributes
             .insert("Surum".into(), PropertyValue::Number(1.0));
-        let icerik = meta_content(m.get_instance(&lt).unwrap());
-        assert!(!icerik.contains("Contents"), "Contents meta'da olmamali: {}", icerik);
+        let file_content = meta_content(m.get_instance(&lt).unwrap());
+        assert!(!file_content.contains("Contents"), "Contents meta'da olmamali: {}", file_content);
     }
 
-    /// Bozuk Contents cokmeye yol acmamali, bos dosya yazilmali.
+    /// Bozuk Contents cokmeye fs_path acmamali, bos file_path yazilmali.
     #[test]
-    fn bozuk_contents_cokmez() {
+    fn broken_contents_does_not_crash() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        let lt = ekle(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let lt = add_instance(&mut m, "LocalizationTable", "Ceviriler", Some(rs));
         m.get_mut_instance(&lt)
             .unwrap()
             .properties
             .insert("Contents".into(), PropertyValue::String("{bozuk".into()));
 
-        let icerik = node_content(m.get_instance(&lt).unwrap());
-        assert!(icerik.is_empty());
+        let file_content = node_content(m.get_instance(&lt).unwrap());
+        assert!(file_content.is_empty());
     }
 
     #[test]
-    fn csv_yonetilen_uzanti() {
-        assert!(yonettigimiz_dosya(Path::new("src/Ceviriler.csv")));
+    fn csv_is_managed_extension() {
+        assert!(is_managed_file(Path::new("src/Ceviriler.csv")));
     }
 }
 
 #[cfg(test)]
-mod cop_kutusu_testleri {
+mod trash_tests {
     use super::*;
     use std::fs;
 
-    /// Her test kendi klasöründe çalışsın: çöp kutusu süreç genelinde tek
-    /// tur adı kullanıyor, aynı dizini paylaşan testler birbirini bozardı.
-    fn gecici_kok(ad: &str) -> PathBuf {
-        let kok = std::env::temp_dir().join(format!("syncix-cop-{}", ad));
-        let _ = fs::remove_dir_all(&kok);
-        fs::create_dir_all(kok.join("src")).unwrap();
-        kok
+    /// Her test own klasöründe çalışsın: çöp kutusu süreç genelinde single
+    /// run_name adı kullanıyor, aynı dizini paylaşan testler birbirini bozardı.
+    fn scratch_root(item_name: &str) -> PathBuf {
+        let root_dir = std::env::temp_dir().join(format!("syncix-cop-{}", item_name));
+        let _ = fs::remove_dir_all(&root_dir);
+        fs::create_dir_all(root_dir.join("src")).unwrap();
+        root_dir
     }
 
     /// Gerçek bir olaydan: Studio bağlanmadan editör açıldı, model boştu ve
-    /// uzlaştırıcı senkron klasöründeki 48 dosyanın hepsini çöpe taşıdı. Model
+    /// uzlaştırıcı syncing klasöründeki 48 dosyanın hepsini çöpe taşıdı. Model
     /// otorite değilken diskten hiçbir şey kaldırılmamalı.
     #[test]
-    fn studio_senkronlamadan_bos_model_dosya_silmez() {
-        let kok = gecici_kok("otorite-yok");
-        let sync = kok.join("src");
+    fn empty_model_deletes_nothing_before_studio_syncs() {
+        let root_dir = scratch_root("otorite-yok");
+        let sync = root_dir.join("src");
         let s = sync.to_str().unwrap();
-        let oyun = sync.join("Workspace.json");
-        let betik = sync.join("ServerScriptService").join("Main.server.lua");
-        fs::create_dir_all(betik.parent().unwrap()).unwrap();
-        fs::write(&oyun, "{}").unwrap();
-        fs::write(&betik, "print('oyun kodu')").unwrap();
+        let game_file = sync.join("Workspace.json");
+        let script_node = sync.join("ServerScriptService").join("Main.server.lua");
+        fs::create_dir_all(script_node.parent().unwrap()).unwrap();
+        fs::write(&game_file, "{}").unwrap();
+        fs::write(&script_node, "print('oyun kodu')").unwrap();
 
         write_full_tree(&DataModel::new(), s, &[], false);
 
-        assert!(oyun.exists(), "model otorite değilken dosya silinmemeli");
-        assert!(betik.exists(), "alt klasördeki betik de yerinde kalmalı");
-        assert!(cop_turlari(s).is_empty(), "çöp kutusuna hiçbir şey gitmemeli");
+        assert!(game_file.exists(), "model otorite değilken dosya silinmemeli");
+        assert!(script_node.exists(), "alt klasördeki betik de yerinde kalmalı");
+        assert!(trash_runs(s).is_empty(), "çöp kutusuna hiçbir şey gitmemeli");
     }
 
-    /// Otorite varsa eski davranış aynen sürer: modelde olmayan dosya çöpe gider.
+    /// Otorite varsa previous_text davranış aynen sürer: modelde olmayan file_path çöpe gider.
     #[test]
-    fn otoriter_model_fazlaligi_cope_tasir() {
-        let kok = gecici_kok("otorite-var");
-        let sync = kok.join("src");
+    fn authoritative_model_trashes_extras() {
+        let root_dir = scratch_root("otorite-var");
+        let sync = root_dir.join("src");
         let s = sync.to_str().unwrap();
-        let fazla = sync.join("Silinmis.server.lua");
-        fs::write(&fazla, "-- Studio'da artik yok").unwrap();
+        let extra = sync.join("Silinmis.server.lua");
+        fs::write(&extra, "-- Studio'da artik yok").unwrap();
 
         write_full_tree(&DataModel::new(), s, &[], true);
 
-        assert!(!fazla.exists(), "otoriter modelde olmayan dosya kaldırılmalı");
-        assert_eq!(cop_turlari(s).len(), 1, "kaldırılan dosya çöp kutusunda olmalı");
+        assert!(!extra.exists(), "otoriter modelde olmayan dosya kaldırılmalı");
+        assert_eq!(trash_runs(s).len(), 1, "kaldırılan dosya çöp kutusunda olmalı");
     }
 
     /// Asıl mesele: uzlaştırıcı bir dosyayı sildiğinde içeriği yok olmamalı.
     #[test]
-    fn silinen_dosya_cop_kutusunda_durur() {
-        let kok = gecici_kok("temel");
-        let sync = kok.join("src");
-        let dosya = sync.join("Onemli.server.lua");
-        fs::write(&dosya, "print('kaybolmamali')").unwrap();
+    fn deleted_file_stays_in_trash() {
+        let root_dir = scratch_root("temel");
+        let sync = root_dir.join("src");
+        let file_path = sync.join("Onemli.server.lua");
+        fs::write(&file_path, "print('kaybolmamali')").unwrap();
 
-        cope_tasi(&dosya, sync.to_str().unwrap()).unwrap();
+        move_to_trash(&file_path, sync.to_str().unwrap()).unwrap();
 
-        assert!(!dosya.exists(), "dosya sync klasöründen kaldırılmalı");
-        let turlar = cop_turlari(sync.to_str().unwrap());
-        assert_eq!(turlar.len(), 1);
-        assert_eq!(turlar[0].1, 1, "çöp kutusunda tam olarak bir dosya olmalı");
+        assert!(!file_path.exists(), "dosya sync klasöründen kaldırılmalı");
+        let runs = trash_runs(sync.to_str().unwrap());
+        assert_eq!(runs.len(), 1);
+        assert_eq!(runs[0].1, 1, "çöp kutusunda tam olarak bir dosya olmalı");
     }
 
     #[test]
-    fn geri_alma_icerigi_aynen_dondurur() {
-        let kok = gecici_kok("geri");
-        let sync = kok.join("src");
+    fn restore_returns_content_unchanged() {
+        let root_dir = scratch_root("geri");
+        let sync = root_dir.join("src");
         let s = sync.to_str().unwrap();
-        let dosya = sync.join("Alt").join("Kod.server.lua");
-        fs::create_dir_all(dosya.parent().unwrap()).unwrap();
-        fs::write(&dosya, "-- orijinal icerik").unwrap();
+        let file_path = sync.join("Alt").join("Kod.server.lua");
+        fs::create_dir_all(file_path.parent().unwrap()).unwrap();
+        fs::write(&file_path, "-- orijinal icerik").unwrap();
 
-        cope_tasi(&dosya, s).unwrap();
-        let tur = cop_turlari(s)[0].0.clone();
-        let (geri, atlanan) = coptan_geri_al(s, &tur);
+        move_to_trash(&file_path, s).unwrap();
+        let run_name = trash_runs(s)[0].0.clone();
+        let (restored_count, skipped) = restore_from_trash(s, &run_name);
 
-        assert_eq!((geri, atlanan), (1, 0));
-        assert!(dosya.exists(), "dosya eski yerine, alt klasörüyle birlikte dönmeli");
-        assert_eq!(fs::read_to_string(&dosya).unwrap(), "-- orijinal icerik");
+        assert_eq!((restored_count, skipped), (1, 0));
+        assert!(file_path.exists(), "dosya eski yerine, alt klasörüyle birlikte dönmeli");
+        assert_eq!(fs::read_to_string(&file_path).unwrap(), "-- orijinal icerik");
     }
 
-    /// Geri alma kendi başına bir veri kaybı olmamalı: aynı yolda dosya varsa
+    /// Geri alma own başına bir veri kaybı olmamalı: aynı yolda file_path varsa
     /// üzerine yazılmaz, atlanır.
     #[test]
-    fn geri_alma_mevcut_dosyanin_uzerine_yazmaz() {
-        let kok = gecici_kok("ezme");
-        let sync = kok.join("src");
+    fn restore_does_not_overwrite_existing() {
+        let root_dir = scratch_root("ezme");
+        let sync = root_dir.join("src");
         let s = sync.to_str().unwrap();
-        let dosya = sync.join("Kod.server.lua");
+        let file_path = sync.join("Kod.server.lua");
 
-        fs::write(&dosya, "eski").unwrap();
-        cope_tasi(&dosya, s).unwrap();
-        fs::write(&dosya, "yeni ve degerli").unwrap();
+        fs::write(&file_path, "eski").unwrap();
+        move_to_trash(&file_path, s).unwrap();
+        fs::write(&file_path, "yeni ve degerli").unwrap();
 
-        let tur = cop_turlari(s)[0].0.clone();
-        let (geri, atlanan) = coptan_geri_al(s, &tur);
+        let run_name = trash_runs(s)[0].0.clone();
+        let (restored_count, skipped) = restore_from_trash(s, &run_name);
 
-        assert_eq!((geri, atlanan), (0, 1));
-        assert_eq!(fs::read_to_string(&dosya).unwrap(), "yeni ve degerli");
+        assert_eq!((restored_count, skipped), (0, 1));
+        assert_eq!(fs::read_to_string(&file_path).unwrap(), "yeni ve degerli");
     }
 
     /// Çöp kutusu sync klasörünün DIŞINDA olmalı; içeride olsaydı izleyici onu
-    /// yeni içerik sanar, uzlaştırıcı da bir sonraki turda tekrar silerdi.
+    /// fresh içerik sanar, uzlaştırıcı da bir sonraki turda again silerdi.
     #[test]
-    fn cop_kutusu_sync_klasorunun_disinda() {
-        let kok = gecici_kok("konum");
-        let sync = kok.join("src");
+    fn trash_is_outside_sync_folder() {
+        let root_dir = scratch_root("konum");
+        let sync = root_dir.join("src");
         let s = sync.to_str().unwrap();
-        let dosya = sync.join("Kod.server.lua");
-        fs::write(&dosya, "x").unwrap();
-        cope_tasi(&dosya, s).unwrap();
+        let file_path = sync.join("Kod.server.lua");
+        fs::write(&file_path, "x").unwrap();
+        move_to_trash(&file_path, s).unwrap();
 
-        let mut kalanlar = Vec::new();
-        collect_files(&sync, &mut kalanlar);
-        assert!(kalanlar.is_empty(), "sync klasöründe hiçbir kalıntı olmamalı");
-        assert!(kok.join(".syncix").join("trash").exists());
+        let mut remaining_items = Vec::new();
+        collect_files(&sync, &mut remaining_items);
+        assert!(remaining_items.is_empty(), "sync klasöründe hiçbir kalıntı olmamalı");
+        assert!(root_dir.join(".syncix").join("trash").exists());
     }
 }
 
 #[cfg(test)]
-mod yol_eslestirme_testleri {
+mod path_matching_tests {
     use super::*;
     use crate::model::{DataModel, InstanceNode};
 
-    /// İzleyici mutlak yol bildiriyor, data_file göreli yol üretiyor.
+    /// İzleyici absolute fs_path bildiriyor, data_file göreli fs_path üretiyor.
     /// Düz eşitlik kullanıldığında disk silmesi hiç eşleşmiyordu.
     #[test]
-    fn mutlak_yol_goreli_beklentiyle_eslesir() {
+    fn absolute_path_matches_relative_expectation() {
         let mut dm = DataModel::new();
-        let mut servis = InstanceNode::new("ServerScriptService", "ServerScriptService");
-        let servis_id = servis.syncix_id;
-        servis.parent = None;
+        let mut service_name = InstanceNode::new("ServerScriptService", "ServerScriptService");
+        let service_id = service_name.syncix_id;
+        service_name.parent = None;
 
-        let mut betik = InstanceNode::new("Script", "DiskSilTest");
-        let betik_id = betik.syncix_id;
-        betik.parent = Some(servis_id);
-        servis.children.push(betik_id);
+        let mut script_node = InstanceNode::new("Script", "DiskSilTest");
+        let script_id = script_node.syncix_id;
+        script_node.parent = Some(service_id);
+        service_name.children.push(script_id);
 
-        dm.upsert_instance(servis).unwrap();
-        dm.upsert_instance(betik).unwrap();
+        dm.upsert_instance(service_name).unwrap();
+        dm.upsert_instance(script_node).unwrap();
 
-        let mutlak = Path::new(r"C:\proje\src_workspace\ServerScriptService\DiskSilTest.server.lua");
+        let absolute = Path::new(r"C:\proje\src_workspace\ServerScriptService\DiskSilTest.server.lua");
         assert_eq!(
-            yol_icin_uuid(&dm, "src_workspace", mutlak),
-            Some(betik_id)
+            uuid_for_path(&dm, "src_workspace", absolute),
+            Some(script_id)
         );
     }
 
     /// Meta dosyasının silinmesi instance'ın silinmesi değildir.
     #[test]
-    fn meta_dosyasi_silme_sayilmaz() {
+    fn deleting_meta_file_is_not_a_delete() {
         let mut dm = DataModel::new();
-        let mut betik = InstanceNode::new("Script", "Kod");
-        betik.parent = None;
-        dm.upsert_instance(betik).unwrap();
+        let mut script_node = InstanceNode::new("Script", "Kod");
+        script_node.parent = None;
+        dm.upsert_instance(script_node).unwrap();
 
         let meta = Path::new(r"C:\proje\src_workspace\Kod.meta.json");
-        assert_eq!(yol_icin_uuid(&dm, "src_workspace", meta), None);
+        assert_eq!(uuid_for_path(&dm, "src_workspace", meta), None);
     }
 }
 
 #[cfg(test)]
-mod sonek_testleri {
+mod suffix_tests {
     use super::*;
 
     /// Sync klasörü çoğu zaman "./src_workspace" olarak geliyor. Baştaki "."
     /// ayrı bir bileşen sayıldığı için düz ends_with eşleşmiyor ve disk
     /// silmeleri sessizce düşüyordu.
     #[test]
-    fn nokta_egik_onek_eslesmeyi_bozmaz() {
-        assert!(sonek_eslesir(
+    fn dot_slash_prefix_does_not_break_matching() {
+        assert!(suffix_matches(
             Path::new(r"C:\proje\src_workspace\SSS\Kod.server.lua"),
             Path::new("./src_workspace/SSS/Kod.server.lua"),
         ));
     }
 
     #[test]
-    fn farkli_dosya_eslesmez() {
-        assert!(!sonek_eslesir(
+    fn different_file_does_not_match() {
+        assert!(!suffix_matches(
             Path::new(r"C:\proje\src_workspace\SSS\Baska.server.lua"),
             Path::new("./src_workspace/SSS/Kod.server.lua"),
         ));
     }
 
-    /// Yalnızca dosya adının tutması yetmemeli; klasör yolu da eşleşmeli.
+    /// Yalnızca file_path adının tutması yetmemeli; klasör yolu da eşleşmeli.
     #[test]
-    fn ayni_isim_farkli_klasor_eslesmez() {
-        assert!(!sonek_eslesir(
+    fn same_name_other_folder_does_not_match() {
+        assert!(!suffix_matches(
             Path::new(r"C:\proje\src_workspace\Baska\Kod.server.lua"),
             Path::new("./src_workspace/SSS/Kod.server.lua"),
         ));

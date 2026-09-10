@@ -1,11 +1,11 @@
 --!strict
 -- PatchBuilder
--- Observer'dan gelen ham değişiklikleri alır ve standartlaştırılmış Patch (Yama) nesnelerine çevirir.
+-- Observer'dan incoming raw değişiklikleri alır ve standartlaştırılmış Patch (Yama) nesnelerine çevirir.
 -- Ağa gidecek JSON verisini hazırlar.
 
 local HttpService = game:GetService("HttpService")
 local CollectionService = game:GetService("CollectionService")
-local PlaceKimligi = require(script.Parent.Parent.Core.PlaceKimligi)
+local PlaceIdentity = require(script.Parent.Parent.Core.PlaceIdentity)
 
 local PatchBuilder = {}
 PatchBuilder.__index = PatchBuilder
@@ -66,9 +66,9 @@ function PatchBuilder:BuildLifecyclePatch(uuid: string, instance: Instance, even
         if attrs then
             patch.data.attributes = attrs
         end
-        local etiketler = self:SerializeTags(instance)
-        if etiketler then
-            patch.data.tags = etiketler
+        local labels = self:SerializeTags(instance)
+        if labels then
+            patch.data.tags = labels
         end
         local props = self:SerializeProperties(instance)
         if props then
@@ -84,7 +84,7 @@ function PatchBuilder:SerializeAttributes(instance: Instance): any
     local attrs = {}
     local count = 0
     for name, value in pairs(instance:GetAttributes()) do
-        -- __syncix_id ve __syncix_place Syncix'in KENDI defterleri; icerik degil.
+        -- __syncix_id ve __syncix_place Syncix'in KENDI defterleri; content degil.
         -- Diske yazilirlarsa place kimligi dosyalara sizar ve baska bir place'e
         -- kopyalanabilir hale gelir — kimligin tek isi ayirt etmek oldugu icin
         -- bu onu ise yaramaz kilardi.
@@ -102,21 +102,21 @@ end
 
 -- Bir objenin CollectionService etiketlerini dondurur. Etiketi yoksa nil.
 --
--- Etiketler property degil: Roblox'ta instance uzerinde bir alan olarak
+-- Etiketler property degil: Roblox'ta instance uzerinde bir field olarak
 -- durmuyorlar, CollectionService'te tutuluyorlar. Bu yuzden property tablosu
 -- onlari asla goremezdi ve etiketle calisan oyunlarin mantigi editorde
 -- tamamen gorunmezdi.
 function PatchBuilder:SerializeTags(instance: Instance): any
-    local ok, etiketler = pcall(function()
+    local ok, labels = pcall(function()
         return CollectionService:GetTags(instance)
     end)
-    if not ok or not etiketler or #etiketler == 0 then
+    if not ok or not labels or #labels == 0 then
         return nil
     end
-    -- Siralanmis gonderiliyor: ayni etiket kumesi her seferinde ayni listeyi
+    -- Siralanmis gonderiliyor: ayni label kumesi her seferinde ayni listeyi
     -- uretsin ki gereksiz "degisti" yamasi cikmasin.
-    table.sort(etiketler)
-    return etiketler
+    table.sort(labels)
+    return labels
 end
 
 -- Tek bir Attribute değişikliği için ATTRIBUTE_UPDATE patch üretir.
@@ -144,7 +144,7 @@ function PatchBuilder:BuildReparentPatch(uuid: string, parentUuid: string): any
     }
 end
 
--- Gelen verinin tipine göre uygun serileştirme yapar (Vector3, Color3, Enum, string, number vb.)
+-- Inbound verinin tipine göre uygun serileştirme yapar (Vector3, Color3, Enum, string, number vb.)
 function PatchBuilder:SerializeValue(value: any): any
     local t = typeof(value)
     if t == "Vector3" then
@@ -175,32 +175,32 @@ function PatchBuilder:SerializeValue(value: any): any
     elseif t == "NumberRange" then
         return { NumberRange = { min = value.Min, max = value.Max } }
     elseif t == "BrickColor" then
-        -- Duz metin olarak gonderilemez: karsi tarafta
+        -- Duz text olarak gonderilemez: karsi tarafta
         -- `part.BrickColor = "Really red"` atamasi sessizce basarisiz oluyor.
         return { BrickColor = value.Name }
     elseif t == "Content" then
-        -- Roblox'un yeni Content tipi. Eskiler (Decal.Texture, SoundId) hala
-        -- duz metin dondugu icin asagidaki string dalindan geciyor.
+        -- Roblox'un fresh Content tipi. Eskiler (Decal.Texture, SoundId) hala
+        -- duz text dondugu icin asagidaki string dalindan geciyor.
         return { Content = value.Uri or "" }
     elseif t == "ColorSequence" then
-        local noktalar = {}
+        local points = {}
         for _, k in ipairs(value.Keypoints) do
-            table.insert(noktalar, {
+            table.insert(points, {
                 t = k.Time,
                 r = k.Value.R,
                 g = k.Value.G,
                 b = k.Value.B,
             })
         end
-        return { ColorSequence = noktalar }
+        return { ColorSequence = points }
     elseif t == "NumberSequence" then
-        local noktalar = {}
+        local points = {}
         for _, k in ipairs(value.Keypoints) do
             -- Envelope Roblox'un rastgelelik payi; atlanirsa parcacik efekti
             -- duzlesir, o yuzden tasiniyor.
-            table.insert(noktalar, { t = k.Time, v = k.Value, envelope = k.Envelope })
+            table.insert(points, { t = k.Time, v = k.Value, envelope = k.Envelope })
         end
-        return { NumberSequence = noktalar }
+        return { NumberSequence = points }
     elseif t == "Rect" then
         return {
             Rect = {
@@ -228,17 +228,17 @@ function PatchBuilder:SerializeValue(value: any): any
         }
     elseif t == "Instance" then
         -- Baska bir objeye referans: hedefin UUID'si tasinir.
-        -- Metin olarak gonderilseydi karsi taraf onu duz metin sanip
+        -- Metin olarak gonderilseydi karsi taraf onu duz text sanip
         -- instance'a cevirmezdi; bu yuzden ayri bir sarmalayici var.
-        local hedefId = value:GetAttribute("__syncix_id")
-        if hedefId then
-            return { Ref = tostring(hedefId) }
+        local targetId = value:GetAttribute("__syncix_id")
+        if targetId then
+            return { Ref = tostring(targetId) }
         end
         return nil
     elseif t == "string" or t == "number" or t == "boolean" then
         return value
     end
-    -- Bos referans (ObjectValue.Value = nil gibi) bilgi tasir: "baglanti yok".
+    -- Bos referans (ObjectValue.Value = nil gibi) info tasir: "baglanti yok".
     if value == nil then
         return { Ref = "" }
     end
@@ -254,52 +254,52 @@ local Services = require(script.Parent.Services)
 --
 -- Eskiden bu listeler elle yaziliyordu ve yalnizca 12 sinifi kapsiyordu; Model,
 -- Humanoid, ParticleEmitter gibi her sey yalnizca yapisal olarak senkron oluyor,
--- tek bir ayari bile gitmiyordu. Artik liste Roblox API dokumundan uretiliyor
+-- tek bir ayari bile gitmiyordu. Artik list Roblox API dokumundan uretiliyor
 -- (tools/gen-properties.py) ve 248 sinifi, 1263 property'yi kapsiyor.
 --
 -- Onbellek onemli: kalitim zinciri her instance icin degil, her SINIF icin bir
 -- kez cozulur.
-local sinifOnbellegi = {}
+local classCache = {}
 
-local function sinifPropertyleri(className: string)
-	local onbellek = sinifOnbellegi[className]
-	if onbellek then
-		return onbellek
+local function classProperties(className: string)
+	local memo = classCache[className]
+	if memo then
+		return memo
 	end
 
-	local birlesik = {}
-	local mevcut = className
-	local koruma = 0
-	while mevcut and koruma < 64 do
-		local kayit = PropertyTable[mevcut]
-		if kayit then
-			for ad, tip in pairs(kayit.p) do
-				-- Alt sinif ust sinifi EZER: ayni ad iki yerde varsa alt sinifin
+	local merged = {}
+	local current = className
+	local guard = 0
+	while current and guard < 64 do
+		local entry = PropertyTable[current]
+		if entry then
+			for ad, kind in pairs(entry.p) do
+				-- Alt cls parentNode sinifi EZER: ayni ad iki yerde varsa subItem sinifin
 				-- tanimi gecerlidir.
-				if birlesik[ad] == nil then
-					birlesik[ad] = tip
+				if merged[ad] == nil then
+					merged[ad] = kind
 				end
 			end
-			mevcut = kayit.u
+			current = entry.u
 		else
 			break
 		end
-		koruma += 1
+		guard += 1
 	end
 
-	sinifOnbellegi[className] = birlesik
-	return birlesik
+	classCache[className] = merged
+	return merged
 end
 
 
 
 -- Bir instance'ın izlenen tüm property'lerini serileştirir (property adı -> değer). Boşsa nil.
 function PatchBuilder:SerializeProperties(instance: Instance): any
-    -- LocalizationTable'in "Contents" diye bir property'si YOKTUR; ilk denemede
+    -- LocalizationTable'in "Contents" diye bir property'si YOKTUR; first denemede
     -- oyle varsayilmisti ve Studio "Contents is not a valid member" dedi.
     -- Dogru API GetEntries()/SetEntries(). Ceviri girdilerini JSON metnine
-    -- cevirip sanki bir property'ymis gibi tasiyoruz; boylece mevcut String
-    -- property yolu ve .csv dosya bicimi oldugu gibi calisiyor.
+    -- cevirip sanki bir property'ymis gibi tasiyoruz; boylece current String
+    -- property yolu ve .csv dosya bicimi oldugu gibi isRunning.
     if instance:IsA("LocalizationTable") then
         local ok, json = pcall(function()
             local HttpService = game:GetService("HttpService")
@@ -311,10 +311,10 @@ function PatchBuilder:SerializeProperties(instance: Instance): any
         return nil
     end
 
-    local liste = sinifPropertyleri(instance.ClassName)
+    local list = classProperties(instance.ClassName)
     local props = {}
     local count = 0
-    for ad in pairs(liste) do
+    for ad in pairs(list) do
         local ok, val = pcall(function() return (instance :: any)[ad] end)
         if ok then
             local sv = self:SerializeValue(val)
@@ -330,7 +330,7 @@ end
 
 -- Bir property adının bu instance için otomatik izlenip izlenmediğini döndürür.
 function PatchBuilder:IsWatchedProperty(instance: Instance, propName: string): boolean
-    return sinifPropertyleri(instance.ClassName)[propName] ~= nil
+    return classProperties(instance.ClassName)[propName] ~= nil
 end
 
 -- Tüm ağacı dolaşıp FULL_SYNC JSON nesnesi üretir
@@ -340,7 +340,7 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
     local instances = {}
 
     -- 1. Önce servislerin kendilerini kök node olarak ekle.
-    -- Servisler de UUID alır; böylece hiyerarşi uçtan uca UUID ile taşınır.
+    -- ServiceList de UUID alır; böylece hiyerarşi uçtan uca UUID ile taşınır.
     for _, service in ipairs(servicesToSync) do
         local serviceUuid = service:GetAttribute("__syncix_id")
         if not serviceUuid then
@@ -378,7 +378,7 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
             parent = parentUuid
         }
         
-        -- Serialize properties (genis kapsam)
+        -- Serialize properties (wide kapsam)
         pcall(function()
             local props = self:SerializeProperties(instance)
             if props then
@@ -393,9 +393,9 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
             if attrs then
                 nodeData.attributes = attrs
             end
-            local etiketler = self:SerializeTags(instance)
-            if etiketler then
-                nodeData.tags = etiketler
+            local labels = self:SerializeTags(instance)
+            if labels then
+                nodeData.tags = labels
             end
         end)
         
@@ -414,7 +414,7 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
         version = "v1",
         data = {
             instances = instances,
-            place_key = PlaceKimligi.Al(),
+            place_key = PlaceIdentity.Resolve(),
             place_id = tostring(game.PlaceId),
             place_name = game.Name,
         }

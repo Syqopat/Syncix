@@ -13,10 +13,10 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 
-const VARSAYILAN_PORT = 8080;
-const PORT_ARALIK = 10;
+const DEFAULT_PORT = 8080;
+const PORT_RANGE = 10;
 
-let baseUrl = `http://127.0.0.1:${VARSAYILAN_PORT}`;
+let baseUrl = `http://127.0.0.1:${DEFAULT_PORT}`;
 
 /** Core'un HTTP adresi (ör. http://127.0.0.1:8081). */
 export function getBaseUrl(): string {
@@ -32,11 +32,11 @@ export function getWsUrl(): string {
 export function probe(port: number, timeoutMs = 1200): Promise<any | undefined> {
     return new Promise((resolve) => {
         const req = http.get(`http://127.0.0.1:${port}/health`, (res) => {
-            let govde = '';
-            res.on('data', (c) => (govde += c));
+            let bodyText = '';
+            res.on('data', (c) => (bodyText += c));
             res.on('end', () => {
                 try {
-                    const j = JSON.parse(govde);
+                    const j = JSON.parse(bodyText);
                     // Portta başka bir program olabilir; Syncix imzası aranır.
                     resolve(j && typeof j.status === 'string' ? j : undefined);
                 } catch {
@@ -66,16 +66,16 @@ export function readPortFile(projectRoot: string | undefined): number | undefine
 }
 
 /**
- * İki yol aynı projeyi mi gösteriyor?
+ * İki filePath aynı projeyi mi gösteriyor?
  * Windows'ta büyük/küçük harf ayrımı yok; sondaki ayraç da fark etmemeli.
  */
-function ayniProje(a: string | undefined, b: string | undefined): boolean {
+function isSameProject(a: string | undefined, b: string | undefined): boolean {
     if (!a || !b) return false;
-    const duzelt = (x: string) => {
+    const fixUp = (x: string) => {
         const n = path.resolve(x).replace(/[\/]+$/, '');
         return isWindows() ? n.toLowerCase() : n;
     };
-    return duzelt(a) === duzelt(b);
+    return fixUp(a) === fixUp(b);
 }
 
 /**
@@ -93,23 +93,23 @@ function ayniProje(a: string | undefined, b: string | undefined): boolean {
  */
 export async function refreshBaseUrl(projectRoot?: string): Promise<any | undefined> {
     // Proje kökü bilinmiyorsa doğrulanacak bir şey yok; eski davranış korunur.
-    const dogrula = (saglik: any) =>
-        !projectRoot || ayniProje(saglik?.root, projectRoot);
+    const checkValue = (health: any) =>
+        !projectRoot || isSameProject(health?.root, projectRoot);
 
-    const dosyadan = readPortFile(projectRoot);
-    if (dosyadan) {
-        const saglik = await probe(dosyadan);
-        if (saglik && dogrula(saglik)) {
-            baseUrl = `http://127.0.0.1:${dosyadan}`;
-            return saglik;
+    const fromFile = readPortFile(projectRoot);
+    if (fromFile) {
+        const health = await probe(fromFile);
+        if (health && checkValue(health)) {
+            baseUrl = `http://127.0.0.1:${fromFile}`;
+            return health;
         }
     }
 
-    for (let port = VARSAYILAN_PORT; port < VARSAYILAN_PORT + PORT_ARALIK; port++) {
-        const saglik = await probe(port);
-        if (saglik && dogrula(saglik)) {
+    for (let port = DEFAULT_PORT; port < DEFAULT_PORT + PORT_RANGE; port++) {
+        const health = await probe(port);
+        if (health && checkValue(health)) {
             baseUrl = `http://127.0.0.1:${port}`;
-            return saglik;
+            return health;
         }
     }
     return undefined;

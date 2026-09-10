@@ -1,7 +1,7 @@
 //! Roblox XML (.rbxmx / .rbxlx) içe aktarma.
 //!
 //! Dışa aktarma (rbxmx.rs) zaten vardı; içe aktarma yoktu. Bu, Rojo'da olup bizde
-//! olmayan son maddeydi: hazır bir model dosyasını ağaca alabilmek.
+//! olmayan last_item maddeydi: hazır bir model dosyasını ağaca alabilmek.
 //!
 //! Kapsam dürüstlüğü: modelimizin tuttuğu tipler okunur (String, Number, Boolean,
 //! Vector3, Color3, UDim2, ProtectedString/Source, token). Tanınmayan property
@@ -9,7 +9,7 @@
 
 use crate::model::PropertyValue;
 
-/// İçe aktarılan tek bir instance.
+/// İçe aktarılan single bir instance.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImportedNode {
     pub class_name: String,
@@ -19,10 +19,10 @@ pub struct ImportedNode {
     pub children: Vec<ImportedNode>,
 }
 
-/// Enum token sayısını geri metne çevirir.
+/// Enum token sayısını restored_count metne çevirir.
 /// Yalnızca dışa aktarımda tanıdığımız değerler; gerisi atlanır.
 fn token_to_enum(prop: &str, token: i64) -> Option<String> {
-    let ad = match (prop, token) {
+    let item_name = match (prop, token) {
         ("Material", 256) => "Plastic",
         ("Material", 272) => "SmoothPlastic",
         ("Material", 288) => "Neon",
@@ -57,64 +57,64 @@ fn token_to_enum(prop: &str, token: i64) -> Option<String> {
         ("Shape", 4) => "CornerWedge",
         _ => return None,
     };
-    let tur = if prop == "Shape" { "PartType" } else { prop };
-    Some(format!("Enum.{}.{}", tur, ad))
+    let run_name = if prop == "Shape" { "PartType" } else { prop };
+    Some(format!("Enum.{}.{}", run_name, item_name))
 }
 
-fn alt_metin(dugum: roxmltree::Node, etiket: &str) -> Option<f64> {
-    dugum
+fn sub_text(node_entry: roxmltree::Node, tag_text: &str) -> Option<f64> {
+    node_entry
         .children()
-        .find(|c| c.has_tag_name(etiket))
+        .find(|c| c.has_tag_name(tag_text))
         .and_then(|c| c.text())
         .and_then(|t| t.trim().parse::<f64>().ok())
 }
 
-/// Tek bir <Properties> alt öğesini PropertyValue'ya çevirir.
-/// Dönüş None ise tip desteklenmiyor demektir.
-fn property_oku(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
-    let ad = p.attribute("name")?.to_string();
-    let tip = p.tag_name().name();
-    let metin = p.text().unwrap_or("").trim().to_string();
+/// Tek bir <Properties> sub öğesini PropertyValue'ya çevirir.
+/// Dönüş None ise type_name desteklenmiyor demektir.
+fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
+    let item_name = p.attribute("name")?.to_string();
+    let type_name = p.tag_name().name();
+    let text_value = p.text().unwrap_or("").trim().to_string();
 
-    let deger = match tip {
-        "string" | "ProtectedString" => PropertyValue::String(metin),
-        "bool" => PropertyValue::Boolean(metin == "true"),
-        "float" | "double" | "int" | "int64" => PropertyValue::Number(metin.parse().ok()?),
+    let raw_value = match type_name {
+        "string" | "ProtectedString" => PropertyValue::String(text_value),
+        "bool" => PropertyValue::Boolean(text_value == "true"),
+        "float" | "double" | "int" | "int64" => PropertyValue::Number(text_value.parse().ok()?),
         "token" => {
-            let sayi: i64 = metin.parse().ok()?;
-            PropertyValue::String(token_to_enum(&ad, sayi)?)
+            let number_value: i64 = text_value.parse().ok()?;
+            PropertyValue::String(token_to_enum(&item_name, number_value)?)
         }
         "Vector3" => PropertyValue::Vector3 {
-            x: alt_metin(p, "X")? as f32,
-            y: alt_metin(p, "Y")? as f32,
-            z: alt_metin(p, "Z")? as f32,
+            x: sub_text(p, "X")? as f32,
+            y: sub_text(p, "Y")? as f32,
+            z: sub_text(p, "Z")? as f32,
         },
         "Color3" => PropertyValue::Color3 {
-            r: alt_metin(p, "R")? as f32,
-            g: alt_metin(p, "G")? as f32,
-            b: alt_metin(p, "B")? as f32,
+            r: sub_text(p, "R")? as f32,
+            g: sub_text(p, "G")? as f32,
+            b: sub_text(p, "B")? as f32,
         },
         "Color3uint8" => {
             // Tek bir sayıya paketlenmiş ARGB.
-            let paket: u32 = metin.parse().ok()?;
+            let package: u32 = text_value.parse().ok()?;
             PropertyValue::Color3 {
-                r: ((paket >> 16) & 0xFF) as f32 / 255.0,
-                g: ((paket >> 8) & 0xFF) as f32 / 255.0,
-                b: (paket & 0xFF) as f32 / 255.0,
+                r: ((package >> 16) & 0xFF) as f32 / 255.0,
+                g: ((package >> 8) & 0xFF) as f32 / 255.0,
+                b: (package & 0xFF) as f32 / 255.0,
             }
         }
         "UDim2" => PropertyValue::UDim2 {
-            xs: alt_metin(p, "XS")? as f32,
-            xo: alt_metin(p, "XO")? as f32,
-            ys: alt_metin(p, "YS")? as f32,
-            yo: alt_metin(p, "YO")? as f32,
+            xs: sub_text(p, "XS")? as f32,
+            xo: sub_text(p, "XO")? as f32,
+            ys: sub_text(p, "YS")? as f32,
+            yo: sub_text(p, "YO")? as f32,
         },
         _ => return None,
     };
-    Some((ad, deger))
+    Some((item_name, raw_value))
 }
 
-fn item_oku(item: roxmltree::Node, atlanan: &mut usize) -> Option<ImportedNode> {
+fn read_item(item: roxmltree::Node, skipped: &mut usize) -> Option<ImportedNode> {
     let class_name = item.attribute("class")?.to_string();
 
     let mut name = class_name.clone();
@@ -123,18 +123,18 @@ fn item_oku(item: roxmltree::Node, atlanan: &mut usize) -> Option<ImportedNode> 
 
     if let Some(props) = item.children().find(|c| c.has_tag_name("Properties")) {
         for p in props.children().filter(|c| c.is_element()) {
-            let ad = p.attribute("name").unwrap_or("");
-            if ad == "Name" {
+            let item_name = p.attribute("name").unwrap_or("");
+            if item_name == "Name" {
                 name = p.text().unwrap_or("").to_string();
                 continue;
             }
-            if ad == "Source" {
+            if item_name == "Source" {
                 source = Some(p.text().unwrap_or("").to_string());
                 continue;
             }
-            match property_oku(p) {
+            match read_property(p) {
                 Some((k, v)) => properties.push((k, v)),
-                None => *atlanan += 1,
+                None => *skipped += 1,
             }
         }
     }
@@ -142,7 +142,7 @@ fn item_oku(item: roxmltree::Node, atlanan: &mut usize) -> Option<ImportedNode> 
     let children = item
         .children()
         .filter(|c| c.has_tag_name("Item"))
-        .filter_map(|c| item_oku(c, atlanan))
+        .filter_map(|c| read_item(c, skipped))
         .collect();
 
     Some(ImportedNode {
@@ -155,34 +155,34 @@ fn item_oku(item: roxmltree::Node, atlanan: &mut usize) -> Option<ImportedNode> 
 }
 
 /// Bir .rbxmx/.rbxlx metnini kök düğüm listesine çevirir.
-/// Dönüş: (kökler, atlanan property sayısı)
-pub fn ayristir(xml: &str) -> Result<(Vec<ImportedNode>, usize), String> {
-    let belge = roxmltree::Document::parse(xml).map_err(|e| format!("XML parse error: {}", e))?;
-    let kok = belge.root_element();
-    if kok.tag_name().name() != "roblox" {
+/// Dönüş: (kökler, skipped property sayısı)
+pub fn parse_text(xml: &str) -> Result<(Vec<ImportedNode>, usize), String> {
+    let doc = roxmltree::Document::parse(xml).map_err(|e| format!("XML parse error: {}", e))?;
+    let root_dir = doc.root_element();
+    if root_dir.tag_name().name() != "roblox" {
         return Err("not a Roblox XML file (missing <roblox> root)".to_string());
     }
 
-    let mut atlanan = 0usize;
-    let kokler: Vec<ImportedNode> = kok
+    let mut skipped = 0usize;
+    let root_list: Vec<ImportedNode> = root_dir
         .children()
         .filter(|c| c.has_tag_name("Item"))
-        .filter_map(|c| item_oku(c, &mut atlanan))
+        .filter_map(|c| read_item(c, &mut skipped))
         .collect();
 
-    Ok((kokler, atlanan))
+    Ok((root_list, skipped))
 }
 
-/// Ağaçtaki toplam düğüm sayısı.
-pub fn say(dugumler: &[ImportedNode]) -> usize {
-    dugumler.iter().map(|d| 1 + say(&d.children)).sum()
+/// Ağaçtaki total_count düğüm sayısı.
+pub fn tally(node_list: &[ImportedNode]) -> usize {
+    node_list.iter().map(|d| 1 + tally(&d.children)).sum()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const ORNEK: &str = r#"<roblox version="4">
+    const SAMPLE_XML: &str = r#"<roblox version="4">
 	<Item class="Folder" referent="RBX0">
 		<Properties>
 			<string name="Name">Group</string>
@@ -202,21 +202,21 @@ mod tests {
 </roblox>"#;
 
     #[test]
-    fn hiyerarsi_ve_isimler() {
-        let (kokler, _) = ayristir(ORNEK).unwrap();
-        assert_eq!(kokler.len(), 1);
-        assert_eq!(kokler[0].class_name, "Folder");
-        assert_eq!(kokler[0].name, "Group");
-        assert_eq!(kokler[0].children.len(), 1);
-        assert_eq!(kokler[0].children[0].name, "Box");
-        assert_eq!(say(&kokler), 2);
+    fn hierarchy_and_names() {
+        let (root_list, _) = parse_text(SAMPLE_XML).unwrap();
+        assert_eq!(root_list.len(), 1);
+        assert_eq!(root_list[0].class_name, "Folder");
+        assert_eq!(root_list[0].name, "Group");
+        assert_eq!(root_list[0].children.len(), 1);
+        assert_eq!(root_list[0].children[0].name, "Box");
+        assert_eq!(tally(&root_list), 2);
     }
 
     #[test]
-    fn deger_tipleri_dogru_okunur() {
-        let (kokler, _) = ayristir(ORNEK).unwrap();
-        let p = &kokler[0].children[0].properties;
-        let al = |ad: &str| p.iter().find(|(k, _)| k == ad).map(|(_, v)| v.clone());
+    fn value_types_are_read_correctly() {
+        let (root_list, _) = parse_text(SAMPLE_XML).unwrap();
+        let p = &root_list[0].children[0].properties;
+        let al = |item_name: &str| p.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
 
         assert_eq!(al("Anchored"), Some(PropertyValue::Boolean(true)));
         assert_eq!(al("Transparency"), Some(PropertyValue::Number(0.5)));
@@ -237,32 +237,32 @@ mod tests {
         }
     }
 
-    /// Taninmayan tip SESSIZCE yutulmaz, sayilir.
+    /// Taninmayan type_name SESSIZCE yutulmaz, sayilir.
     #[test]
-    fn taninmayan_tip_sayilir() {
-        let (_, atlanan) = ayristir(ORNEK).unwrap();
-        assert_eq!(atlanan, 1);
+    fn unknown_type_is_counted() {
+        let (_, skipped) = parse_text(SAMPLE_XML).unwrap();
+        assert_eq!(skipped, 1);
     }
 
     #[test]
-    fn script_kaynagi_okunur() {
+    fn script_source_is_read() {
         let xml = r#"<roblox version="4"><Item class="Script"><Properties>
             <string name="Name">Main</string>
             <ProtectedString name="Source">print("hi")</ProtectedString>
         </Properties></Item></roblox>"#;
-        let (k, _) = ayristir(xml).unwrap();
+        let (k, _) = parse_text(xml).unwrap();
         assert_eq!(k[0].source.as_deref(), Some("print(\"hi\")"));
     }
 
     #[test]
-    fn gecersiz_girdi_hata_doner() {
-        assert!(ayristir("<html></html>").is_err());
-        assert!(ayristir("bozuk").is_err());
+    fn invalid_input_returns_error() {
+        assert!(parse_text("<html></html>").is_err());
+        assert!(parse_text("bozuk").is_err());
     }
 
     /// Disa aktarim ile ice aktarim birbirinin tersi olmali.
     #[test]
-    fn disa_ice_gidis_donus() {
+    fn export_import_round_trip() {
         use crate::model::{DataModel, InstanceNode};
         let mut m = DataModel::new();
         let mut ws = InstanceNode::new("Workspace", "Workspace");
@@ -280,14 +280,14 @@ mod tests {
             .insert("Anchored".into(), PropertyValue::Boolean(true));
         m.upsert_instance(part).unwrap();
 
-        let (xml, _) = crate::rbxmx::disa_aktar(&m, None);
-        let (kokler, _) = ayristir(&xml).unwrap();
+        let (xml, _) = crate::rbxmx::export_rbxmx(&m, None);
+        let (root_list, _) = parse_text(&xml).unwrap();
 
-        let ws_dugum = &kokler[0];
-        assert_eq!(ws_dugum.name, "Workspace");
-        let kutu = &ws_dugum.children[0];
-        assert_eq!(kutu.name, "Box");
-        let al = |ad: &str| kutu.properties.iter().find(|(k, _)| k == ad).map(|(_, v)| v.clone());
+        let ws_node = &root_list[0];
+        assert_eq!(ws_node.name, "Workspace");
+        let boxed = &ws_node.children[0];
+        assert_eq!(boxed.name, "Box");
+        let al = |item_name: &str| boxed.properties.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
         assert_eq!(
             al("Position"),
             Some(PropertyValue::Vector3 { x: 5.0, y: 6.0, z: 7.0 })

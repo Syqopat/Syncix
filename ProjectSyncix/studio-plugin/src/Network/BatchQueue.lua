@@ -10,12 +10,12 @@ function BatchQueue.new()
     local self = setmetatable({}, BatchQueue)
     self.queue = {}
     -- Birleştirme (coalescing) indeksi: "uuid|property" -> kuyruktaki sıra numarası.
-    -- Sürükleme/renk seçici gibi durumlarda aynı property saniyede onlarca kez değişir;
+    -- Sürükleme/color seçici gibi durumlarda aynı property saniyede onlarca kez değişir;
     -- kuyrukta yalnızca SON değer tutulur, ara değerler ağa hiç çıkmaz.
     self.propIndex = {}
     -- Ölçüm sayaçları: birleştirmenin gerçekten çalıştığını doğrulamanın tek yolu.
-    -- queued    = kuyruğa giren toplam değişiklik
-    -- coalesced = mevcut bir kaydın üzerine yazılarak ağa hiç çıkmayan değişiklik
+    -- queued    = kuyruğa giren total değişiklik
+    -- coalesced = current bir kaydın üzerine yazılarak ağa hiç çıkmayan değişiklik
     self.stats = { queued = 0, coalesced = 0 }
     return self
 end
@@ -25,12 +25,12 @@ function BatchQueue:GetStats()
     return { queued = self.stats.queued, coalesced = self.stats.coalesced }
 end
 
--- Bir patch birleştirilebilir mi? (aynı obje + aynı property'nin ara değerleri atılabilir)
+-- Bir patch birleştirilebilir mi? (aynı object + aynı property'nin ara değerleri atılabilir)
 local function coalesceKey(patch: any): string?
     local d = patch and patch.data
     if not d or not d.syncix_id then return nil end
     if patch.event_type == "PROPERTY_UPDATE" and d.property then
-        -- Source (script kodu) da birleşebilir: son hali yeterli
+        -- Source (script kodu) da birleşebilir: last hali yeterli
         return tostring(d.syncix_id) .. "|p|" .. tostring(d.property)
     elseif patch.event_type == "ATTRIBUTE_UPDATE" and d.name then
         return tostring(d.syncix_id) .. "|a|" .. tostring(d.name)
@@ -45,7 +45,7 @@ function BatchQueue:OnStart(container)
     self.metrics = container:Get("Metrics")
 end
 
--- Yeni bir yama (Patch) ekler. Aynı obje+property için bekleyen patch varsa
+-- Yeni bir yama (Patch) ekler. Aynı object+property için pendingItem patch varsa
 -- yenisiyle DEĞİŞTİRİLİR (ara değerler ağa çıkmaz).
 function BatchQueue:Enqueue(patch: any)
     self.stats.queued += 1
@@ -54,7 +54,7 @@ function BatchQueue:Enqueue(patch: any)
     if key then
         local existingIndex = self.propIndex[key]
         if existingIndex and self.queue[existingIndex] then
-            self.queue[existingIndex] = patch -- sadece son değeri tut
+            self.queue[existingIndex] = patch -- sadece last değeri tut
             self.stats.coalesced += 1
             if self.metrics then
                 self.metrics:IncrementPatchCount(1)

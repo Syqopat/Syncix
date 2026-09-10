@@ -2,17 +2,17 @@ use crate::model::{InstanceNode, InstancePatch};
 use tokio::sync::broadcast;
 
 /// Sistemin merkezi sinir ağı (Event Bus).
-/// Tüm bileşenler (Watcher, Transport, DataModel) sadece buraya mesaj bırakır veya buradan okur.
+/// Tüm bileşenler (Watcher, Transport, DataModel) sadece buraya message bırakır veya buradan okur.
 /// Birbirlerini doğrudan çağırmazlar (Decoupling).
 #[derive(Debug, Clone)]
 pub enum SyncEvent {
-    /// Dosya sisteminden veya Studio'dan gelen, "Tüm nesneyi ez" komutu.
+    /// Dosya sisteminden veya Studio'dan received, "Tüm nesneyi ez" komutu.
     FullNodeUpdate(InstanceNode),
 
     /// Sadece belirli özellikleri değiştiren yama komutu (Incremental Sync).
     PatchUpdate(InstancePatch),
 
-    /// Bir nesnenin silindiğini bildiren komut.
+    /// Bir nesnenin silindiğini bildiren command_name.
     NodeDeleted(uuid::Uuid),
 }
 

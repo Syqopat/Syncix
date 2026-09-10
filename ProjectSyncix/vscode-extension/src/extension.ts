@@ -21,16 +21,16 @@ let coreProcessPid: number | undefined;
  * core dolu portu atlayıp bir sonrakine geçebiliyor.
  */
 async function checkCoreHealth(): Promise<boolean> {
-    const saglik = await env.refreshBaseUrl(findProjectRoot());
-    if (!saglik) return false;
-    uyarSurumUyusmazligi(saglik);
+    const health = await env.refreshBaseUrl(findProjectRoot());
+    if (!health) return false;
+    warnVersionMismatch(health);
     return true;
 }
 
 /** Sürüm uyuşmazlığını bir kez bildirir (sessizce garip davranmasın). */
-let surumUyarisiVerildi = false;
+let versionWarningShown = false;
 /**
- * Eklentinin kendi sürümü; activate'te context.extension'dan doldurulur.
+ * Eklentinin ownVersion sürümü; activate'te context.extension'dan doldurulur.
  *
  * Eskiden getExtension('Syncix.syncix-vscode') ile aranıyordu. O kimlik hiçbir
  * zaman gerçek değildi (yayıncı hiç "Syncix" olmadı), arama her seferinde
@@ -38,16 +38,16 @@ let surumUyarisiVerildi = false;
  * Kimliği koda yazmak yerine eklentinin kendisinden okuyoruz; yayıncı ya da ad
  * değişse de doğru kalıyor.
  */
-let kendiSurum = '';
-function uyarSurumUyusmazligi(saglik: any) {
-    if (surumUyarisiVerildi || !saglik?.version) return;
-    const kendi = kendiSurum;
-    if (!kendi) return;
+let extensionVersion = '';
+function warnVersionMismatch(health: any) {
+    if (versionWarningShown || !health?.version) return;
+    const ownVersion = extensionVersion;
+    if (!ownVersion) return;
     const mm = (v: string) => v.split('.').slice(0, 2).join('.');
-    if (mm(kendi) !== mm(saglik.version)) {
-        surumUyarisiVerildi = true;
+    if (mm(ownVersion) !== mm(health.version)) {
+        versionWarningShown = true;
         vscode.window.showWarningMessage(
-            `Syncix version mismatch — extension ${kendi}, core ${saglik.version}. ` +
+            `Syncix version mismatch — extension ${ownVersion}, core ${health.version}. ` +
             `The same major.minor is required; rebuild the core or update the extension.`
         );
     }
@@ -121,7 +121,7 @@ function resolveCorePaths(): { exePath: string; cwd: string } | undefined {
 let context_extensionPath = '';
 
 /** Platform uyarısı oturumda bir kez gösterilir; her denemede tekrarlanmamalı. */
-let platformUyarisiVerildi = false;
+let platformWarningShown = false;
 
 /** Sync klasörünün üst dizinini bulur (syncix.toml'a göre). */
 function findSyncWorkspaceRoot(): string | undefined {
@@ -148,13 +148,13 @@ async function ensureCoreRunning(): Promise<void> {
         // Sessizce cikmak en kotusuydu: macOS'ta eklenti kuruluyor, agac
         // acilmiyor, hicbir yerde sebep yazmiyordu. Neyin eksik oldugunu
         // soylemek, calismiyor olmaktan daha iyi degil ama tesis edilebilir.
-        if (!platformUyarisiVerildi) {
-            platformUyarisiVerildi = true;
-            const mesaj = env.isWindows()
+        if (!platformWarningShown) {
+            platformWarningShown = true;
+            const messageText = env.isWindows()
                 ? 'Syncix could not find the core binary. Reinstall the extension, or set syncix.coreExePath.'
                 : `Syncix ships a Windows core binary only, so it cannot start on ${process.platform}. ` +
                   'Build the core from source and point syncix.coreExePath at it.';
-            vscode.window.showWarningMessage(mesaj);
+            vscode.window.showWarningMessage(messageText);
         }
         return;
     }
@@ -177,10 +177,10 @@ async function ensureCoreRunning(): Promise<void> {
         // Beklemeden devam edilirse rpcClient.connect() hala eski adrese gider.
         // Baska bir projenin core'u 8080'i tutuyorsa bu adres onu gosteriyor
         // demektir; yani baglanti yanlis oyuna kurulur. refreshBaseUrl artik
-        // projeyi dogruladigi icin, dogru adres ancak kendi core'umuz acildiktan
+        // projeyi dogruladigi icin, dogru adres ancak ownVersion core'umuz acildiktan
         // sonra olusuyor.
-        const baslangic = Date.now();
-        while (Date.now() - baslangic < 10_000) {
+        const startIndex = Date.now();
+        while (Date.now() - startIndex < 10_000) {
             await new Promise((r) => setTimeout(r, 300));
             if (await checkCoreHealth()) break;
         }
@@ -196,7 +196,7 @@ async function ensureCoreRunning(): Promise<void> {
  *
  * Eskiden burada `taskkill /IM syncix-core.exe /F` çalışıyordu: isimden öldürdüğü
  * için AÇIK OLAN BÜTÜN projelerin core'unu kapatıyordu ve yalnızca Windows'ta
- * çalışıyordu. Artık yalnızca kendi başlattığımız süreç, PID ile durduruluyor.
+ * çalışıyordu. Artık yalnızca ownVersion başlattığımız süreç, PID ile durduruluyor.
  */
 function stopCore(): boolean {
     if (!coreProcessPid) return false;
@@ -216,22 +216,22 @@ function stopCore(): boolean {
  * Bir Syncix projesi mi?
  *
  * Ölçüt syncix.toml'un varlığı. Daha önce klasör ADINA bakılıyordu
- * ("src_workspace", "projectsyncix") — bunlar bu deponun kendi eski klasör
- * isimleriydi. Sonucu şuydu: kendi makinemizde her şey çalışıyor, projesine
+ * ("src_workspace", "projectsyncix") — bunlar bu deponun ownVersion eski klasör
+ * isimleriydi. Sonucu şuydu: ownVersion makinemizde her şey çalışıyor, projesine
  * "MyGame" adını veren herkeste eklenti sessizce hiçbir şey yapmıyordu.
- * Kurulumu kendi makinende denemenin neden yetmediğinin iyi bir örneği.
+ * Kurulumu ownVersion makinende denemenin neden yetmediğinin iyi bir örneği.
  */
 async function isSyncixWorkspace(): Promise<boolean> {
-    return projeDosyasi() !== undefined;
+    return projectFile() !== undefined;
 }
 
 /** Çalışma alanındaki syncix.toml'un yolu, yoksa undefined. */
-function projeDosyasi(): string | undefined {
+function projectFile(): string | undefined {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders || folders.length === 0) return undefined;
     for (const folder of folders) {
-        const aday = path.join(folder.uri.fsPath, 'syncix.toml');
-        if (fs.existsSync(aday)) return aday;
+        const candidate = path.join(folder.uri.fsPath, 'syncix.toml');
+        if (fs.existsSync(candidate)) return candidate;
     }
     return undefined;
 }
@@ -239,12 +239,12 @@ function projeDosyasi(): string | undefined {
 /**
  * Projenin sync klasörünün ADI (syncix.toml'daki `sync_dir`).
  *
- * Daha önce bu ad kodda sabitti ("src_workspace") — bu deponun kendi klasör
+ * Daha önce bu ad kodda sabitti ("src_workspace") — bu deponun ownVersion klasör
  * adı. Sonuç: klasörüne başka bir ad veren herkeste kayıt geri bildirimi ve
  * "sync klasörünü aç" komutu sessizce yanlış yolu gösteriyordu.
  */
-function senkronKlasoruAdi(): string {
-    const toml = projeDosyasi();
+function syncFolderName(): string {
+    const toml = projectFile();
     if (toml) {
         try {
             const m = /^\s*sync_dir\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(toml, 'utf8'));
@@ -263,16 +263,16 @@ function senkronKlasoruAdi(): string {
  * yalnızca syncix.toml varsa çalışıyor, syncix.toml'u da yalnızca CLI
  * yaratabiliyor, CLI ise eklenti çalışınca kuruluyordu.
  */
-async function projeOlustur(context: vscode.ExtensionContext): Promise<void> {
+async function createProject(context: vscode.ExtensionContext): Promise<void> {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders || folders.length === 0) {
         vscode.window.showErrorMessage('Open a folder first, then create the Syncix project inside it.');
         return;
     }
 
-    const kok = folders[0].uri.fsPath;
-    const tomlYolu = path.join(kok, 'syncix.toml');
-    if (fs.existsSync(tomlYolu)) {
+    const rootPath = folders[0].uri.fsPath;
+    const tomlPath = path.join(rootPath, 'syncix.toml');
+    if (fs.existsSync(tomlPath)) {
         vscode.window.showInformationMessage('This folder already has a syncix.toml.');
         return;
     }
@@ -284,24 +284,24 @@ async function projeOlustur(context: vscode.ExtensionContext): Promise<void> {
     });
     if (!syncDir) return;   // kullanıcı vazgeçti
 
-    const ornek = path.join(context.extensionPath, 'resources', 'syncix.example.toml');
-    let icerik: string;
-    if (fs.existsSync(ornek)) {
+    const sampleFile = path.join(context.extensionPath, 'resources', 'syncix.example.toml');
+    let fileText: string;
+    if (fs.existsSync(sampleFile)) {
         // Örnek dosya her ayarı açıklıyor; yeni kullanıcının neyi
         // değiştirebileceğini görmesi için olduğu gibi veriliyor.
-        icerik = fs.readFileSync(ornek, 'utf8').replace(
+        fileText = fs.readFileSync(sampleFile, 'utf8').replace(
             /^sync_dir = ".*"$/m,
             `sync_dir = "${syncDir.trim()}"`
         );
     } else {
-        icerik = `[files]
+        fileText = `[files]
 sync_dir = "${syncDir.trim()}"
 `;
     }
 
     try {
-        fs.writeFileSync(tomlYolu, icerik);
-        fs.mkdirSync(path.join(kok, syncDir.trim()), { recursive: true });
+        fs.writeFileSync(tomlPath, fileText);
+        fs.mkdirSync(path.join(rootPath, syncDir.trim()), { recursive: true });
     } catch (err: any) {
         vscode.window.showErrorMessage(`Could not create the project: ${err.message}`);
         return;
@@ -315,7 +315,7 @@ sync_dir = "${syncDir.trim()}"
     rpcClient?.connect();
     await vscode.commands.executeCommand('setContext', 'syncix.hasProject', true);
 
-    const doc = await vscode.workspace.openTextDocument(tomlYolu);
+    const doc = await vscode.workspace.openTextDocument(tomlPath);
     await vscode.window.showTextDocument(doc);
     vscode.window.showInformationMessage(
         'Syncix project created. Open Roblox Studio — the plugin is installed and the core is running.'
@@ -358,14 +358,14 @@ function ensurePluginInstalled(context: vscode.ExtensionContext) {
 }
 
 /**
- * `syncix` komutunu editörün kendi terminallerine ekler.
+ * `syncix` komutunu editörün ownVersion terminallerine ekler.
  *
  * Eskiden bu fonksiyon kullanıcının ev klasörüne bir .cmd yazıyor ve gizli,
  * ayrık bir kabuk süreciyle kullanıcının PATH'ini kayıt defterinde
  * değiştiriyordu — kimse sormadan, her proje açılışında. Bu, rıza dışı
  * kalıcı bir sistem değişikliğiydi.
  *
- * Artık kısayol eklentinin kendi depolama klasörüne yazılıyor ve PATH'e
+ * Artık kısayol eklentinin ownVersion depolama klasörüne yazılıyor ve PATH'e
  * yalnızca VS Code API'si üzerinden, editörün açtığı terminaller için
  * ekleniyor. Kayıt defterine, kullanıcı klasörüne ya da sistem PATH'ine
  * dokunulmuyor; eklenti kaldırılınca geride iz kalmıyor.
@@ -415,7 +415,7 @@ exec "${exe}" "$@"
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Syncix Extension Activated');
     context_extensionPath = context.extensionPath;
-    kendiSurum = context.extension.packageJSON?.version ?? '';
+    extensionVersion = context.extension.packageJSON?.version ?? '';
 
     // 0. Yalnızca Syncix çalışma alanında otomatik core başlat + bağlan.
     // Diğer projelerde her şey pasif kalır; istenirse "Syncix: Start" komutu ile elle bağlanılır.
@@ -483,17 +483,17 @@ export async function activate(context: vscode.ExtensionContext) {
         };
 
         // /health'i düzenli yoklayarak Studio durumunu ve çakışma sayısını izle.
-        const saglikYokla = async () => {
+        const pollHealth = async () => {
             try {
-                const saglik = await env.probe(
+                const health = await env.probe(
                     parseInt(new URL(env.getBaseUrl()).port || '8080', 10),
                     1200
                 );
-                if (saglik) {
-                    studioConnected = saglik.studio_connected === true;
-                    conflictCount = saglik.conflicts ?? 0;
-                    if (typeof saglik.object_count === 'number') {
-                        objectCount = saglik.object_count;
+                if (health) {
+                    studioConnected = health.studio_connected === true;
+                    conflictCount = health.conflicts ?? 0;
+                    if (typeof health.object_count === 'number') {
+                        objectCount = health.object_count;
                     }
                 } else {
                     studioConnected = false;
@@ -503,9 +503,9 @@ export async function activate(context: vscode.ExtensionContext) {
             }
             updateStatusBar();
         };
-        const saglikZamanlayici = setInterval(saglikYokla, 5000);
-        context.subscriptions.push({ dispose: () => clearInterval(saglikZamanlayici) });
-        saglikYokla();
+        const healthTimer = setInterval(pollHealth, 5000);
+        context.subscriptions.push({ dispose: () => clearInterval(healthTimer) });
+        pollHealth();
         updateStatusBar();
         statusBar.show();
         context.subscriptions.push(statusBar);
@@ -533,14 +533,14 @@ export async function activate(context: vscode.ExtensionContext) {
         // bırakılmıştı. Bir .lua dosyasını kaydettiğinde değişikliğin Studio'ya
         // ulaşıp ulaşmadığını anlamanın hiçbir yolu yoktu — Studio kapalıyken bile
         // kayıt sessizce hiçbir yere gitmiyordu. Artık her kayıtta durum söyleniyor.
-        const senkronKoku = findSyncWorkspaceRoot() ?? findProjectRoot();
-        const kaydetIzleyici = vscode.workspace.onDidSaveTextDocument((belge) => {
-            if (!senkronKoku) return;
-            const yol = belge.uri.fsPath;
-            const senkronKlasoru = path.join(senkronKoku, senkronKlasoruAdi());
-            if (!yol.startsWith(senkronKlasoru)) return;
+        const syncRoot = findSyncWorkspaceRoot() ?? findProjectRoot();
+        const saveWatcher = vscode.workspace.onDidSaveTextDocument((savedDoc) => {
+            if (!syncRoot) return;
+            const filePath = savedDoc.uri.fsPath;
+            const syncFolder = path.join(syncRoot, syncFolderName());
+            if (!filePath.startsWith(syncFolder)) return;
 
-            const ad = path.basename(yol);
+            const ad = path.basename(filePath);
             if (!studioConnected) {
                 vscode.window.showWarningMessage(
                     `Saved ${ad}, but Roblox Studio is not connected — the change did not reach Studio.`
@@ -549,7 +549,7 @@ export async function activate(context: vscode.ExtensionContext) {
             }
             vscode.window.setStatusBarMessage(`$(check) ${ad} → Studio`, 2500);
         });
-        context.subscriptions.push(kaydetIzleyici);
+        context.subscriptions.push(saveWatcher);
 
         const showStatusCmd = vscode.commands.registerCommand('syncix.showStatus', () => {
             if (!connected) {
@@ -563,9 +563,9 @@ export async function activate(context: vscode.ExtensionContext) {
                 );
                 return;
             }
-            const cakismaNotu = conflictCount > 0 ? `  —  ${conflictCount} conflict(s)` : '';
+            const conflictNote = conflictCount > 0 ? `  —  ${conflictCount} conflict(s)` : '';
             vscode.window.showInformationMessage(
-                `Syncix connected  —  ${objectCount} instances in sync${cakismaNotu}`
+                `Syncix connected  —  ${objectCount} instances in sync${conflictNote}`
             );
         });
         context.subscriptions.push(showStatusCmd);
@@ -612,7 +612,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // ── Komut Paleti (Ctrl+Shift+P) aksiyonları ──
     const cfg = vscode.workspace.getConfiguration('syncix');
     const projRoot = findProjectRoot() ?? '';
-    const syncDir = projRoot ? path.join(projRoot, senkronKlasoruAdi()) : '';
+    const syncDir = projRoot ? path.join(projRoot, syncFolderName()) : '';
 
     const paletteCmds = [
         vscode.commands.registerCommand('syncix.reconnect', async () => {
@@ -635,7 +635,7 @@ export async function activate(context: vscode.ExtensionContext) {
             setTimeout(() => ensureCoreRunning().then(() => rpcClient.connect()), 1200);
             vscode.window.showInformationMessage('Restarting the Syncix core...');
         }),
-        vscode.commands.registerCommand('syncix.initProject', () => projeOlustur(context)),
+        vscode.commands.registerCommand('syncix.initProject', () => createProject(context)),
         vscode.commands.registerCommand('syncix.installPlugin', () => {
             ensurePluginInstalled(context);
             vscode.window.showInformationMessage('Checked the Syncix plugin. If it changed, restart Roblox Studio.');
@@ -663,14 +663,14 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
             const dir = path.dirname(shim);
-            const secim = await vscode.window.showInformationMessage(
+            const choice = await vscode.window.showInformationMessage(
                 `"syncix" already works in this editor's terminals. Syncix does not change your system PATH. To use the command in other terminals too, add this folder to your PATH yourself:
 
 ${dir}`,
                 { modal: true },
                 'Copy Folder Path'
             );
-            if (secim === 'Copy Folder Path') {
+            if (choice === 'Copy Folder Path') {
                 await vscode.env.clipboard.writeText(dir);
                 vscode.window.showInformationMessage(
                     'Folder path copied. On Windows: Start, search "Edit environment variables for your account", select Path, New, paste.'

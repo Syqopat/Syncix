@@ -11,10 +11,10 @@ use crate::serializers::part::PartSerializer;
 use crate::serializers::Serializer;
 
 /// Diskteki değişiklikleri izler ve Studio'ya iletir.
-/// ÖNEMLİ: Studio'ya giden her deger `pv_to_wire` ile cevrilir.
+/// ÖNEMLİ: Studio'ya outgoing her raw_value `pv_to_wire` ile cevrilir.
 /// `PropertyValue`'yu dogrudan JSON'a koymak serde'nin disa donuk etiketli
 /// bicimini uretiyor ({"Number":0.5}); eklenti ise duz bicimi bekliyor ve
-/// "unsupported table value for property" diye reddediyor. Bu hata canli
+/// "unsupported table value for property" diye reddediyor. Bu report_error canli
 /// kullanimda Part.Transparency uzerinde yakalandi.
 ///
 /// ÖNEMLİ: Bu modül diske ASLA yazmaz. Diske yazmak yalnızca layout modülünün işidir;
@@ -26,17 +26,17 @@ pub async fn start_watcher(
     tx_to_vscode: tokio::sync::broadcast::Sender<String>,
     disk_notify: Arc<tokio::sync::Notify>,
     ignore: Vec<String>,
-    yapilandirma: crate::project::ProjectConfig,
+    settings_data: crate::project::ProjectConfig,
 ) {
     // Disk -> Studio yonu kapaliysa izleyiciyi hic baslatmiyoruz.
     // Sadece gonderimi susturmak yetmezdi: diskteki degisiklik yine de modele
     // islenir ve bir sonraki yazimda Studio'ya sizardi.
-    silme_beklemesini_kur(yapilandirma.guvenlik.silme_bekleme_ms);
+    configure_delete_grace(settings_data.safety_settings.delete_grace_ms);
 
-    if !yapilandirma.mod_.diskten_kabul() {
+    if !settings_data.mode_value.accepts_from_disk() {
         info!(
             "Sync mode is '{}': the file watcher was not started, disk changes are ignored.",
-            yapilandirma.mod_.adi()
+            settings_data.mode_value.name_of()
         );
         return;
     }
@@ -49,18 +49,18 @@ pub async fn start_watcher(
     info!("File system watcher started: {}", path);
 
     let serializer = PartSerializer;
-    let sync_dir_sahibi = path.to_string();
+    let sync_dir_owner = path.to_string();
 
     tokio::task::spawn_blocking(move || {
         let _watcher = watcher;
         // Silme olaylari HEMEN uygulanmaz. Sebep: bir dosyayi baska klasore
         // tasimak isletim sisteminde "sil + olustur" olarak goruluyor. Hemen
-        // silseydik tasima, instance'i yok edip yerine yeni kimlikli bir tane
-        // koyardi; property'ler ve alt agac kaybolurdu.
-        // Bunun yerine silme SILME_BEKLEME_SURESI kadar bekletilir; ayni uuid
+        // silseydik tasima, instance'i yok edip yerine fresh kimlikli bir tane
+        // koyardi; property'ler ve sub tree kaybolurdu.
+        // Bunun yerine deletion SILME_BEKLEME_SURESI kadar bekletilir; is_same uuid
         // bu sure icinde yeniden ortaya cikarsa tasima oldugu anlasilir ve
-        // silme iptal edilir.
-        let mut bekleyen_silmeler: std::collections::HashMap<Uuid, std::time::Instant> =
+        // deletion iptal edilir.
+        let mut pending_deletes: std::collections::HashMap<Uuid, std::time::Instant> =
             std::collections::HashMap::new();
 
         loop {
@@ -73,17 +73,17 @@ pub async fn start_watcher(
                         &data_model,
                         &tx_to_vscode,
                         &disk_notify,
-                        &sync_dir_sahibi,
+                        &sync_dir_owner,
                         &ignore,
-                        &mut bekleyen_silmeler,
+                        &mut pending_deletes,
                     );
                 }
                 Ok(Err(e)) => error!("Watch error: {:?}", e),
                 Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
                 Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
             }
-            olgunlasan_silmeleri_uygula(
-                &mut bekleyen_silmeler,
+            apply_ripe_deletes(
+                &mut pending_deletes,
                 &tx_to_studio,
                 &data_model,
                 &tx_to_vscode,
@@ -96,44 +96,44 @@ pub async fn start_watcher(
 
 /// Bekleme suresini dolduran silmeleri gercekten uygular.
 ///
-/// Bekleme, tasima islemini silme sanmamak icin: isletim sistemi dosya
-/// tasimayi "sil + olustur" olarak bildiriyor. Bu sure icinde dosya geri
-/// gelirse silme iptal edilmis oluyor.
-static SILME_BEKLEME_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(800);
+/// Bekleme, tasima islemini deletion sanmamak icin: isletim sistemi file_path
+/// tasimayi "sil + olustur" olarak bildiriyor. Bu sure icinde file_path restored_count
+/// gelirse deletion iptal edilmis oluyor.
+static DELETE_GRACE_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(800);
 
-pub fn silme_beklemesini_kur(ms: u64) {
-    SILME_BEKLEME_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
+pub fn configure_delete_grace(ms: u64) {
+    DELETE_GRACE_MS.store(ms, std::sync::atomic::Ordering::Relaxed);
 }
 
-fn silme_bekleme_suresi() -> std::time::Duration {
-    std::time::Duration::from_millis(SILME_BEKLEME_MS.load(std::sync::atomic::Ordering::Relaxed))
+fn delete_grace_period() -> std::time::Duration {
+    std::time::Duration::from_millis(DELETE_GRACE_MS.load(std::sync::atomic::Ordering::Relaxed))
 }
 
-fn olgunlasan_silmeleri_uygula(
-    bekleyen: &mut std::collections::HashMap<Uuid, std::time::Instant>,
+fn apply_ripe_deletes(
+    pending_item: &mut std::collections::HashMap<Uuid, std::time::Instant>,
     tx_to_studio: &StudioOutbox,
     data_model: &crate::model::SharedDataModel,
     tx_to_vscode: &tokio::sync::broadcast::Sender<String>,
     disk_notify: &Arc<tokio::sync::Notify>,
 ) {
-    if bekleyen.is_empty() {
+    if pending_item.is_empty() {
         return;
     }
-    let simdi = std::time::Instant::now();
-    let olgunlar: Vec<Uuid> = bekleyen
+    let current_time = std::time::Instant::now();
+    let ready_deletes: Vec<Uuid> = pending_item
         .iter()
-        .filter(|(_, t)| simdi.duration_since(**t) >= silme_bekleme_suresi())
+        .filter(|(_, t)| current_time.duration_since(**t) >= delete_grace_period())
         .map(|(u, _)| *u)
         .collect();
 
-    for uuid in olgunlar {
-        bekleyen.remove(&uuid);
+    for uuid in ready_deletes {
+        pending_item.remove(&uuid);
 
-        let kaldirilan = {
+        let removed_node = {
             let mut dm = data_model.blocking_write();
             dm.remove_instance(&uuid)
         };
-        let Some(instance) = kaldirilan else {
+        let Some(instance) = removed_node else {
             continue;
         };
 
@@ -162,7 +162,7 @@ fn olgunlasan_silmeleri_uygula(
         });
         let _ = tx_to_vscode.send(msg.to_string());
 
-        // Alt agac da modelden dustu; disk yazicisi agaci yeniden yazsin.
+        // Alt tree da modelden dustu; disk yazicisi agaci yeniden yazsin.
         disk_notify.notify_one();
     }
 }
@@ -192,7 +192,7 @@ fn notify_vscode_updated(
 
 fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)> {
     let fname = path.file_name()?.to_str()?;
-    // Sira onemli: ".server.lua" ayni zamanda ".lua" ile bitiyor, once uzun
+    // Sira onemli: ".server.lua" is_same zamanda ".lua" ile bitiyor, once uzun
     // olanlar denenmeli.
     let (base, ext) = if let Some(b) = fname.strip_suffix(".server.lua") {
         (b, "server.lua")
@@ -240,26 +240,26 @@ fn is_script_class(class_name: &str) -> bool {
 ///
 /// Kural layout.rs ile aynidir:
 ///
-/// - `init.meta.json`  -> dugum, iceren KLASORUN kendisidir (konteyner script)
-/// - `Ad.meta.json`    -> dugum, klasorun `Ad` isimli cocugudur
+/// - `init.meta.json`  -> node_entry, iceren KLASORUN kendisidir (konteyner script)
+/// - `Ad.meta.json`    -> node_entry, klasorun `Ad` isimli cocugudur
 ///
-/// Isim cakismasinda layout dosya adina 8 haneli kisa UUID ekler; burada da o ek
-/// ayristirilir, aksi halde iki ayni isimli script birbirine karisirdi.
-fn meta_hedefi(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> {
+/// Isim cakismasinda layout file_path adina 8 haneli kisa UUID ekler; burada da o ek
+/// ayristirilir, aksi halde iki is_same isimli script birbirine karisirdi.
+fn meta_target(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> {
     let fname = path.file_name()?.to_str()?;
     let base = fname.strip_suffix(".meta.json")?;
     let dir_name = path.parent()?.file_name()?.to_str()?;
 
-    let bol = |s: &str| -> (String, String) {
+    let divide = |s: &str| -> (String, String) {
         match s.rsplit_once('_') {
             Some((n, k)) if is_short_uuid(k) => (n.to_string(), k.to_string()),
             _ => (s.to_string(), String::new()),
         }
     };
 
-    let (dir_clean, dir_short) = bol(dir_name);
+    let (dir_clean, dir_short) = divide(dir_name);
 
-    let dizin_dugumu = dm.get_all_instances().iter().find_map(|(u, n)| {
+    let dir_node = dm.get_all_instances().iter().find_map(|(u, n)| {
         if n.name == dir_clean && (dir_short.is_empty() || u.to_string().starts_with(&dir_short)) {
             Some(*u)
         } else {
@@ -269,18 +269,18 @@ fn meta_hedefi(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> 
 
     if base == "init" {
         // Konteyner script: klasorun kendisi bir script dugumu olmali.
-        return dizin_dugumu.filter(|u| {
+        return dir_node.filter(|u| {
             dm.get_instance(u)
                 .map(|n| is_script_class(&n.class_name))
                 .unwrap_or(false)
         });
     }
 
-    let (base_clean, base_short) = bol(base);
-    let ebeveyn = dizin_dugumu?;
-    let ebeveyn_dugum = dm.get_instance(&ebeveyn)?;
+    let (base_clean, base_short) = divide(base);
+    let parent_ref = dir_node?;
+    let parent_entry = dm.get_instance(&parent_ref)?;
 
-    ebeveyn_dugum.children.iter().find_map(|cid| {
+    parent_entry.children.iter().find_map(|cid| {
         let c = dm.get_instance(cid)?;
         if c.name == base_clean
             && is_script_class(&c.class_name)
@@ -295,7 +295,7 @@ fn meta_hedefi(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> 
 
 /// `Ad.txt` dosyasini ilgili StringValue'nun Value'suna uygular.
 ///
-/// StringValue diske duz metin olarak yazilir (bkz. layout::script_ext); dolayisiyla
+/// StringValue diske duz text_value olarak yazilir (bkz. layout::script_ext); dolayisiyla
 /// dosyanin icerigi dogrudan Value'dur. Bu, metni JSON kacis karakterleri icinde
 /// duzenlemek zorunda kalmadan editorde acip yazabilmeyi saglar.
 fn handle_txt_file(
@@ -303,28 +303,28 @@ fn handle_txt_file(
     tx_to_studio: &StudioOutbox,
     data_model: &crate::model::SharedDataModel,
 ) {
-    let Ok(icerik) = fs::read_to_string(path) else {
+    let Ok(file_content) = fs::read_to_string(path) else {
         return;
     };
 
     let uuid = {
         let dm = data_model.blocking_read();
-        ham_dosya_hedefi(&dm, path, "txt", "StringValue")
+        raw_file_target(&dm, path, "txt", "StringValue")
     };
     let Some(uuid) = uuid else {
         debug!("Could not find the owner of the txt file: {:?}", path);
         return;
     };
 
-    let degisti = {
+    let changed = {
         let mut dm = data_model.blocking_write();
         match dm.get_mut_instance(&uuid) {
             Some(node) => {
-                let yeni = crate::model::PropertyValue::String(icerik.clone());
-                if node.properties.get("Value") == Some(&yeni) {
+                let fresh = crate::model::PropertyValue::String(file_content.clone());
+                if node.properties.get("Value") == Some(&fresh) {
                     false
                 } else {
-                    node.properties.insert("Value".to_string(), yeni);
+                    node.properties.insert("Value".to_string(), fresh);
                     true
                 }
             }
@@ -332,14 +332,14 @@ fn handle_txt_file(
         }
     };
 
-    if degisti {
+    if changed {
         tx_to_studio.push(Payload {
             version: "v1".to_string(),
             event_type: EventType::CompositeUpdate,
             data: serde_json::json!({
                 "patches": [{
                     "event_type": "PROPERTY_UPDATE",
-                    "data": { "syncix_id": uuid, "property": "Value", "value": icerik }
+                    "data": { "syncix_id": uuid, "property": "Value", "value": file_content }
                 }]
             }),
         });
@@ -370,22 +370,22 @@ fn handle_csv_file(
 
     let uuid = {
         let dm = data_model.blocking_read();
-        ham_dosya_hedefi(&dm, path, "csv", "LocalizationTable")
+        raw_file_target(&dm, path, "csv", "LocalizationTable")
     };
     let Some(uuid) = uuid else {
         debug!("Could not find the owner of the csv file: {:?}", path);
         return;
     };
 
-    let degisti = {
+    let changed = {
         let mut dm = data_model.blocking_write();
         match dm.get_mut_instance(&uuid) {
             Some(node) => {
-                let yeni = crate::model::PropertyValue::String(json.clone());
-                if node.properties.get("Contents") == Some(&yeni) {
+                let fresh = crate::model::PropertyValue::String(json.clone());
+                if node.properties.get("Contents") == Some(&fresh) {
                     false
                 } else {
-                    node.properties.insert("Contents".to_string(), yeni);
+                    node.properties.insert("Contents".to_string(), fresh);
                     true
                 }
             }
@@ -393,7 +393,7 @@ fn handle_csv_file(
         }
     };
 
-    if degisti {
+    if changed {
         tx_to_studio.push(Payload {
             version: "v1".to_string(),
             event_type: EventType::CompositeUpdate,
@@ -408,27 +408,27 @@ fn handle_csv_file(
     }
 }
 
-/// Ham icerik dosyalarinin (.txt gibi) sahibi olan dugumu bulur.
-/// meta_hedefi ile ayni isim kurallarini kullanir.
-fn ham_dosya_hedefi(
+/// Ham file_content dosyalarinin (.txt gibi) sahibi olan dugumu bulur.
+/// meta_target ile is_same isim kurallarini kullanir.
+fn raw_file_target(
     dm: &crate::model::DataModel,
     path: &Path,
-    uzanti: &str,
-    sinif: &str,
+    file_ext: &str,
+    class_str: &str,
 ) -> Option<uuid::Uuid> {
     let fname = path.file_name()?.to_str()?;
-    let base = fname.strip_suffix(&format!(".{}", uzanti))?;
+    let base = fname.strip_suffix(&format!(".{}", file_ext))?;
     let dir_name = path.parent()?.file_name()?.to_str()?;
 
-    let bol = |s: &str| -> (String, String) {
+    let divide = |s: &str| -> (String, String) {
         match s.rsplit_once('_') {
             Some((n, k)) if is_short_uuid(k) => (n.to_string(), k.to_string()),
             _ => (s.to_string(), String::new()),
         }
     };
 
-    let (dir_clean, dir_short) = bol(dir_name);
-    let dizin_dugumu = dm.get_all_instances().iter().find_map(|(u, n)| {
+    let (dir_clean, dir_short) = divide(dir_name);
+    let dir_node = dm.get_all_instances().iter().find_map(|(u, n)| {
         if n.name == dir_clean && (dir_short.is_empty() || u.to_string().starts_with(&dir_short)) {
             Some(*u)
         } else {
@@ -437,19 +437,19 @@ fn ham_dosya_hedefi(
     });
 
     if base == "init" {
-        return dizin_dugumu.filter(|u| {
-            dm.get_instance(u).map(|n| n.class_name == sinif).unwrap_or(false)
+        return dir_node.filter(|u| {
+            dm.get_instance(u).map(|n| n.class_name == class_str).unwrap_or(false)
         });
     }
 
-    let (base_clean, base_short) = bol(base);
-    let ebeveyn = dizin_dugumu?;
-    let ebeveyn_dugum = dm.get_instance(&ebeveyn)?;
+    let (base_clean, base_short) = divide(base);
+    let parent_ref = dir_node?;
+    let parent_entry = dm.get_instance(&parent_ref)?;
 
-    ebeveyn_dugum.children.iter().find_map(|cid| {
+    parent_entry.children.iter().find_map(|cid| {
         let c = dm.get_instance(cid)?;
         if c.name == base_clean
-            && c.class_name == sinif
+            && c.class_name == class_str
             && (base_short.is_empty() || cid.to_string().starts_with(&base_short))
         {
             Some(*cid)
@@ -478,7 +478,7 @@ fn handle_meta_file(
 
     let uuid = {
         let dm = data_model.blocking_read();
-        meta_hedefi(&dm, path)
+        meta_target(&dm, path)
     };
     let Some(uuid) = uuid else {
         debug!("Could not find the owner of the meta file: {:?}", path);
@@ -494,45 +494,45 @@ fn handle_meta_file(
             return true;
         };
 
-        for (ad, deger) in &meta.properties {
-            if node.properties.get(ad) != Some(deger) {
-                node.properties.insert(ad.clone(), deger.clone());
+        for (item_name, raw_value) in &meta.properties {
+            if node.properties.get(item_name) != Some(raw_value) {
+                node.properties.insert(item_name.clone(), raw_value.clone());
                 patches.push(serde_json::json!({
                     "event_type": "PROPERTY_UPDATE",
                     "data": {
                         "syncix_id": uuid,
-                        "property": ad,
-                        "value": crate::pv_to_wire(deger)
+                        "property": item_name,
+                        "value": crate::pv_to_wire(raw_value)
                     }
                 }));
             }
         }
-        for (ad, deger) in &meta.attributes {
-            if node.attributes.get(ad) != Some(deger) {
-                node.attributes.insert(ad.clone(), deger.clone());
+        for (item_name, raw_value) in &meta.attributes {
+            if node.attributes.get(item_name) != Some(raw_value) {
+                node.attributes.insert(item_name.clone(), raw_value.clone());
                 patches.push(serde_json::json!({
                     "event_type": "ATTRIBUTE_UPDATE",
                     "data": {
                         "syncix_id": uuid,
-                        "name": ad,
-                        "value": crate::pv_to_wire(deger)
+                        "name": item_name,
+                        "value": crate::pv_to_wire(raw_value)
                     }
                 }));
             }
         }
 
-        // Etiketler liste halinde karsilastirilir: attribute gibi tek tek degil,
-        // cunku etiket "var/yok" bilgisidir; dosyadan cikarilan etiket gercekten
+        // Etiketler liste halinde karsilastirilir: attribute gibi single single degil,
+        // cunku tag_text "var/yok" bilgisidir; dosyadan cikarilan tag_text gercekten
         // silinmistir. Property'lerden ayrilmasinin sebebi de bu.
         {
-            let mut dosyadaki = meta.tags.clone();
-            dosyadaki.sort();
-            dosyadaki.dedup();
-            if node.tags != dosyadaki {
-                node.tags = dosyadaki.clone();
+            let mut in_file = meta.tags.clone();
+            in_file.sort();
+            in_file.dedup();
+            if node.tags != in_file {
+                node.tags = in_file.clone();
                 patches.push(serde_json::json!({
                     "event_type": "TAGS_UPDATE",
-                    "data": { "syncix_id": uuid, "tags": dosyadaki }
+                    "data": { "syncix_id": uuid, "tags": in_file }
                 }));
             }
         }
@@ -544,58 +544,58 @@ fn handle_meta_file(
         // yalnizca true/false olabilir. Bu yuzden bir property'yi meta dosyasindan
         // cikarmak "Studio'da sil" anlamina GELMEZ; olsa olsa "Syncix bunu artik
         // kaydetmesin" demektir. Studio o property'yi izlemeye devam ettigi icin
-        // deger bir sonraki senkronda geri gelir.
+        // raw_value bir sonraki senkronda restored_count gelir.
         //
         // Bu yuzden property yoklugunda hicbir sey yapmiyoruz, ama kullanici
         // beklentisi bosa cikmasin diye durumu loga yaziyoruz.
-        let eksik_propertyler: Vec<&String> = node
+        let missing_properties: Vec<&String> = node
             .properties
             .keys()
             .filter(|k| !meta.properties.contains_key(*k))
             .collect();
-        if !eksik_propertyler.is_empty() {
+        if !missing_properties.is_empty() {
             tracing::info!(
                 "Properties removed from the meta file were ignored ({:?}): {:?}. \
                  Properties cannot be deleted in Roblox; write the new value instead.",
                 path.file_name().unwrap_or_default(),
-                eksik_propertyler
+                missing_properties
             );
         }
 
         // Dosyada ARTIK OLMAYAN attribute silinmis demektir.
         //
-        // Bu ancak yazim kaydi korumasi sayesinde guvenli: kendi yazdigimiz dosyayi
-        // tekrar okumadigimiz icin "eksik" olan sey gercekten kullanicinin sildigi
-        // seydir, gecikmis bir olayin eski hali degil.
-        let silinecekler: Vec<String> = node
+        // Bu ancak yazim kaydi korumasi sayesinde guvenli: own yazdigimiz dosyayi
+        // again okumadigimiz icin "eksik" olan sey gercekten kullanicinin sildigi
+        // seydir, gecikmis bir olayin previous_text hali degil.
+        let delete_list: Vec<String> = node
             .attributes
             .keys()
             .filter(|k| !meta.attributes.contains_key(*k))
             .cloned()
             .collect();
-        for ad in silinecekler {
-            node.attributes.remove(&ad);
+        for item_name in delete_list {
+            node.attributes.remove(&item_name);
             patches.push(serde_json::json!({
                 "event_type": "ATTRIBUTE_UPDATE",
-                "data": { "syncix_id": uuid, "name": ad, "value": serde_json::Value::Null }
+                "data": { "syncix_id": uuid, "name": item_name, "value": serde_json::Value::Null }
             }));
         }
     }
 
     if !patches.is_empty() {
-        let sayi = patches.len();
+        let number_value = patches.len();
         tx_to_studio.push(Payload {
             version: "v1".to_string(),
             event_type: EventType::CompositeUpdate,
             data: serde_json::json!({ "patches": patches }),
         });
-        debug!("Sent {} change(s) from the meta file to Studio", sayi);
+        debug!("Sent {} change(s) from the meta file to Studio", number_value);
     }
     true
 }
 
 // Argumanlarin cogu bagimsiz kanal (Studio kuyrugu, model, editor yayini, disk
-// uyarisi) ve hepsi tek bir olayin islenmesinde gerekli. Tek bir yapiya
+// uyarisi) ve hepsi single bir olayin islenmesinde gerekli. Tek bir yapiya
 // toplamak, cagri zincirindeki her halkanin o yapiyi tasimasini gerektirirdi;
 // okunurlugu arttirmiyor.
 #[allow(clippy::too_many_arguments)]
@@ -608,38 +608,38 @@ fn handle_event(
     disk_notify: &Arc<tokio::sync::Notify>,
     sync_dir: &str,
     ignore: &[String],
-    bekleyen_silmeler: &mut std::collections::HashMap<Uuid, std::time::Instant>,
+    pending_deletes: &mut std::collections::HashMap<Uuid, std::time::Instant>,
 ) {
     // Askidayken diskten hicbir sey okunmaz ve Studio'ya hicbir sey gonderilmez.
-    // Asil tehlike buydu: modelde olmayan bir dosya "yeni obje" sanilip Studio'ya
-    // yaratiliyordu; yanlis place bagliyken bu, eski oyunun yeni place'e
+    // Asil tehlike buydu: modelde olmayan bir file_path "yeni obje" sanilip Studio'ya
+    // yaratiliyordu; yanlis place bagliyken bu, previous_text oyunun fresh place'e
     // dolmasi demekti.
-    if crate::project::senkron_askida() {
+    if crate::project::is_sync_suspended() {
         return;
     }
 
     // Silme: uzun sure tamamen yok sayiliyordu, cunku disk yazicisi agaci
-    // yeniden yazarken dosya siliyor ve bunlar yanlis DESTROY uretiyordu.
-    // Artik yazicinin kendi silmeleri kayitli oldugu icin ayirt edilebiliyor:
-    // kayitta olmayan bir silme gercek kullanici silmesidir.
+    // yeniden yazarken file_path siliyor ve bunlar yanlis DESTROY uretiyordu.
+    // Artik yazicinin own silmeleri kayitli oldugu icin ayirt edilebiliyor:
+    // kayitta olmayan bir deletion gercek kullanici silmesidir.
     if matches!(event.kind, EventKind::Remove(_)) {
         for path in &event.paths {
-            if crate::layout::yok_sayilir(path, sync_dir, ignore) {
+            if crate::layout::is_ignored(path, sync_dir, ignore) {
                 continue;
             }
-            if crate::layout::kendi_silmemiz(path) {
+            if crate::layout::is_own_delete(path) {
                 continue;
             }
             let uuid = {
                 let dm = data_model.blocking_read();
-                crate::layout::yol_icin_uuid(&dm, sync_dir, path)
+                crate::layout::uuid_for_path(&dm, sync_dir, path)
             };
             match uuid {
                 Some(u) => {
                     info!("A file was deleted from disk: {}", path.display());
-                    bekleyen_silmeler.insert(u, std::time::Instant::now());
+                    pending_deletes.insert(u, std::time::Instant::now());
                 }
-                // Sessizce dusen silmeler tesise edilemiyordu: yol eslestirmesi
+                // Sessizce dusen silmeler tesise edilemiyordu: fs_path eslestirmesi
                 // bozuldugunda hicbir iz kalmiyordu.
                 None => info!(
                     "A file was deleted but no instance matched it, so nothing was removed: {}",
@@ -659,13 +659,13 @@ fn handle_event(
         return;
     }
 
-    // Bir dosya yeniden ortaya ciktiysa o instance silinmemis, TASINMIS demektir.
-    // Bekleyen silme iptal edilir.
-    if !bekleyen_silmeler.is_empty() {
+    // Bir file_path yeniden ortaya ciktiysa o instance silinmemis, TASINMIS demektir.
+    // Bekleyen deletion iptal edilir.
+    if !pending_deletes.is_empty() {
         let dm = data_model.blocking_read();
         for path in &event.paths {
-            if let Some(u) = crate::layout::yol_icin_uuid(&dm, sync_dir, path) {
-                bekleyen_silmeler.remove(&u);
+            if let Some(u) = crate::layout::uuid_for_path(&dm, sync_dir, path) {
+                pending_deletes.remove(&u);
             }
         }
     }
@@ -679,15 +679,15 @@ fn handle_event(
 
     for path in &event.paths {
         // Kullanicinin yok saydirdigi yollar okunmaz.
-        if crate::layout::yok_sayilir(path, sync_dir, ignore) {
+        if crate::layout::is_ignored(path, sync_dir, ignore) {
             continue;
         }
 
         // Kendi yazimimizi isleme: disk yazicisi bir dosyayi yazdiginda izleyici
         // bunu kullanici degisikligi saniyordu. Olaylar gecikmeli geldigi icin
         // bazen dosyanin ESKI hali okunup model geriye sariliyordu.
-        if let Ok(mevcut) = fs::read_to_string(path) {
-            if crate::layout::kendi_yazimimiz(path, &mevcut) {
+        if let Ok(current_value) = fs::read_to_string(path) {
+            if crate::layout::is_own_write(path, &current_value) {
                 continue;
             }
         }
@@ -807,8 +807,8 @@ fn handle_event(
                         None
                     };
 
-                    // UUID ekiyle ara; bulunamazsa (ör. kullanıcı eki sildi) isim
-                    // eşleşmesine düşülür — böylece dosya sahipsiz kalmaz.
+                    // UUID ekiyle search; bulunamazsa (ör. kullanıcı eki sildi) isim
+                    // eşleşmesine düşülür — böylece file_path sahipsiz kalmaz.
                     let by_uuid = lua_uuid_opt
                         .as_ref()
                         .and_then(|s| dm.find_by_short_uuid(s));
@@ -864,12 +864,12 @@ fn handle_event(
 
                     // TASIMA. Bir dosyayi baska klasore tasimak isletim sisteminde
                     // "sil + olustur" olarak gorunuyor. Yukaridaki eslestirmeler
-                    // yalnizca AYNI klasore bakiyor, dolayisiyla tasinan dosya
+                    // yalnizca AYNI klasore bakiyor, dolayisiyla tasinan file_path
                     // sahipsiz kaliyor ve ikinci bir instance yaratiliyordu.
-                    // Bekleyen silmeler arasinda ayni adda ve ayni sinifta bir
-                    // script varsa bu yeni bir obje degil, tasinmis olanidir.
+                    // Bekleyen silmeler arasinda is_same adda ve is_same sinifta bir
+                    // script varsa bu fresh bir obje degil, tasinmis olanidir.
                     let target_uuid = target_uuid.or_else(|| {
-                        bekleyen_silmeler.keys().copied().find(|u| {
+                        pending_deletes.keys().copied().find(|u| {
                             dm.get_instance(u)
                                 .map(|n| n.name == clean_name && is_script_class(&n.class_name))
                                 .unwrap_or(false)
@@ -877,13 +877,13 @@ fn handle_event(
                     });
 
                     if let Some(uuid) = target_uuid {
-                        // Tasima olarak eslestiyse silme iptal edilir.
-                        bekleyen_silmeler.remove(&uuid);
+                        // Tasima olarak eslestiyse deletion iptal edilir.
+                        pending_deletes.remove(&uuid);
 
-                        // Yeni klasor baska bir ebeveyne isaret ediyorsa objenin
+                        // Yeni folder_path baska bir ebeveyne isaret ediyorsa objenin
                         // agactaki yeri de degismeli.
                         let parent_diff = match (parent_uuid_opt, dm.get_instance(&uuid).and_then(|n| n.parent)) {
-                            (Some(yeni), eski) if Some(yeni) != eski => Some(yeni),
+                            (Some(fresh), previous_text) if Some(fresh) != previous_text => Some(fresh),
                             _ => None,
                         };
 
@@ -898,10 +898,10 @@ fn handle_event(
 
                         drop(dm);
 
-                        if let Some(yeni_ebeveyn) = parent_diff {
+                        if let Some(moved_to) = parent_diff {
                             {
                                 let mut dm = data_model.blocking_write();
-                                if let Err(e) = dm.reparent(&uuid, Some(yeni_ebeveyn)) {
+                                if let Err(e) = dm.reparent(&uuid, Some(moved_to)) {
                                     error!("The moved file could not be reparented: {}", e);
                                 }
                             }
@@ -913,7 +913,7 @@ fn handle_event(
                                         "event_type": "REPARENT",
                                         "data": {
                                             "syncix_id": uuid,
-                                            "newParentId": yeni_ebeveyn
+                                            "newParentId": moved_to
                                         }
                                     }]
                                 }),
@@ -944,7 +944,7 @@ fn handle_event(
                                     inst.name = clean_name.clone();
                                 }
                             }
-                            // Editöre bildir + diski tazele (isim değişti, yol değişebilir)
+                            // Editöre bildir + diski tazele (isim değişti, fs_path değişebilir)
                             {
                                 let dm_read = data_model.blocking_read();
                                 notify_vscode_updated(&dm_read, &uuid, tx_to_vscode, "INSTANCE_UPDATED");
@@ -981,7 +981,7 @@ fn handle_event(
 
                         // NOT: Dosyayı burada yeniden adlandırmıyoruz. Diskin doğru
                         // isimlendirmesi layout modülünün sorumluluğunda; iki taraf
-                        // farklı kural uygularsa dosya adı savaşı/döngü oluşuyordu.
+                        // farklı kural uygularsa file_path adı savaşı/döngü oluşuyordu.
                     } else if let Some(parent_uuid) = parent_uuid_opt {
                         drop(dm);
                         let new_uuid = Uuid::new_v4();

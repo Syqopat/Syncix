@@ -3,22 +3,22 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 local Services = require(script.Parent.Services)
-local Ayarlar = require(script.Parent.Parent.Core.Ayarlar)
+local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
 local SERVICE_UUIDS = Services.UUIDS
 
 local Players = game:GetService("Players")
 
---- Bu obje, senkron dışı bırakılması gereken bir OYUNCU karakterinin parçası mı?
+--- Bu object, senkron dışı bırakılması gereken bir OYUNCU karakterinin parçası mı?
 ---
---- Eskiden içinde Humanoid olan HER Model elenirdi. Amaç doğruydu — oyuncu
---- karakterleri Studio'da kendiliğinden belirip kaybolan geçici objeler, onları
+--- Eskiden içinde Humanoid olan HER Model elenirdi. Amaç doğruydu — player
+--- karakterleri Studio'da kendiliğinden belirip kaybolan geçici objects, onları
 --- diske yazmak anlamsız — ama kapsam çok genişti: yazarın Workspace'e elle
 --- koyduğu NPC'ler, içlerindeki script'ler ve kıyafetleri de eleniyordu. Bir
 --- simulator'da NPC'ler oyunun kendisi; editörde hiç görünmüyorlardı.
 ---
 --- Ayrım şu: eleyeceğimiz şey "Humanoid içeriyor" değil, "Players servisine
 --- bağlı bir oyuncunun karakteri". Yazarın koyduğu NPC ise sıradan içerik.
-local function oyuncuKarakteriMi(inst: Instance): boolean
+local function isPlayerCharacter(inst: Instance): boolean
     local model = inst:FindFirstAncestorOfClass("Model")
         or (inst:IsA("Model") and inst :: Model)
     if not model then
@@ -27,10 +27,10 @@ local function oyuncuKarakteriMi(inst: Instance): boolean
 
     -- Oyuncu karakteri: adı bağlı bir oyuncunun adıyla eşleşir ve Workspace'in
     -- doğrudan çocuğudur. Roblox karakterleri tam olarak böyle yerleştiriyor.
-    local ok, oyuncu = pcall(function()
+    local ok, player = pcall(function()
         return Players:GetPlayerFromCharacter(model)
     end)
-    if ok and oyuncu then
+    if ok and player then
         return true
     end
 
@@ -87,9 +87,9 @@ function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: bo
     if RunService:IsRunning() then return end
     if instance:IsA("Terrain") or instance:IsA("Camera") then return end
     -- Kullanicinin disladigi siniflar hic izlenmez: yalnizca gonderimi
-    -- susturmak yetmez, obje yine de onbellege girip UUID alirdi.
-    if not Ayarlar.SinifIzinli(instance.ClassName) then return end
-    if oyuncuKarakteriMi(instance) then return end
+    -- susturmak yetmez, object yine de onbellege girip UUID alirdi.
+    if not SyncConfig.ClassAllowed(instance.ClassName) then return end
+    if isPlayerCharacter(instance) then return end
 
     if self.tracked[instance] then return end
     self.tracked[instance] = true
@@ -103,7 +103,7 @@ function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: bo
         if not isBootstrap then
             local createPatch = self.patchBuilder:BuildLifecyclePatch(uuid, instance, "CREATE")
             if self.activityLog then
-                self.activityLog:Giden("create", instance.Name, nil, instance.ClassName, uuid)
+                self.activityLog:Outbound("create", instance.Name, nil, instance.ClassName, uuid)
             end
             self.batchQueue:Enqueue(createPatch)
         end
@@ -138,8 +138,8 @@ end
 
 function GenericObserver:HandleReparent(instance: Instance, uuid: string)
     if RunService:IsRunning() then return end
-    if not Ayarlar.StudiodanGonder() then return end
-    if oyuncuKarakteriMi(instance) then return end
+    if not SyncConfig.SendFromStudio() then return end
+    if isPlayerCharacter(instance) then return end
     local parent = instance.Parent
     if not parent then return end
 
@@ -158,11 +158,11 @@ end
 
 function GenericObserver:HandlePropertyChanged(instance: Instance, uuid: string, propertyName: string)
     if RunService:IsRunning() then return end
-    if oyuncuKarakteriMi(instance) then return end
+    if isPlayerCharacter(instance) then return end
     if self.commandDispatcher and self.commandDispatcher:IsLocked() then return end
     
-    if not Ayarlar.StudiodanGonder() then return end
-    if not Ayarlar.PropertyIzinli(propertyName) then return end
+    if not SyncConfig.SendFromStudio() then return end
+    if not SyncConfig.PropertyAllowed(propertyName) then return end
 
     if propertyName == "Name" or self.patchBuilder:IsWatchedProperty(instance, propertyName) then
         local newValue = (instance :: any)[propertyName]
@@ -172,7 +172,7 @@ function GenericObserver:HandlePropertyChanged(instance: Instance, uuid: string,
 
         if patch then
             if self.activityLog then
-                self.activityLog:Giden("property", instance.Name, propertyName, newValue, uuid)
+                self.activityLog:Outbound("property", instance.Name, propertyName, newValue, uuid)
             end
             self.batchQueue:Enqueue(patch)
         end
@@ -188,9 +188,9 @@ end
 
 function GenericObserver:HandleAttributeChanged(instance: Instance, uuid: string, attrName: string)
     if RunService:IsRunning() then return end
-    if not Ayarlar.StudiodanGonder() then return end
-    if oyuncuKarakteriMi(instance) then return end
-    -- Syncix'in kendi defterleri icerik degil; degistiklerinde yama uretilmez.
+    if not SyncConfig.SendFromStudio() then return end
+    if isPlayerCharacter(instance) then return end
+    -- Syncix'in kendi defterleri content degil; degistiklerinde yama uretilmez.
     if attrName == "__syncix_id" or attrName == "__syncix_place" then return end
     if self.commandDispatcher and self.commandDispatcher:IsLocked() then return end
 
@@ -199,7 +199,7 @@ function GenericObserver:HandleAttributeChanged(instance: Instance, uuid: string
     local patch = self.patchBuilder:BuildAttributePatch(uuid, attrName, value)
     if patch then
         if self.activityLog then
-            self.activityLog:Giden("attribute", instance.Name, attrName, value, uuid)
+            self.activityLog:Outbound("attribute", instance.Name, attrName, value, uuid)
         end
         self.batchQueue:Enqueue(patch)
     end
@@ -218,7 +218,7 @@ function GenericObserver:HandleInstanceDestroyed(instance: Instance, uuid: strin
 
     local destroyPatch = self.patchBuilder:BuildLifecyclePatch(uuid, instance, "DESTROY")
     if self.activityLog then
-        self.activityLog:Giden("silme", instance.Name, nil, nil, uuid)
+        self.activityLog:Outbound("silme", instance.Name, nil, nil, uuid)
     end
     self.batchQueue:Enqueue(destroyPatch)
     self.subscriptions:UnsubscribeAll(uuid)

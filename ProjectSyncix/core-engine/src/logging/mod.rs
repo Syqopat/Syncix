@@ -26,7 +26,7 @@ pub fn init_enterprise_logging(log_dir: &str) -> Result<WorkerGuard, String> {
     // Çevresel değişken filtresi (RUST_LOG=info)
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
-    // Subscriber oluştur ve kaydet
+    // Subscriber oluştur ve persist
     tracing_subscriber::registry()
         .with(filter)
         .with(stdout_log)
@@ -80,9 +80,9 @@ mod tests {
 
     #[test]
     fn test_logging_init_does_not_panic() {
-        // Temp bir dizin ile başlatmayı dene
+        // Temp bir directory ile başlatmayı dene
         let temp_dir = std::env::temp_dir().join("syncix_test_logs");
         let _guard = init_enterprise_logging(temp_dir.to_str().unwrap());
-        // Init bir kere yapılabilir, eğer hata almazsak başarılıdır.
+        // Init bir kere yapılabilir, eğer report_error almazsak başarılıdır.
     }
 }

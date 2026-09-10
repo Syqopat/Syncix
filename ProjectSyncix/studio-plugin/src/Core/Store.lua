@@ -11,56 +11,56 @@ local HttpService = game:GetService("HttpService")
 
 local Store = {}
 
-local GAME_ATTR = "__syncix_ayarlar"
+local GAME_ATTR = "__syncix_settings"
 
-local function placeOku()
-	local ok, ham = pcall(function()
+local function readPlace()
+	local ok, raw = pcall(function()
 		return game:GetAttribute(GAME_ATTR)
 	end)
-	if not ok or type(ham) ~= "string" or ham == "" then
+	if not ok or type(raw) ~= "string" or raw == "" then
 		return {}
 	end
-	local okDecode, tablo = pcall(function()
-		return HttpService:JSONDecode(ham)
+	local okDecode, tbl = pcall(function()
+		return HttpService:JSONDecode(raw)
 	end)
-	if okDecode and type(tablo) == "table" then
-		return tablo
+	if okDecode and type(tbl) == "table" then
+		return tbl
 	end
 	return {}
 end
 
-local function placeYaz(tablo)
+local function writePlace(tbl)
 	pcall(function()
-		game:SetAttribute(GAME_ATTR, HttpService:JSONEncode(tablo))
+		game:SetAttribute(GAME_ATTR, HttpService:JSONEncode(tbl))
 	end)
 end
 
-function Store.Get(pluginRef, anahtar, varsayilan)
+function Store.Get(pluginRef, keyName, defaultValue)
 	if pluginRef then
-		local ok, deger = pcall(function()
-			return pluginRef:GetSetting(anahtar)
+		local ok, datum = pcall(function()
+			return pluginRef:GetSetting(keyName)
 		end)
-		if ok and deger ~= nil then
-			return deger
+		if ok and datum ~= nil then
+			return datum
 		end
 	end
 
-	local tablo = placeOku()
-	if tablo[anahtar] ~= nil then
-		return tablo[anahtar]
+	local tbl = readPlace()
+	if tbl[keyName] ~= nil then
+		return tbl[keyName]
 	end
-	return varsayilan
+	return defaultValue
 end
 
-function Store.Set(pluginRef, anahtar, deger)
+function Store.Set(pluginRef, keyName, datum)
 	if pluginRef then
 		pcall(function()
-			pluginRef:SetSetting(anahtar, deger)
+			pluginRef:SetSetting(keyName, datum)
 		end)
 	end
-	local tablo = placeOku()
-	tablo[anahtar] = deger
-	placeYaz(tablo)
+	local tbl = readPlace()
+	tbl[keyName] = datum
+	writePlace(tbl)
 end
 
 return Store

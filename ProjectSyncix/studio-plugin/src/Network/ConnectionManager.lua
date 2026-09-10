@@ -5,24 +5,24 @@
 -- Release için buraya üç şey eklendi:
 --   1. Port keşfi. Port artık sabit 8080 değil; core doluysa sıradakine geçiyor.
 --      Eklenti dosya okuyamadığı için aralığı /health ile tarar.
---   2. Sürüm uyum kontrolü. Eski eklenti + yeni core sessizce garip davranıyordu.
---   3. İlk bağlantı onayı. Hangi proje klasörünün bağlandığı kullanıcıya gösterilir.
+--   2. Sürüm uyum kontrolü. Eski eklenti + fresh core sessizce garip davranıyordu.
+--   3. İlk bağlantı onayı. Hangi projectInfo klasörünün bağlandığı kullanıcıya gösterilir.
 
 local HttpService = game:GetService("HttpService")
-local Ayarlar = require(script.Parent.Parent.Core.Ayarlar)
-local PlaceKimligi = require(script.Parent.Parent.Core.PlaceKimligi)
+local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
+local PlaceIdentity = require(script.Parent.Parent.Core.PlaceIdentity)
 local Store = require(script.Parent.Parent.Core.Store)
 local Approval = require(script.Parent.Parent.Core.Approval)
 
 -- Bu dort sabit core ile ESLESMEK ZORUNDA. Karsiliklari:
 --   PLUGIN_VERSION  <-> core-engine/Cargo.toml  version
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
---   PORT_BASLANGIC  <-> project.rs  DEFAULT_PORT
---   PORT_ARALIK     <-> project.rs  PORT_SCAN_SPAN
+--   PORT_START  <-> project.rs  DEFAULT_PORT
+--   PORT_RANGE     <-> project.rs  PORT_SCAN_SPAN
 local PLUGIN_VERSION = "0.1.1"
 local PLUGIN_PROTOCOL = 1
-local PORT_BASLANGIC = 8080
-local PORT_ARALIK = 10
+local PORT_START = 8080
+local PORT_RANGE = 10
 
 local ConnectionManager = {}
 ConnectionManager.__index = ConnectionManager
@@ -40,17 +40,17 @@ function ConnectionManager.new()
 	self.currentRetryWait = 1.0
 
 	-- Reddedilen köklerin tekrar tekrar sorulmaması için oturum içi hafıza
-	self.reddedilen = {}
+	self.rejected = {}
 
 	-- Kullanici senkronu elle duraklatti mi?
-	-- Duraklatma yalnizca kullanicinin acik istegiyle olur; aglar koptugunda
+	-- Duraklatma yalnizca kullanicinin isOpen istegiyle olur; aglar koptugunda
 	-- kullanilan yol Reconnecting'dir, bu ayri bir durumdur.
-	self.duraklatildi = false
+	self.wasPaused = false
 
 	-- Elle sabitlenmiş port. nil ise 8080-8089 aralığı taranır.
-	-- Sabitlenmişse YALNIZCA o port denenir: iki proje açıkken hangi projeye
+	-- Sabitlenmişse YALNIZCA o port denenir: iki projectInfo açıkken hangi projeye
 	-- bağlanılacağını kesinleştirmenin tek yolu bu.
-	self.manuelPort = nil
+	self.manualPort = nil
 
 	return self
 end
@@ -73,15 +73,15 @@ function ConnectionManager:OnStart(container)
 	-- acilisinda pencere cikip senkronu bekletiyordu. Guvenlik degeri, engellemenin
 	-- maliyetini karsilamiyordu.
 	--
-	-- Yerine: baglanti kurulunca hangi proje klasorune baglanildigi Output'a ve
-	-- panele YAZILIYOR. Kullanici neye baglandigini goruyor, ama akis durmuyor.
+	-- Yerine: baglanti kurulunca hangi projectInfo klasorune baglanildigi Output'a ve
+	-- panele YAZILIYOR. Kullanici neye baglandigini goruyor, ama flow durmuyor.
 	-- Kapiyi geri acmak isteyen Syncix panelinden "Baglanti izni sor"u acabilir.
-	self.izinSor = Store.Get(self.plugin, "syncix_izin_sor", false) == true
+	self.askPermission = Store.Get(self.plugin, "syncix_ask_permission", false) == true
 
-	local kayitli = Store.Get(self.plugin, "syncix_port", 0)
-	if type(kayitli) == "number" and kayitli > 0 then
-		self.manuelPort = kayitli
-		print(string.format("[Syncix] Saved port setting: %d (only this port will be tried)", kayitli))
+	local saved = Store.Get(self.plugin, "syncix_port", 0)
+	if type(saved) == "number" and saved > 0 then
+		self.manualPort = saved
+		print(string.format("[Syncix] Saved port setting: %d (only this port will be tried)", saved))
 	end
 
 	self:Connect()
@@ -95,7 +95,7 @@ function ConnectionManager:SetState(newState: string)
 end
 
 -- Tek bir portu yoklar. Cevap Syncix core'undan geliyorsa bilgiyi döndürür.
-local function healthOku(port: number)
+local function readHealth(port: number)
 	local url = string.format("http://127.0.0.1:%d/health", port)
 	local ok, response = pcall(function()
 		return HttpService:RequestAsync({ Url = url, Method = "GET" })
@@ -120,7 +120,7 @@ local function healthOku(port: number)
 end
 
 -- major.minor karşılaştırır; yama farkı sorun değildir.
-local function surumUyumlu(a: string?, b: string?): boolean
+local function versionCompatible(a: string?, b: string?): boolean
 	if type(a) ~= "string" or type(b) ~= "string" then
 		return false
 	end
@@ -134,13 +134,13 @@ end
 
 -- Elle port ayarlama (SettingsPanel'den çağrılır).
 function ConnectionManager:SetManualPort(port: number?)
-	self.manuelPort = port
+	self.manualPort = port
 	-- Port değişince eski reddetmeler anlamını yitirir.
-	self.reddedilen = {}
+	self.rejected = {}
 end
 
 function ConnectionManager:GetManualPort(): number?
-	return self.manuelPort
+	return self.manualPort
 end
 
 -- Kullanıcı ayarı değiştirdiğinde beklemeden yeniden bağlan.
@@ -152,40 +152,40 @@ function ConnectionManager:ForceReconnect()
 	self:Connect()
 end
 
--- Panelde göstermek için: aralıktaki tüm core'ları listeler (izin/sürüm süzgeci yok).
-function ConnectionManager:TaraTumPortlar()
-	local bulunanlar = {}
-	for port = PORT_BASLANGIC, PORT_BASLANGIC + PORT_ARALIK - 1 do
-		local bilgi = healthOku(port)
-		if bilgi then
-			table.insert(bulunanlar, bilgi)
+-- Panelde göstermek için: aralıktaki tüm core'ları listeler (permission/sürüm süzgeci yok).
+function ConnectionManager:ScanAllPorts()
+	local foundList = {}
+	for port = PORT_START, PORT_START + PORT_RANGE - 1 do
+		local info = readHealth(port)
+		if info then
+			table.insert(foundList, info)
 		end
 	end
 	-- Elle yazılan port aralık dışında olabilir; o da listelenmeli.
-	if self.manuelPort and (self.manuelPort < PORT_BASLANGIC or self.manuelPort >= PORT_BASLANGIC + PORT_ARALIK) then
-		local bilgi = healthOku(self.manuelPort)
-		if bilgi then
-			table.insert(bulunanlar, bilgi)
+	if self.manualPort and (self.manualPort < PORT_START or self.manualPort >= PORT_START + PORT_RANGE) then
+		local info = readHealth(self.manualPort)
+		if info then
+			table.insert(foundList, info)
 		end
 	end
-	return bulunanlar
+	return foundList
 end
 
 function ConnectionManager:Discover()
 	-- Port sabitlenmişse tarama yapılmaz; yalnızca o port denenir.
-	local ilk, son
-	if self.manuelPort then
-		ilk, son = self.manuelPort, self.manuelPort
+	local first, last
+	if self.manualPort then
+		first, last = self.manualPort, self.manualPort
 	else
-		ilk, son = PORT_BASLANGIC, PORT_BASLANGIC + PORT_ARALIK - 1
+		first, last = PORT_START, PORT_START + PORT_RANGE - 1
 	end
 
-	for port = ilk, son do
-		local bilgi = healthOku(port)
-		if bilgi then
-			local root = tostring(bilgi.root or "")
+	for port = first, last do
+		local info = readHealth(port)
+		if info then
+			local root = tostring(info.root or "")
 
-			if self.reddedilen[root] then
+			if self.rejected[root] then
 				-- Bu oturumda zaten reddedildi, atla.
 				continue
 			end
@@ -193,62 +193,62 @@ function ConnectionManager:Discover()
 			-- BASKA bir place'e bagli core'u atla.
 			--
 			-- Eklenti port tararken buldugu ILK saglikli core'a baglaniyordu.
-			-- Iki proje ayni anda acikken bu, yanlis projeye baglanmak demekti:
+			-- Iki projectInfo ayni anda acikken bu, yanlis projeye baglanmak demekti:
 			-- core hemen place catismasi verip senkronu askiya aliyor ve
 			-- kullanici "neden calismiyor" diye bakakaliyordu. Artik kendi
 			-- place'imize bagli olan ya da hic baglanmamis (bos) klasoru
 			-- seciyoruz.
-			local benimPlace = PlaceKimligi.Al()
-			if bilgi.bound_place ~= nil
-				and benimPlace ~= ""
-				and tostring(bilgi.bound_place) ~= benimPlace
+			local myPlace = PlaceIdentity.Resolve()
+			if info.bound_place ~= nil
+				and myPlace ~= ""
+				and tostring(info.bound_place) ~= myPlace
 			then
 				continue
 			end
 
 			-- Sürüm kapısı: uyumsuzsa bağlanma, sebebini açıkça söyle.
-			if not surumUyumlu(bilgi.version, PLUGIN_VERSION) then
+			if not versionCompatible(info.version, PLUGIN_VERSION) then
 				warn(string.format(
 					"[Syncix] Version mismatch. Plugin: %s, core: %s (port %d).\n" ..
 					"  The same major.minor version is required. Update the VS Code extension and the Studio plugin.",
-					PLUGIN_VERSION, tostring(bilgi.version), port
+					PLUGIN_VERSION, tostring(info.version), port
 				))
 				continue
 			end
 
-			if bilgi.protocol ~= nil and bilgi.protocol ~= PLUGIN_PROTOCOL then
+			if info.protocol ~= nil and info.protocol ~= PLUGIN_PROTOCOL then
 				warn(string.format(
 					"[Syncix] Protocol mismatch. Plugin: %d, core: %s. An update is required.",
-					PLUGIN_PROTOCOL, tostring(bilgi.protocol)
+					PLUGIN_PROTOCOL, tostring(info.protocol)
 				))
 				continue
 			end
 
-			-- İzin kapısı yalnızca açıkça istenmişse çalışır (bkz. self.izinSor).
-			local izinli = true
+			-- İzin kapısı yalnızca açıkça istenmişse çalışır (bkz. self.askPermission).
+			local isAllowed = true
 			-- Izin kapisi artik syncix.toml'dan geliyor; panel ayari yalnizca
 			-- core'a hic baglanilamadigi durumda gecerli.
-			if self.izinSor or Ayarlar.IzinSor() then
-				izinli = Approval.GetStoredDecision(self.plugin, root)
+			if self.askPermission or SyncConfig.AskPermission() then
+				isAllowed = Approval.GetStoredDecision(self.plugin, root)
 			end
 
-			if izinli == nil then
+			if isAllowed == nil then
 				print(string.format("[Syncix] A new project wants to connect: %s", root))
-				local karar = Approval.Ask(self.plugin, bilgi)
+				local decision = Approval.Ask(self.plugin, info)
 
-				if karar == "error" then
-					-- Pencere açılamadı: karar verilmedi. Saklamıyoruz ve kara
+				if decision == "error" then
+					-- Pencere açılamadı: decision verilmedi. Saklamıyoruz ve kara
 					-- listeye almıyoruz ki bir arayüz aksaklığı senkronu
 					-- kalıcı olarak kilitlemesin; sonraki denemede tekrar sorulur.
 					continue
 				end
 
-				izinli = (karar == "allow")
-				Approval.Store(self.plugin, root, izinli)
+				isAllowed = (decision == "allow")
+				Approval.Store(self.plugin, root, isAllowed)
 			end
 
-			if not izinli then
-				self.reddedilen[root] = true
+			if not isAllowed then
+				self.rejected[root] = true
 				warn(string.format(
 					"[Syncix] Connection refused: %s\n" ..
 					"  To change your mind, reset the Studio plugin settings.",
@@ -257,16 +257,16 @@ function ConnectionManager:Discover()
 				continue
 			end
 
-			return bilgi
+			return info
 		end
 	end
 
-	if self.manuelPort then
+	if self.manualPort then
 		warn(string.format(
 			"[Syncix] No Syncix core found on port %d.\n" ..
 			"  Start one there:  syncix serve %d\n" ..
 			"  Or set the port back to Automatic in the Syncix panel.",
-			self.manuelPort, self.manuelPort
+			self.manualPort, self.manualPort
 		))
 	end
 	return nil
@@ -275,16 +275,16 @@ end
 --- Senkronu elle duraklatir/devam ettirir.
 ---
 --- Devam ederken TAM YENIDEN SENKRON yapilir: duraklatma sirasinda hem Studio
---- hem editor tarafinda degisiklik olmus olabilir ve hangisinin daha yeni
+--- hem editor tarafinda degisiklik olmus olabilir ve hangisinin daha fresh
 --- oldugunu bilmiyoruz. Studio'nun anlik goruntusunu yeniden gondermek iki
 --- tarafi tek adimda ayni noktaya getirir.
-function ConnectionManager:SetPaused(duraklat: boolean)
-	if self.duraklatildi == duraklat then
+function ConnectionManager:SetPaused(pause: boolean)
+	if self.wasPaused == pause then
 		return
 	end
-	self.duraklatildi = duraklat
+	self.wasPaused = pause
 
-	if duraklat then
+	if pause then
 		self:SetState("Paused")
 		print("[Syncix] Sync paused. Nothing is sent to or applied from the editor.")
 	else
@@ -296,24 +296,24 @@ function ConnectionManager:SetPaused(duraklat: boolean)
 end
 
 function ConnectionManager:IsPaused(): boolean
-	return self.duraklatildi
+	return self.wasPaused
 end
 
 function ConnectionManager:Connect()
-	if self.duraklatildi then return end
+	if self.wasPaused then return end
 	if self.state == "Connected" then return end
 
 	self:SetState("Discovering")
 
 	task.spawn(function()
-		local bilgi = self:Discover()
-		if not bilgi then
+		local info = self:Discover()
+		if not info then
 			self:HandleDisconnect()
 			return
 		end
 
-		self.serverUrl = bilgi.url
-		self.serverInfo = bilgi
+		self.serverUrl = info.url
+		self.serverInfo = info
 
 		-- syncix.toml'daki ayarlar core uzerinden geliyor. Eklentinin bunlari
 		-- kendi icinde saklamamasi bilincli: iki ayri ayar seti olsaydi hangisinin
@@ -321,7 +321,7 @@ function ConnectionManager:Connect()
 		-- Klasor baska bir place'e bagliysa kullanici bunu Studio'da gormeli;
 		-- terminale bakmiyor olabilir ve sessiz kalirsa "neden senkron olmuyor"
 		-- sorusunun cevabi hicbir yerde yazmaz.
-		if bilgi.place_conflict then
+		if info.place_conflict then
 			warn(string.format(
 				"[Syncix] This folder belongs to a DIFFERENT place. Sync is on hold so nothing gets mixed.\n" ..
 				"  folder is bound to : %s\n" ..
@@ -329,19 +329,19 @@ function ConnectionManager:Connect()
 				"  Decide in a terminal:\n" ..
 				"    syncix bind --studio   this place is right, rewrite the folder from it\n" ..
 				"    syncix bind --disk     the folder is right, load it into this place",
-				tostring(bilgi.place_conflict.klasorun_place),
-				tostring(bilgi.place_conflict.gelen_place),
-				tostring(bilgi.place_conflict.gelen_ad)
+				tostring(info.place_conflict.folder_place),
+				tostring(info.place_conflict.incoming_place),
+				tostring(info.place_conflict.incoming_name)
 			))
 		end
 
-		Ayarlar.Uygula(bilgi.config)
-		if bilgi.config then
+		SyncConfig.Apply(info.config)
+		if info.config then
 			print(string.format(
 				"[Syncix] Settings from syncix.toml — mode: %s, play: %s, undo: %s",
-				tostring(bilgi.config.mode),
-				tostring(bilgi.config.play_mode),
-				tostring(bilgi.config.undo)
+				tostring(info.config.mode),
+				tostring(info.config.play_mode),
+				tostring(info.config.undo)
 			))
 		end
 
@@ -350,7 +350,7 @@ function ConnectionManager:Connect()
 
 		print(string.format(
 			"[Syncix] Connected: %s (folder: %s, port %d, core %s)",
-			tostring(bilgi.project), tostring(bilgi.root), bilgi.port, tostring(bilgi.version)
+			tostring(info.project), tostring(info.root), info.port, tostring(info.version)
 		))
 
 		-- Eski gönderilemeyen paketleri yolla
@@ -395,7 +395,7 @@ end
 
 function ConnectionManager:HandleDisconnect()
 	-- Kullanici duraklatmissa yeniden baglanma dongusu calismamali.
-	if self.duraklatildi then
+	if self.wasPaused then
 		return
 	end
 	self:SetState("Reconnecting")
@@ -412,7 +412,7 @@ function ConnectionManager:Send(payload: any)
 	-- Duraklatilmisken hicbir sey gonderilmez. Kuyruga da alinmaz: duraklatma
 	-- bittiginde tam yeniden senkron yapiliyor, birikmis eski paketleri sonradan
 	-- gondermek o senkronu bozardi.
-	if self.duraklatildi then
+	if self.wasPaused then
 		return
 	end
 	if not self.serverUrl then
@@ -473,7 +473,7 @@ end
 
 -- BatchQueue sayaçlarını düzenli olarak core'a bildirir.
 -- Birleştirmenin gerçekten çalışıp çalışmadığı ancak böyle ölçülebilir; eskiden
--- bunu doğrulamanın tek yolu Studio'da elle obje sürüklemekti.
+-- bunu doğrulamanın tek yolu Studio'da elle object sürüklemekti.
 function ConnectionManager:StartMetricsReporting()
 	task.spawn(function()
 		while self.state == "Connected" do
@@ -481,22 +481,22 @@ function ConnectionManager:StartMetricsReporting()
 			if self.state ~= "Connected" or not self.batchQueue then
 				break
 			end
-			local sayac = self.batchQueue:GetStats()
+			local counter = self.batchQueue:GetStats()
 			-- Akis ozeti de bildirilir: eklenti bellegindeki gunlugu disaridan
 			-- gorebilmenin tek yolu bu. `syncix status` bu sayilari gosterir,
-			-- ozellikle cakisma sayisi sessiz veri kaybinin erken uyarisidir.
-			local akis = self.activityLog and self.activityLog:Ozet() or nil
+			-- ozellikle conflict sayisi sessiz veri kaybinin erken uyarisidir.
+			local flow = self.activityLog and self.activityLog:Summary() or nil
 			self:Send({
 				event_type = "PLUGIN_METRICS",
 				version = "v1",
 				data = {
-					queued = sayac.queued,
-					coalesced = sayac.coalesced,
+					queued = counter.queued,
+					coalesced = counter.coalesced,
 					plugin_version = PLUGIN_VERSION,
-					activity_total = akis and akis.toplam or 0,
-					activity_in = akis and akis.gelen or 0,
-					activity_out = akis and akis.giden or 0,
-					conflicts = akis and akis.cakisma or 0,
+					activity_total = flow and flow.total or 0,
+					activity_in = flow and flow.incoming or 0,
+					activity_out = flow and flow.outgoing or 0,
+					conflicts = flow and flow.conflict or 0,
 				},
 			})
 		end

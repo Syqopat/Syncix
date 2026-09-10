@@ -3,10 +3,10 @@
 //! Neden gerekli: luau-lsp (VS Code'daki Luau dil sunucusu) hangi dosyanın
 //! DataModel'de nereye karşılık geldiğini bilmez. sourcemap.json ona bu haritayı
 //! verir; ancak o zaman `game.ReplicatedStorage.Modul` gibi ifadelerde otomatik
-//! tamamlama ve tip denetimi çalışır. Rojo'nun en çok kullanılan özelliklerinden
+//! tamamlama ve type_name denetimi çalışır. Rojo'nun en çok kullanılan özelliklerinden
 //! biri budur ve Syncix'te eksikti.
 //!
-//! Biçim Rojo ile aynıdır, dolayısıyla mevcut luau-lsp kurulumları hiçbir
+//! Biçim Rojo ile aynıdır, dolayısıyla current_value luau-lsp kurulumları hiçbir
 //! değişiklik gerektirmeden çalışır:
 //! { "name": ..., "className": ..., "filePaths": [...], "children": [...] }
 
@@ -29,23 +29,23 @@ pub struct SourcemapNode {
 
 /// Yollar sourcemap.json'un bulunduğu dizine göre ve daima ileri eğik çizgiyle
 /// yazılır; luau-lsp Windows'ta da bu biçimi bekler.
-fn goreceli(yol: &Path, kok: &Path) -> String {
-    let p = yol.strip_prefix(kok).unwrap_or(yol);
+fn relative_path(fs_path: &Path, root_dir: &Path) -> String {
+    let p = fs_path.strip_prefix(root_dir).unwrap_or(fs_path);
     p.to_string_lossy().replace('\\', "/")
 }
 
-fn dugum(dm: &DataModel, uuid: &Uuid, sync_dir: &str, kok: &Path) -> Option<SourcemapNode> {
+fn node_entry(dm: &DataModel, uuid: &Uuid, sync_dir: &str, root_dir: &Path) -> Option<SourcemapNode> {
     let node = dm.get_instance(uuid)?;
 
     let mut file_paths = Vec::new();
     if let Some(p) = layout::data_file(dm, sync_dir, uuid) {
-        file_paths.push(goreceli(&p, kok));
+        file_paths.push(relative_path(&p, root_dir));
     }
 
     let mut children: Vec<SourcemapNode> = node
         .children
         .iter()
-        .filter_map(|cid| dugum(dm, cid, sync_dir, kok))
+        .filter_map(|cid| node_entry(dm, cid, sync_dir, root_dir))
         .collect();
     children.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -58,13 +58,13 @@ fn dugum(dm: &DataModel, uuid: &Uuid, sync_dir: &str, kok: &Path) -> Option<Sour
 }
 
 /// Tüm ağacı Rojo uyumlu sourcemap ağacına çevirir.
-/// Kök daima DataModel'dir; servisler onun çocuklarıdır.
-pub fn olustur(dm: &DataModel, sync_dir: &str, kok: &Path) -> SourcemapNode {
+/// Kök daima DataModel'dir; service_list onun çocuklarıdır.
+pub fn generate(dm: &DataModel, sync_dir: &str, root_dir: &Path) -> SourcemapNode {
     let mut children: Vec<SourcemapNode> = dm
         .get_all_instances()
         .iter()
         .filter(|(_, n)| n.parent.is_none() && n.class_name != "DataModel")
-        .filter_map(|(uuid, _)| dugum(dm, uuid, sync_dir, kok))
+        .filter_map(|(uuid, _)| node_entry(dm, uuid, sync_dir, root_dir))
         .collect();
     children.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -76,8 +76,8 @@ pub fn olustur(dm: &DataModel, sync_dir: &str, kok: &Path) -> SourcemapNode {
     }
 }
 
-pub fn json(dm: &DataModel, sync_dir: &str, kok: &Path) -> String {
-    serde_json::to_string_pretty(&olustur(dm, sync_dir, kok)).unwrap_or_default()
+pub fn json(dm: &DataModel, sync_dir: &str, root_dir: &Path) -> String {
+    serde_json::to_string_pretty(&generate(dm, sync_dir, root_dir)).unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -85,7 +85,7 @@ mod tests {
     use super::*;
     use crate::model::InstanceNode;
 
-    fn ekle(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
+    fn add_instance(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut n = InstanceNode::new(class, name);
         n.parent = parent;
         let id = n.syncix_id;
@@ -94,44 +94,44 @@ mod tests {
     }
 
     #[test]
-    fn agac_yapisi_ve_sinif_adlari_korunur() {
+    fn tree_shape_and_class_names_are_kept() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        ekle(&mut m, "ModuleScript", "Modul", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        add_instance(&mut m, "ModuleScript", "Modul", Some(rs));
 
-        let sm = olustur(&m, "src_workspace", Path::new("."));
+        let sm = generate(&m, "src_workspace", Path::new("."));
         assert_eq!(sm.class_name, "DataModel");
         assert_eq!(sm.children.len(), 1);
 
-        let servis = &sm.children[0];
-        assert_eq!(servis.name, "ReplicatedStorage");
-        assert_eq!(servis.children.len(), 1);
-        assert_eq!(servis.children[0].name, "Modul");
-        assert_eq!(servis.children[0].class_name, "ModuleScript");
+        let service_name = &sm.children[0];
+        assert_eq!(service_name.name, "ReplicatedStorage");
+        assert_eq!(service_name.children.len(), 1);
+        assert_eq!(service_name.children[0].name, "Modul");
+        assert_eq!(service_name.children[0].class_name, "ModuleScript");
     }
 
     #[test]
-    fn yollar_ileri_egik_cizgi_kullanir() {
+    fn paths_use_forward_slashes() {
         let mut m = DataModel::new();
-        let rs = ekle(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        ekle(&mut m, "ModuleScript", "Modul", Some(rs));
+        let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        add_instance(&mut m, "ModuleScript", "Modul", Some(rs));
 
-        let sm = olustur(&m, "src_workspace", Path::new("."));
-        let yol = &sm.children[0].children[0].file_paths[0];
-        assert!(!yol.contains('\\'), "ters egik cizgi olmamali: {}", yol);
-        assert!(yol.ends_with("Modul.lua"), "beklenmeyen yol: {}", yol);
+        let sm = generate(&m, "src_workspace", Path::new("."));
+        let fs_path = &sm.children[0].children[0].file_paths[0];
+        assert!(!fs_path.contains('\\'), "ters egik cizgi olmamali: {}", fs_path);
+        assert!(fs_path.ends_with("Modul.lua"), "beklenmeyen yol: {}", fs_path);
     }
 
     #[test]
-    fn cocuklar_isme_gore_sirali() {
+    fn children_sorted_by_name() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        ekle(&mut m, "Part", "Zebra", Some(ws));
-        ekle(&mut m, "Part", "Alfa", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        add_instance(&mut m, "Part", "Zebra", Some(ws));
+        add_instance(&mut m, "Part", "Alfa", Some(ws));
 
-        let sm = olustur(&m, "src_workspace", Path::new("."));
-        let cocuklar = &sm.children[0].children;
-        assert_eq!(cocuklar[0].name, "Alfa");
-        assert_eq!(cocuklar[1].name, "Zebra");
+        let sm = generate(&m, "src_workspace", Path::new("."));
+        let child_entries = &sm.children[0].children;
+        assert_eq!(child_entries[0].name, "Alfa");
+        assert_eq!(child_entries[1].name, "Zebra");
     }
 }

@@ -13,8 +13,8 @@ pub trait Serializer: Send + Sync {
 }
 
 /// Sınıf ayrımı yapmayan genel serializer.
-/// Kayıtlı özel bir serializer'ı olmayan HER sınıf (Folder, Script, Model, GUI, servisler...)
-/// bunun üzerinden diske yazılır. Böylece Studio'daki her obje bir dosya olarak görünür.
+/// Kayıtlı özel bir serializer'ı olmayan HER sınıf (Folder, Script, Model, GUI, service_list...)
+/// bunun üzerinden diske yazılır. Böylece Studio'daki her obje bir file_path olarak görünür.
 pub struct GenericSerializer;
 
 impl Serializer for GenericSerializer {
@@ -34,7 +34,7 @@ impl Serializer for GenericSerializer {
 /// Serializer'ları barındıran merkezi kayıt defteri (Registry & Factory).
 /// Performans ve Genişletilebilirlik: Çekirdek motor hangi instance türünü işlediğini bilmez.
 /// Gelen verinin `class_name`'ine bakar ve bu defterden ilgili Serializer'ı çeker.
-/// 50 yeni nesne eklense bile `main.rs` veya `model.rs` değişmez (Open/Closed Principle).
+/// 50 fresh nesne eklense bile `main.rs` veya `model.rs` değişmez (Open/Closed Principle).
 pub struct SerializerRegistry {
     serializers: HashMap<String, Box<dyn Serializer>>,
     /// Kayıtlı özel serializer'ı olmayan sınıflar için genel yedek.
@@ -74,7 +74,7 @@ pub type SharedRegistry = Arc<RwLock<SerializerRegistry>>;
 pub fn create_default_registry() -> SharedRegistry {
     let mut registry = SerializerRegistry::new();
 
-    // Tüm mevcut serializer'lar burada kaydedilir.
+    // Tüm current_value serializer'lar burada kaydedilir.
     registry.register(Box::new(part::PartSerializer));
 
     Arc::new(RwLock::new(registry))

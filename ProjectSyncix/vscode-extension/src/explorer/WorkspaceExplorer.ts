@@ -28,8 +28,8 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
     public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
     private searchQuery: string = "";
     private view?: vscode.TreeView<SyncixTreeItem>;
-    /** Studio'dan gelen seçimi uygularken kendi olayımızı geri göndermemek için. */
-    private studiodanGelenSecim = false;
+    /** Studio'dan gelen seçimi uygularken ownVersion olayımızı geri göndermemek için. */
+    private selectionFromStudio = false;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -95,7 +95,7 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
                     if (!item) return;
                     const draggedIds: string[] = item.value;
                     for (const id of draggedIds) {
-                        if (id === target.node.id) continue; // kendi üstüne bırakma
+                        if (id === target.node.id) continue; // ownVersion üstüne bırakma
                         this.rpc.send("REPARENT_INSTANCE", { id, newParentId: target.node.id }, RequestPriority.High);
                     }
                 }
@@ -126,7 +126,7 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
                     this.refresh(msg.data.newParentId);
                     break;
                 case "SELECTION":
-                    void this.studioSeciminiGoster(msg.data?.ids ?? []);
+                    void this.showStudioSelection(msg.data?.ids ?? []);
                     break;
                 case "TREE_UPDATED": // Bulk initial load
                 case "FULL_SYNC":
@@ -149,7 +149,7 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
             // Editörde seçileni Studio'da da seç.
             // Studio'dan gelen seçimi uygularken bu olay yeniden tetikleniyor;
             // bayrak olmasa iki taraf birbirini sonsuza kadar tetiklerdi.
-            if (!this.studiodanGelenSecim) {
+            if (!this.selectionFromStudio) {
                 this.rpc.send('SELECTION', { ids, source: 'editor' });
             }
         });
@@ -158,25 +158,25 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
     }
 
     /** Studio'dan gelen seçimi ağaçta göster. */
-    private async studioSeciminiGoster(ids: string[]): Promise<void> {
+    private async showStudioSelection(ids: string[]): Promise<void> {
         if (!this.view || ids.length === 0) return;
 
         // Yalnızca ağaçta karşılığı olanlar; silinmiş bir kimlik seçimi bozmasın.
-        const ogeler = ids
+        const items = ids
             .map((id) => this.cache.getNode(id))
             .filter((n): n is NodeData => !!n)
             .map((n) => new SyncixTreeItem(n, vscode.TreeItemCollapsibleState.Collapsed));
-        if (ogeler.length === 0) return;
+        if (items.length === 0) return;
 
-        this.studiodanGelenSecim = true;
+        this.selectionFromStudio = true;
         try {
             // reveal ağacı gerekli yerlerde açar; select seçimi kurar.
-            await this.view.reveal(ogeler[0], { select: true, focus: false, expand: 3 });
+            await this.view.reveal(items[0], { select: true, focus: false, expand: 3 });
         } catch {
             // Görünmeyen bir düğüm reveal edilemeyebilir; seçim senkronu
             // bu yüzden hata vermemeli.
         } finally {
-            this.studiodanGelenSecim = false;
+            this.selectionFromStudio = false;
         }
     }
 

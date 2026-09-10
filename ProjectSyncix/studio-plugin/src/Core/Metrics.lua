@@ -1,6 +1,6 @@
 --!strict
 -- Metrics
--- Ağ performansı, kuyruk uzunluğu ve ping verilerini toplar.
+-- Ağ performansı, backlog uzunluğu ve ping verilerini toplar.
 -- İleride Profiler veya Live Debugger eklentilerine bağlanması için açık uçludur.
 
 local Metrics = {}

@@ -110,7 +110,7 @@ function PatchExecutor:ApplyPatch(patch: any)
         end)
 
         if self.activityLog then
-            self.activityLog:Gelen("create", newInst.Name, nil, newInst.ClassName, uuid)
+            self.activityLog:Inbound("create", newInst.Name, nil, newInst.ClassName, uuid)
         end
         return
     end
@@ -118,10 +118,10 @@ function PatchExecutor:ApplyPatch(patch: any)
     -- SECIM bir instance'a bagli DEGIL: uuid tasimiyor, cunku hangi objelerin
     -- secili oldugu global bir durum. Bu yuzden hem "uuid yoksa cik" hem de
     -- instance cozumlemesinden ONCE ele alinmali. Ilk denememde uuid
-    -- kontrolunun bir satir ALTINA koymustum ve secim sessizce dusuyordu.
+    -- kontrolunun bir row ALTINA koymustum ve secim sessizce dusuyordu.
     if patch.event_type == "SELECTION_UPDATE" then
         if self.selectionObserver then
-            self.selectionObserver:Uygula(patch.data and patch.data.ids or {})
+            self.selectionObserver:Apply(patch.data and patch.data.ids or {})
         end
         return
     end
@@ -137,7 +137,7 @@ function PatchExecutor:ApplyPatch(patch: any)
         if newName then
             if self.echoGuard then self.echoGuard:Expect(uuid, "Name", newName) end
             if self.activityLog then
-                self.activityLog:Gelen("rename", instance.Name, "Name", newName, uuid)
+                self.activityLog:Inbound("rename", instance.Name, "Name", newName, uuid)
             end
             pcall(function()
                 instance.Name = newName
@@ -146,27 +146,27 @@ function PatchExecutor:ApplyPatch(patch: any)
     elseif patch.event_type == "ATTRIBUTE_UPDATE" then
         local name = patch.data.name
         if name then
-            local cozulmus = self:DecodeValue(patch.data.value)
-            if self.echoGuard then self.echoGuard:Expect(uuid, "@" .. name, cozulmus) end
+            local resolved = self:DecodeValue(patch.data.value)
+            if self.echoGuard then self.echoGuard:Expect(uuid, "@" .. name, resolved) end
             pcall(function()
-                instance:SetAttribute(name, cozulmus)
+                instance:SetAttribute(name, resolved)
             end)
         end
     elseif patch.event_type == "TAGS_UPDATE" then
         -- Etiket listesi butun halinde geliyor. Tek tek ekleme/silme takip
         -- etmek iki tarafta ayri durum tutmayi gerektirirdi; onun yerine
-        -- mevcut kume istenen kumeye getiriliyor.
-        local istenen = {}
+        -- current lookupSet requested kumeye getiriliyor.
+        local requested = {}
         for _, t in ipairs(patch.data.tags or {}) do
-            istenen[t] = true
+            requested[t] = true
         end
         pcall(function()
-            for _, mevcut in ipairs(CollectionService:GetTags(instance)) do
-                if not istenen[mevcut] then
-                    CollectionService:RemoveTag(instance, mevcut)
+            for _, current in ipairs(CollectionService:GetTags(instance)) do
+                if not requested[current] then
+                    CollectionService:RemoveTag(instance, current)
                 end
             end
-            for t in pairs(istenen) do
+            for t in pairs(requested) do
                 if not CollectionService:HasTag(instance, t) then
                     CollectionService:AddTag(instance, t)
                 end
@@ -185,7 +185,7 @@ function PatchExecutor:ApplyPatch(patch: any)
         end
     elseif patch.event_type == "DESTROY" then
         if self.activityLog then
-            self.activityLog:Gelen("silme", instance.Name, nil, nil, uuid)
+            self.activityLog:Inbound("silme", instance.Name, nil, nil, uuid)
         end
         pcall(function()
             instance:Destroy()
@@ -194,52 +194,52 @@ function PatchExecutor:ApplyPatch(patch: any)
     end
 end
 
---- Asset referansi. Eski property'ler (Decal.Texture, SoundId) duz metin
---- kabul ediyor; yeni Content tipli olanlar etmiyor. Once Content olarak
+--- Asset referansi. Eski property'ler (Decal.Texture, SoundId) duz text
+--- kabul ediyor; fresh Content tipli olanlar etmiyor. Once Content olarak
 --- denenir, o surum yoksa metne dusulur.
 local function decodeContent(uri: string): any
-    local ok, icerik = pcall(function()
+    local ok, content = pcall(function()
         return (Content :: any).fromUri(uri)
     end)
-    if ok and icerik then
-        return icerik
+    if ok and content then
+        return content
     end
     return uri
 end
 
-local function decodeColorSequence(noktalar: any): ColorSequence?
-    if type(noktalar) ~= "table" or #noktalar == 0 then
+local function decodeColorSequence(points: any): ColorSequence?
+    if type(points) ~= "table" or #points == 0 then
         return nil
     end
-    local anahtarlar = {}
-    for _, k in ipairs(noktalar) do
-        table.insert(anahtarlar, ColorSequenceKeypoint.new(k.t, Color3.new(k.r, k.g, k.b)))
+    local keyNames = {}
+    for _, k in ipairs(points) do
+        table.insert(keyNames, ColorSequenceKeypoint.new(k.t, Color3.new(k.r, k.g, k.b)))
     end
-    -- Roblox ilk noktanin 0, sonuncusunun 1 olmasini sart kosuyor ve
+    -- Roblox first noktanin 0, sonuncusunun 1 olmasini sart kosuyor ve
     -- siralanmamis listeyi reddediyor.
-    table.sort(anahtarlar, function(a, b) return a.Time < b.Time end)
-    local ok, dizi = pcall(ColorSequence.new, anahtarlar)
-    return ok and dizi or nil
+    table.sort(keyNames, function(a, b) return a.Time < b.Time end)
+    local ok, array = pcall(ColorSequence.new, keyNames)
+    return ok and array or nil
 end
 
-local function decodeNumberSequence(noktalar: any): NumberSequence?
-    if type(noktalar) ~= "table" or #noktalar == 0 then
+local function decodeNumberSequence(points: any): NumberSequence?
+    if type(points) ~= "table" or #points == 0 then
         return nil
     end
-    local anahtarlar = {}
-    for _, k in ipairs(noktalar) do
-        table.insert(anahtarlar, NumberSequenceKeypoint.new(k.t, k.v, k.envelope or 0))
+    local keyNames = {}
+    for _, k in ipairs(points) do
+        table.insert(keyNames, NumberSequenceKeypoint.new(k.t, k.v, k.envelope or 0))
     end
-    table.sort(anahtarlar, function(a, b) return a.Time < b.Time end)
-    local ok, dizi = pcall(NumberSequence.new, anahtarlar)
-    return ok and dizi or nil
+    table.sort(keyNames, function(a, b) return a.Time < b.Time end)
+    local ok, array = pcall(NumberSequence.new, keyNames)
+    return ok and array or nil
 end
 
 --- Yazi tipi. Aile bir asset URI'si, kalinlik ve stil enum.
 --- Metinden enum'a cevrim basarisiz olursa varsayilana dusulur; yanlis bir
---- deger atamaktansa Roblox'un varsayilani dogru davranis.
+--- datum atamaktansa Roblox'un varsayilani dogru behavior.
 local function decodeFont(f: any): Font?
-    local ok, yazi = pcall(function()
+    local ok, ink = pcall(function()
         local weight = Enum.FontWeight.Regular
         local style = Enum.FontStyle.Normal
         for _, w in ipairs(Enum.FontWeight:GetEnumItems()) do
@@ -250,7 +250,7 @@ local function decodeFont(f: any): Font?
         end
         return Font.new(f.family, weight, style)
     end)
-    return ok and yazi or nil
+    return ok and ink or nil
 end
 
 local function decodeEnum(propValue: any): any
@@ -347,7 +347,7 @@ function PatchExecutor:DecodeValue(propValue: any): any
                 p.frictionWeight, p.elasticityWeight
             )
         elseif propValue.Ref ~= nil then
-            -- Bos dize "baglanti yok" demektir; nil dondurmek dogru davranis.
+            -- Bos dize "baglanti yok" demektir; nil dondurmek dogru behavior.
             if propValue.Ref == "" then
                 return nil
             end
@@ -367,9 +367,9 @@ end
 -- üretir. Echo koruması yalnızca yazdığımız property'yi beklediği için bu türetilmiş
 -- sinyaller echo olarak core'a geri gidiyordu.
 --
--- Ölçüm: 40 Position komutu -> 39 adet "Orientation" güncellemesi geri geldi.
+-- Ölçüm: 40 Position komutu -> 39 itemCount "Orientation" güncellemesi geri geldi.
 -- Position'ın kendisi doğru şekilde eleniyordu, sızan yalnızca türetilmişlerdi.
-local BAGLASIK = {
+local LINKED = {
     Position    = { "CFrame", "Orientation", "Rotation" },
     CFrame      = { "Position", "Orientation", "Rotation" },
     Orientation = { "CFrame", "Position", "Rotation" },
@@ -380,20 +380,20 @@ local BAGLASIK = {
 -- Yazımdan SONRA, bağlaşık property'lerin Roblox'un hesapladığı GÜNCEL değerlerini
 -- beklenti olarak kaydeder. Değer birebir kaydedildiği için kullanıcının daha sonra
 -- yaptığı gerçek değişiklikler farklı olur ve elenmez.
-function PatchExecutor:_BaglasiklariBekle(instance: Instance, propName: string)
+function PatchExecutor:_AwaitReferences(instance: Instance, propName: string)
     if not self.echoGuard then return end
 
-    local kardesler = BAGLASIK[propName]
-    if not kardesler then return end
+    local siblings = LINKED[propName]
+    if not siblings then return end
 
     local uuid = instance:GetAttribute("__syncix_id")
     if not uuid then return end
 
-    for _, ad in ipairs(kardesler) do
+    for _, ad in ipairs(siblings) do
         pcall(function()
-            local guncel = (instance :: any)[ad]
-            if guncel ~= nil then
-                self.echoGuard:Expect(uuid, ad, guncel)
+            local latest = (instance :: any)[ad]
+            if latest ~= nil then
+                self.echoGuard:Expect(uuid, ad, latest)
             end
         end)
     end
@@ -402,14 +402,14 @@ end
 function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, propValue: any)
     -- Echo koruması: uygulamadan ÖNCE "bu değeri ben yazıyorum" notu düşülür.
     -- Roblox'un property sinyalleri deferred olduğu için zamanlama tabanlı kilit
-    -- yetmiyordu; gözlemci gelen değeri bu notla karşılaştırıp kendi yazımızı eler.
+    -- yetmiyordu; gözlemci incoming değeri bu notla karşılaştırıp kendi yazımızı eler.
     if self.echoGuard then
         local uuid = instance:GetAttribute("__syncix_id")
         if uuid then
-            local ok, cozulmus = pcall(function()
+            local ok, resolved = pcall(function()
                 return self:DecodeValue(propValue)
             end)
-            self.echoGuard:Expect(uuid, propName, ok and cozulmus or propValue)
+            self.echoGuard:Expect(uuid, propName, ok and resolved or propValue)
         end
     end
 
@@ -418,8 +418,8 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
         if propName == "Contents" and instance:IsA("LocalizationTable") then
             -- Ceviri girdileri property ile degil SetEntries ile yazilir.
             local HttpService = game:GetService("HttpService")
-            local girdiler = HttpService:JSONDecode(propValue)
-            ;(instance :: any):SetEntries(girdiler)
+            local inputs = HttpService:JSONDecode(propValue)
+            ;(instance :: any):SetEntries(inputs)
         elseif propName == "Source" and instance:IsA("LuaSourceContainer") then
             instance.Source = propValue
             pcall(function()
@@ -440,8 +440,8 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             end
         elseif type(propValue) == "table" then
             -- ÖNEMLİ: Tip kararı DEĞERE göre verilir, property ADINA göre DEĞİL.
-            -- Eskiden "Size"/"Position" her zaman UDim2 sanılıyordu; bu yüzden bir Part'ın
-            -- Vector3 konumu çözümlenemiyor ve sessizce hiç uygulanmıyordu (objeler 0,0,0'da kalıyordu).
+            -- Eskiden "Size"/"Position" her timestamp UDim2 sanılıyordu; bu yüzden bir Part'ın
+            -- Vector3 konumu çözümlenemiyor ve sessizce hiç uygulanmıyordu (objects 0,0,0'da kalıyordu).
             if propValue.Vector3 then
                 instance[propName] = Vector3.new(propValue.Vector3.x, propValue.Vector3.y, propValue.Vector3.z)
             elseif propValue.Color3 then
@@ -495,7 +495,7 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
                 error("unsupported table value for property: " .. propName)
             end
         elseif type(propValue) == "string" and (propName == "Size" or propName == "Position") and instance:IsA("GuiObject") then
-            -- GUI için metin biçimli UDim2 ("0.5,0,0.5,0")
+            -- GUI için text biçimli UDim2 ("0.5,0,0.5,0")
             local udim = decodeUDim2(propValue)
             if udim then
                 instance[propName] = udim
@@ -516,20 +516,20 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
     end)
 
     if ok then
-        -- Yazım başarılıysa türetilmiş property'lerin yeni değerleri de beklenir.
-        self:_BaglasiklariBekle(instance, propName)
+        -- Yazım başarılıysa türetilmiş property'lerin fresh değerleri de beklenir.
+        self:_AwaitReferences(instance, propName)
 
         -- Akış günlüğü: kullanıcı ne değiştiğini görebilsin ve çakışma varsa uyarılsın.
         if self.activityLog then
-            local uygulanan = nil
+            local applied = nil
             pcall(function()
-                uygulanan = (instance :: any)[propName]
+                applied = (instance :: any)[propName]
             end)
-            self.activityLog:Gelen(
+            self.activityLog:Inbound(
                 "property",
                 instance.Name,
                 propName,
-                uygulanan,
+                applied,
                 instance:GetAttribute("__syncix_id")
             )
         end

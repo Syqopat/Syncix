@@ -5,7 +5,7 @@ use std::sync::RwLock;
 /// Nesneler arasındaki ObjectValue, Motor, HingeConstraint gibi referansları yönetir.
 /// Eğer referans edilen nesne (UUID) henüz Workspace'te yoksa "Lazy Resolution" için beklemeye alır.
 pub struct ReferenceResolver {
-    /// UUID -> Bu UUID'yi bekleyen nesneler ve property isimleri
+    /// UUID -> Bu UUID'yi pending_item nesneler ve property isimleri
     /// Örn: "Part_B" UUID'si yaratıldığında, "ObjectValue_A" nın "Value" propertysine atanacak.
     pending_references: RwLock<HashMap<String, Vec<PendingRef>>>,
 
@@ -37,7 +37,7 @@ impl ReferenceResolver {
     }
 
     /// Yeni bir UUID sisteme dahil olduğunda (Instance yaratıldığında) çağrılır.
-    /// Eğer bu UUID'yi bekleyen referanslar varsa onları çözümler (Resolve).
+    /// Eğer bu UUID'yi pending_item referanslar varsa onları çözümler (Resolve).
     pub fn notify_uuid_created(&self, new_uuid: &str) -> Vec<PendingRef> {
         self.resolved_references
             .write()
@@ -56,7 +56,7 @@ impl ReferenceResolver {
 /// Asset Kayıt Sistemi (AssetRegistry)
 /// İleride eklenecek Mesh, Texture, Sound gibi yerel dosyaları veya rbxassetid:// linklerini tutar.
 pub struct AssetRegistry {
-    /// Yerel dosya yolu -> rbxassetid veya syncix:// URL'si
+    /// Yerel file_path yolu -> rbxassetid veya syncix:// URL'si
     assets: RwLock<HashMap<String, String>>,
 }
 

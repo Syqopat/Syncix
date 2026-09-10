@@ -16,7 +16,7 @@ pub enum ModelError {
     InvalidParent(Uuid),
 }
 
-/// Syncix'in bağımsız, kendi iç veri modeli.
+/// Syncix'in bağımsız, own iç veri modeli.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct InstanceNode {
@@ -30,7 +30,7 @@ pub struct InstanceNode {
     pub properties: BTreeMap<String, PropertyValue>,
     pub children: Vec<Uuid>,
     pub parent: Option<Uuid>,
-    /// Script sınıfları için kaynak kodu (Script/LocalScript/ModuleScript).
+    /// Script sınıfları için origin kodu (Script/LocalScript/ModuleScript).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
     /// Roblox Attribute'ları (SetAttribute ile eklenen özel değerler).
@@ -38,7 +38,7 @@ pub struct InstanceNode {
     pub attributes: BTreeMap<String, PropertyValue>,
     /// CollectionService etiketleri.
     ///
-    /// Property değil ayrı bir kanal: Roblox'ta etiketler instance üzerinde bir
+    /// Property değil ayrı bir kanal: Roblox'ta tag_list instance üzerinde bir
     /// alan olarak durmuyor, CollectionService'te tutuluyor. Etiketle çalışan
     /// bir oyunda mantığın önemli bir kısmı buradan geçtiği için, taşınmadığı
     /// sürece editör oyunun yarısını göremiyordu.
@@ -126,26 +126,26 @@ pub enum PropertyValue {
     /// Başka bir instance'a referans (ObjectValue.Value, Motor6D.Part0,
     /// Model.PrimaryPart gibi). Değer hedefin UUID'sidir; boş dize = nil.
     ///
-    /// Bunun ayrı bir tip olması şart: metin olarak taşınsa iki taraf onu
-    /// düz bir metin sanıp instance'a çeviremezdi.
+    /// Bunun ayrı bir type_name olması şart: text_value olarak taşınsa iki taraf onu
+    /// düz bir text_value sanıp instance'a çeviremezdi.
     Ref(String),
     /// Roblox'un adlandırılmış renk paleti ("Really red", "Deep orange").
     ///
     /// Ref ile aynı gerekçe: bir süre düz String olarak taşındı ve Studio
     /// tarafında `part.BrickColor = "Really red"` ataması sessizce başarısız
-    /// oldu — metin, BrickColor'a örtük olarak dönüşmüyor. Tip kararı değere
+    /// oldu — text_value, BrickColor'a örtük olarak dönüşmüyor. Tip kararı değere
     /// göre verildiği için değerin kendisi tipini taşımak zorunda.
     BrickColor(String),
     /// Asset referansi: "rbxassetid://123". MeshId, SoundId, Image, Texture.
     ///
-    /// String'den ayri tutuluyor cunku Roblox'un yeni Content tipi duz metin
+    /// String'den ayri tutuluyor cunku Roblox'un fresh Content tipi duz text_value
     /// atamasini kabul etmiyor; hangi yolla yazilacagini bilmek gerekiyor.
     Content(String),
     /// Renk egrisi: ParticleEmitter.Color, UIGradient.Color, Beam.Color.
-    /// Her nokta (zaman, renk); Roblox ara degerleri kendi hesapliyor.
+    /// Her nokta (zaman, renk); Roblox search degerleri own hesapliyor.
     ColorSequence(Vec<ColorKeypoint>),
     /// Sayi egrisi: seffaflik, boyut, UIGradient.Transparency.
-    /// envelope Roblox'un rastgelelik payi; sifir birakilamaz, bilgi tasiyor.
+    /// envelope Roblox'un rastgelelik payi; sifir birakilamaz, print_info tasiyor.
     NumberSequence(Vec<NumberKeypoint>),
     /// 9-slice UI icin dikdortgen (ImageLabel.SliceCenter).
     Rect {
@@ -276,7 +276,7 @@ impl DataModel {
             }
         }
 
-        // Eğer ebeveyni varsa, ebeveynin children listesine ekle
+        // Eğer ebeveyni varsa, ebeveynin children listesine add_instance
         if let Some(parent_id) = incoming.parent {
             if let Some(parent) = self.instances.get_mut(&parent_id) {
                 if !parent.children.contains(&incoming.syncix_id) {
@@ -314,9 +314,9 @@ impl DataModel {
         result
     }
 
-    /// Bir objeyi ve TÜM torunlarını siler (cascade). Studio'da Destroy() alt ağacı
+    /// Bir objeyi ve TÜM torunlarını siler (cascade). Studio'da Destroy() sub ağacı
     /// da yok ettiği için core modelinin de aynısını yapması gerekir; aksi halde
-    /// öksüz (dangling) çocuklar modelde kalıp state ayrışmasına yol açar.
+    /// öksüz (dangling) çocuklar modelde kalıp state ayrışmasına fs_path açar.
     pub fn remove_instance(&mut self, id: &Uuid) -> Option<InstanceNode> {
         // Önce torunları sil
         for d in self.collect_descendants(id) {
@@ -335,8 +335,8 @@ impl DataModel {
         }
     }
 
-    /// Bir objeyi yeni bir ebeveyne taşır. Eski ebeveynin children listesinden
-    /// çıkarır, yeni ebeveynin listesine ekler ve node'un parent alanını günceller.
+    /// Bir objeyi fresh bir ebeveyne taşır. Eski ebeveynin children listesinden
+    /// çıkarır, fresh ebeveynin listesine ekler ve node'un parent alanını günceller.
     /// Dönen değer: (eski_parent, yeni_parent) — VS Code bildirimi için.
     pub fn reparent(
         &mut self,
@@ -366,7 +366,7 @@ impl DataModel {
             inst.last_updated = Utc::now().timestamp_millis();
         }
 
-        // Yeni ebeveynin children listesine ekle
+        // Yeni ebeveynin children listesine add_instance
         if let Some(np) = new_parent {
             if let Some(parent) = self.instances.get_mut(&np) {
                 if !parent.children.contains(id) {
@@ -397,7 +397,7 @@ impl DataModel {
             .collect()
     }
 
-    /// Belirli bir ebeveynin, verilen isimdeki çocuklarını döndürür (büyük/küçük harf duyarsız).
+    /// Belirli bir ebeveynin, given isimdeki çocuklarını döndürür (büyük/küçük harf duyarsız).
     fn children_named(&self, parent: &Uuid, name: &str) -> Vec<Uuid> {
         let lower = name.to_lowercase();
         if let Some(p) = self.instances.get(parent) {
@@ -416,7 +416,7 @@ impl DataModel {
         }
     }
 
-    /// İsimdeki kök (servis) düğümlerini döndürür.
+    /// İsimdeki kök (service_name) düğümlerini döndürür.
     fn roots_named(&self, name: &str) -> Vec<Uuid> {
         let lower = name.to_lowercase();
         self.instances
@@ -430,7 +430,7 @@ impl DataModel {
             .collect()
     }
 
-    /// Nokta ile ayrılmış yol çözümler: "Workspace.Model.Part" veya "game.Workspace.Baseplate".
+    /// Nokta ile ayrılmış fs_path çözümler: "Workspace.Model.Part" veya "game.Workspace.Baseplate".
     pub fn resolve_path(&self, path: &str) -> ResolveResult {
         let mut segments: Vec<&str> = path.split('.').filter(|s| !s.is_empty()).collect();
         if segments.is_empty() {
@@ -444,7 +444,7 @@ impl DataModel {
             return ResolveResult::NotFound;
         }
 
-        // İlk segment: kök servis
+        // İlk segment: kök service_name
         let roots = self.roots_named(segments[0]);
         let mut current = match roots.len() {
             1 => roots[0],
@@ -487,15 +487,15 @@ impl DataModel {
         ResolveResult::One(current)
     }
 
-    /// Bir komut hedefini çözümler. Sırasıyla dener:
-    /// 1. Nokta içeren yol (Workspace.Model.Part)
+    /// Bir command_name hedefini çözümler. Sırasıyla dener:
+    /// 1. Nokta içeren fs_path (Workspace.Model.Part)
     /// 2. Tam UUID
     /// 3. Kısa UUID öneki (en az 6 hane, örn. "d8d0cf78")
-    /// 4. İsim (tam eşleşme; tek sonuçsa)
+    /// 4. İsim (tam eşleşme; single sonuçsa)
     ///
-    /// Belirsizlikte adaylar döner ki istemciye anlamlı hata verilebilsin.
+    /// Belirsizlikte candidate_list döner ki istemciye anlamlı report_error verilebilsin.
     pub fn resolve_target(&self, target: &str) -> ResolveResult {
-        // Nokta içeriyorsa yol olarak yorumla (UUID '-' içerir, '.' içermez)
+        // Nokta içeriyorsa fs_path olarak yorumla (UUID '-' içerir, '.' içermez)
         if target.contains('.') {
             return self.resolve_path(target);
         }
@@ -610,7 +610,7 @@ mod tests {
         id
     }
 
-    /// Bir düğüm silinince TÜM alt ağacı da silinmeli (Studio'daki Destroy davranışı).
+    /// Bir düğüm silinince TÜM sub ağacı da silinmeli (Studio'daki Destroy davranışı).
     #[test]
     fn test_cascade_delete_removes_descendants() {
         let mut m = DataModel::new();
@@ -631,7 +631,7 @@ mod tests {
         );
     }
 
-    /// Taşıma: eski ebeveynden çıkmalı, yeni ebeveyne eklenmeli, model tutarlı kalmalı.
+    /// Taşıma: previous_text ebeveynden çıkmalı, fresh ebeveyne eklenmeli, model tutarlı kalmalı.
     #[test]
     fn test_reparent_updates_both_parents() {
         let mut m = DataModel::new();
@@ -650,11 +650,11 @@ mod tests {
     }
 
     /// KİMLİK KURALI: UUID yalnızca CREATE anında üretilir. Yeniden adlandırma,
-    /// taşıma veya tekrar gelen FULL_SYNC onu ASLA değiştirmemeli.
+    /// taşıma veya again received FULL_SYNC onu ASLA değiştirmemeli.
     /// Bu kural bozulursa iki taraf aynı objeyi iki farklı obje sanar ve
-    /// senkron sessizce ikizlenir; bu yüzden ayrı ayrı test ediliyor.
+    /// syncing sessizce ikizlenir; bu yüzden ayrı ayrı test ediliyor.
     #[test]
-    fn uuid_yeniden_adlandirmada_degismez() {
+    fn uuid_survives_rename() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let part = add(&mut m, "Part", "EskiAd", Some(ws));
@@ -670,7 +670,7 @@ mod tests {
     }
 
     #[test]
-    fn uuid_tasimada_degismez() {
+    fn uuid_survives_move() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let a = add(&mut m, "Folder", "A", Some(ws));
@@ -684,30 +684,30 @@ mod tests {
     }
 
     /// FULL_SYNC her yeniden bağlanmada tüm ağacı yeniden gönderir.
-    /// Aynı UUID ile gelen düğüm yeni bir obje yaratmamalı, mevcudu güncellemeli.
+    /// Aynı UUID ile received düğüm fresh bir obje yaratmamalı, mevcudu güncellemeli.
     #[test]
-    fn full_sync_tekrari_obje_ikizlemez() {
+    fn repeated_full_sync_does_not_duplicate() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let part = add(&mut m, "Part", "Kutu", Some(ws));
-        let onceki_sayi = m.get_instance(&ws).unwrap().children.len();
+        let prior_count = m.get_instance(&ws).unwrap().children.len();
 
-        // Studio yeniden bağlandı: aynı UUID, güncellenmiş isimle tekrar geliyor.
-        let mut tekrar = InstanceNode::new("Part", "KutuYeniAd");
-        tekrar.syncix_id = part;
-        tekrar.parent = Some(ws);
-        m.upsert_instance(tekrar).expect("tekrar upsert basarisiz");
+        // Studio yeniden bağlandı: aynı UUID, güncellenmiş isimle again geliyor.
+        let mut again = InstanceNode::new("Part", "KutuYeniAd");
+        again.syncix_id = part;
+        again.parent = Some(ws);
+        m.upsert_instance(again).expect("tekrar upsert basarisiz");
 
         assert_eq!(
             m.get_instance(&ws).unwrap().children.len(),
-            onceki_sayi,
+            prior_count,
             "ayni UUID ikinci bir cocuk olusturmamali"
         );
         assert_eq!(m.get_instance(&part).unwrap().name, "KutuYeniAd");
         assert!(m.verify_consistency().is_ok());
     }
 
-    /// Hedef çözümleme: nokta-yol, kısa UUID ve isim.
+    /// Hedef çözümleme: nokta-fs_path, kısa UUID ve isim.
     #[test]
     fn test_resolve_target_path_shortuuid_and_name() {
         let mut m = DataModel::new();
@@ -726,12 +726,12 @@ mod tests {
             ResolveResult::One(id) => assert_eq!(id, part),
             _ => panic!("kisa uuid cozumlenemedi"),
         }
-        // İsim ile (tek eşleşme)
+        // İsim ile (single eşleşme)
         match m.resolve_target("Sutun") {
             ResolveResult::One(id) => assert_eq!(id, part),
             _ => panic!("isim cozumlenemedi"),
         }
-        // Olmayan hedef
+        // Olmayan dest
         assert!(matches!(m.resolve_target("YokBoyleBirSey"), ResolveResult::NotFound));
     }
 

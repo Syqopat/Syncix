@@ -7,15 +7,15 @@
 //!
 //! Kapsam dürüstlüğü: Syncix'in modeli yalnızca String, Number, Boolean, Vector3,
 //! Color3 ve UDim2 tutar. Dolayısıyla bu yazıcı, modelin tuttuğu HER ŞEYİ yazar —
-//! kayıp yazıcıda değil modeldedir. Enum değerleri metin olarak saklandığı için
+//! kayıp yazıcıda değil modeldedir. Enum değerleri text_value olarak saklandığı için
 //! yaygın olanlar sayısal token'a çevrilir; tanınmayan enum'lar atlanır ve sayısı
 //! bildirilir.
 
 use crate::model::{DataModel, InstanceNode, PropertyValue};
 use uuid::Uuid;
 
-/// XML metin kaçışı.
-fn kacir(s: &str) -> String {
+/// XML text_value kaçışı.
+fn escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
@@ -25,8 +25,8 @@ fn kacir(s: &str) -> String {
 
 /// Yaygın Enum değerleri için sayısal token karşılıkları.
 /// Roblox XML'inde enum'lar `<token>` olarak sayı ile yazılır.
-fn enum_token(deger: &str) -> Option<u32> {
-    let token = match deger {
+fn enum_token(raw_value: &str) -> Option<u32> {
+    let token = match raw_value {
         // Material
         "Enum.Material.Plastic" => 256,
         "Enum.Material.Wood" => 512,
@@ -83,222 +83,222 @@ fn enum_token(deger: &str) -> Option<u32> {
     Some(token)
 }
 
-/// Script sınıflarında kaynak kod `ProtectedString` olarak yazılır.
-fn script_mi(class_name: &str) -> bool {
+/// Script sınıflarında origin script_code `ProtectedString` olarak yazılır.
+fn looks_like_script(class_name: &str) -> bool {
     matches!(class_name, "Script" | "LocalScript" | "ModuleScript")
 }
 
-struct Sayac {
+struct ExportCounters {
     referent: usize,
-    atlanan_enum: usize,
+    skipped_enums: usize,
 }
 
-fn ozellik_yaz(cikti: &mut String, ad: &str, deger: &PropertyValue, sayac: &mut Sayac) {
-    match deger {
+fn write_property(out_text: &mut String, item_name: &str, raw_value: &PropertyValue, counter: &mut ExportCounters) {
+    match raw_value {
         PropertyValue::String(s) => {
             // Metin bir Enum olabilir; öyleyse token olarak yazılmalı.
             if s.starts_with("Enum.") {
                 match enum_token(s) {
-                    Some(t) => cikti.push_str(&format!(
+                    Some(t) => out_text.push_str(&format!(
                         "\t\t\t<token name=\"{}\">{}</token>\n",
-                        kacir(ad),
+                        escape(item_name),
                         t
                     )),
-                    None => sayac.atlanan_enum += 1,
+                    None => counter.skipped_enums += 1,
                 }
             } else {
-                cikti.push_str(&format!(
+                out_text.push_str(&format!(
                     "\t\t\t<string name=\"{}\">{}</string>\n",
-                    kacir(ad),
-                    kacir(s)
+                    escape(item_name),
+                    escape(s)
                 ));
             }
         }
-        PropertyValue::Number(n) => cikti.push_str(&format!(
+        PropertyValue::Number(n) => out_text.push_str(&format!(
             "\t\t\t<float name=\"{}\">{}</float>\n",
-            kacir(ad),
+            escape(item_name),
             n
         )),
-        PropertyValue::Boolean(b) => cikti.push_str(&format!(
+        PropertyValue::Boolean(b) => out_text.push_str(&format!(
             "\t\t\t<bool name=\"{}\">{}</bool>\n",
-            kacir(ad),
+            escape(item_name),
             b
         )),
-        PropertyValue::Vector3 { x, y, z } => cikti.push_str(&format!(
+        PropertyValue::Vector3 { x, y, z } => out_text.push_str(&format!(
             "\t\t\t<Vector3 name=\"{}\"><X>{}</X><Y>{}</Y><Z>{}</Z></Vector3>\n",
-            kacir(ad),
+            escape(item_name),
             x,
             y,
             z
         )),
         PropertyValue::Color3 { r, g, b } => {
             // BasePart.Color Roblox XML'inde Color3uint8 olarak tutulur.
-            if ad == "Color" {
-                let paket = 0xFF00_0000u32
+            if item_name == "Color" {
+                let package = 0xFF00_0000u32
                     | ((r * 255.0).round() as u32) << 16
                     | ((g * 255.0).round() as u32) << 8
                     | ((b * 255.0).round() as u32);
-                cikti.push_str(&format!(
+                out_text.push_str(&format!(
                     "\t\t\t<Color3uint8 name=\"{}\">{}</Color3uint8>\n",
-                    kacir(ad),
-                    paket
+                    escape(item_name),
+                    package
                 ));
             } else {
-                cikti.push_str(&format!(
+                out_text.push_str(&format!(
                     "\t\t\t<Color3 name=\"{}\"><R>{}</R><G>{}</G><B>{}</B></Color3>\n",
-                    kacir(ad),
+                    escape(item_name),
                     r,
                     g,
                     b
                 ));
             }
         }
-        PropertyValue::UDim2 { xs, xo, ys, yo } => cikti.push_str(&format!(
+        PropertyValue::UDim2 { xs, xo, ys, yo } => out_text.push_str(&format!(
             "\t\t\t<UDim2 name=\"{}\"><XS>{}</XS><XO>{}</XO><YS>{}</YS><YO>{}</YO></UDim2>\n",
-            kacir(ad),
+            escape(item_name),
             xs,
             xo,
             ys,
             yo
         )),
-        PropertyValue::Vector2 { x, y } => cikti.push_str(&format!(
+        PropertyValue::Vector2 { x, y } => out_text.push_str(&format!(
             "\t\t\t<Vector2 name=\"{}\"><X>{}</X><Y>{}</Y></Vector2>\n",
-            kacir(ad),
+            escape(item_name),
             x,
             y
         )),
-        PropertyValue::UDim { scale, offset } => cikti.push_str(&format!(
+        PropertyValue::UDim { scale, offset } => out_text.push_str(&format!(
             "\t\t\t<UDim name=\"{}\"><S>{}</S><O>{}</O></UDim>\n",
-            kacir(ad),
+            escape(item_name),
             scale,
             offset
         )),
-        PropertyValue::CFrame { pos, rot } => cikti.push_str(&format!(
+        PropertyValue::CFrame { pos, rot } => out_text.push_str(&format!(
             "\t\t\t<CoordinateFrame name=\"{}\"><X>{}</X><Y>{}</Y><Z>{}</Z>\
              <R00>{}</R00><R01>{}</R01><R02>{}</R02>\
              <R10>{}</R10><R11>{}</R11><R12>{}</R12>\
              <R20>{}</R20><R21>{}</R21><R22>{}</R22></CoordinateFrame>\n",
-            kacir(ad),
+            escape(item_name),
             pos[0], pos[1], pos[2],
             rot[0], rot[1], rot[2],
             rot[3], rot[4], rot[5],
             rot[6], rot[7], rot[8]
         )),
-        PropertyValue::NumberRange { min, max } => cikti.push_str(&format!(
+        PropertyValue::NumberRange { min, max } => out_text.push_str(&format!(
             "\t\t\t<NumberRange name=\"{}\">{} {} </NumberRange>\n",
-            kacir(ad),
+            escape(item_name),
             min,
             max
         )),
-        // Instance referanslari XML'de <Ref> ile referent'a bagli; bizim UUID'miz
+        // Instance referanslari XML'de <Ref> ile referent'a is_bound; bizim UUID'miz
         // referent degil. Yanlis bir baglanti yazmaktansa atliyoruz.
-        PropertyValue::Ref(_) => sayac.atlanan_enum += 1,
-        // Roblox XML'inde BrickColor sayisal palet koduyla yazilir; bizde ad var,
-        // kod yok. Yanlis bir kod yazmaktansa atliyoruz — ayni bilgiyi Color3
+        PropertyValue::Ref(_) => counter.skipped_enums += 1,
+        // Roblox XML'inde BrickColor sayisal palet koduyla yazilir; bizde item_name exists_flag,
+        // script_code yok. Yanlis bir script_code yazmaktansa atliyoruz — is_same bilgiyi Color3
         // zaten tasiyor.
-        PropertyValue::BrickColor(_) => sayac.atlanan_enum += 1,
-        PropertyValue::Content(u) => cikti.push_str(&format!(
+        PropertyValue::BrickColor(_) => counter.skipped_enums += 1,
+        PropertyValue::Content(u) => out_text.push_str(&format!(
             "			<Content name=\"{}\"><url>{}</url></Content>
 ",
-            kacir(ad),
-            kacir(u)
+            escape(item_name),
+            escape(u)
         )),
         // Bu tiplerin XML gosterimi bilesik; yanlis yazmaktansa atlaniyorlar.
-        // Ayni bilgi Studio ile dogrudan senkronda tam olarak tasiniyor.
+        // Ayni print_info Studio ile dogrudan senkronda tam olarak tasiniyor.
         PropertyValue::ColorSequence(_)
         | PropertyValue::NumberSequence(_)
         | PropertyValue::Rect { .. }
         | PropertyValue::Font { .. }
-        | PropertyValue::PhysicalProperties { .. } => sayac.atlanan_enum += 1,
+        | PropertyValue::PhysicalProperties { .. } => counter.skipped_enums += 1,
     }
 }
 
-fn dugum_yaz(cikti: &mut String, dm: &DataModel, node: &InstanceNode, sayac: &mut Sayac) {
-    let referent = sayac.referent;
-    sayac.referent += 1;
+fn write_node(out_text: &mut String, dm: &DataModel, node: &InstanceNode, counter: &mut ExportCounters) {
+    let referent = counter.referent;
+    counter.referent += 1;
 
-    cikti.push_str(&format!(
+    out_text.push_str(&format!(
         "\t<Item class=\"{}\" referent=\"RBX{}\">\n\t\t<Properties>\n",
-        kacir(&node.class_name),
+        escape(&node.class_name),
         referent
     ));
-    cikti.push_str(&format!(
+    out_text.push_str(&format!(
         "\t\t\t<string name=\"Name\">{}</string>\n",
-        kacir(&node.name)
+        escape(&node.name)
     ));
 
     // Özellikler ada göre sıralı yazılır ki çıktı belirleyici olsun (CI diff'i için).
-    let mut anahtarlar: Vec<&String> = node.properties.keys().collect();
-    anahtarlar.sort();
-    for ad in anahtarlar {
-        if ad == "Name" {
+    let mut key_names: Vec<&String> = node.properties.keys().collect();
+    key_names.sort();
+    for item_name in key_names {
+        if item_name == "Name" {
             continue;
         }
-        ozellik_yaz(cikti, ad, &node.properties[ad], sayac);
+        write_property(out_text, item_name, &node.properties[item_name], counter);
     }
 
-    if script_mi(&node.class_name) {
-        let kaynak = node.source.clone().unwrap_or_default();
-        cikti.push_str(&format!(
+    if looks_like_script(&node.class_name) {
+        let origin = node.source.clone().unwrap_or_default();
+        out_text.push_str(&format!(
             "\t\t\t<ProtectedString name=\"Source\"><![CDATA[{}]]></ProtectedString>\n",
             // CDATA içinde "]]>" dizisi bölünmek zorunda.
-            kaynak.replace("]]>", "]]]]><![CDATA[>")
+            origin.replace("]]>", "]]]]><![CDATA[>")
         ));
     }
 
-    // Attribute'lar Roblox XML'inde ikili bir blob olarak tutulur; metin biçiminde
+    // Attribute'lar Roblox XML'inde ikili bir blob olarak tutulur; text_value biçiminde
     // güvenilir şekilde yazılamaz. Bu yüzden dışa aktarımda atlanır (bkz. README).
 
-    cikti.push_str("\t\t</Properties>\n");
+    out_text.push_str("\t\t</Properties>\n");
 
     for cid in &node.children {
-        if let Some(cocuk) = dm.get_instance(cid) {
-            dugum_yaz(cikti, dm, cocuk, sayac);
+        if let Some(child_entry) = dm.get_instance(cid) {
+            write_node(out_text, dm, child_entry, counter);
         }
     }
 
-    cikti.push_str("\t</Item>\n");
+    out_text.push_str("\t</Item>\n");
 }
 
 /// Tüm ağacı Roblox XML olarak döndürür.
-/// `kok`: verilirse yalnızca o alt ağaç yazılır (model dosyası), verilmezse
-/// bütün servisler yazılır (yer dosyası).
+/// `kok`: verilirse yalnızca o sub ağaç yazılır (model dosyası), verilmezse
+/// bütün service_list yazılır (yer dosyası).
 /// Dönüş: (xml, atlanan_enum_sayisi)
-pub fn disa_aktar(dm: &DataModel, kok: Option<&Uuid>) -> (String, usize) {
-    let mut cikti = String::from("<roblox version=\"4\">\n");
-    let mut sayac = Sayac {
+pub fn export_rbxmx(dm: &DataModel, root_dir: Option<&Uuid>) -> (String, usize) {
+    let mut out_text = String::from("<roblox version=\"4\">\n");
+    let mut counter = ExportCounters {
         referent: 0,
-        atlanan_enum: 0,
+        skipped_enums: 0,
     };
 
-    match kok {
+    match root_dir {
         Some(uuid) => {
             if let Some(node) = dm.get_instance(uuid) {
-                dugum_yaz(&mut cikti, dm, node, &mut sayac);
+                write_node(&mut out_text, dm, node, &mut counter);
             }
         }
         None => {
-            let mut kokler: Vec<(&Uuid, &InstanceNode)> = dm
+            let mut root_list: Vec<(&Uuid, &InstanceNode)> = dm
                 .get_all_instances()
                 .iter()
                 .filter(|(_, n)| n.parent.is_none() && n.class_name != "DataModel")
                 .collect();
-            kokler.sort_by(|a, b| a.1.name.cmp(&b.1.name));
-            for (_, node) in kokler {
-                dugum_yaz(&mut cikti, dm, node, &mut sayac);
+            root_list.sort_by(|a, b| a.1.name.cmp(&b.1.name));
+            for (_, node) in root_list {
+                write_node(&mut out_text, dm, node, &mut counter);
             }
         }
     }
 
-    cikti.push_str("</roblox>\n");
-    (cikti, sayac.atlanan_enum)
+    out_text.push_str("</roblox>\n");
+    (out_text, counter.skipped_enums)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn ekle(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
+    fn add_instance(m: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut n = InstanceNode::new(class, name);
         n.parent = parent;
         let id = n.syncix_id;
@@ -307,12 +307,12 @@ mod tests {
     }
 
     #[test]
-    fn temel_yapi_ve_hiyerarsi() {
+    fn basic_structure_and_hierarchy() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        ekle(&mut m, "Part", "Kutu", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        add_instance(&mut m, "Part", "Kutu", Some(ws));
 
-        let (xml, _) = disa_aktar(&m, None);
+        let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.starts_with("<roblox version=\"4\">"));
         assert!(xml.ends_with("</roblox>\n"));
         assert!(xml.contains("class=\"Workspace\""));
@@ -321,10 +321,10 @@ mod tests {
     }
 
     #[test]
-    fn vector3_ve_renk_dogru_yazilir() {
+    fn vector3_and_color_are_written_correctly() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        let p = ekle(&mut m, "Part", "Kutu", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        let p = add_instance(&mut m, "Part", "Kutu", Some(ws));
         {
             let n = m.get_mut_instance(&p).unwrap();
             n.properties.insert(
@@ -337,7 +337,7 @@ mod tests {
             );
         }
 
-        let (xml, _) = disa_aktar(&m, None);
+        let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.contains("<X>1</X><Y>2</Y><Z>3</Z>"));
         // Kirmizi: 0xFFFF0000
         assert!(
@@ -348,10 +348,10 @@ mod tests {
     }
 
     #[test]
-    fn enum_token_a_cevrilir_taninmayan_atlanir() {
+    fn enum_becomes_token_unknown_is_skipped() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        let p = ekle(&mut m, "Part", "Kutu", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        let p = add_instance(&mut m, "Part", "Kutu", Some(ws));
         {
             let n = m.get_mut_instance(&p).unwrap();
             n.properties.insert(
@@ -364,42 +364,42 @@ mod tests {
             );
         }
 
-        let (xml, atlanan) = disa_aktar(&m, None);
+        let (xml, skipped) = export_rbxmx(&m, None);
         assert!(xml.contains("<token name=\"Material\">288</token>"));
-        assert_eq!(atlanan, 1, "taninmayan enum sayilmali");
+        assert_eq!(skipped, 1, "taninmayan enum sayilmali");
         assert!(!xml.contains("Enum.Yok.Boyle"), "gecersiz enum yazilmamali");
     }
 
     #[test]
-    fn script_kaynagi_cdata_icinde() {
+    fn script_source_is_in_cdata() {
         let mut m = DataModel::new();
-        let sss = ekle(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = ekle(&mut m, "Script", "Ana", Some(sss));
+        let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
+        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
         m.get_mut_instance(&s).unwrap().source = Some("print(\"merhaba\")".into());
 
-        let (xml, _) = disa_aktar(&m, None);
+        let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.contains("<![CDATA[print(\"merhaba\")]]>"));
     }
 
     #[test]
-    fn xml_ozel_karakterleri_kacirilir() {
+    fn xml_special_characters_are_escaped() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        ekle(&mut m, "Part", "A<B&C", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        add_instance(&mut m, "Part", "A<B&C", Some(ws));
 
-        let (xml, _) = disa_aktar(&m, None);
+        let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.contains("A&lt;B&amp;C"));
     }
 
     #[test]
-    fn tek_alt_agac_disa_aktarilabilir() {
+    fn single_subtree_can_be_exported() {
         let mut m = DataModel::new();
-        let ws = ekle(&mut m, "Workspace", "Workspace", None);
-        let klasor = ekle(&mut m, "Folder", "Sadece", Some(ws));
-        ekle(&mut m, "Part", "Icerik", Some(klasor));
-        ekle(&mut m, "Part", "Disarida", Some(ws));
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        let folder_path = add_instance(&mut m, "Folder", "Sadece", Some(ws));
+        add_instance(&mut m, "Part", "Icerik", Some(folder_path));
+        add_instance(&mut m, "Part", "Disarida", Some(ws));
 
-        let (xml, _) = disa_aktar(&m, Some(&klasor));
+        let (xml, _) = export_rbxmx(&m, Some(&folder_path));
         assert!(xml.contains("Sadece"));
         assert!(xml.contains("Icerik"));
         assert!(!xml.contains("Disarida"), "alt agac disi obje yazilmamali");

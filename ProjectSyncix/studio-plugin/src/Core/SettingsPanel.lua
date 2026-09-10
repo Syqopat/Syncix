@@ -1,13 +1,13 @@
 -- SettingsPanel
 -- Studio araç çubuğundaki Syncix düğmesi ve ayar/durum paneli.
 --
--- Buradaki asıl iş PORT SEÇİMİ. Eklenti normalde 8080-8089 aralığını tarayıp ilk
--- cevap veren core'a bağlanır. İki proje aynı anda açıksa bu YANLIŞ projeye
+-- Buradaki asıl iş PORT SEÇİMİ. Eklenti normalde 8080-8089 aralığını tarayıp first
+-- cevap veren core'a bağlanır. İki projectInfo aynı anda açıksa bu YANLIŞ projeye
 -- bağlanabilir. Port alanına bir sayı yazıldığında tarama kapanır ve yalnızca o
 -- port denenir; orada Syncix yoksa bağlanılmaz. Böylece "bu Studio penceresi şu
 -- projeye bağlansın" kesin olarak söylenebilir.
 --
--- Varsayılan bilerek "Automatic"tir, 8080 değildir: core istenen port doluysa
+-- Varsayılan bilerek "Automatic"tir, 8080 değildir: core requested port doluysa
 -- kendiliğinden 8081'e geçebiliyor; alanda sabit 8080 yazsaydı o durumda hiç
 -- bağlanamazdınız.
 
@@ -18,38 +18,38 @@ SettingsPanel.__index = SettingsPanel
 
 -- Palet.
 --
--- Iki zemin tonu var: panelin arkasi KOYU, kartlar bir ton acik. Ayrimi
+-- Iki zemin tonu var: panelin arkasi KOYU, kartlar bir ton isOpen. Ayrimi
 -- cizgiyle degil tonla yapmak, kucuk bir panelde daha az gurultu uretiyor.
 -- Mavi, logodaki maviyle ayni (#4C8DF5) — panel, ikon ve magaza girdisi
 -- tek bir renge dayaniyor.
-local RENK = {
-	arka     = Color3.fromRGB(22, 24, 29),
-	kart     = Color3.fromRGB(30, 33, 40),
-	kutu     = Color3.fromRGB(41, 45, 54),
-	cizgi    = Color3.fromRGB(52, 57, 68),
-	yazi     = Color3.fromRGB(232, 234, 240),
-	soluk    = Color3.fromRGB(138, 146, 166),
-	yesil    = Color3.fromRGB(58, 176, 106),
-	sari     = Color3.fromRGB(214, 162, 54),
-	kirmizi  = Color3.fromRGB(214, 88, 88),
-	mavi     = Color3.fromRGB(76, 141, 245),
+local COLOR = {
+	bg     = Color3.fromRGB(22, 24, 29),
+	card     = Color3.fromRGB(30, 33, 40),
+	box     = Color3.fromRGB(41, 45, 54),
+	stroke    = Color3.fromRGB(52, 57, 68),
+	ink     = Color3.fromRGB(232, 234, 240),
+	muted    = Color3.fromRGB(138, 146, 166),
+	green    = Color3.fromRGB(58, 176, 106),
+	yellow     = Color3.fromRGB(214, 162, 54),
+	red  = Color3.fromRGB(214, 88, 88),
+	blue     = Color3.fromRGB(76, 141, 245),
 }
 
 -- Bosluk olcegi. Elle piksel yazmak yerine buradan seciliyor; panelin her
 -- yerinde ayni ritim olusuyor.
-local BOSLUK = { dar = 6, orta = 10, genis = 14 }
+local SPACING = { narrow = 6, medium = 10, wide = 14 }
 
 -- Arac cubugu ikonu.
 --
 -- Roblox plugin dugmesine ikon koymanin tek yolu, gorseli Roblox'a asset
 -- olarak yuklemek: yerel bir dosya kullanilamiyor. Kaynagi
--- vscode-extension/resources/logo.png; ayni isaret kenar cubugu ikonunda ve
+-- vscode-extension/resources/logo.png; ayni marker kenar cubugu ikonunda ve
 -- magaza girdisinde de kullaniliyor.
 --
 -- Once Roblox'un yerlesik ROBUX ikonu vardi (urunle ilgisi yoktu), sonra bos
 -- dize denendi ve Studio onu "yuklenemedi" sayip baklava seklinde bir yer
 -- tutucu gosterdi.
-local IKON = "rbxassetid://73929349055328"
+local ICON = "rbxassetid://73929349055328"
 
 function SettingsPanel.new()
 	return setmetatable({}, SettingsPanel)
@@ -59,10 +59,10 @@ function SettingsPanel:OnStart(container)
 	self.plugin = container:Get("Plugin").ref
 	self.connectionManager = container:Get("ConnectionManager")
 	self.activityLog = container:Get("ActivityLog")
-	-- Panelde iki gorunum var: "projeler" (hangi core'lar calisiyor) ve
-	-- "akis" (Syncix ne degistirdi). Varsayilan akis, cunku asil eksik oydu:
+	-- Panelde iki view var: "projeler" (hangi core'lar isRunning) ve
+	-- "akis" (Syncix ne degistirdi). Varsayilan flow, cunku asil eksik oydu:
 	-- degisiklikler tamamen sessiz uygulaniyordu.
-	self.gorunum = "activity"
+	self.view = "activity"
 
 	if not self.plugin then
 		return
@@ -70,9 +70,9 @@ function SettingsPanel:OnStart(container)
 
 	-- Arac cubugu, panelin TAMAMEN DISINDA tutuluyor ve her sey pcall icinde.
 	--
-	-- Burasi StartAll icinden cagriliyor; buradaki bir hata butun eklentiyi
+	-- Burasi StartAll icinden cagriliyor; buradaki bir failure butun eklentiyi
 	-- baslatmadan dusuruyor. Ikon denemesi yuzunden senkronun hic calismamasi
-	-- kabul edilemez; basarisizlikta yalnizca dugme eksik kalir.
+	-- kabul edilemez; basarisizlikta yalnizca button eksik kalir.
 	--
 	-- Ikon: once Roblox'un yerlesik ROBUX ikonu vardi (urunle ilgisi yoktu),
 	-- sonra bos dize denendi ve Studio onu "yuklenemedi" sayip baklava seklinde
@@ -87,22 +87,22 @@ function SettingsPanel:OnStart(container)
 	end
 
 	if not pcall(function()
-		self.dugme = toolbar:CreateButton("Syncix", "Syncix status and port settings", IKON)
+		self.button = toolbar:CreateButton("Syncix", "Syncix status and port settings", ICON)
 	end) then
-		-- Ikon yuklenemezse dugme yine de olusmali; senkron ikona bagli degil.
+		-- Ikon yuklenemezse button yine de olusmali; senkron ikona bagli degil.
 		pcall(function()
-			self.dugme = toolbar:CreateButton("Syncix", "Syncix status and port settings", "")
+			self.button = toolbar:CreateButton("Syncix", "Syncix status and port settings", "")
 		end)
 	end
-	if not self.dugme then
+	if not self.button then
 		warn("[Syncix] Toolbar button could not be created; sync still works.")
 		return
 	end
 
-	self.dugme.ClickableWhenViewportHidden = true
+	self.button.ClickableWhenViewportHidden = true
 
-	self.dugme.Click:Connect(function()
-		self:AcKapa()
+	self.button.Click:Connect(function()
+		self:Toggle()
 	end)
 end
 
@@ -111,406 +111,406 @@ end
 --
 -- Eski panel her ogeyi elle piksel konumuna koyuyordu (y = 10, 32, 96, 154...).
 -- Iki sorunu vardi: bir oge buyudugunde altindakiler ustune biniyordu ve
--- genislikler sabit oldugu icin dar panelde tasiyordu (330 + 74 = 404 piksel,
--- panelin dar hali 380).
+-- genislikler sabit oldugu icin narrow panelde tasiyordu (330 + 74 = 404 piksel,
+-- panelin narrow hali 380).
 --
--- Artik dikey akis UIListLayout ile, yatay yerlesim ORANLA yapiliyor. Hicbir
+-- Artik dikey flow UIListLayout ile, yatay yerlesim ORANLA yapiliyor. Hicbir
 -- yerde elle Y konumu yok; ogeler kendi boylarini soyluyor, duzen siralamayi
 -- hallediyor.
 -- ---------------------------------------------------------------------------
 
-local function kose(ust, yaricap)
+local function corner(parentNode, radius)
 	local k = Instance.new("UICorner")
-	k.CornerRadius = UDim.new(0, yaricap or 6)
-	k.Parent = ust
+	k.CornerRadius = UDim.new(0, radius or 6)
+	k.Parent = parentNode
 	return k
 end
 
-local function dikeyAkis(ust, aralik)
+local function verticalFlow(parentNode, gap)
 	local d = Instance.new("UIListLayout")
 	d.FillDirection = Enum.FillDirection.Vertical
 	d.SortOrder = Enum.SortOrder.LayoutOrder
-	d.Padding = UDim.new(0, aralik or BOSLUK.orta)
-	d.Parent = ust
+	d.Padding = UDim.new(0, gap or SPACING.medium)
+	d.Parent = parentNode
 	return d
 end
 
-local function icBosluk(ust, deger)
+local function innerPadding(parentNode, datum)
 	local b = Instance.new("UIPadding")
-	local u = UDim.new(0, deger)
+	local u = UDim.new(0, datum)
 	b.PaddingTop = u
 	b.PaddingBottom = u
 	b.PaddingLeft = u
 	b.PaddingRight = u
-	b.Parent = ust
+	b.Parent = parentNode
 	return b
 end
 
-local function etiket(ust, metin, renk, boyut, kalin)
+local function label(parentNode, text, color, size, bold)
 	local l = Instance.new("TextLabel")
 	l.BackgroundTransparency = 1
 	l.Size = UDim2.new(1, 0, 0, 0)
 	l.AutomaticSize = Enum.AutomaticSize.Y
-	l.TextColor3 = renk or RENK.yazi
+	l.TextColor3 = color or COLOR.ink
 	l.TextXAlignment = Enum.TextXAlignment.Left
 	l.TextYAlignment = Enum.TextYAlignment.Top
 	l.TextWrapped = true
-	l.Font = kalin and Enum.Font.GothamBold or Enum.Font.Gotham
-	l.TextSize = boyut or 13
-	l.Text = metin
-	l.Parent = ust
+	l.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+	l.TextSize = size or 13
+	l.Text = text
+	l.Parent = parentNode
 	return l
 end
 
---- Bolum basligi: kucuk, buyuk harf, soluk. Iceriginin onune gecmemeli.
-local function baslik(ust, metin, sira)
-	local l = etiket(ust, string.upper(metin), RENK.soluk, 11, true)
-	l.LayoutOrder = sira
+--- Bolum basligi: kucuk, buyuk harf, muted. Iceriginin onune gecmemeli.
+local function title(parentNode, text, order)
+	local l = label(parentNode, string.upper(text), COLOR.muted, 11, true)
+	l.LayoutOrder = order
 	return l
 end
 
---- Icerigi gruplayan kart. Panelin arkasindan bir ton acik.
-local function kart(ust, sira)
+--- Icerigi gruplayan card. Panelin arkasindan bir ton isOpen.
+local function card(parentNode, order)
 	local k = Instance.new("Frame")
-	k.BackgroundColor3 = RENK.kart
+	k.BackgroundColor3 = COLOR.card
 	k.BorderSizePixel = 0
 	k.Size = UDim2.new(1, 0, 0, 0)
 	k.AutomaticSize = Enum.AutomaticSize.Y
-	k.LayoutOrder = sira
-	k.Parent = ust
-	kose(k, 8)
-	icBosluk(k, BOSLUK.orta)
-	dikeyAkis(k, BOSLUK.dar)
+	k.LayoutOrder = order
+	k.Parent = parentNode
+	corner(k, 8)
+	innerPadding(k, SPACING.medium)
+	verticalFlow(k, SPACING.narrow)
 	return k
 end
 
---- Yatay satir. Genislikler ORANLA veriliyor ki dar panelde tasmasin.
-local function satir(ust, yukseklik, sira)
+--- Yatay row. Genislikler ORANLA veriliyor ki narrow panelde tasmasin.
+local function row(parentNode, height, order)
 	local r = Instance.new("Frame")
 	r.BackgroundTransparency = 1
-	r.Size = UDim2.new(1, 0, 0, yukseklik)
-	r.LayoutOrder = sira
-	r.Parent = ust
+	r.Size = UDim2.new(1, 0, 0, height)
+	r.LayoutOrder = order
+	r.Parent = parentNode
 	local d = Instance.new("UIListLayout")
 	d.FillDirection = Enum.FillDirection.Horizontal
 	d.SortOrder = Enum.SortOrder.LayoutOrder
-	d.Padding = UDim.new(0, BOSLUK.dar)
+	d.Padding = UDim.new(0, SPACING.narrow)
 	d.Parent = r
 	return r
 end
 
--- Liste satirlarinin ICI mutlak yerlesim kullaniyor: her satir sabit
--- yukseklikte ve icindeki uc alan (yon, baslik, zaman) hizali durmali.
--- Ust bolumdeki akis tabanli `etiket` bunun icin uygun degil, o yuzden
+-- Liste satirlarinin ICI mutlak yerlesim kullaniyor: her row sabit
+-- yukseklikte ve icindeki uc field (direction, title, timestamp) hizali durmali.
+-- Ust bolumdeki flow tabanli `etiket` bunun icin uygun degil, o yuzden
 -- konumlu bir es var.
 --
--- Bu ikisi bir sure YOKTU: `etiket`in imzasini degistirdim ama liste
--- icindeki sekiz cagriyi guncellemeyi unuttum. UDim2 degerleri renk
--- parametresine gitti ve panel her yenilenmede hata verdi.
-local function kutuEtiket(ust, metin, boyut, konum, renk, kalin)
+-- Bu ikisi bir sure YOKTU: `etiket`in imzasini degistirdim ama list
+-- icindeki sekiz cagriyi guncellemeyi unuttum. UDim2 degerleri color
+-- parametresine gitti ve panel her yenilenmede failure verdi.
+local function boxLabel(parentNode, text, size, position, color, bold)
 	local l = Instance.new("TextLabel")
-	l.Size = boyut
-	l.Position = konum
+	l.Size = size
+	l.Position = position
 	l.BackgroundTransparency = 1
-	l.TextColor3 = renk or RENK.yazi
+	l.TextColor3 = color or COLOR.ink
 	l.TextXAlignment = Enum.TextXAlignment.Left
 	l.TextYAlignment = Enum.TextYAlignment.Top
 	l.TextWrapped = true
-	l.Font = kalin and Enum.Font.GothamBold or Enum.Font.Gotham
-	l.TextSize = kalin and 12 or 11
-	l.Text = metin
-	l.Parent = ust
+	l.Font = bold and Enum.Font.GothamBold or Enum.Font.Gotham
+	l.TextSize = bold and 12 or 11
+	l.Text = text
+	l.Parent = parentNode
 	return l
 end
 
-local function kutuDugme(ust, metin, boyut, konum, renk)
+local function boxButton(parentNode, text, size, position, color)
 	local b = Instance.new("TextButton")
-	b.Size = boyut
-	b.Position = konum
-	b.BackgroundColor3 = renk
+	b.Size = size
+	b.Position = position
+	b.BackgroundColor3 = color
 	b.BorderSizePixel = 0
 	b.AutoButtonColor = true
-	b.TextColor3 = RENK.yazi
+	b.TextColor3 = COLOR.ink
 	b.Font = Enum.Font.GothamMedium
 	b.TextSize = 11
-	b.Text = metin
-	b.Parent = ust
-	kose(b, 5)
+	b.Text = text
+	b.Parent = parentNode
+	corner(b, 5)
 	return b
 end
 
-local function dugmeYap(ust, metin, oran, renk, sira)
+local function makeButton(parentNode, text, ratio, color, order)
 	local b = Instance.new("TextButton")
-	b.Size = UDim2.new(oran, -BOSLUK.dar, 1, 0)
-	b.BackgroundColor3 = renk
+	b.Size = UDim2.new(ratio, -SPACING.narrow, 1, 0)
+	b.BackgroundColor3 = color
 	b.BorderSizePixel = 0
 	b.AutoButtonColor = true
-	b.TextColor3 = RENK.yazi
+	b.TextColor3 = COLOR.ink
 	b.Font = Enum.Font.GothamMedium
 	b.TextSize = 12
-	b.Text = metin
-	b.LayoutOrder = sira
-	b.Parent = ust
-	kose(b, 6)
+	b.Text = text
+	b.LayoutOrder = order
+	b.Parent = parentNode
+	corner(b, 6)
 	return b
 end
 
-function SettingsPanel:AcKapa()
+function SettingsPanel:Toggle()
 	if self.gui then
 		self.gui.Enabled = not self.gui.Enabled
 		if self.gui.Enabled then
-			self:Yenile()
+			self:Refresh()
 		end
 		return
 	end
 
-	local bilgi = DockWidgetPluginGuiInfo.new(
+	local info = DockWidgetPluginGuiInfo.new(
 		Enum.InitialDockState.Float,
 		true, true,
 		420, 520,
 		360, 420
 	)
-	self.gui = self.plugin:CreateDockWidgetPluginGui("SyncixPanel", bilgi)
+	self.gui = self.plugin:CreateDockWidgetPluginGui("SyncixPanel", info)
 	self.gui.Title = "Syncix"
 
-	local cerceve = Instance.new("Frame")
-	cerceve.Size = UDim2.new(1, 0, 1, 0)
-	cerceve.BackgroundColor3 = RENK.arka
-	cerceve.BorderSizePixel = 0
-	cerceve.Parent = self.gui
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundColor3 = COLOR.bg
+	frame.BorderSizePixel = 0
+	frame.Parent = self.gui
 
 	-- Ust bolum: kartlar dikey akista.
-	-- AutomaticSize sayesinde durum yazisi uzayinca kart da uzuyor ve
+	-- AutomaticSize sayesinde durum yazisi uzayinca card da uzuyor ve
 	-- altindakiler kendiliginden asagi kayiyor.
-	local ust = Instance.new("Frame")
-	ust.BackgroundTransparency = 1
-	ust.Size = UDim2.new(1, 0, 0, 0)
-	ust.AutomaticSize = Enum.AutomaticSize.Y
-	ust.Parent = cerceve
-	icBosluk(ust, BOSLUK.genis)
-	dikeyAkis(ust, BOSLUK.orta)
+	local parentNode = Instance.new("Frame")
+	parentNode.BackgroundTransparency = 1
+	parentNode.Size = UDim2.new(1, 0, 0, 0)
+	parentNode.AutomaticSize = Enum.AutomaticSize.Y
+	parentNode.Parent = frame
+	innerPadding(parentNode, SPACING.wide)
+	verticalFlow(parentNode, SPACING.medium)
 
-	-- Kimlik satiri: logodaki mavi kare + ad.
-	local kimlik = satir(ust, 18, 1)
-	-- Logonun kendisi. Yuklenemezse (asset erisimi yoksa) arkasindaki mavi
+	-- Kimlik satiri: logodaki blue kare + ad.
+	local identity = row(parentNode, 18, 1)
+	-- Logonun kendisi. Yuklenemezse (asset erisimi yoksa) arkasindaki blue
 	-- kare gorunur kalir; panel ikona bagli degil.
-	local isaret = Instance.new("ImageLabel")
-	isaret.Size = UDim2.new(0, 16, 0, 16)
-	isaret.BackgroundColor3 = RENK.mavi
-	isaret.BackgroundTransparency = 0
-	isaret.BorderSizePixel = 0
-	isaret.Image = IKON
-	isaret.ScaleType = Enum.ScaleType.Fit
-	isaret.LayoutOrder = 1
-	isaret.Parent = kimlik
-	kose(isaret, 4)
-	local ad = etiket(kimlik, "SYNCIX", RENK.yazi, 12, true)
+	local marker = Instance.new("ImageLabel")
+	marker.Size = UDim2.new(0, 16, 0, 16)
+	marker.BackgroundColor3 = COLOR.blue
+	marker.BackgroundTransparency = 0
+	marker.BorderSizePixel = 0
+	marker.Image = ICON
+	marker.ScaleType = Enum.ScaleType.Fit
+	marker.LayoutOrder = 1
+	marker.Parent = identity
+	corner(marker, 4)
+	local ad = label(identity, "SYNCIX", COLOR.ink, 12, true)
 	ad.AutomaticSize = Enum.AutomaticSize.None
 	ad.Size = UDim2.new(1, -22, 1, 0)
 	ad.TextYAlignment = Enum.TextYAlignment.Center
 	ad.LayoutOrder = 2
 
 	-- DURUM
-	baslik(ust, "Status", 2)
-	local durumKart = kart(ust, 3)
-	local durumSatir = Instance.new("Frame")
-	durumSatir.BackgroundTransparency = 1
-	durumSatir.Size = UDim2.new(1, 0, 0, 0)
-	durumSatir.AutomaticSize = Enum.AutomaticSize.Y
-	durumSatir.Parent = durumKart
+	title(parentNode, "Status", 2)
+	local statusCard = card(parentNode, 3)
+	local statusRow = Instance.new("Frame")
+	statusRow.BackgroundTransparency = 1
+	statusRow.Size = UDim2.new(1, 0, 0, 0)
+	statusRow.AutomaticSize = Enum.AutomaticSize.Y
+	statusRow.Parent = statusCard
 
 	-- Renkli nokta: durum rengini yazinin renginden ayirmak, "bagli" halinde
-	-- metnin beyaz kalip yalnizca noktanin yesil olmasini sagliyor.
-	self.durumNokta = Instance.new("Frame")
-	self.durumNokta.Size = UDim2.new(0, 8, 0, 8)
-	self.durumNokta.Position = UDim2.new(0, 0, 0, 4)
-	self.durumNokta.BackgroundColor3 = RENK.soluk
-	self.durumNokta.BorderSizePixel = 0
-	self.durumNokta.Parent = durumSatir
-	kose(self.durumNokta, 4)
+	-- metnin beyaz kalip yalnizca noktanin green olmasini sagliyor.
+	self.statusDot = Instance.new("Frame")
+	self.statusDot.Size = UDim2.new(0, 8, 0, 8)
+	self.statusDot.Position = UDim2.new(0, 0, 0, 4)
+	self.statusDot.BackgroundColor3 = COLOR.muted
+	self.statusDot.BorderSizePixel = 0
+	self.statusDot.Parent = statusRow
+	corner(self.statusDot, 4)
 
-	self.durumYazi = etiket(durumSatir, "...", RENK.yazi, 12)
-	self.durumYazi.Position = UDim2.new(0, 16, 0, 0)
-	self.durumYazi.Size = UDim2.new(1, -16, 0, 0)
+	self.statusText = label(statusRow, "...", COLOR.ink, 12)
+	self.statusText.Position = UDim2.new(0, 16, 0, 0)
+	self.statusText.Size = UDim2.new(1, -16, 0, 0)
 
 	-- BAGLANTI
-	baslik(ust, "Connection", 4)
-	local baglantiKart = kart(ust, 5)
-	etiket(
-		baglantiKart,
+	title(parentNode, "Connection", 4)
+	local connectionCard = card(parentNode, 5)
+	label(
+		connectionCard,
 		"Leave the port empty and Syncix finds the running core itself (8080-8089). Type a port to pin this window to one project.",
-		RENK.soluk, 11
+		COLOR.muted, 11
 	)
 
-	local portSatir = satir(baglantiKart, 28, 2)
-	self.portKutu = Instance.new("TextBox")
-	self.portKutu.Size = UDim2.new(0.32, -BOSLUK.dar, 1, 0)
-	self.portKutu.BackgroundColor3 = RENK.kutu
-	self.portKutu.BorderSizePixel = 0
-	self.portKutu.TextColor3 = RENK.yazi
-	self.portKutu.PlaceholderText = "Automatic"
-	self.portKutu.PlaceholderColor3 = RENK.soluk
-	self.portKutu.Font = Enum.Font.Code
-	self.portKutu.TextSize = 13
-	self.portKutu.ClearTextOnFocus = false
-	self.portKutu.Text = ""
-	self.portKutu.LayoutOrder = 1
-	self.portKutu.Parent = portSatir
-	kose(self.portKutu, 6)
+	local portRow = row(connectionCard, 28, 2)
+	self.portBox = Instance.new("TextBox")
+	self.portBox.Size = UDim2.new(0.32, -SPACING.narrow, 1, 0)
+	self.portBox.BackgroundColor3 = COLOR.box
+	self.portBox.BorderSizePixel = 0
+	self.portBox.TextColor3 = COLOR.ink
+	self.portBox.PlaceholderText = "Automatic"
+	self.portBox.PlaceholderColor3 = COLOR.muted
+	self.portBox.Font = Enum.Font.Code
+	self.portBox.TextSize = 13
+	self.portBox.ClearTextOnFocus = false
+	self.portBox.Text = ""
+	self.portBox.LayoutOrder = 1
+	self.portBox.Parent = portRow
+	corner(self.portBox, 6)
 
-	local uygula = dugmeYap(portSatir, "Apply", 0.38, RENK.mavi, 2)
-	local temizle = dugmeYap(portSatir, "Automatic", 0.30, RENK.kutu, 3)
+	local applyFn = makeButton(portRow, "Apply", 0.38, COLOR.blue, 2)
+	local cleanup = makeButton(portRow, "Automatic", 0.30, COLOR.box, 3)
 
 	-- SENKRON
-	baslik(ust, "Sync", 6)
-	local senkronSatir = satir(ust, 30, 7)
-	self.duraklatDugme = dugmeYap(senkronSatir, "...", 0.5, RENK.kutu, 1)
-	self.izinDugme = dugmeYap(senkronSatir, "...", 0.5, RENK.kutu, 2)
+	title(parentNode, "Sync", 6)
+	local syncRow = row(parentNode, 30, 7)
+	self.pauseButton = makeButton(syncRow, "...", 0.5, COLOR.box, 1)
+	self.permissionButton = makeButton(syncRow, "...", 0.5, COLOR.box, 2)
 
-	self.duraklatDugme.Activated:Connect(function()
+	self.pauseButton.Activated:Connect(function()
 		self.connectionManager:SetPaused(not self.connectionManager:IsPaused())
-		self:Yenile()
+		self:Refresh()
 	end)
-	self.izinDugme.Activated:Connect(function()
-		local yeni = not self.connectionManager.izinSor
-		self.connectionManager.izinSor = yeni
-		Store.Set(self.plugin, "syncix_izin_sor", yeni)
+	self.permissionButton.Activated:Connect(function()
+		local fresh = not self.connectionManager.askPermission
+		self.connectionManager.askPermission = fresh
+		Store.Set(self.plugin, "syncix_ask_permission", fresh)
 		print(string.format(
 			"[Syncix] Ask for connection permission: %s",
-			yeni and "ON (every new project must be approved)" or "OFF"
+			fresh and "ON (every new project must be approved)" or "OFF"
 		))
-		self:Yenile()
+		self:Refresh()
 	end)
 
 	-- SEKMELER
-	local sekmeSatir = satir(ust, 26, 8)
-	self.sekmeAkis = dugmeYap(sekmeSatir, "Recent changes", 0.5, RENK.kutu, 1)
-	self.sekmeProje = dugmeYap(sekmeSatir, "Projects", 0.5, RENK.kutu, 2)
-	self.sekmeAkis.Activated:Connect(function()
-		self.gorunum = "activity"
-		self:Yenile()
+	local tabRow = row(parentNode, 26, 8)
+	self.tabFlow = makeButton(tabRow, "Recent changes", 0.5, COLOR.box, 1)
+	self.projectTab = makeButton(tabRow, "Projects", 0.5, COLOR.box, 2)
+	self.tabFlow.Activated:Connect(function()
+		self.view = "activity"
+		self:Refresh()
 	end)
-	self.sekmeProje.Activated:Connect(function()
-		self.gorunum = "projects"
-		self:Yenile()
+	self.projectTab.Activated:Connect(function()
+		self.view = "projects"
+		self:Refresh()
 	end)
 
 	-- LISTE: kalan yuksekligi doldurur.
-	self.liste = Instance.new("ScrollingFrame")
-	self.liste.BackgroundColor3 = RENK.kart
-	self.liste.BorderSizePixel = 0
-	self.liste.ScrollBarThickness = 5
-	self.liste.ScrollBarImageColor3 = RENK.cizgi
-	self.liste.CanvasSize = UDim2.new(0, 0, 0, 0)
-	self.liste.Parent = cerceve
-	kose(self.liste, 8)
+	self.list = Instance.new("ScrollingFrame")
+	self.list.BackgroundColor3 = COLOR.card
+	self.list.BorderSizePixel = 0
+	self.list.ScrollBarThickness = 5
+	self.list.ScrollBarImageColor3 = COLOR.stroke
+	self.list.CanvasSize = UDim2.new(0, 0, 0, 0)
+	self.list.Parent = frame
+	corner(self.list, 8)
 
-	-- Listenin yeri ust bolumun GERCEK yuksekligine gore ayarlanir.
-	-- Sabit bir sayi yazmak, durum yazisi uzadiginda listenin ustune
+	-- Listenin yeri parentNode bolumun GERCEK yuksekligine gore ayarlanir.
+	-- Sabit bir numValue yazmak, durum yazisi uzadiginda listenin ustune
 	-- binmesine yol aciyordu.
-	local function listeyiYerlestir()
-		local y = ust.AbsoluteSize.Y
-		self.liste.Position = UDim2.new(0, BOSLUK.genis, 0, y)
-		self.liste.Size = UDim2.new(1, -BOSLUK.genis * 2, 1, -y - BOSLUK.genis)
+	local function layoutList()
+		local y = parentNode.AbsoluteSize.Y
+		self.list.Position = UDim2.new(0, SPACING.wide, 0, y)
+		self.list.Size = UDim2.new(1, -SPACING.wide * 2, 1, -y - SPACING.wide)
 	end
-	ust:GetPropertyChangedSignal("AbsoluteSize"):Connect(listeyiYerlestir)
-	listeyiYerlestir()
+	parentNode:GetPropertyChangedSignal("AbsoluteSize"):Connect(layoutList)
+	layoutList()
 
-	uygula.Activated:Connect(function()
-		self:PortUygula(self.portKutu.Text)
+	applyFn.Activated:Connect(function()
+		self:ApplyPort(self.portBox.Text)
 	end)
-	temizle.Activated:Connect(function()
-		self.portKutu.Text = ""
-		self:PortUygula("")
+	cleanup.Activated:Connect(function()
+		self.portBox.Text = ""
+		self:ApplyPort("")
 	end)
 
 	-- Panel acikken durumu canli tut.
 	--
-	-- Yenile pcall icinde: burada olusan bir hata task'i olduruyordu ve panel
+	-- Refresh pcall icinde: burada olusan bir failure task'i olduruyordu ve panel
 	-- bir daha HIC guncellenmiyordu. Sonuc yaniltiyordu — Output "Connected"
 	-- derken panelde "Not connected" yaziyordu, cunku yazan kod artik
 	-- calismiyordu. Hata bir kez bildirilir, dongu devam eder.
 	task.spawn(function()
-		local hataBildirildi = false
+		local errorReported = false
 		while self.gui do
 			if self.gui.Enabled then
-				local ok, hata = pcall(function()
-					self:Yenile()
+				local ok, failure = pcall(function()
+					self:Refresh()
 				end)
-				if not ok and not hataBildirildi then
-					hataBildirildi = true
-					warn("[Syncix] Panel refresh failed: " .. tostring(hata))
+				if not ok and not errorReported then
+					errorReported = true
+					warn("[Syncix] Panel refresh failed: " .. tostring(failure))
 				end
 			end
 			task.wait(2)
 		end
 	end)
 
-	self:Yenile()
+	self:Refresh()
 end
 
-function SettingsPanel:PortUygula(metin: string)
-	local temiz = string.gsub(metin or "", "%s", "")
+function SettingsPanel:ApplyPort(text: string)
+	local clean = string.gsub(text or "", "%s", "")
 
-	if temiz == "" then
+	if clean == "" then
 		Store.Set(self.plugin, "syncix_port", 0) -- 0 = otomatik
 		self.connectionManager:SetManualPort(nil)
 		print("[Syncix] Port: automatic. Looking for a running core...")
 	else
-		local sayi = tonumber(temiz)
-		if not sayi or sayi < 1 or sayi > 65535 or sayi ~= math.floor(sayi) then
-			warn("[Syncix] Invalid port: " .. temiz .. " (must be a whole number between 1 and 65535)")
+		local numValue = tonumber(clean)
+		if not numValue or numValue < 1 or numValue > 65535 or numValue ~= math.floor(numValue) then
+			warn("[Syncix] Invalid port: " .. clean .. " (must be a whole number between 1 and 65535)")
 			return
 		end
-		Store.Set(self.plugin, "syncix_port", sayi)
-		self.connectionManager:SetManualPort(sayi)
-		print(string.format("[Syncix] Port pinned to %d. Only this port will be tried.", sayi))
+		Store.Set(self.plugin, "syncix_port", numValue)
+		self.connectionManager:SetManualPort(numValue)
+		print(string.format("[Syncix] Port pinned to %d. Only this port will be tried.", numValue))
 	end
 
 	self.connectionManager:ForceReconnect()
-	self:Yenile()
+	self:Refresh()
 end
 
-function SettingsPanel:Yenile()
-	if not self.durumYazi then return end
+function SettingsPanel:Refresh()
+	if not self.statusText then return end
 
 	local cm = self.connectionManager
-	local bilgi = cm.serverInfo
-	local manuel = cm:GetManualPort()
+	local info = cm.serverInfo
+	local manual = cm:GetManualPort()
 
-	local portMetni = manuel and tostring(manuel) or "Automatic"
-	if self.portKutu and not self.portKutu:IsFocused() then
-		self.portKutu.Text = manuel and tostring(manuel) or ""
+	local portText = manual and tostring(manual) or "Automatic"
+	if self.portBox and not self.portBox:IsFocused() then
+		self.portBox.Text = manual and tostring(manual) or ""
 	end
 
-	local durumRengi = RENK.soluk
+	local statusColor = COLOR.muted
 
 	if cm:IsPaused() then
-		durumRengi = RENK.sari
-		self.durumYazi.TextColor3 = RENK.sari
-		self.durumYazi.Text =
+		statusColor = COLOR.yellow
+		self.statusText.TextColor3 = COLOR.yellow
+		self.statusText.Text =
 			"Sync PAUSED\nNothing is sent to or applied from the editor.\n"
 			.. "Press Resume sync to re-sync the full tree."
-	elseif cm.state == "Connected" and bilgi then
-		-- Bagliyken yazi BEYAZ kaliyor, yalnizca nokta yesil. Butun blogu
+	elseif cm.state == "Connected" and info then
+		-- Bagliyken ink BEYAZ kaliyor, yalnizca nokta green. Butun blogu
 		-- yesile boyamak okunurlugu dusuruyordu.
-		durumRengi = RENK.yesil
-		self.durumYazi.TextColor3 = RENK.yazi
-		self.durumYazi.Text = string.format(
+		statusColor = COLOR.green
+		self.statusText.TextColor3 = COLOR.ink
+		self.statusText.Text = string.format(
 			"Connected  •  port setting: %s\nProject: %s\nFolder: %s\nPort: %s   Core: %s",
-			portMetni,
-			tostring(bilgi.project),
-			tostring(bilgi.root),
-			tostring(bilgi.port),
-			tostring(bilgi.version)
+			portText,
+			tostring(info.project),
+			tostring(info.root),
+			tostring(info.port),
+			tostring(info.version)
 		)
 	else
-		self.durumYazi.TextColor3 = RENK.soluk
-		self.durumYazi.Text = string.format(
+		self.statusText.TextColor3 = COLOR.muted
+		self.statusText.Text = string.format(
 			"Not connected  •  port setting: %s\nState: %s\n%s",
-			portMetni,
+			portText,
 			tostring(cm.state),
-			manuel and ("Only port " .. manuel .. " is being tried.")
+			manual and ("Only port " .. manual .. " is being tried.")
 				or "Scanning ports 8080-8089."
 		)
 	end
@@ -518,113 +518,113 @@ function SettingsPanel:Yenile()
 	-- Cakisma varsa durum satirinda goster: sessizce ezilmis bir degisiklik
 	-- kullanicinin haberi olmadan kaybolmasin.
 	if self.activityLog then
-		local ozet = self.activityLog:Ozet()
-		if ozet.cakisma > 0 then
-			durumRengi = RENK.sari
-			self.durumYazi.Text = self.durumYazi.Text
-				.. string.format("\n%d conflict(s) — see the Recent changes tab", ozet.cakisma)
-			self.durumYazi.TextColor3 = RENK.sari
+		local summary = self.activityLog:Summary()
+		if summary.conflict > 0 then
+			statusColor = COLOR.yellow
+			self.statusText.Text = self.statusText.Text
+				.. string.format("\n%d conflict(s) — see the Recent changes tab", summary.conflict)
+			self.statusText.TextColor3 = COLOR.yellow
 		end
 	end
 
-	if self.durumNokta then
-		self.durumNokta.BackgroundColor3 = durumRengi
+	if self.statusDot then
+		self.statusDot.BackgroundColor3 = statusColor
 	end
 
-	if self.duraklatDugme then
-		local durdu = self.connectionManager:IsPaused()
-		self.duraklatDugme.Text = durdu and "Resume sync" or "Pause sync"
-		self.duraklatDugme.BackgroundColor3 = durdu and RENK.sari or RENK.kutu
+	if self.pauseButton then
+		local stopped = self.connectionManager:IsPaused()
+		self.pauseButton.Text = stopped and "Resume sync" or "Pause sync"
+		self.pauseButton.BackgroundColor3 = stopped and COLOR.yellow or COLOR.box
 	end
 
-	if self.izinDugme then
-		local acik = self.connectionManager.izinSor == true
-		self.izinDugme.Text = acik and "Ask permission: ON" or "Ask permission: OFF"
-		self.izinDugme.BackgroundColor3 = acik and RENK.yesil or RENK.kutu
+	if self.permissionButton then
+		local isOpen = self.connectionManager.askPermission == true
+		self.permissionButton.Text = isOpen and "Ask permission: ON" or "Ask permission: OFF"
+		self.permissionButton.BackgroundColor3 = isOpen and COLOR.green or COLOR.box
 	end
 
-	self:ListeyiDoldur()
+	self:FillList()
 end
 
---- Son degisiklikler akisi.
+--- Recent degisiklikler akisi.
 ---
 --- Rojo'nun patch visualizer'i bagliniverince buyuk bir farki onaya sunar; biz
 --- surekli ve cift yonlu calistigimiz icin onay istemek kullanilamaz olurdu.
 --- Bunun yerine ne gelip ne gittigini geriye donuk gosteriyoruz. Cakisan
---- degisiklikler kirmizi isaretlenir.
-function SettingsPanel:AkisiDoldur()
-	local kayitlar = self.activityLog:Son(40)
+--- degisiklikler red isaretlenir.
+function SettingsPanel:FillFlow()
+	local entries = self.activityLog:Recent(40)
 
-	if #kayitlar == 0 then
-		kutuEtiket(self.liste, "No changes yet.\nChange something in Studio, or send a command from the editor.",
-			UDim2.new(1, -16, 0, 40), UDim2.new(0, 8, 0, 8), RENK.soluk)
-		self.liste.CanvasSize = UDim2.new(0, 0, 0, 56)
+	if #entries == 0 then
+		boxLabel(self.list, "No changes yet.\nChange something in Studio, or send a command from the editor.",
+			UDim2.new(1, -16, 0, 40), UDim2.new(0, 8, 0, 8), COLOR.muted)
+		self.list.CanvasSize = UDim2.new(0, 0, 0, 56)
 		return
 	end
 
-	local simdi = os.clock()
+	local now = os.clock()
 	local y = 6
-	for _, k in ipairs(kayitlar) do
-		local satir = Instance.new("Frame")
-		satir.Size = UDim2.new(1, -12, 0, 34)
-		satir.Position = UDim2.new(0, 6, 0, y)
-		satir.BackgroundColor3 = k.cakisma and Color3.fromRGB(70, 32, 32) or RENK.arka
-		satir.BorderSizePixel = 0
-		satir.Parent = self.liste
+	for _, k in ipairs(entries) do
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -12, 0, 34)
+		row.Position = UDim2.new(0, 6, 0, y)
+		row.BackgroundColor3 = k.conflict and Color3.fromRGB(70, 32, 32) or COLOR.bg
+		row.BorderSizePixel = 0
+		row.Parent = self.list
 		local sk = Instance.new("UICorner")
 		sk.CornerRadius = UDim.new(0, 4)
-		sk.Parent = satir
+		sk.Parent = row
 
-		local yonIsareti = (k.yon == "in") and "<-" or "->"
-		local yonRenk = k.cakisma and RENK.kirmizi
-			or ((k.yon == "in") and RENK.mavi or RENK.yesil)
+		local directionMark = (k.direction == "in") and "<-" or "->"
+		local directionColor = k.conflict and COLOR.red
+			or ((k.direction == "in") and COLOR.blue or COLOR.green)
 
-		local ok = kutuEtiket(satir, yonIsareti, UDim2.new(0, 24, 0, 16), UDim2.new(0, 8, 0, 4), yonRenk, true)
+		local ok = boxLabel(row, directionMark, UDim2.new(0, 24, 0, 16), UDim2.new(0, 8, 0, 4), directionColor, true)
 		ok.TextXAlignment = Enum.TextXAlignment.Center
 
-		local baslik = k.hedef
-		if k.alan then
-			baslik = baslik .. "." .. k.alan
+		local title = k.target
+		if k.field then
+			title = title .. "." .. k.field
 		end
-		kutuEtiket(satir, baslik, UDim2.new(1, -110, 0, 16), UDim2.new(0, 36, 0, 3), RENK.yazi, true)
+		boxLabel(row, title, UDim2.new(1, -110, 0, 16), UDim2.new(0, 36, 0, 3), COLOR.ink, true)
 
-		local alt = k.tur
-		if k.deger and k.deger ~= "" then
-			alt = alt .. "  =  " .. k.deger
+		local subItem = k.pass
+		if k.datum and k.datum ~= "" then
+			subItem = subItem .. "  =  " .. k.datum
 		end
-		if k.cakisma then
-			alt = alt .. "   [CAKISMA]"
+		if k.conflict then
+			subItem = subItem .. "   [CAKISMA]"
 		end
-		kutuEtiket(satir, alt, UDim2.new(1, -110, 0, 14), UDim2.new(0, 36, 0, 18), k.cakisma and RENK.kirmizi or RENK.soluk)
+		boxLabel(row, subItem, UDim2.new(1, -110, 0, 14), UDim2.new(0, 36, 0, 18), k.conflict and COLOR.red or COLOR.muted)
 
-		local gecen = math.max(0, math.floor(simdi - k.zaman))
-		local zamanMetni = (gecen < 60) and (gecen .. "s ago")
-			or (math.floor(gecen / 60) .. "m ago")
-		local z = kutuEtiket(satir, zamanMetni, UDim2.new(0, 66, 0, 14), UDim2.new(1, -72, 0, 10), RENK.soluk)
+		local elapsed = math.max(0, math.floor(now - k.timestamp))
+		local timeText = (elapsed < 60) and (elapsed .. "s ago")
+			or (math.floor(elapsed / 60) .. "m ago")
+		local z = boxLabel(row, timeText, UDim2.new(0, 66, 0, 14), UDim2.new(1, -72, 0, 10), COLOR.muted)
 		z.TextXAlignment = Enum.TextXAlignment.Right
 
 		y += 38
 	end
-	self.liste.CanvasSize = UDim2.new(0, 0, 0, y)
+	self.list.CanvasSize = UDim2.new(0, 0, 0, y)
 end
 
-function SettingsPanel:ListeyiDoldur()
-	if not self.liste then return end
+function SettingsPanel:FillList()
+	if not self.list then return end
 
-	for _, c in ipairs(self.liste:GetChildren()) do
+	for _, c in ipairs(self.list:GetChildren()) do
 		if not c:IsA("UICorner") then
 			c:Destroy()
 		end
 	end
 
 	-- Sekme gorunumleri
-	if self.sekmeAkis then
-		self.sekmeAkis.BackgroundColor3 = (self.gorunum == "activity") and RENK.mavi or RENK.kutu
-		self.sekmeProje.BackgroundColor3 = (self.gorunum == "projects") and RENK.mavi or RENK.kutu
+	if self.tabFlow then
+		self.tabFlow.BackgroundColor3 = (self.view == "activity") and COLOR.blue or COLOR.box
+		self.projectTab.BackgroundColor3 = (self.view == "projects") and COLOR.blue or COLOR.box
 	end
 
-	if self.gorunum == "activity" then
-		self:AkisiDoldur()
+	if self.view == "activity" then
+		self:FillFlow()
 		return
 	end
 
@@ -632,46 +632,46 @@ function SettingsPanel:ListeyiDoldur()
 	-- yenilendigi icin bu, saniyede bes HTTP istegi demekti ve baglantiyi
 	-- calkantiya sokuyordu (Output'ta surekli Connected -> Disconnected).
 	-- Sonuc onbelleklenip en fazla 10 saniyede bir tazeleniyor.
-	local simdiTara = os.clock()
-	if not self.projeOnbellek or (simdiTara - (self.projeOnbellekZaman or 0)) > 10 then
-		self.projeOnbellek = self.connectionManager:TaraTumPortlar()
-		self.projeOnbellekZaman = simdiTara
+	local scanNow = os.clock()
+	if not self.projectCache or (scanNow - (self.projectCacheTime or 0)) > 10 then
+		self.projectCache = self.connectionManager:ScanAllPorts()
+		self.projectCacheTime = scanNow
 	end
-	local bulunanlar = self.projeOnbellek
-	if #bulunanlar == 0 then
-		kutuEtiket(self.liste, "No running core found.\nOpen the project in VS Code, or run: syncix up",
-			UDim2.new(1, -16, 0, 40), UDim2.new(0, 8, 0, 8), RENK.soluk)
-		self.liste.CanvasSize = UDim2.new(0, 0, 0, 56)
+	local foundList = self.projectCache
+	if #foundList == 0 then
+		boxLabel(self.list, "No running core found.\nOpen the project in VS Code, or run: syncix up",
+			UDim2.new(1, -16, 0, 40), UDim2.new(0, 8, 0, 8), COLOR.muted)
+		self.list.CanvasSize = UDim2.new(0, 0, 0, 56)
 		return
 	end
 
 	local y = 6
-	for _, b in ipairs(bulunanlar) do
-		local satir = Instance.new("Frame")
-		satir.Size = UDim2.new(1, -12, 0, 52)
-		satir.Position = UDim2.new(0, 6, 0, y)
-		satir.BackgroundColor3 = RENK.arka
-		satir.BorderSizePixel = 0
-		satir.Parent = self.liste
+	for _, b in ipairs(foundList) do
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -12, 0, 52)
+		row.Position = UDim2.new(0, 6, 0, y)
+		row.BackgroundColor3 = COLOR.bg
+		row.BorderSizePixel = 0
+		row.Parent = self.list
 		local sk = Instance.new("UICorner")
 		sk.CornerRadius = UDim.new(0, 4)
-		sk.Parent = satir
+		sk.Parent = row
 
-		kutuEtiket(satir, string.format("%s   (port %d)", tostring(b.project), b.port),
-			UDim2.new(1, -80, 0, 18), UDim2.new(0, 8, 0, 6), RENK.yazi, true)
-		kutuEtiket(satir, tostring(b.root),
-			UDim2.new(1, -80, 0, 24), UDim2.new(0, 8, 0, 24), RENK.soluk)
+		boxLabel(row, string.format("%s   (port %d)", tostring(b.project), b.port),
+			UDim2.new(1, -80, 0, 18), UDim2.new(0, 8, 0, 6), COLOR.ink, true)
+		boxLabel(row, tostring(b.root),
+			UDim2.new(1, -80, 0, 24), UDim2.new(0, 8, 0, 24), COLOR.muted)
 
-		local sec = kutuDugme(satir, "Select", UDim2.new(0, 56, 0, 24), UDim2.new(1, -64, 0, 14), RENK.mavi)
+		local pick = boxButton(row, "Select", UDim2.new(0, 56, 0, 24), UDim2.new(1, -64, 0, 14), COLOR.blue)
 		local port = b.port
-		sec.Activated:Connect(function()
-			self.portKutu.Text = tostring(port)
-			self:PortUygula(tostring(port))
+		pick.Activated:Connect(function()
+			self.portBox.Text = tostring(port)
+			self:ApplyPort(tostring(port))
 		end)
 
 		y += 58
 	end
-	self.liste.CanvasSize = UDim2.new(0, 0, 0, y)
+	self.list.CanvasSize = UDim2.new(0, 0, 0, y)
 end
 
 return SettingsPanel

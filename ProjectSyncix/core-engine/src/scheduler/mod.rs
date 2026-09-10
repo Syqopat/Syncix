@@ -29,13 +29,13 @@ impl JobScheduler {
         // Kanal kapasitesi 1000
         let (tx, mut rx) = mpsc::channel::<Job>(1000);
 
-        // N adet worker thread başlat
+        // N amount worker thread başlat
         for _i in 0..worker_count {
             let _rx_clone = tx.clone(); // Gerçek uygulamada MPMC veya crossbeam kullanılabilir.
                                         // Şimdilik basitleştirilmiş single receiver modeli kuruyoruz:
         }
 
-        // Basitçe tek bir asenkron dispatcher kuralım (Gerçek projede tokio::task::spawn ile dağıtılır)
+        // Basitçe single bir asenkron dispatcher kuralım (Gerçek projede tokio::task::spawn ile dağıtılır)
         tokio::spawn(async move {
             while let Some(job) = rx.recv().await {
                 info!("Job started: [{}]", job.id);
