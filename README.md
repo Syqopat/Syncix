@@ -24,7 +24,7 @@ The project lives in [`ProjectSyncix/`](ProjectSyncix/). Start with its
 
 ## Install
 
-Install **Syncix** by *Syqopat* from the VS Code Marketplace. The engine and the
+Install **Syncix** by *syqopatx* from the VS Code Marketplace. The engine and the
 Studio plugin ship inside the extension; nothing else to download.
 
 Windows only in this release — the engine has not been run on macOS or Linux,
