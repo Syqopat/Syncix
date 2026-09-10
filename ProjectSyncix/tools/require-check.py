@@ -20,6 +20,8 @@ import re
 import sys
 import glob
 
+AD = "[A-Za-z_]" + chr(92) + "w*"
+
 KOK = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "studio-plugin",
@@ -31,9 +33,34 @@ def kodu_ayikla(ham):
     """Yorumlari ve metin sabitlerini siler; geriye yalnizca kod kalir."""
     satirlar = [re.sub(r"--.*$", "", x) for x in ham.splitlines()]
     kod = '\n'.join(satirlar)
-    kod = re.sub('"[^"\\n]*"', " ", kod)
-    kod = re.sub("'[^'\\n]*'", " ", kod)
+    # Metinler BOSLUKLA degil yer tutucuyla degistiriliyor.
+    #
+    # Bosluk kullanildiginda `etiket(a, "x", b)` cagrisi `etiket(a,  , b)`
+    # oluyor; arguman sayan denetim ortadakini yok sayip 3 yerine 2 sayiyor
+    # ve fazla arguman verilmis cagrilari kaciriyordu.
+    # Yer tutucu kucuk harfli: buyuk harfli sabit denetimine takilmasin.
+    kod = re.sub('"[^"\\n]*"', "metinsabiti", kod)
+    kod = re.sub("'[^'\\n]*'", "metinsabiti", kod)
     return kod
+
+
+def virgulden_ayir(metin):
+    """Ust duzey virgullerden boler; parantez ICINDEKI virguller sayilmaz.
+
+    UDim2.new(0, 24, 0, 16) tek bir argumandir; duz split(",") bunu dort
+    parcaya bolup her cagriyi yanlis sayardi.
+    """
+    parcalar, derinlik, son = [], 0, 0
+    for i, c in enumerate(metin):
+        if c in "({[":
+            derinlik += 1
+        elif c in ")}]":
+            derinlik -= 1
+        elif c == "," and derinlik == 0:
+            parcalar.append(metin[son:i])
+            son = i + 1
+    parcalar.append(metin[son:])
+    return [p for p in parcalar if p.strip()]
 
 
 def denetle():
@@ -66,6 +93,33 @@ def denetle():
         for sabit in sorted(sabitler - tanimli):
             print("  %-44s %s kullaniliyor ama tanimli degil" % (gosterim, sabit))
             sorun += 1
+
+    # 3. Yerel fonksiyon ARGUMAN SAYISI
+    #
+    # Panelde `etiket` ve `dugmeYap` imzalarini degistirdim ama sekiz cagriyi
+    # eski haliyle biraktim. Lua fazla argumani sessizce yutuyor, eksigi nil
+    # yapiyor; sozdizimi temiz cikiyor ve hata ancak o satir calisinca
+    # "Color3 expected, got UDim2" olarak ortaya cikiyor.
+    for yol in dosyalar:
+        kod = kodu_ayikla(io.open(yol, encoding="utf-8").read())
+        gosterim = os.path.relpath(yol, KOK).replace(os.sep, "/")
+
+        for ad, parametreler in re.findall(
+            r"local[ ]function[ ]+(" + AD + r")[ ]*\(([^)]*)\)", kod
+        ):
+            beklenen = len([x for x in parametreler.split(",") if x.strip()])
+            for cagri in re.findall(
+                r"(?<![A-Za-z_.:])" + ad + r"[ ]*\(([^()]*(?:\([^()]*\)[^()]*)*)\)", kod
+            ):
+                if cagri.strip() == parametreler.strip():
+                    continue  # tanimin kendisi
+                verilen = len(virgulden_ayir(cagri))
+                if verilen > beklenen:
+                    print(
+                        "  %-44s %s(): %d parametre var, %d arguman verilmis"
+                        % (gosterim, ad, beklenen, verilen)
+                    )
+                    sorun += 1
 
     if sorun:
         print("SONUC: %d sorun" % sorun)

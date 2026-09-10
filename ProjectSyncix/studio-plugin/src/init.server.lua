@@ -5,18 +5,6 @@ local RunService = game:GetService("RunService")
 local SYNCIX_VERSION = "0.1.0"
 
 local function startSyncix()
-    -- YALNIZCA duzenleme oturumunda calis.
-    --
-    -- Bu Studio surumu Play'e basildiginda eklentileri oyunun SUNUCU ve
-    -- ISTEMCI oturumlarinda da calistiriyor (yerlesik eklentiler de ayni
-    -- sekilde davraniyor). O kopyalarin yapacagi bir is yok: senkron
-    -- edilecek bir duzenleme agaci yok, istemci tarafinda HTTP zaten kapali.
-    -- Engellenmediklerinde core'a baglanmaya calisip Output'u
-    -- "No Syncix core found" satirlariyla dolduruyorlardi.
-    if not RunService:IsEdit() then
-        return
-    end
-
     print("[Syncix] Starting Studio runtime (version " .. SYNCIX_VERSION .. ")...")
 
     local CorePath = script.Core
@@ -74,6 +62,20 @@ local function startSyncix()
     end)
 
     print("[Syncix] All services started and wired up.")
+end
+
+-- YALNIZCA duzenleme oturumunda calis.
+--
+-- Bu Studio surumu Play'e basildiginda eklentileri oyunun SUNUCU ve ISTEMCI
+-- oturumlarinda da calistiriyor (yerlesik eklentiler de ayni sekilde
+-- davraniyor). O kopyalarin yapacagi bir is yok: senkron edilecek bir duzenleme
+-- agaci yok, istemci tarafinda HTTP zaten kapali.
+--
+-- Kapi EN BASTA olmali. Ilk denememde startSyncix'in ICINE koymustum, ama
+-- HTTP denetimi ondan once calisiyor: Play sirasinda istemci oturumu
+-- "Allow HTTP Requests" uyarisini basmaya devam ediyordu.
+if not RunService:IsEdit() then
+    return
 end
 
 if not HttpService.HttpEnabled then
