@@ -23,18 +23,10 @@ jobs:
             hedef: x86_64-pc-windows-msvc
             klasor: win32-x64
             dosya: syncix-core.exe
-          - os: macos-latest
-            hedef: aarch64-apple-darwin
-            klasor: darwin-arm64
-            dosya: syncix-core
-          - os: macos-latest
-            hedef: x86_64-apple-darwin
-            klasor: darwin-x64
-            dosya: syncix-core
-          - os: ubuntu-latest
-            hedef: x86_64-unknown-linux-gnu
-            klasor: linux-x64
-            dosya: syncix-core
+          # macOS ve Linux hedefleri BILEREK cikarildi. Kod tasinabilir
+          # yazildi ama o platformlarda hic calistirilmadi; test edilmemis
+          # binary yayinlamak, calisiyor iddiasinda bulunmak olur.
+          # Roblox Studio zaten Linux'ta yok.
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

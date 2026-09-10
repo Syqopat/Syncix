@@ -55,10 +55,23 @@ versions follow [Semantic Versioning](https://semver.org/).
   saving lost the identity and the next session looked like a different place.
   The attribute remains as a fallback for places that have never been saved.
 
+### Branding
+
+- Added a logo and a sidebar icon. The mark is two arrows — one to the editor,
+  one back to Studio — so it states what the product does. The sidebar entry
+  previously pointed at an icon file that did not exist.
+- The Studio toolbar button no longer shows Roblox's built-in **Robux** icon,
+  which had nothing to do with Syncix. It shows the name only; a real icon needs
+  an image uploaded to Roblox, which is the account owner's decision.
+  `vscode-extension/resources/logo.png` is ready to upload.
+
 ### Known limitations
 
-- Only a `win32-x64` core binary ships today. macOS and Linux binaries require a
-  CI run.
+- **Windows only.** The macOS and Linux build targets were removed from the
+  release workflow on purpose: the code is written to be portable but has never
+  been run on those platforms, and shipping an untested binary would be a claim
+  rather than a fact. Roblox Studio does not exist on Linux at all. On a
+  non-Windows machine the extension now says so instead of failing silently.
 - Terrain is out of scope and this is not surfaced to the user.
 - `.rbxmx` export skips Rect, Font, ColorSequence, NumberSequence,
   PhysicalProperties, BrickColor and instance references; their XML forms are

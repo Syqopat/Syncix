@@ -1,14 +1,15 @@
 {
   "name": "syncix-vscode",
-  "displayName": "Syncix",
-  "description": "Developer platform for Roblox",
+  "displayName": "Syncix — Roblox two-way sync",
+  "description": "Keep Roblox Studio and your editor in sync, both ways.",
   "version": "0.1.0",
   "publisher": "Syqopat",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Programming Languages"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -216,5 +217,17 @@
     "url": "https://github.com/Syqopat/Syncix/issues"
   },
   "homepage": "https://github.com/Syqopat/Syncix#readme",
-  "license": "MIT"
+  "license": "MIT",
+  "icon": "resources/logo.png",
+  "keywords": [
+    "roblox",
+    "studio",
+    "sync",
+    "luau",
+    "rojo"
+  ],
+  "galleryBanner": {
+    "color": "#1E2128",
+    "theme": "dark"
+  }
 }

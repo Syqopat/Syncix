@@ -1,0 +1,23 @@
+<!--
+  Marketplace ve README logosu (renkli surum).
+
+  Kenar cubugu ikonuyla AYNI isaret; yalnizca renk ve zemin ekleniyor.
+  Iki okun farkli renkte olmasi tesadufi degil: ust ok Studio'dan editore,
+  alt ok editorden Studio'ya. Isaret, urunun ne yaptigini soyluyor.
+
+  Zemin rengi Studio panelindeki arka plan ile ayni (RGB 30,33,40) —
+  eklenti, panel ve logo ayni paleti kullaniyor.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="28" fill="#1E2128"/>
+  <g fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#FFFFFF">
+      <path d="M30 52h44"/>
+      <path d="M64 40l12 12-12 12"/>
+    </g>
+    <g stroke="#4C8DF5">
+      <path d="M98 80H54"/>
+      <path d="M64 68L52 80l12 12"/>
+    </g>
+  </g>
+</svg>

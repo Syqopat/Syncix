@@ -110,6 +110,9 @@ function resolveCorePaths(): { exePath: string; cwd: string } | undefined {
 /** Extension yolu (activate'te doldurulur; resolveCorePaths gömülü binary için kullanır). */
 let context_extensionPath = '';
 
+/** Platform uyarısı oturumda bir kez gösterilir; her denemede tekrarlanmamalı. */
+let platformUyarisiVerildi = false;
+
 /** Sync klasörünün üst dizinini bulur (syncix.toml veya src_workspace'e göre). */
 function findSyncWorkspaceRoot(): string | undefined {
     const folders = vscode.workspace.workspaceFolders;
@@ -129,7 +132,22 @@ async function ensureCoreRunning(): Promise<void> {
     if (!cfg.get<boolean>('autoStartCore', true)) return;
 
     const paths = resolveCorePaths();
-    if (!paths) return;
+    if (!paths) {
+        // Bu surumde yalnizca Windows binary'si paketleniyor.
+        //
+        // Sessizce cikmak en kotusuydu: macOS'ta eklenti kuruluyor, agac
+        // acilmiyor, hicbir yerde sebep yazmiyordu. Neyin eksik oldugunu
+        // soylemek, calismiyor olmaktan daha iyi degil ama tesis edilebilir.
+        if (!platformUyarisiVerildi) {
+            platformUyarisiVerildi = true;
+            const mesaj = env.isWindows()
+                ? 'Syncix could not find the core binary. Reinstall the extension, or set syncix.coreExePath.'
+                : `Syncix ships a Windows core binary only, so it cannot start on ${process.platform}. ` +
+                  'Build the core from source and point syncix.coreExePath at it.';
+            vscode.window.showWarningMessage(mesaj);
+        }
+        return;
+    }
     const { exePath, cwd } = paths;
 
     if (await checkCoreHealth()) return; // Zaten çalışıyor

@@ -45,7 +45,14 @@ function SettingsPanel:OnStart(container)
 	end
 
 	local toolbar = self.plugin:CreateToolbar("Syncix")
-	self.dugme = toolbar:CreateButton("Syncix", "Syncix status and port settings", "rbxasset://textures/ui/common/robux.png")
+	-- Ikon BILEREK bos.
+	--
+	-- Onceden buraya Roblox'un yerlesik ROBUX ikonu konmustu; arac cubugunda
+	-- Syncix'in yaninda para simgesi duruyordu ve urunle hicbir ilgisi yoktu.
+	-- Kendi ikonumuzu koymak icin gorseli Roblox'a asset olarak yuklemek
+	-- gerekiyor (rbxassetid), bu da yayinlama islemi ve hesap sahibinin karari.
+	-- Yanlis bir ikondan iyisi, yalnizca ad gostermek.
+	self.dugme = toolbar:CreateButton("Syncix", "Syncix status and port settings", "")
 	self.dugme.ClickableWhenViewportHidden = true
 
 	self.dugme.Click:Connect(function()
@@ -109,6 +116,16 @@ function SettingsPanel:AcKapa()
 	cerceve.BackgroundColor3 = RENK.arka
 	cerceve.BorderSizePixel = 0
 	cerceve.Parent = self.gui
+
+	-- Ust kenardaki ince mavi cizgi. Tek isi panelin Syncix'e ait oldugunu
+	-- bir bakista belli etmek; logodaki mavi ile ayni renk.
+	local seritCizgi = Instance.new("Frame")
+	seritCizgi.Size = UDim2.new(1, 0, 0, 2)
+	seritCizgi.Position = UDim2.new(0, 0, 0, 0)
+	seritCizgi.BackgroundColor3 = RENK.mavi
+	seritCizgi.BorderSizePixel = 0
+	seritCizgi.ZIndex = 5
+	seritCizgi.Parent = cerceve
 
 	-- Durum
 	etiket(cerceve, "Status", UDim2.new(1, -24, 0, 20), UDim2.new(0, 12, 0, 10), RENK.soluk, true)
