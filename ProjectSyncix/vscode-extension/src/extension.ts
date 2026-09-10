@@ -29,9 +29,19 @@ async function checkCoreHealth(): Promise<boolean> {
 
 /** Sürüm uyuşmazlığını bir kez bildirir (sessizce garip davranmasın). */
 let surumUyarisiVerildi = false;
+/**
+ * Eklentinin kendi sürümü; activate'te context.extension'dan doldurulur.
+ *
+ * Eskiden getExtension('Syncix.syncix-vscode') ile aranıyordu. O kimlik hiçbir
+ * zaman gerçek değildi (yayıncı hiç "Syncix" olmadı), arama her seferinde
+ * undefined döndü ve sürüm uyuşmazlığı uyarısı bugüne kadar hiç tetiklenmedi.
+ * Kimliği koda yazmak yerine eklentinin kendisinden okuyoruz; yayıncı ya da ad
+ * değişse de doğru kalıyor.
+ */
+let kendiSurum = '';
 function uyarSurumUyusmazligi(saglik: any) {
     if (surumUyarisiVerildi || !saglik?.version) return;
-    const kendi = vscode.extensions.getExtension('Syncix.syncix-vscode')?.packageJSON?.version;
+    const kendi = kendiSurum;
     if (!kendi) return;
     const mm = (v: string) => v.split('.').slice(0, 2).join('.');
     if (mm(kendi) !== mm(saglik.version)) {
@@ -405,6 +415,7 @@ exec "${exe}" "$@"
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Syncix Extension Activated');
     context_extensionPath = context.extensionPath;
+    kendiSurum = context.extension.packageJSON?.version ?? '';
 
     // 0. Yalnızca Syncix çalışma alanında otomatik core başlat + bağlan.
     // Diğer projelerde her şey pasif kalır; istenirse "Syncix: Start" komutu ile elle bağlanılır.

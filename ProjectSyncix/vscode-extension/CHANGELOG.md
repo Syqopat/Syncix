@@ -24,6 +24,9 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The version-mismatch warning never fired.** The extension looked itself up
+  under an id that never existed (`Syncix.syncix-vscode`), got nothing back and
+  skipped the check. It now reads its own version from the extension context.
 - **Two places could silently merge into one folder.** Service UUIDs are the
   same in every place, so two trees landed on the same skeleton and singletons
   such as `StarterPlayerScripts` ended up duplicated. Files were then written
