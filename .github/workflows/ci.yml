@@ -25,7 +25,10 @@ on:
 jobs:
   rust:
     name: Core testleri
-    runs-on: ubuntu-latest
+    # Windows: urun yalnizca Windows'ta dagitiliyor ve yol eslestirme testleri
+    # C:\ bicimli mutlak yollarla calisiyor. Ubuntu'da ters egik cizgi ayirici
+    # sayilmadigi icin bu testler anlamsizca dusuyordu (CI'nin ilk calismasi).
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -39,8 +42,7 @@ jobs:
         run: cargo test --all-features
       - name: Clippy
         working-directory: ProjectSyncix/core-engine
-        run: cargo clippy -- -D warnings
-        continue-on-error: true
+        run: cargo clippy --all-targets -- -D warnings
 
   luau:
     name: Luau sözdizimi
@@ -48,6 +50,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          path: ProjectSyncix
       - name: Eklenti ve oyun scriptleri
         run: sh tools/luau-check.sh $(find studio-plugin/src example -name "*.lua")
 

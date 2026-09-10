@@ -60,6 +60,8 @@ jobs:
         with:
           node-version: '20'
       - uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          path: ProjectSyncix
 
       - name: Studio eklentisini derle
         run: rojo build studio-plugin/default.project.json -o vscode-extension/resources/SyncixPlugin.rbxm
