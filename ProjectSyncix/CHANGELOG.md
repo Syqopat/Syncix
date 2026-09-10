@@ -36,6 +36,14 @@ versions follow [Semantic Versioning](https://semver.org/).
   while the plugin expects the plain form, so Studio rejected them with
   "unsupported table value for property". Found in normal use on
   `Part.Transparency`.
+- **Changes sent while the game is running are held until Play ends** — with
+  a caveat found while testing it. The queue never actually triggers on current
+  Studio versions: Studio restarts plugins in the game's own server and client
+  sessions, those copies stop at the edit-session guard, and the one instance
+  still talking to the core lives in the edit tree, which never reports itself
+  as running. The intended behaviour happens regardless, because Studio plays
+  from a separate copy and the edit tree keeps the change. The code stays as a
+  fallback if that isolation ever changes, and says so.
 - **The plugin ran inside Play sessions.** Studio also starts plugins in the
   game's server and client sessions; those copies had nothing to sync and filled
   the Output with connection attempts. The plugin now runs only in the edit

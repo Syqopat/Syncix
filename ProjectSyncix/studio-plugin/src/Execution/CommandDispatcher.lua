@@ -81,14 +81,25 @@ end
 
 --- Oyun calisirken gelen degisiklikleri biriktirir, Play bitince uygular.
 ---
---- Neden: kapi tek yonluydu. Gozlemci Play sirasinda kapaliydi (Studio -> core
---- akmiyordu) ama core -> Studio yonu acikti. Editorde yapilan bir degisiklik
---- CALISAN oturuma uygulaniyor, Studio Play'i durdurup duzenleme haline
---- donunce o oturumla birlikte atiliyordu. Core degisikligin uygulandigini
---- saniyor, Studio'da izi kalmiyordu — iki taraf sessizce ayrisiyordu.
+--- ONEMLI: bu kuyruk gunumuz Studio surumunde HIC DEVREYE GIRMIYOR ve bu
+--- gercek bir testle olculdu.
 ---
---- Cozum: Play sirasinda hicbir sey uygulanmiyor, kuyruga aliniyor; duzenleme
---- haline donuldugunde sirasiyla isleniyor.
+--- Play'e basildiginda Studio eklentileri oyunun sunucu ve istemci
+--- oturumlarinda yeniden baslatiyor; o kopyalar init.server.lua'daki IsEdit
+--- kapisinda duruyor. Geriye core'a bagli tek ornek kaliyor: DUZENLEME
+--- oturumundaki. Onun agaci calismadigi icin RunService:IsRunning() onun
+--- icin hep false, yani asagidaki dal hicbir zaman secilmiyor.
+---
+--- Peki neden duruyor: Studio Play sirasinda ayri bir oturum kopyasi
+--- kullaniyor, yani editorden gelen degisiklik duzenleme agacina yaziliyor ve
+--- Stop'a basildiginda oldugu gibi duruyor. Amaclanan davranis zaten
+--- saglaniyor — bu kod onun yedegi. Studio bu izolasyonu degistirirse
+--- devreye girer.
+---
+--- Olculen: Play sirasinda Transparency 0.7 gonderildi. Studio'nun agacinda
+--- deger 0.7 olarak gorundu (kuyruga alinmadi), Output'ta "Play mode ended"
+--- satiri cikmadi, ve kullanici Play sirasinda parcayi opak, Stop sonrasi
+--- saydam gordu.
 function CommandDispatcher:_OyunBittiginde()
     if self._playDinleyici then return end
     self._playDinleyici = true
