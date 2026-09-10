@@ -7,6 +7,13 @@ name: Release
 # binary'yi kendi makinelerinde derleyip tek bir .vsix içinde toplar; böylece
 # kullanıcı hangi işletim sisteminde olursa olsun tek kurulumla çalışır.
 
+# CI ile ayni sebep: kaynak agaci ProjectSyncix/ altinda, is akisi dosyasi
+# depo kokunde olmak zorunda. Ayrintilar icin ci.yml'deki nota bak.
+
+defaults:
+  run:
+    working-directory: ProjectSyncix
+
 on:
   push:
     tags: ['v*']
@@ -34,14 +41,14 @@ jobs:
           targets: ${{ matrix.hedef }}
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: core-engine
+          workspaces: ProjectSyncix/core-engine
       - name: Derle
-        working-directory: core-engine
+        working-directory: ProjectSyncix/core-engine
         run: cargo build --release --target ${{ matrix.hedef }}
       - uses: actions/upload-artifact@v4
         with:
           name: core-${{ matrix.klasor }}
-          path: core-engine/target/${{ matrix.hedef }}/release/${{ matrix.dosya }}
+          path: ProjectSyncix/core-engine/target/${{ matrix.hedef }}/release/${{ matrix.dosya }}
 
   paket:
     name: VSIX paketi
@@ -60,7 +67,7 @@ jobs:
       - name: Binary'leri indir
         uses: actions/download-artifact@v4
         with:
-          path: indirilen
+          path: ProjectSyncix/indirilen
 
       - name: Binary'leri yerleştir
         run: |
@@ -73,7 +80,7 @@ jobs:
           find vscode-extension/resources/bin -type f -exec ls -la {} \;
 
       - name: Paketle
-        working-directory: vscode-extension
+        working-directory: ProjectSyncix/vscode-extension
         run: |
           npm ci || npm install
           npm run compile
@@ -82,7 +89,7 @@ jobs:
       - name: Sürüme ekle
         uses: softprops/action-gh-release@v2
         with:
-          files: syncix.vsix
+          files: ProjectSyncix/syncix.vsix
           body: |
             Kurulum: syncix.vsix dosyasını indir, VS Code'da
             Extensions panelinde "..." > "Install from VSIX..." ile kur.

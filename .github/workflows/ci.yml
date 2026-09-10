@@ -7,6 +7,16 @@ name: CI
 # Bu iş akışının varlık sebebi: "Position" hatası (her Vector3 yazımının sessizce
 # düşmesi) aylarca fark edilmedi çünkü o katmanda hiç test yoktu.
 
+# Kaynak agaci depo kokunde degil, ProjectSyncix/ altinda. GitHub Actions
+# yalnizca kok .github/workflows'u okur, bu yuzden dosya burada durur ve her
+# `run:` adimi asagidaki `defaults` ile o klasorde calisir. `uses:` adimlarinin
+# yol girdileri bu varsayilandan ETKILENMEZ; onlar tek tek ProjectSyncix/ ile
+# baslatilmali.
+
+defaults:
+  run:
+    working-directory: ProjectSyncix
+
 on:
   push:
     branches: [main, master]
@@ -23,12 +33,12 @@ jobs:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: core-engine
+          workspaces: ProjectSyncix/core-engine
       - name: Testler
-        working-directory: core-engine
+        working-directory: ProjectSyncix/core-engine
         run: cargo test --all-features
       - name: Clippy
-        working-directory: core-engine
+        working-directory: ProjectSyncix/core-engine
         run: cargo clippy -- -D warnings
         continue-on-error: true
 
@@ -50,10 +60,10 @@ jobs:
         with:
           node-version: '20'
       - name: Bağımlılıklar
-        working-directory: vscode-extension
+        working-directory: ProjectSyncix/vscode-extension
         run: npm ci || npm install
       - name: Derleme
-        working-directory: vscode-extension
+        working-directory: ProjectSyncix/vscode-extension
         run: npm run compile
 
   surum-hizasi:

@@ -7,6 +7,9 @@ vscode-extension/out/
 
 # Syncix calisma dosyalari
 .syncix/
+# Reconciler'in aldigi yedekler: makineye ozel, tarihli anlik goruntuler.
+# Diskte kalirlar, depoya girmezler.
+.syncix-yedek/
 syncix-core.log
 *.vsix
 

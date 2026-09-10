@@ -3,3 +3,10 @@ node_modules/
 bin/
 obj/
 .vs/
+
+# Motor loglari — makineye ozel, depoda isi yok
+*.log
+
+# Eski bicimde birakilmis test artigi sync klasoru.
+# Gercek ornek ProjectSyncix/example altinda.
+/src_workspace/
