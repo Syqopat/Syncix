@@ -151,17 +151,17 @@
         "syncix.autoStartCore": {
           "type": "boolean",
           "default": true,
-          "description": "VS Code açılırken Syncix Core Engine çalışmıyorsa otomatik başlat."
+          "description": "Start the Syncix core automatically when a Syncix project is opened."
         },
         "syncix.coreExePath": {
           "type": "string",
           "default": "",
-          "description": "Syncix Core Engine exe yolu (otomatik başlatma için)."
+          "description": "Optional. Path to a core binary built from source. Leave empty to use the one bundled with the extension."
         },
         "syncix.coreCwd": {
           "type": "string",
           "default": "",
-          "description": "Core Engine'in çalışma dizini (sync klasörü yolu buna göre çözülür)."
+          "description": "Optional. Working directory for a core built from source. Only used together with syncix.coreExePath."
         }
       }
     },
