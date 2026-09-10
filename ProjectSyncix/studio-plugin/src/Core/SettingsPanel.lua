@@ -49,7 +49,7 @@ local BOSLUK = { dar = 6, orta = 10, genis = 14 }
 -- Once Roblox'un yerlesik ROBUX ikonu vardi (urunle ilgisi yoktu), sonra bos
 -- dize denendi ve Studio onu "yuklenemedi" sayip baklava seklinde bir yer
 -- tutucu gosterdi.
-local IKON = "rbxassetid://128567176637407"
+local IKON = "rbxassetid://73929349055328"
 
 function SettingsPanel.new()
 	return setmetatable({}, SettingsPanel)
