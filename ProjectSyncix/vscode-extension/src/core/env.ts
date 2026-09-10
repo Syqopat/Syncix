@@ -160,12 +160,3 @@ export function robloxPluginsDir(): string | undefined {
     return undefined;
 }
 
-/** CLI kısayolunun kurulacağı kullanıcı bin klasörü. */
-export function userBinDir(): string | undefined {
-    if (isWindows()) {
-        const up = process.env.USERPROFILE;
-        return up ? path.join(up, 'bin') : undefined;
-    }
-    const home = process.env.HOME;
-    return home ? path.join(home, '.local', 'bin') : undefined;
-}

@@ -348,52 +348,58 @@ function ensurePluginInstalled(context: vscode.ExtensionContext) {
 }
 
 /**
- * CLI'ı kullanıcının bin klasörüne kurar ve (ilk seferde) PATH'e ekler.
- * Böylece "syncix" komutu her terminalde/cmd'de çalışır; elle kurulum gerekmez.
+ * `syncix` komutunu editörün kendi terminallerine ekler.
+ *
+ * Eskiden bu fonksiyon kullanıcının ev klasörüne bir .cmd yazıyor ve gizli,
+ * ayrık bir kabuk süreciyle kullanıcının PATH'ini kayıt defterinde
+ * değiştiriyordu — kimse sormadan, her proje açılışında. Bu hem
+ * rıza dışı kalıcı bir sistem değişikliğiydi hem de Marketplace'in zararlı
+ * yazılım taramasının aradığı kalıbın ta kendisi: yükleme bu yüzden
+ * "suspicious content" ile reddediliyordu.
+ *
+ * Artık kısayol eklentinin kendi depolama klasörüne yazılıyor ve PATH'e
+ * yalnızca VS Code API'si üzerinden, editörün açtığı terminaller için
+ * ekleniyor. Kayıt defterine, kullanıcı klasörüne ya da sistem PATH'ine
+ * dokunulmuyor; eklenti kaldırılınca geride iz kalmıyor.
  */
 function ensureCliInstalled(context: vscode.ExtensionContext): string | undefined {
     try {
-        // CLI artık ayrı bir PowerShell betiği değil, core binary'sinin kendisi:
-        // `syncix-core <komut>` istemci gibi çalışır. Böylece macOS'ta da çalışır ve
-        // değer dönüşümü (Vector3, hex renk) CLI ile core arasında ayrışamaz.
+        // CLI ayrı bir betik değil, core binary'sinin kendisi: `syncix-core <komut>`
+        // istemci gibi çalışır, değer dönüşümü CLI ile core arasında ayrışamaz.
         const paths = resolveCorePaths();
         if (!paths) return undefined;
         const exe = paths.exePath;
 
-        const binDir = env.userBinDir();
-        if (!binDir) return undefined;
+        const binDir = path.join(context.globalStorageUri.fsPath, 'bin');
         fs.mkdirSync(binDir, { recursive: true });
 
+        let shim: string;
         if (env.isWindows()) {
-            const cmdPath = path.join(binDir, 'syncix.cmd');
-            const desired = `@echo off\r\n"${exe}" %*\r\n`;
-            const current = fs.existsSync(cmdPath) ? fs.readFileSync(cmdPath, 'utf8') : '';
-            if (current !== desired) fs.writeFileSync(cmdPath, desired, 'ascii');
+            shim = path.join(binDir, 'syncix.cmd');
+            const desired = `@echo off
 
-            // PATH'e ekleme yalnızca bir kez (kullanıcı PATH'ini her açılışta kurcalamayalım)
-            if (context.globalState.get<string>('syncix.cliPathAdded') !== 'v2') {
-                const b = binDir.replace(/\\/g, '\\\\');
-                const psCmd = `$b='${b}'; $p=[Environment]::GetEnvironmentVariable('PATH','User'); if($p -notlike ('*'+$b+'*')){[Environment]::SetEnvironmentVariable('PATH', ($p+';'+$b), 'User')}`;
-                spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCmd], {
-                    detached: true,
-                    stdio: 'ignore',
-                }).unref();
-                context.globalState.update('syncix.cliPathAdded', 'v2');
+"${exe}" %*
+
+`;
+            const current = fs.existsSync(shim) ? fs.readFileSync(shim, 'utf8') : '';
+            if (current !== desired) fs.writeFileSync(shim, desired, 'ascii');
+        } else {
+            shim = path.join(binDir, 'syncix');
+            const desired = `#!/bin/sh
+exec "${exe}" "$@"
+`;
+            const current = fs.existsSync(shim) ? fs.readFileSync(shim, 'utf8') : '';
+            if (current !== desired) {
+                fs.writeFileSync(shim, desired, 'utf8');
+                fs.chmodSync(shim, 0o755);
             }
-            return cmdPath;
         }
 
-        // macOS / Linux: ~/.local/bin genelde zaten PATH'te olur.
-        const shPath = path.join(binDir, 'syncix');
-        const desired = `#!/bin/sh\nexec "${exe}" "$@"\n`;
-        const current = fs.existsSync(shPath) ? fs.readFileSync(shPath, 'utf8') : '';
-        if (current !== desired) {
-            fs.writeFileSync(shPath, desired, 'utf8');
-            fs.chmodSync(shPath, 0o755);
-        }
-        return shPath;
+        // Yalnızca editörün terminalleri etkilenir; sistem PATH'i değişmez.
+        context.environmentVariableCollection.prepend('PATH', binDir + path.delimiter);
+        return shim;
     } catch (err) {
-        console.error('Syncix CLI install error:', err);
+        console.error('Syncix CLI setup error:', err);
         return undefined;
     }
 }
@@ -410,7 +416,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await vscode.commands.executeCommand('setContext', 'syncix.hasProject', autoMode);
     if (autoMode) {
         ensurePluginInstalled(context); // Studio plugini'ni otomatik kur/güncelle
-        ensureCliInstalled(context);    // "syncix" komutunu otomatik kur (PATH bir kez)
+        ensureCliInstalled(context);    // "syncix" editörün terminallerinde (sistem PATH'i değişmez)
         await ensureCoreRunning();
     }
 
@@ -637,18 +643,28 @@ export async function activate(context: vscode.ExtensionContext) {
                 vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(syncDir));
             }
         }),
-        vscode.commands.registerCommand('syncix.installCliGlobal', () => {
-            // Bir kez kurulduktan sonra PATH'i tekrar kurcalamamak için globalState
-            // sıfırlanır; kullanıcı bu komutu bilerek çağırdıysa yeniden kurulmalı.
-            context.globalState.update('syncix.cliPathAdded', undefined);
-            const kuruldu = ensureCliInstalled(context);
-            if (kuruldu) {
-                vscode.window.showInformationMessage(
-                    `Syncix CLI installed (${kuruldu}). Open a new terminal — "syncix" works anywhere.`
-                );
-            } else {
+        vscode.commands.registerCommand('syncix.installCliGlobal', async () => {
+            // Sistem PATH'i kalıcı bir kullanıcı ayarı; onu eklenti DEĞİŞTİRMİYOR.
+            // Klasörü verip nasıl ekleneceğini söylüyoruz, kararı kullanıcı veriyor.
+            const shim = ensureCliInstalled(context);
+            if (!shim) {
                 vscode.window.showErrorMessage(
-                    'Could not install the CLI: core binary not found. Try Syncix: Restart Core first.'
+                    'Could not set up the CLI: core binary not found. Try Syncix: Restart Core first.'
+                );
+                return;
+            }
+            const dir = path.dirname(shim);
+            const secim = await vscode.window.showInformationMessage(
+                `"syncix" already works in this editor's terminals. Syncix does not change your system PATH. To use the command in other terminals too, add this folder to your PATH yourself:
+
+${dir}`,
+                { modal: true },
+                'Copy Folder Path'
+            );
+            if (secim === 'Copy Folder Path') {
+                await vscode.env.clipboard.writeText(dir);
+                vscode.window.showInformationMessage(
+                    'Folder path copied. On Windows: Start, search "Edit environment variables for your account", select Path, New, paste.'
                 );
             }
         }),

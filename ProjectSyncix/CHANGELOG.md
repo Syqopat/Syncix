@@ -58,6 +58,21 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **The extension no longer edits your system PATH.** It used to write a
+  `syncix.cmd` into your home folder and, on every project open, start a hidden
+  PowerShell process with the execution policy bypassed to append that folder
+  to the PATH in the registry — without asking. That is a persistent system
+  change nobody consented to, and it is the pattern malware scanners look for:
+  the Marketplace rejected the package as "suspicious content" because of it.
+  The shortcut now lives in the extension's own storage folder and is added to
+  PATH only for terminals opened inside the editor, through the VS Code API.
+  **Syncix: Use CLI Outside the Editor** shows the folder for anyone who wants
+  the command in other terminals too; adding it is their decision.
+- The `syncix.coreExePath` and `syncix.coreCwd` settings no longer default to a
+  path on the developer's machine. With them set, the installed extension ran
+  a local dev build instead of the bundled engine.
+- The bundled engine binary no longer embeds absolute build paths.
+
 - Place identity is derived from `game.PlaceId`. It was previously stored as a
   Workspace attribute, which is saved with the place — closing Studio without
   saving lost the identity and the next session looked like a different place.

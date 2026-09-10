@@ -67,8 +67,8 @@ A sync tool's first duty is not to lose your work.
 
 ## Command line
 
-Installing the extension also puts a `syncix` command on your PATH. It talks to
-the same engine:
+Terminals opened inside the editor get a `syncix` command automatically. It
+talks to the same engine:
 
 ```
 syncix status          # engine and Studio connection
@@ -80,6 +80,9 @@ syncix config          # the settings actually in effect
 ```
 
 `syncix --help` lists all 30 commands.
+
+Syncix never edits your system PATH. To use the command in other terminals
+too, run **Syncix: Use CLI Outside the Editor** — it shows the folder to add.
 
 ## What ships inside this package
 

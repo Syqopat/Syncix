@@ -16,8 +16,9 @@ sides in the same state.
 3. Open your project folder in VS Code.
 
 That is all. The Studio plugin and the core engine ship inside the package — nothing
-else to download. On first launch the extension installs the Studio plugin and adds
-the `syncix` command to your terminal.
+else to download. On first launch the extension installs the Studio plugin and makes
+the `syncix` command available in the editor's terminals. It never edits your
+system PATH.
 
 ## Use
 
