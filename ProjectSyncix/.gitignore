@@ -20,3 +20,6 @@ sourcemap.json
 
 # vsce package: rebuilt for every release, not kept in the repository.
 *.vsix
+
+# Python bytecode cache
+__pycache__/
