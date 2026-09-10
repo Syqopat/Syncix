@@ -13,3 +13,10 @@ tsconfig.json
 node_modules/.bin/**
 node_modules/**/test/**
 node_modules/**/*.md
+
+# SVG'ler pakete GIRMIYOR.
+# Marketplace kullanici SVG'lerini kabul etmiyor ("Due to security concerns,
+# vsce will not publish extensions that contain user-provided SVG images") ve
+# yukleme bu yuzden "suspicious content" diye reddedildi. Depoda kaynak olarak
+# duruyorlar; pakete PNG surumleri gidiyor.
+resources/*.svg

@@ -1,16 +1,17 @@
-# icon.svg'nin geometrisini PNG'ye cizer.
+# Kenar cubugu ikonunu (PNG) uretir.
 #
-# Neden: kenar cubugu ikonu bir kez "seffaf goruniyor" diye geri geldi ve
-# sebebini ancak kurup bakinca anladik. Bu betik, kurmadan once seklin
-# gercekten dolu ve dogru olup olmadigini gostermek icin.
+# Neden PNG ve neden SVG degil: VS Code Marketplace, kullanici tarafindan
+# saglanan SVG goruntuleri kabul etmiyor ("Due to security concerns, vsce will
+# not publish extensions that contain user-provided SVG images"). Paket
+# icindeki SVG yuzunden yukleme "suspicious content" diyerek reddedildi.
 #
-# icon.svg ile AYNI koordinatlar; degistirirsen ikisini birden guncelle.
+# Zemin SEFFAF: VS Code ikonu maske olarak kullanip temaya gore boyuyor.
 
 import zlib, struct, os
 
-OLCEK, KUTU = 6, 24
+OLCEK, KUTU = 8, 24
 B = KUTU * OLCEK
-ZEMIN = (0x25, 0x25, 0x26)   # VS Code kenar cubugu grisi
+SEFFAF = True
 RENK = (0xC5, 0xC5, 0xC5)
 
 
@@ -48,37 +49,38 @@ def ucgende(px, py, u):
     return not (negatif and pozitif)
 
 
-buyuk = bytearray(B * B * 3)
+buyuk = bytearray(B * B * 4)
 for y in range(B):
     for x in range(B):
-        i = (y * B + x) * 3
+        i = (y * B + x) * 4
         px, py = x + 0.5, y + 0.5
         dolu = any(dikdortgende(px, py, d) for d in DIKDORTGENLER) or any(
             ucgende(px, py, u) for u in UCGENLER
         )
-        r, g, b = RENK if dolu else ZEMIN
-        buyuk[i], buyuk[i + 1], buyuk[i + 2] = r, g, b
+        if dolu:
+            buyuk[i], buyuk[i + 1], buyuk[i + 2], buyuk[i + 3] = RENK[0], RENK[1], RENK[2], 255
 
-# Kucult (kenar yumusatma)
-BOY = KUTU * 4
-kucuk = bytearray(BOY * BOY * 3)
+# Kucult. Seffaflik icin alfa agirlikli ortalama: aksi halde kenarlarda
+# saydam pikseller rengi kirletir.
+BOY = KUTU * 2
+kucuk = bytearray(BOY * BOY * 4)
 adim = B // BOY
 alan = adim * adim
 for y in range(BOY):
     for x in range(BOY):
-        tr = tg = tb = 0
+        ta = 0
         for dy in range(adim):
-            taban = ((y * adim + dy) * B + x * adim) * 3
+            taban = ((y * adim + dy) * B + x * adim) * 4
             for dx in range(adim):
-                i = taban + dx * 3
-                tr += buyuk[i]; tg += buyuk[i + 1]; tb += buyuk[i + 2]
-        j = (y * BOY + x) * 3
-        kucuk[j], kucuk[j + 1], kucuk[j + 2] = tr // alan, tg // alan, tb // alan
+                ta += buyuk[taban + dx * 4 + 3]
+        j = (y * BOY + x) * 4
+        kucuk[j], kucuk[j + 1], kucuk[j + 2] = RENK
+        kucuk[j + 3] = ta // alan
 
 ham = bytearray()
 for y in range(BOY):
     ham.append(0)
-    ham += kucuk[y * BOY * 3:(y + 1) * BOY * 3]
+    ham += kucuk[y * BOY * 4:(y + 1) * BOY * 4]
 
 
 def parca(tur, veri):
@@ -88,11 +90,14 @@ def parca(tur, veri):
 
 png = (
     b"\x89PNG\r\n\x1a\n"
-    + parca(b"IHDR", struct.pack(">IIBBBBB", BOY, BOY, 8, 2, 0, 0, 0))
+    + parca(b"IHDR", struct.pack(">IIBBBBB", BOY, BOY, 8, 6, 0, 0, 0))
     + parca(b"IDAT", zlib.compress(bytes(ham), 9))
     + parca(b"IEND", b"")
 )
 
-hedef = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ikon-onizleme.png")
+hedef = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "vscode-extension", "resources", "icon.png",
+)
 open(hedef, "wb").write(png)
 print("  yazildi: %s (%dx%d)" % (os.path.basename(hedef), BOY, BOY))
