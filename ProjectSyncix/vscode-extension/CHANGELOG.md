@@ -4,6 +4,14 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.1.3] - 2026-09-11
+
+### Changed
+
+- Non-script instances serialized to JSON now reflect their Roblox class name in the file extension (`<name>.<class>.json` and `init.<class>.json`, such as `Baseplate.part.json` or `init.folder.json`) instead of generic `.json`.
+- Backward-compatible path and uuid resolution ensures existing `.json` files are still matched and handled during migration.
+- The example project and VS Code explorer now use the class-specific extension convention.
+
 ## [0.1.2] - 2026-09-11
 
 ### Changed

@@ -257,6 +257,16 @@ pub fn uuid_for_path(dm: &DataModel, sync_dir: &str, path: &Path) -> Option<Uuid
         if suffix_matches(path, &expected_value) {
             return Some(*uuid);
         }
+        if let Some(name_str) = expected_value.file_name().and_then(|f| f.to_str()) {
+            if name_str.ends_with(".json") && !name_str.ends_with(".meta.json") {
+                if let Some((base, _)) = name_str.strip_suffix(".json").and_then(|s| s.rsplit_once('.')) {
+                    let legacy = expected_value.with_file_name(format!("{}.json", base));
+                    if suffix_matches(path, &legacy) {
+                        return Some(*uuid);
+                    }
+                }
+            }
+        }
     }
     None
 }
@@ -316,6 +326,14 @@ fn is_script(node: &InstanceNode) -> bool {
         node.class_name.as_str(),
         "Script" | "LocalScript" | "ModuleScript"
     )
+}
+
+fn instance_ext(class_name: &str) -> String {
+    if let Some(ext) = script_ext(class_name) {
+        ext.to_string()
+    } else {
+        format!("{}.json", class_name.to_ascii_lowercase())
+    }
 }
 
 /// Is this class written to disk as RAW CONTENT (instead of its own .json)?
@@ -382,7 +400,7 @@ pub fn data_file(dm: &DataModel, sync_dir: &str, uuid: &Uuid) -> Option<PathBuf>
         }
     }
 
-    let ext = script_ext(&node.class_name).unwrap_or("json");
+    let ext = instance_ext(&node.class_name);
     if node.children.is_empty() {
         path.push(format!("{}.{}", seg(dm, node), ext));
     } else {
@@ -866,7 +884,25 @@ mod txt_tests {
         let iv = add_instance(&mut m, "IntValue", "Sayac", Some(rs));
 
         let fs_path = data_file(&m, "src", &iv).unwrap();
-        assert!(fs_path.to_string_lossy().ends_with("Sayac.json"), "{:?}", fs_path);
+        assert!(fs_path.to_string_lossy().ends_with("Sayac.intvalue.json"), "{:?}", fs_path);
+    }
+
+    #[test]
+    fn object_extension_includes_class_name() {
+        let mut m = DataModel::new();
+        let ws = add_instance(&mut m, "Workspace", "Workspace", None);
+        let p = add_instance(&mut m, "Part", "Box", Some(ws));
+        let mdl = add_instance(&mut m, "Model", "House", Some(ws));
+        add_instance(&mut m, "Part", "Roof", Some(mdl));
+
+        let p_path = data_file(&m, "src", &p).unwrap();
+        assert!(p_path.to_string_lossy().ends_with("Box.part.json"), "{:?}", p_path);
+
+        let mdl_path = data_file(&m, "src", &mdl).unwrap();
+        assert!(mdl_path.to_string_lossy().ends_with("init.model.json"), "{:?}", mdl_path);
+
+        assert!(is_managed_file(Path::new("src/Box.part.json")));
+        assert!(is_managed_file(Path::new("src/House/init.model.json")));
     }
 }
 

@@ -37,7 +37,7 @@ impl TreeBuilder {
         for path in &entries {
             if self.vfs.is_file(path) {
                 if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                    if filename.starts_with("init.") && filename.ends_with(".json") {
+                    if filename.starts_with("init.") && filename.ends_with(".json") && !filename.ends_with(".meta.json") {
                         // found a file like init.model.json
                         let data = self.vfs.read_to_string(path).map_err(|e| e.to_string())?;
 
@@ -74,7 +74,7 @@ impl TreeBuilder {
             } else if self.vfs.is_file(path) {
                 if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
                     // Other .json files besides the init file are child objects
-                    if filename.ends_with(".json") && !filename.starts_with("init.") {
+                    if filename.ends_with(".json") && !filename.starts_with("init.") && !filename.ends_with(".meta.json") {
                         let data = self.vfs.read_to_string(path).map_err(|e| e.to_string())?;
                         if let Ok(child_node) = self.deserialize_file(&data).await {
                             node.add_child(child_node.syncix_id);

@@ -56,7 +56,23 @@ export class WorkspaceExplorer implements vscode.TreeDataProvider<SyncixTreeItem
         // Clicking a node opens its synced file on disk
         vscode.commands.registerCommand('syncix.openNodeFile', async (node: NodeData) => {
             const shortUuid = node.id.substring(0, 8).toLowerCase();
-            const files = await vscode.workspace.findFiles(`**/*_${shortUuid}.part.json`, '**/node_modules/**', 1);
+            const classLower = node.className.toLowerCase();
+            let files = await vscode.workspace.findFiles(`**/*_${shortUuid}.${classLower}.json`, '**/node_modules/**', 1);
+            if (files.length === 0) {
+                files = await vscode.workspace.findFiles(`**/*_${shortUuid}.*`, '**/node_modules/**', 1);
+            }
+            if (files.length === 0) {
+                files = await vscode.workspace.findFiles(`**/${node.name}.${classLower}.json`, '**/node_modules/**', 1);
+            }
+            if (files.length === 0) {
+                files = await vscode.workspace.findFiles(`**/${node.name}/init.${classLower}.json`, '**/node_modules/**', 1);
+            }
+            if (files.length === 0) {
+                files = await vscode.workspace.findFiles(`**/${node.name}.*`, '**/node_modules/**', 1);
+            }
+            if (files.length === 0) {
+                files = await vscode.workspace.findFiles(`**/${node.name}/init.*`, '**/node_modules/**', 1);
+            }
             if (files.length > 0) {
                 const doc = await vscode.workspace.openTextDocument(files[0]);
                 await vscode.window.showTextDocument(doc, { preview: true });

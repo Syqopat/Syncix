@@ -19,7 +19,7 @@ local Approval = require(script.Parent.Parent.Core.Approval)
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
 --   PORT_START  <-> project.rs  DEFAULT_PORT
 --   PORT_RANGE     <-> project.rs  PORT_SCAN_SPAN
-local PLUGIN_VERSION = "0.1.2"
+local PLUGIN_VERSION = "0.1.3"
 local PLUGIN_PROTOCOL = 1
 local PORT_START = 8080
 local PORT_RANGE = 10
