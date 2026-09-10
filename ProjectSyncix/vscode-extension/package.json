@@ -3,7 +3,7 @@
   "displayName": "Syncix",
   "description": "Developer platform for Roblox",
   "version": "0.1.0",
-  "publisher": "Syncix",
+  "publisher": "Syqopat",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -207,5 +207,14 @@
     "@types/vscode": "^1.80.0",
     "@types/ws": "^8.5.5",
     "typescript": "^5.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Syqopat/Syncix.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Syqopat/Syncix/issues"
+  },
+  "homepage": "https://github.com/Syqopat/Syncix#readme",
+  "license": "MIT"
 }

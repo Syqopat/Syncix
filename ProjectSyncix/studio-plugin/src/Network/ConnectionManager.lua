@@ -11,6 +11,18 @@
 local HttpService = game:GetService("HttpService")
 local Ayarlar = require(script.Parent.Parent.Core.Ayarlar)
 local PlaceKimligi = require(script.Parent.Parent.Core.PlaceKimligi)
+local Store = require(script.Parent.Parent.Core.Store)
+local Approval = require(script.Parent.Parent.Core.Approval)
+
+-- Bu dort sabit core ile ESLESMEK ZORUNDA. Karsiliklari:
+--   PLUGIN_VERSION  <-> core-engine/Cargo.toml  version
+--   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
+--   PORT_BASLANGIC  <-> project.rs  DEFAULT_PORT
+--   PORT_ARALIK     <-> project.rs  PORT_SCAN_SPAN
+local PLUGIN_VERSION = "0.1.0"
+local PLUGIN_PROTOCOL = 1
+local PORT_BASLANGIC = 8080
+local PORT_ARALIK = 10
 
 local ConnectionManager = {}
 ConnectionManager.__index = ConnectionManager
