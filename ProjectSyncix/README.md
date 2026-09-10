@@ -24,7 +24,7 @@ the `syncix` command to your terminal.
 Open the project folder in VS Code and open Roblox Studio. The connection is made
 automatically; a status bar reading `Syncix: connected (N)` means everything works.
 
-Instances are written under `src_workspace/` as an exact mirror of the Studio
+Instances are written under your sync folder as an exact mirror of the Studio
 Explorer. Editing a `.lua` file sends the change straight to the script in Studio.
 
 ### Command line
@@ -95,7 +95,7 @@ restart the core, install the plugin, open the inspector, run the self test and 
 `syncix.toml` in the project root:
 
 ```toml
-sync_dir = "src_workspace"
+sync_dir = "src"
 port = 8080
 sourcemap = true
 ignore = ["notes/**"]

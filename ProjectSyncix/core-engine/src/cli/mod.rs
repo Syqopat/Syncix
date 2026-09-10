@@ -564,7 +564,7 @@ fn ilklendir() -> i32 {
         println!("{}syncix.toml already exists: {}{}", SARI, cfg.display(), SIFIRLA);
     } else {
         let icerik = format!(
-            "# Syncix project settings\nsync_dir = \"src_workspace\"\nport = {}\n",
+            "# Syncix project settings\nsync_dir = \"src\"\nport = {}\n",
             DEFAULT_PORT
         );
         if let Err(e) = std::fs::write(&cfg, icerik) {
@@ -574,7 +574,7 @@ fn ilklendir() -> i32 {
         tamam(&format!("Created syncix.toml: {}", cfg.display()));
     }
 
-    let senkron = kok.join("src_workspace");
+    let senkron = kok.join("src");
     if !senkron.exists() {
         if let Err(e) = std::fs::create_dir_all(&senkron) {
             hata(&format!("Could not create sync folder: {}", e));

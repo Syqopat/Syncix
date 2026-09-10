@@ -70,7 +70,7 @@ function findProjectRoot(): string | undefined {
  *   1) Kullanıcı ayarı (varsa)
  *   2) Proje kökündeki geliştirme derlemesi (repo içinde çalışırken)
  *   3) Extension'a gömülü binary (son kullanıcı senaryosu — repo gerekmez)
- * Çalışma dizini her zaman sync klasörünün ÜST dizini olur; core "../src_workspace"
+ * Çalışma dizini her zaman sync klasörünün ÜST dizini olur; core "../<sync_dir>"
  * beklediği için gömülü binary çalışırken de doğru klasörü bulur.
  */
 function resolveCorePaths(): { exePath: string; cwd: string } | undefined {
@@ -113,15 +113,15 @@ let context_extensionPath = '';
 /** Platform uyarısı oturumda bir kez gösterilir; her denemede tekrarlanmamalı. */
 let platformUyarisiVerildi = false;
 
-/** Sync klasörünün üst dizinini bulur (syncix.toml veya src_workspace'e göre). */
+/** Sync klasörünün üst dizinini bulur (syncix.toml'a göre). */
 function findSyncWorkspaceRoot(): string | undefined {
     const folders = vscode.workspace.workspaceFolders;
     if (!folders) return undefined;
     for (const f of folders) {
         const p = f.uri.fsPath;
         if (fs.existsSync(path.join(p, 'syncix.toml'))) return p;
-        // src_workspace klasörü açıksa üst dizini proje köküdür
-        if (path.basename(p).toLowerCase() === 'src_workspace') return path.dirname(p);
+        // Sync klasörünün kendisi açıksa proje kökü bir üst dizindir
+        if (fs.existsSync(path.join(path.dirname(p), 'syncix.toml'))) return path.dirname(p);
     }
     return undefined;
 }
@@ -206,7 +206,7 @@ function stopCore(): boolean {
  * Bir Syncix projesi mi?
  *
  * Ölçüt syncix.toml'un varlığı. Daha önce klasör ADINA bakılıyordu
- * ("src_workspace", "projectsyncix") — bunlar bu deponun kendi klasör
+ * ("src_workspace", "projectsyncix") — bunlar bu deponun kendi eski klasör
  * isimleriydi. Sonucu şuydu: kendi makinemizde her şey çalışıyor, projesine
  * "MyGame" adını veren herkeste eklenti sessizce hiçbir şey yapmıyordu.
  * Kurulumu kendi makinende denemenin neden yetmediğinin iyi bir örneği.
@@ -224,6 +224,26 @@ function projeDosyasi(): string | undefined {
         if (fs.existsSync(aday)) return aday;
     }
     return undefined;
+}
+
+/**
+ * Projenin sync klasörünün ADI (syncix.toml'daki `sync_dir`).
+ *
+ * Daha önce bu ad kodda sabitti ("src_workspace") — bu deponun kendi klasör
+ * adı. Sonuç: klasörüne başka bir ad veren herkeste kayıt geri bildirimi ve
+ * "sync klasörünü aç" komutu sessizce yanlış yolu gösteriyordu.
+ */
+function senkronKlasoruAdi(): string {
+    const toml = projeDosyasi();
+    if (toml) {
+        try {
+            const m = /^\s*sync_dir\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(toml, 'utf8'));
+            if (m) return m[1];
+        } catch {
+            // okunamiyorsa varsayilana dus
+        }
+    }
+    return 'src';
 }
 
 /**
@@ -502,7 +522,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const kaydetIzleyici = vscode.workspace.onDidSaveTextDocument((belge) => {
             if (!senkronKoku) return;
             const yol = belge.uri.fsPath;
-            const senkronKlasoru = path.join(senkronKoku, 'src_workspace');
+            const senkronKlasoru = path.join(senkronKoku, senkronKlasoruAdi());
             if (!yol.startsWith(senkronKlasoru)) return;
 
             const ad = path.basename(yol);
@@ -577,7 +597,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // ── Komut Paleti (Ctrl+Shift+P) aksiyonları ──
     const cfg = vscode.workspace.getConfiguration('syncix');
     const projRoot = findProjectRoot() ?? '';
-    const syncDir = projRoot ? path.join(projRoot, 'src_workspace') : '';
+    const syncDir = projRoot ? path.join(projRoot, senkronKlasoruAdi()) : '';
 
     const paletteCmds = [
         vscode.commands.registerCommand('syncix.reconnect', async () => {

@@ -155,7 +155,7 @@ pub struct KapsamAyarlari {
 
 #[derive(Clone, Debug)]
 pub struct ProjectConfig {
-    /// Senkron klasörü, core'un çalışma dizinine göre (ör. "../src_workspace").
+    /// Senkron klasörü, core'un çalışma dizinine göre (ör. "../src").
     pub sync_dir: String,
     /// syncix.toml'un bulunduğu dizin, mutlak yol.
     pub root: PathBuf,
@@ -275,7 +275,7 @@ impl ProjectConfig {
 
         let dir = al(files, "sync_dir")
             .and_then(|x| x.as_str().map(|s| s.to_string()))
-            .unwrap_or_else(|| "src_workspace".to_string());
+            .unwrap_or_else(|| "src".to_string());
 
         let port = al(server, "port")
             .and_then(|x| x.as_integer())

@@ -1,7 +1,7 @@
 {
   "class_name": "Part",
-  "name": "CantaYukseltme",
-  "syncix_id": "c9babb46-038a-4185-bf8a-8344614768b9",
+  "name": "SpeedUpgrade",
+  "syncix_id": "33a9b360-cbd7-440b-ae38-28ed1dcacfcd",
   "schema_version": 1,
   "last_updated": 1785808904047,
   "properties": {
@@ -15,14 +15,14 @@
       "String": "Enum.SurfaceType.Inlet"
     },
     "BrickColor": {
-      "BrickColor": "Bright orange"
+      "BrickColor": "Lavender"
     },
     "CFrame": {
       "CFrame": {
         "pos": [
           -20.0,
           0.5,
-          -6.0
+          6.0
         ],
         "rot": [
           1.0,
@@ -54,9 +54,9 @@
     },
     "Color": {
       "Color3": {
-        "r": 0.9019608,
-        "g": 0.49411765,
-        "b": 0.13333334
+        "r": 0.60784316,
+        "g": 0.34901962,
+        "b": 0.7137255
       }
     },
     "CustomPhysicalProperties": {

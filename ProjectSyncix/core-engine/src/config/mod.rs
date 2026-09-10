@@ -147,7 +147,7 @@ mod tests {
     fn test_default_manifest() {
         let config = ConfigManager::new();
         assert_eq!(config.get_manifest().project.schema_version, 2);
-        assert_eq!(config.get_manifest().features.enable_ai, false);
+        assert!(!config.get_manifest().features.enable_ai);
     }
 
     #[test]
@@ -176,6 +176,6 @@ mod tests {
         let manifest: ProjectManifest = toml::from_str(toml_str).unwrap();
         assert_eq!(manifest.project.name, "TestProject");
         assert_eq!(manifest.project.schema_version, 2);
-        assert_eq!(manifest.features.enable_ai, true);
+        assert!(manifest.features.enable_ai);
     }
 }

@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: CompeyDev/setup-rokit@v0.1.2
       - name: Eklenti ve oyun scriptleri
-        run: sh tools/luau-check.sh $(find studio-plugin/src src_workspace -name "*.lua")
+        run: sh tools/luau-check.sh $(find studio-plugin/src example -name "*.lua")
 
   typescript:
     name: Editör eklentisi

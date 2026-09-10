@@ -1,7 +1,7 @@
 {
   "class_name": "Part",
-  "name": "HizYukseltme",
-  "syncix_id": "33a9b360-cbd7-440b-ae38-28ed1dcacfcd",
+  "name": "SellArea",
+  "syncix_id": "424ce524-6a95-4864-aa3f-fb94c19b15d2",
   "schema_version": 1,
   "last_updated": 1785808904047,
   "properties": {
@@ -15,14 +15,14 @@
       "String": "Enum.SurfaceType.Inlet"
     },
     "BrickColor": {
-      "BrickColor": "Lavender"
+      "BrickColor": "Sea green"
     },
     "CFrame": {
       "CFrame": {
         "pos": [
-          -20.0,
+          20.0,
           0.5,
-          6.0
+          0.0
         ],
         "rot": [
           1.0,
@@ -54,9 +54,9 @@
     },
     "Color": {
       "Color3": {
-        "r": 0.60784316,
-        "g": 0.34901962,
-        "b": 0.7137255
+        "r": 0.18039216,
+        "g": 0.8,
+        "b": 0.44313726
       }
     },
     "CustomPhysicalProperties": {
@@ -124,9 +124,9 @@
     },
     "Size": {
       "Vector3": {
-        "x": 8.0,
+        "x": 12.0,
         "y": 1.0,
-        "z": 8.0
+        "z": 12.0
       }
     },
     "TopSurface": {
@@ -137,5 +137,5 @@
     }
   },
   "children": [],
-  "parent": "37b03d43-8114-4bb0-9d27-f70a1f4072dc"
+  "parent": "92106783-a138-4412-8261-b9df99d5fb4f"
 }
