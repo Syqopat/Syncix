@@ -352,10 +352,8 @@ function ensurePluginInstalled(context: vscode.ExtensionContext) {
  *
  * Eskiden bu fonksiyon kullanıcının ev klasörüne bir .cmd yazıyor ve gizli,
  * ayrık bir kabuk süreciyle kullanıcının PATH'ini kayıt defterinde
- * değiştiriyordu — kimse sormadan, her proje açılışında. Bu hem
- * rıza dışı kalıcı bir sistem değişikliğiydi hem de Marketplace'in zararlı
- * yazılım taramasının aradığı kalıbın ta kendisi: yükleme bu yüzden
- * "suspicious content" ile reddediliyordu.
+ * değiştiriyordu — kimse sormadan, her proje açılışında. Bu, rıza dışı
+ * kalıcı bir sistem değişikliğiydi.
  *
  * Artık kısayol eklentinin kendi depolama klasörüne yazılıyor ve PATH'e
  * yalnızca VS Code API'si üzerinden, editörün açtığı terminaller için

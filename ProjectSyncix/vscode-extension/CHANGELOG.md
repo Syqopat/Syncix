@@ -62,8 +62,7 @@ versions follow [Semantic Versioning](https://semver.org/).
   `syncix.cmd` into your home folder and, on every project open, start a hidden
   PowerShell process with the execution policy bypassed to append that folder
   to the PATH in the registry — without asking. That is a persistent system
-  change nobody consented to, and it is the pattern malware scanners look for:
-  the Marketplace rejected the package as "suspicious content" because of it.
+  change nobody consented to.
   The shortcut now lives in the extension's own storage folder and is added to
   PATH only for terminals opened inside the editor, through the VS Code API.
   **Syncix: Use CLI Outside the Editor** shows the folder for anyone who wants
