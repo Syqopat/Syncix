@@ -4,7 +4,19 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.1] - 2026-09-10
+
+### Fixed
+
+- **Opening the editor without Studio could empty the sync folder.** Until
+  Studio had synced, the model was empty, and the reconciler treated every
+  file on disk as stale: one request from the editor was enough to move the
+  whole sync folder to the trash. The reconciler now removes files only after
+  Studio has completed a full sync in the current session. Files went to the
+  trash rather than being deleted, so affected projects can recover them with
+  `syncix trash` and `syncix restore`.
+
+## [0.1.0] - 2026-09-10
 
 ### Added
 
@@ -24,13 +36,6 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- **Opening the editor without Studio could empty the sync folder.** Until
-  Studio had synced, the model was empty, and the reconciler treated every
-  file on disk as stale: one request from the editor was enough to move the
-  whole sync folder to the trash. The reconciler now removes files only after
-  Studio has completed a full sync in the current session. Files went to the
-  trash rather than being deleted, so affected projects can recover them with
-  `syncix trash` and `syncix restore`.
 - **The version-mismatch warning never fired.** The extension looked itself up
   under a hardcoded id that never existed, got nothing back and skipped the
   check. It now reads its own version from the extension context.

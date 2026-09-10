@@ -19,7 +19,7 @@ local Approval = require(script.Parent.Parent.Core.Approval)
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
 --   PORT_BASLANGIC  <-> project.rs  DEFAULT_PORT
 --   PORT_ARALIK     <-> project.rs  PORT_SCAN_SPAN
-local PLUGIN_VERSION = "0.1.0"
+local PLUGIN_VERSION = "0.1.1"
 local PLUGIN_PROTOCOL = 1
 local PORT_BASLANGIC = 8080
 local PORT_ARALIK = 10

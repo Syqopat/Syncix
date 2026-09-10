@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 -- Sürüm artık semver: core ile major.minor eşleşmesi aranıyor (bkz. ConnectionManager).
-local SYNCIX_VERSION = "0.1.0"
+local SYNCIX_VERSION = "0.1.1"
 
 local function startSyncix()
     print("[Syncix] Starting Studio runtime (version " .. SYNCIX_VERSION .. ")...")
