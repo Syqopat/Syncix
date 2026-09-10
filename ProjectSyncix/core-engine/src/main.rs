@@ -525,7 +525,12 @@ async fn main() {
     // Debounce sayesinde sürükleme gibi hızlı değişimlerde disk fırtınası oluşmaz.
     // NOT: Diske YAZMAK yalnızca burasının işidir; file_sync sadece okur.
     let disk_notify = Arc::new(tokio::sync::Notify::new());
+    // Model, Studio bu oturumda FULL_SYNC'i tamamlayana kadar diskin otoritesi
+    // DEGILDIR. O ana kadar yazici diske yazabilir ama hicbir dosya silemez;
+    // bos modelle uzlastirma butun senkron klasorunu cope tasiyordu.
+    let model_otoritede = Arc::new(std::sync::atomic::AtomicBool::new(false));
     {
+        let model_otoritede_yazici = model_otoritede.clone();
         let data_model_for_writer = data_model.clone();
         let notify_for_writer = disk_notify.clone();
         let cfg_for_writer = cfg.clone();
@@ -548,7 +553,9 @@ async fn main() {
                     continue;
                 }
                 let dm = data_model_for_writer.read().await;
-                layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore);
+                let silme_izni =
+                    model_otoritede_yazici.load(std::sync::atomic::Ordering::SeqCst);
+                layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore, silme_izni);
 
                 // sourcemap.json: luau-lsp'nin otomatik tamamlama yapabilmesi için
                 // hangi dosyanın DataModel'de nereye karşılık geldiğini bildirir.
@@ -796,6 +803,8 @@ async fn main() {
                 }
                 
                 tracing::info!("FULL_SYNC complete. {} instances added or updated.", added_count);
+                // Artik model Studio'nun agaci: uzlastirici fazlaliklari silebilir.
+                model_otoritede.store(true, std::sync::atomic::Ordering::SeqCst);
                 
                 // Notify VS Code with FULL_SYNC
                 let ws_msg = serde_json::json!({

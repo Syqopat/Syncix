@@ -24,6 +24,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Opening the editor without Studio could empty the sync folder.** Until
+  Studio had synced, the model was empty, and the reconciler treated every
+  file on disk as stale: one request from the editor was enough to move the
+  whole sync folder to the trash. The reconciler now removes files only after
+  Studio has completed a full sync in the current session. Files went to the
+  trash rather than being deleted, so affected projects can recover them with
+  `syncix trash` and `syncix restore`.
 - **The version-mismatch warning never fired.** The extension looked itself up
   under a hardcoded id that never existed, got nothing back and skipped the
   check. It now reads its own version from the extension context.

@@ -569,7 +569,11 @@ fn cop_ayari() -> (bool, usize) {
         .unwrap_or((true, KORUNAN_TUR))
 }
 
-pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String]) {
+/// `silme_izni`: modelin Studio'nun gercek agacini yansittigi kesinlesmeden
+/// (bu oturumda FULL_SYNC tamamlanmadan) diskten HICBIR dosya kaldirilmaz.
+/// Aksi halde bos model "diskteki her sey fazla" demek olur: Studio kapaliyken
+/// editor acildiginda senkron klasorundeki butun dosyalar cope tasiniyordu.
+pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], silme_izni: bool) {
     let root = Path::new(sync_dir);
     let _ = fs::create_dir_all(root);
 
@@ -592,8 +596,9 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String]) {
     let mut existing = Vec::new();
     collect_files(root, &mut existing);
 
-    // 3) Fazlalıkları sil
+    // 3) Fazlalıkları sil — yalnızca model otoriteyse (bkz. silme_izni).
     let mut removed = 0usize;
+    let mut korunan = 0usize;
     for path in &existing {
         if expected.contains_key(path) {
             continue;
@@ -604,6 +609,10 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String]) {
         }
         // Kullanıcının yok saydırdığı yollar da korunur.
         if yok_sayilir(path, sync_dir, ignore) {
+            continue;
+        }
+        if !silme_izni {
+            korunan += 1;
             continue;
         }
         if cope_tasi(path, sync_dir).is_ok() {
@@ -637,6 +646,12 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String]) {
     // 5) Boşalan klasörleri temizle
     remove_empty_dirs(root, root);
 
+    if korunan > 0 {
+        tracing::debug!(
+            "layout: {} file(s) not in the model were kept — Studio has not synced yet",
+            korunan
+        );
+    }
     if written > 0 || removed > 0 {
         tracing::debug!(
             "layout: synced ({} instances) — {} written, {} removed",
@@ -1007,6 +1022,42 @@ mod cop_kutusu_testleri {
         let _ = fs::remove_dir_all(&kok);
         fs::create_dir_all(kok.join("src")).unwrap();
         kok
+    }
+
+    /// Gerçek bir olaydan: Studio bağlanmadan editör açıldı, model boştu ve
+    /// uzlaştırıcı senkron klasöründeki 48 dosyanın hepsini çöpe taşıdı. Model
+    /// otorite değilken diskten hiçbir şey kaldırılmamalı.
+    #[test]
+    fn studio_senkronlamadan_bos_model_dosya_silmez() {
+        let kok = gecici_kok("otorite-yok");
+        let sync = kok.join("src");
+        let s = sync.to_str().unwrap();
+        let oyun = sync.join("Workspace.json");
+        let betik = sync.join("ServerScriptService").join("Main.server.lua");
+        fs::create_dir_all(betik.parent().unwrap()).unwrap();
+        fs::write(&oyun, "{}").unwrap();
+        fs::write(&betik, "print('oyun kodu')").unwrap();
+
+        write_full_tree(&DataModel::new(), s, &[], false);
+
+        assert!(oyun.exists(), "model otorite değilken dosya silinmemeli");
+        assert!(betik.exists(), "alt klasördeki betik de yerinde kalmalı");
+        assert!(cop_turlari(s).is_empty(), "çöp kutusuna hiçbir şey gitmemeli");
+    }
+
+    /// Otorite varsa eski davranış aynen sürer: modelde olmayan dosya çöpe gider.
+    #[test]
+    fn otoriter_model_fazlaligi_cope_tasir() {
+        let kok = gecici_kok("otorite-var");
+        let sync = kok.join("src");
+        let s = sync.to_str().unwrap();
+        let fazla = sync.join("Silinmis.server.lua");
+        fs::write(&fazla, "-- Studio'da artik yok").unwrap();
+
+        write_full_tree(&DataModel::new(), s, &[], true);
+
+        assert!(!fazla.exists(), "otoriter modelde olmayan dosya kaldırılmalı");
+        assert_eq!(cop_turlari(s).len(), 1, "kaldırılan dosya çöp kutusunda olmalı");
     }
 
     /// Asıl mesele: uzlaştırıcı bir dosyayı sildiğinde içeriği yok olmamalı.
