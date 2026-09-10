@@ -636,7 +636,7 @@ async fn verify_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::
     let mut by_class: std::collections::BTreeMap<String, usize> = Default::default();
     let mut scripts_with_source = 0usize;
     let mut roots = 0usize;
-    for (_, n) in instances {
+    for n in instances.values() {
         if n.class_name == "DataModel" {
             continue;
         }
@@ -670,7 +670,7 @@ async fn verify_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::
 async fn tree_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
     let dm = state.data_model.read().await;
     let mut nodes = Vec::new();
-    for (_, instance) in dm.get_all_instances() {
+    for instance in dm.get_all_instances().values() {
         if instance.class_name == "DataModel" {
             continue;
         }

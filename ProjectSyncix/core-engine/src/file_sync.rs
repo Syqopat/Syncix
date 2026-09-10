@@ -192,16 +192,16 @@ fn notify_vscode_updated(
 
 fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)> {
     let fname = path.file_name()?.to_str()?;
-    let (base, ext) = if fname.ends_with(".server.lua") {
-        (&fname[..fname.len() - 11], "server.lua")
-    } else if fname.ends_with(".client.lua") {
-        (&fname[..fname.len() - 11], "client.lua")
-    } else if fname.ends_with(".lua") {
-        (&fname[..fname.len() - 4], "lua")
-    } else if fname.ends_with(".luau") {
-        (&fname[..fname.len() - 5], "luau")
+    // Sira onemli: ".server.lua" ayni zamanda ".lua" ile bitiyor, once uzun
+    // olanlar denenmeli.
+    let (base, ext) = if let Some(b) = fname.strip_suffix(".server.lua") {
+        (b, "server.lua")
+    } else if let Some(b) = fname.strip_suffix(".client.lua") {
+        (b, "client.lua")
+    } else if let Some(b) = fname.strip_suffix(".luau") {
+        (b, "luau")
     } else {
-        return None;
+        (fname.strip_suffix(".lua")?, "lua")
     };
 
     // Konteyner script: klasör adı objenin adıdır (init.server.lua vb.)
@@ -239,8 +239,10 @@ fn is_script_class(class_name: &str) -> bool {
 /// `Ad.meta.json` ya da `init.meta.json` dosyasindan ilgili script dugumunu bulur.
 ///
 /// Kural layout.rs ile aynidir:
-///   - `init.meta.json`  -> dugum, iceren KLASORUN kendisidir (konteyner script)
-///   - `Ad.meta.json`    -> dugum, klasorun `Ad` isimli cocugudur
+///
+/// - `init.meta.json`  -> dugum, iceren KLASORUN kendisidir (konteyner script)
+/// - `Ad.meta.json`    -> dugum, klasorun `Ad` isimli cocugudur
+///
 /// Isim cakismasinda layout dosya adina 8 haneli kisa UUID ekler; burada da o ek
 /// ayristirilir, aksi halde iki ayni isimli script birbirine karisirdi.
 fn meta_hedefi(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> {
@@ -592,6 +594,11 @@ fn handle_meta_file(
     true
 }
 
+// Argumanlarin cogu bagimsiz kanal (Studio kuyrugu, model, editor yayini, disk
+// uyarisi) ve hepsi tek bir olayin islenmesinde gerekli. Tek bir yapiya
+// toplamak, cagri zincirindeki her halkanin o yapiyi tasimasini gerektirirdi;
+// okunurlugu arttirmiyor.
+#[allow(clippy::too_many_arguments)]
 fn handle_event(
     event: Event,
     tx_to_studio: &StudioOutbox,
@@ -692,11 +699,9 @@ fn handle_event(
             .and_then(|f| f.to_str())
             .map(|f| f.ends_with(".meta.json"))
             .unwrap_or(false)
-        {
-            if handle_meta_file(path, tx_to_studio, data_model) {
+            && handle_meta_file(path, tx_to_studio, data_model) {
                 continue;
             }
-        }
 
         // .txt -> StringValue.Value
         if path
@@ -812,7 +817,7 @@ fn handle_event(
                         by_uuid
                     } else if let Some((_, Some(ref old_short))) = old_info {
                         dm.find_by_short_uuid(old_short)
-                    } else if let Some(ref old_name) = old_info.as_ref().map(|o| &o.0) {
+                    } else if let Some(old_name) = old_info.as_ref().map(|o| &o.0) {
                         if let Some(parent_uuid) = parent_uuid_opt {
                             dm.get_all_instances().iter().find_map(|(u, n)| {
                                 if n.parent == Some(parent_uuid) && n.name.as_str() == old_name.as_str() {

@@ -154,12 +154,11 @@ fn core_portu() -> Option<u16> {
             return Some(p);
         }
     }
-    for p in DEFAULT_PORT..DEFAULT_PORT + PORT_SCAN_SPAN {
-        if istek(p, "GET", "/health", None).map(|c| c.durum == 200).unwrap_or(false) {
-            return Some(p);
-        }
-    }
-    None
+    (DEFAULT_PORT..DEFAULT_PORT + PORT_SCAN_SPAN).find(|&p| {
+        istek(p, "GET", "/health", None)
+            .map(|c| c.durum == 200)
+            .unwrap_or(false)
+    })
 }
 
 fn core_gerekli() -> Option<u16> {

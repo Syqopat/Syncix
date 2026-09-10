@@ -128,7 +128,7 @@ fn cope_tasi(path: &Path, sync_dir: &str) -> std::io::Result<()> {
         return fs::remove_file(path);
     }
     let goreli = path.strip_prefix(sync_dir).unwrap_or(path);
-    let hedef = cop_kokü(sync_dir).join(&tur_adi()).join(goreli);
+    let hedef = cop_kokü(sync_dir).join(tur_adi()).join(goreli);
     if let Some(ust) = hedef.parent() {
         fs::create_dir_all(ust)?;
     }
@@ -250,7 +250,7 @@ fn sonek_eslesir(yol: &Path, beklenen: &Path) -> bool {
 }
 
 pub fn yol_icin_uuid(dm: &DataModel, sync_dir: &str, path: &Path) -> Option<Uuid> {
-    for (uuid, _) in dm.get_all_instances() {
+    for uuid in dm.get_all_instances().keys() {
         let Some(beklenen) = data_file(dm, sync_dir, uuid) else {
             continue;
         };

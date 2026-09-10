@@ -492,6 +492,7 @@ impl DataModel {
     /// 2. Tam UUID
     /// 3. Kısa UUID öneki (en az 6 hane, örn. "d8d0cf78")
     /// 4. İsim (tam eşleşme; tek sonuçsa)
+    ///
     /// Belirsizlikte adaylar döner ki istemciye anlamlı hata verilebilsin.
     pub fn resolve_target(&self, target: &str) -> ResolveResult {
         // Nokta içeriyorsa yol olarak yorumla (UUID '-' içerir, '.' içermez)

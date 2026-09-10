@@ -142,6 +142,7 @@ pub struct GuvenlikAyarlari {
 
 /// Neyin senkron edilecegini belirleyen ayarlar.
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct KapsamAyarlari {
     /// Izlenecek servisler. Bos birakilirsa eklentinin varsayilan listesi gecerli.
     pub servisler: Vec<String>,
@@ -201,15 +202,6 @@ impl Default for GuvenlikAyarlari {
     }
 }
 
-impl Default for KapsamAyarlari {
-    fn default() -> Self {
-        Self {
-            servisler: Vec::new(),
-            sinif_disla: Vec::new(),
-            property_disla: Vec::new(),
-        }
-    }
-}
 
 /// TOML'dan bir bolumu okumak icin kucuk yardimcilar.
 /// Bilinmeyen anahtarlar sessizce yutulmaz; cagiran taraf uyari basar.
@@ -599,6 +591,36 @@ mod place_kimligi_testleri {
         // Karar verildikten sonra yeni sahip yazılabilmeli.
         c.place_bagla("place-B");
         assert_eq!(c.bagli_place(), Some("place-B".to_string()));
+    }
+
+    /// Süzgeçler hem eklentide hem core'da uygulanıyor. Core tarafı, eski bir
+    /// eklenti bağlandığında ayarın yine de geçerli olması için gerekli —
+    /// bir süre yalnızca eklentide vardı ve o hâlde ayar sessizce etkisizdi.
+    #[test]
+    fn suzgecler_dislanani_reddeder() {
+        let c = ProjectConfig::coz(
+            &"[scope]
+ignore_classes = [\"Camera\", \"Terrain\"]
+ignore_properties = [\"Transparency\"]
+"
+                .parse::<toml::Value>()
+                .unwrap(),
+            ".",
+        );
+        assert!(!c.sinif_izinli("Camera"));
+        assert!(!c.sinif_izinli("Terrain"));
+        assert!(c.sinif_izinli("Part"), "listede olmayan sınıf geçmeli");
+
+        assert!(!c.property_izinli("Transparency"));
+        assert!(c.property_izinli("Anchored"), "listede olmayan property geçmeli");
+    }
+
+    /// Boş liste "hiçbir şey geçmesin" değil, "kısıtlama yok" demek.
+    #[test]
+    fn bos_suzgec_her_seye_izin_verir() {
+        let c = ProjectConfig::coz(&toml::Value::Table(Default::default()), ".");
+        assert!(c.sinif_izinli("Camera"));
+        assert!(c.property_izinli("Transparency"));
     }
 
     /// Askıya alma üç yerden de görülebilmeli ve geri alınabilmeli.

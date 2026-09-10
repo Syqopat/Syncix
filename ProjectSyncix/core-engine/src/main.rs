@@ -721,6 +721,15 @@ async fn main() {
                             node_data.get("name").and_then(|v| v.as_str()),
                             node_data.get("syncix_id").and_then(|v| v.as_str()),
                         ) {
+                            // Kullanicinin disladigi siniflar modele hic girmez.
+                            //
+                            // Ayni suzgec eklentide de var; buradaki ikinci kapi
+                            // eski bir eklenti baglandiginda ayarin yine de
+                            // gecerli olmasi icin. Ayar iki taraftan birinde
+                            // uygulanmazsa "disladim ama geliyor" durumu olusur.
+                            if !cfg_for_loop.sinif_izinli(class_name) {
+                                continue;
+                            }
                             if let Ok(uuid) = uuid::Uuid::parse_str(syncix_id) {
                                 let mut instance = InstanceNode::new(class_name, name);
                                 instance.syncix_id = uuid;
@@ -757,6 +766,9 @@ async fn main() {
                                 // Property'ler (geniş kapsam — generic properties objesi)
                                 if let Some(props) = node_data.get("properties").and_then(|v| v.as_object()) {
                                     for (k, val) in props {
+                                        if !cfg_for_loop.property_izinli(k) {
+                                            continue;
+                                        }
                                         if let Some(pv) = parse_wire_value(val) {
                                             instance.properties.insert(k.clone(), pv);
                                         }
@@ -799,7 +811,7 @@ async fn main() {
             let mut ws_nodes = Vec::new();
             {
                 let dm = data_model.read().await;
-                for (_, instance) in dm.get_all_instances() {
+                for instance in dm.get_all_instances().values() {
                     // İç kök "Game" (DataModel) düğümünü dışarı gönderme
                     if instance.class_name == "DataModel" {
                         continue;

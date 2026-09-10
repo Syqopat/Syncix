@@ -282,7 +282,6 @@ pub fn disa_aktar(dm: &DataModel, kok: Option<&Uuid>) -> (String, usize) {
                 .get_all_instances()
                 .iter()
                 .filter(|(_, n)| n.parent.is_none() && n.class_name != "DataModel")
-                .map(|(u, n)| (u, n))
                 .collect();
             kokler.sort_by(|a, b| a.1.name.cmp(&b.1.name));
             for (_, node) in kokler {
