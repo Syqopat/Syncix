@@ -20,3 +20,10 @@ node_modules/**/*.md
 # yukleme bu yuzden "suspicious content" diye reddedildi. Depoda kaynak olarak
 # duruyorlar; pakete PNG surumleri gidiyor.
 resources/*.svg
+
+# node_modules pakete GIRMIYOR.
+# Marketplace tarayicisi ham node_modules'u "suspicious content" sayip
+# yuklemeyi reddediyor. Bagimliliklar build.js ile out/extension.js icine
+# gomuluyor, yani pakette ayrica durmalarina gerek yok.
+node_modules/**
+build.js

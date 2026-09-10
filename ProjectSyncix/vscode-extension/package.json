@@ -195,10 +195,11 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "package": "npm run compile && vsce package --allow-missing-repository"
+    "vscode:prepublish": "npm run typecheck && npm run compile",
+    "compile": "node build.js",
+    "watch": "node build.js --watch",
+    "package": "npm run vscode:prepublish && vsce package",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "ws": "^8.13.0"
@@ -207,6 +208,7 @@
     "@types/node": "^16.18.34",
     "@types/vscode": "^1.80.0",
     "@types/ws": "^8.5.5",
+    "esbuild": "^0.28.2",
     "typescript": "^5.0.0"
   },
   "repository": {
@@ -229,5 +231,8 @@
   "galleryBanner": {
     "color": "#1E2128",
     "theme": "dark"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }
