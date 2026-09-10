@@ -60,7 +60,7 @@ export class PendingRequestQueue {
             }
         }
 
-        // Expired olanları reject et
+        // Reject the expired ones
         for (const exp of expiredRequests) {
             if (exp.reject) {
                 exp.reject(new Error("Request TTL expired in queue."));

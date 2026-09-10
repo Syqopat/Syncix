@@ -1,15 +1,15 @@
-//! Roblox XML (.rbxmx / .rbxlx) içe aktarma.
+//! Roblox XML (.rbxmx / .rbxlx) import.
 //!
-//! Dışa aktarma (rbxmx.rs) zaten vardı; içe aktarma yoktu. Bu, Rojo'da olup bizde
-//! olmayan last_item maddeydi: hazır bir model dosyasını ağaca alabilmek.
+//! Export (rbxmx.rs) already existed; import did not. This was the last item Rojo
+//! had and Syncix lacked: bringing a ready-made model file into the tree.
 //!
-//! Kapsam dürüstlüğü: modelimizin tuttuğu tipler okunur (String, Number, Boolean,
-//! Vector3, Color3, UDim2, ProtectedString/Source, token). Tanınmayan property
-//! tipleri ATLANIR ve sayısı bildirilir — sessizce yutulmaz.
+//! Scope, honestly: the types our model holds are read (String, Number, Boolean,
+//! Vector3, Color3, UDim2, ProtectedString/Source, token). Unknown property
+//! types are SKIPPED and their count is reported — never silently swallowed.
 
 use crate::model::PropertyValue;
 
-/// İçe aktarılan single bir instance.
+/// A single imported instance.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImportedNode {
     pub class_name: String,
@@ -19,8 +19,8 @@ pub struct ImportedNode {
     pub children: Vec<ImportedNode>,
 }
 
-/// Enum token sayısını restored_count metne çevirir.
-/// Yalnızca dışa aktarımda tanıdığımız değerler; gerisi atlanır.
+/// Turns an Enum token number back into text.
+/// Only the values export knows; the rest are skipped.
 fn token_to_enum(prop: &str, token: i64) -> Option<String> {
     let item_name = match (prop, token) {
         ("Material", 256) => "Plastic",
@@ -69,8 +69,8 @@ fn sub_text(node_entry: roxmltree::Node, tag_text: &str) -> Option<f64> {
         .and_then(|t| t.trim().parse::<f64>().ok())
 }
 
-/// Tek bir <Properties> sub öğesini PropertyValue'ya çevirir.
-/// Dönüş None ise type_name desteklenmiyor demektir.
+/// Turns a single <Properties> child element into a PropertyValue.
+/// None means the type is not supported.
 fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
     let item_name = p.attribute("name")?.to_string();
     let type_name = p.tag_name().name();
@@ -95,7 +95,7 @@ fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
             b: sub_text(p, "B")? as f32,
         },
         "Color3uint8" => {
-            // Tek bir sayıya paketlenmiş ARGB.
+            // ARGB packed into a single number.
             let package: u32 = text_value.parse().ok()?;
             PropertyValue::Color3 {
                 r: ((package >> 16) & 0xFF) as f32 / 255.0,
@@ -154,8 +154,8 @@ fn read_item(item: roxmltree::Node, skipped: &mut usize) -> Option<ImportedNode>
     })
 }
 
-/// Bir .rbxmx/.rbxlx metnini kök düğüm listesine çevirir.
-/// Dönüş: (kökler, skipped property sayısı)
+/// Turns .rbxmx/.rbxlx text into a list of root nodes.
+/// Returns: (roots, number of skipped properties)
 pub fn parse_text(xml: &str) -> Result<(Vec<ImportedNode>, usize), String> {
     let doc = roxmltree::Document::parse(xml).map_err(|e| format!("XML parse error: {}", e))?;
     let root_dir = doc.root_element();
@@ -173,7 +173,7 @@ pub fn parse_text(xml: &str) -> Result<(Vec<ImportedNode>, usize), String> {
     Ok((root_list, skipped))
 }
 
-/// Ağaçtaki total_count düğüm sayısı.
+/// Total number of nodes in the tree.
 pub fn tally(node_list: &[ImportedNode]) -> usize {
     node_list.iter().map(|d| 1 + tally(&d.children)).sum()
 }
@@ -228,16 +228,16 @@ mod tests {
             al("Material"),
             Some(PropertyValue::String("Enum.Material.Neon".into()))
         );
-        // 4294901760 = 0xFFFF0000 -> kirmizi
+        // 4294901760 = 0xFFFF0000 -> red
         match al("Color") {
             Some(PropertyValue::Color3 { r, g, b }) => {
                 assert!((r - 1.0).abs() < 0.01 && g < 0.01 && b < 0.01);
             }
-            other => panic!("renk okunamadi: {:?}", other),
+            other => panic!("the colour could not be read: {:?}", other),
         }
     }
 
-    /// Taninmayan type_name SESSIZCE yutulmaz, sayilir.
+    /// Unknown type_name is NOT silently swallowed, it is counted.
     #[test]
     fn unknown_type_is_counted() {
         let (_, skipped) = parse_text(SAMPLE_XML).unwrap();
@@ -257,10 +257,10 @@ mod tests {
     #[test]
     fn invalid_input_returns_error() {
         assert!(parse_text("<html></html>").is_err());
-        assert!(parse_text("bozuk").is_err());
+        assert!(parse_text("broken").is_err());
     }
 
-    /// Disa aktarim ile ice aktarim birbirinin tersi olmali.
+    /// Export and import must be each other's inverse.
     #[test]
     fn export_import_round_trip() {
         use crate::model::{DataModel, InstanceNode};

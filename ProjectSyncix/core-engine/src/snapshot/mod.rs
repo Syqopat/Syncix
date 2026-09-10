@@ -2,17 +2,17 @@ use crate::model::InstanceNode;
 use std::collections::VecDeque;
 use std::sync::RwLock;
 
-/// Snapshot Yöneticisi
-/// Verilen DataModel'in (Kök InstanceNode) derin kopyalarını belirli aralıklarla alır.
-/// Geçmişe dönük kopyaları limitli bir kuyrukta tutar (Undo/Redo ve Crash Recovery için).
+/// Snapshot manager
+/// Takes deep copies of the given DataModel (root InstanceNode) at intervals.
+/// Keeps past copies in a bounded queue (for undo/redo and crash recovery).
 pub struct SnapshotManager {
-    /// Undo History (Eski versiyonlar)
+    /// Undo history (older versions)
     history: RwLock<VecDeque<InstanceNode>>,
 
-    /// Redo History (İleri alınan versiyonlar)
+    /// Redo history (versions stepped back from)
     future: RwLock<VecDeque<InstanceNode>>,
 
-    /// Maksimum to_keep snapshot sayısı
+    /// Maximum number of snapshots kept
     max_snapshots: usize,
 }
 
@@ -25,27 +25,27 @@ impl SnapshotManager {
         }
     }
 
-    /// O anki DataModel ağacını Snapshot olarak kaydeder.
+    /// Stores the current DataModel tree as a snapshot.
     pub fn take_snapshot(&self, current_root: &InstanceNode) {
         let mut history = self.history.write().unwrap();
 
-        // Kapasite dolduysa en eskisini at
+        // If capacity is reached, drop the oldest
         if history.len() >= self.max_snapshots {
             history.pop_front();
         }
 
-        // Ağacın Derin Kopyasını (Deep Clone) alıp persist
+        // Take a deep clone of the tree and store it
         history.push_back(current_root.clone());
 
-        // Yeni değişiklik yapıldığında Redo kuyruğu temizlenir
+        // A new change clears the redo queue
         self.future.write().unwrap().clear();
     }
 
-    /// Bir önceki snapshot'a döner (Undo)
+    /// Returns to the previous snapshot (undo)
     pub fn undo(&self, current_root: &InstanceNode) -> Option<InstanceNode> {
         let mut history = self.history.write().unwrap();
         if let Some(previous_state) = history.pop_back() {
-            // Şimdiki durumu future kuyruğuna at
+            // Push the current state to the future queue
             let mut future = self.future.write().unwrap();
             future.push_front(current_root.clone());
 
@@ -54,11 +54,11 @@ impl SnapshotManager {
         None
     }
 
-    /// İleri sarılan bir snapshot'ı restored_count getirir (Redo)
+    /// Brings back a snapshot that was stepped back from (redo)
     pub fn redo(&self, current_root: &InstanceNode) -> Option<InstanceNode> {
         let mut future = self.future.write().unwrap();
         if let Some(next_state) = future.pop_front() {
-            // Şimdiki durumu history kuyruğuna at
+            // Push the current state to the history queue
             let mut history = self.history.write().unwrap();
             history.push_back(current_root.clone());
 
@@ -67,7 +67,7 @@ impl SnapshotManager {
         None
     }
 
-    /// Kaç amount kayıtlı snapshot olduğunu döndürür.
+    /// Returns how many snapshots are stored.
     pub fn history_count(&self) -> usize {
         self.history.read().unwrap().len()
     }

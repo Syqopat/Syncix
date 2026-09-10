@@ -10,15 +10,15 @@ use uuid::Uuid;
 use crate::serializers::part::PartSerializer;
 use crate::serializers::Serializer;
 
-/// Diskteki değişiklikleri izler ve Studio'ya iletir.
-/// ÖNEMLİ: Studio'ya outgoing her raw_value `pv_to_wire` ile cevrilir.
-/// `PropertyValue`'yu dogrudan JSON'a koymak serde'nin disa donuk etiketli
-/// bicimini uretiyor ({"Number":0.5}); eklenti ise duz bicimi bekliyor ve
-/// "unsupported table value for property" diye reddediyor. Bu report_error canli
-/// kullanimda Part.Transparency uzerinde yakalandi.
+/// Watches changes on disk and forwards them to Studio.
+/// IMPORTANT: every value sent to Studio goes through `pv_to_wire`.
+/// Putting a `PropertyValue` straight into JSON produces serde's externally tagged
+/// form ({"Number":0.5}); the plugin expects the plain form and rejects it with
+/// "unsupported table value for property". This bug was caught in live use
+/// on Part.Transparency.
 ///
-/// ÖNEMLİ: Bu modül diske ASLA yazmaz. Diske yazmak yalnızca layout modülünün işidir;
-/// aksi halde iki taraf farklı isim kuralları uygulayıp birbirinin dosyasını ezer.
+/// IMPORTANT: this module NEVER writes to disk. Writing is the layout module's job alone;
+/// otherwise the two sides would apply different naming rules and overwrite each other's files.
 pub async fn start_watcher(
     tx_to_studio: Arc<StudioOutbox>,
     path: &str,
@@ -28,9 +28,9 @@ pub async fn start_watcher(
     ignore: Vec<String>,
     settings_data: crate::project::ProjectConfig,
 ) {
-    // Disk -> Studio yonu kapaliysa izleyiciyi hic baslatmiyoruz.
-    // Sadece gonderimi susturmak yetmezdi: diskteki degisiklik yine de modele
-    // islenir ve bir sonraki yazimda Studio'ya sizardi.
+    // If the disk -> Studio direction is off, the watcher is not started at all.
+    // Silencing only the sending would not be enough: a change on disk would still be
+    // applied to the model and leak to Studio on the next write.
     configure_delete_grace(settings_data.safety_settings.delete_grace_ms);
 
     if !settings_data.mode_value.accepts_from_disk() {
@@ -53,13 +53,13 @@ pub async fn start_watcher(
 
     tokio::task::spawn_blocking(move || {
         let _watcher = watcher;
-        // Silme olaylari HEMEN uygulanmaz. Sebep: bir dosyayi baska klasore
-        // tasimak isletim sisteminde "sil + olustur" olarak goruluyor. Hemen
-        // silseydik tasima, instance'i yok edip yerine fresh kimlikli bir tane
-        // koyardi; property'ler ve sub tree kaybolurdu.
-        // Bunun yerine deletion SILME_BEKLEME_SURESI kadar bekletilir; is_same uuid
-        // bu sure icinde yeniden ortaya cikarsa tasima oldugu anlasilir ve
-        // deletion iptal edilir.
+        // Deletions are NOT applied immediately. Reason: moving a file to another folder
+        // shows up in the operating system as "delete + create". Deleting right away would
+        // turn a move into destroying the instance and creating one with a new identity;
+        // its properties and subtree would be lost.
+        // Instead a deletion waits for the delete grace period; if the same uuid
+        // reappears within that time it was a move, and
+        // the deletion is cancelled.
         let mut pending_deletes: std::collections::HashMap<Uuid, std::time::Instant> =
             std::collections::HashMap::new();
 
@@ -94,11 +94,11 @@ pub async fn start_watcher(
     });
 }
 
-/// Bekleme suresini dolduran silmeleri gercekten uygular.
+/// Actually applies the deletions whose grace period has expired.
 ///
-/// Bekleme, tasima islemini deletion sanmamak icin: isletim sistemi file_path
-/// tasimayi "sil + olustur" olarak bildiriyor. Bu sure icinde file_path restored_count
-/// gelirse deletion iptal edilmis oluyor.
+/// The wait keeps a move from being mistaken for a deletion: the operating system
+/// reports a move as "delete + create". If the file comes back within this time,
+/// the deletion has been cancelled.
 static DELETE_GRACE_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(800);
 
 pub fn configure_delete_grace(ms: u64) {
@@ -162,12 +162,12 @@ fn apply_ripe_deletes(
         });
         let _ = tx_to_vscode.send(msg.to_string());
 
-        // Alt tree da modelden dustu; disk yazicisi agaci yeniden yazsin.
+        // The subtree left the model too; let the disk writer rewrite the tree.
         disk_notify.notify_one();
     }
 }
 
-/// Bir instance'ın güncel halini VS Code Explorer'a bildirir.
+/// Reports the current state of an instance to the VS Code Explorer.
 fn notify_vscode_updated(
     dm: &crate::model::DataModel,
     uuid: &Uuid,
@@ -192,8 +192,8 @@ fn notify_vscode_updated(
 
 fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)> {
     let fname = path.file_name()?.to_str()?;
-    // Sira onemli: ".server.lua" is_same zamanda ".lua" ile bitiyor, once uzun
-    // olanlar denenmeli.
+    // Order matters: ".server.lua" also ends with ".lua", so the longer
+    // suffixes must be tried first.
     let (base, ext) = if let Some(b) = fname.strip_suffix(".server.lua") {
         (b, "server.lua")
     } else if let Some(b) = fname.strip_suffix(".client.lua") {
@@ -204,7 +204,7 @@ fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)
         (fname.strip_suffix(".lua")?, "lua")
     };
 
-    // Konteyner script: klasör adı objenin adıdır (init.server.lua vb.)
+    // Container script: the folder name is the object's name (init.server.lua, etc.)
     if base == "init" {
         let parent_dir = path.parent()?.file_name()?.to_str()?;
         if let Some((dir_name, dir_uuid)) = parent_dir.rsplit_once('_') {
@@ -215,9 +215,9 @@ fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)
         return Some((parent_dir.to_string(), None, ext.to_string()));
     }
 
-    // Yaprak script: yalnızca layout'un ürettiği 8 haneli kısa UUID eki tanınır.
-    // Sayı eki ("Health_2") ARTIK ayrıştırılmaz; layout böyle bir isim üretmiyor ve
-    // ayrıştırmak "Health_2" adlı gerçek objenin adını bozuyordu.
+    // Leaf script: only the 8-character short UUID suffix generated by layout is recognised.
+    // A numeric suffix ("Health_2") is NO LONGER parsed; layout never produces such a name, and
+    // parsing it broke the name of a real object called "Health_2".
     if let Some((name_part, potential_suffix)) = base.rsplit_once('_') {
         if is_short_uuid(potential_suffix) {
             return Some((name_part.to_string(), Some(potential_suffix.to_string()), ext.to_string()));
@@ -227,7 +227,7 @@ fn parse_script_filename(path: &Path) -> Option<(String, Option<String>, String)
     Some((base.to_string(), None, ext.to_string()))
 }
 
-/// layout'un ürettiği kısa UUID eki mi? (tam 8 hane, hepsi hex)
+/// Is this the short UUID suffix generated by layout? (exactly 8 characters, all hex)
 fn is_short_uuid(s: &str) -> bool {
     s.len() == 8 && s.chars().all(|c| c.is_ascii_hexdigit())
 }
@@ -236,15 +236,15 @@ fn is_script_class(class_name: &str) -> bool {
     matches!(class_name, "Script" | "LocalScript" | "ModuleScript")
 }
 
-/// `Ad.meta.json` ya da `init.meta.json` dosyasindan ilgili script dugumunu bulur.
+/// Finds the script node for a `Name.meta.json` or `init.meta.json` file.
 ///
-/// Kural layout.rs ile aynidir:
+/// The rule is the same as in layout.rs:
 ///
-/// - `init.meta.json`  -> node_entry, iceren KLASORUN kendisidir (konteyner script)
-/// - `Ad.meta.json`    -> node_entry, klasorun `Ad` isimli cocugudur
+/// - `init.meta.json`  -> the node is the CONTAINING FOLDER itself (container script)
+/// - `Name.meta.json`  -> the node is the folder's child called `Name`
 ///
-/// Isim cakismasinda layout file_path adina 8 haneli kisa UUID ekler; burada da o ek
-/// ayristirilir, aksi halde iki is_same isimli script birbirine karisirdi.
+/// On a name clash layout appends an 8-character short UUID to the file name; that suffix
+/// is parsed here too, otherwise two scripts with the same name would be mixed up.
 fn meta_target(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> {
     let fname = path.file_name()?.to_str()?;
     let base = fname.strip_suffix(".meta.json")?;
@@ -268,7 +268,7 @@ fn meta_target(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> 
     });
 
     if base == "init" {
-        // Konteyner script: klasorun kendisi bir script dugumu olmali.
+        // Container script: the folder itself must be a script node.
         return dir_node.filter(|u| {
             dm.get_instance(u)
                 .map(|n| is_script_class(&n.class_name))
@@ -293,11 +293,11 @@ fn meta_target(dm: &crate::model::DataModel, path: &Path) -> Option<uuid::Uuid> 
     })
 }
 
-/// `Ad.txt` dosyasini ilgili StringValue'nun Value'suna uygular.
+/// Applies a `Name.txt` file to the Value of the matching StringValue.
 ///
-/// StringValue diske duz text_value olarak yazilir (bkz. layout::script_ext); dolayisiyla
-/// dosyanin icerigi dogrudan Value'dur. Bu, metni JSON kacis karakterleri icinde
-/// duzenlemek zorunda kalmadan editorde acip yazabilmeyi saglar.
+/// A StringValue is written to disk as plain text (see layout::script_ext), so
+/// the file's content is the Value itself. That lets the text be opened and edited
+/// in the editor without dealing with JSON escape characters.
 fn handle_txt_file(
     path: &Path,
     tx_to_studio: &StudioOutbox,
@@ -347,10 +347,10 @@ fn handle_txt_file(
     }
 }
 
-/// `Ad.csv` dosyasini ilgili LocalizationTable'in Contents'ine uygular.
+/// Applies a `Name.csv` file to the Contents of the matching LocalizationTable.
 ///
-/// Ceviriler tabloda duzenlenebilsin diye diske CSV yaziliyor; Roblox tarafinda
-/// karsiligi Contents adli JSON metnidir. Donusum kayipsizdir (localization.rs).
+/// Translations are written to disk as CSV so they can be edited as a table; on the
+/// Roblox side the counterpart is a JSON string called Contents. The conversion is lossless (localization.rs).
 fn handle_csv_file(
     path: &Path,
     tx_to_studio: &StudioOutbox,
@@ -408,8 +408,8 @@ fn handle_csv_file(
     }
 }
 
-/// Ham file_content dosyalarinin (.txt gibi) sahibi olan dugumu bulur.
-/// meta_target ile is_same isim kurallarini kullanir.
+/// Finds the node that owns a raw-content file (such as .txt).
+/// Uses the same naming rules as meta_target.
 fn raw_file_target(
     dm: &crate::model::DataModel,
     path: &Path,
@@ -459,7 +459,7 @@ fn raw_file_target(
     })
 }
 
-/// Disk uzerindeki bir .meta.json degisikligini modele ve Studio'ya uygular.
+/// Applies a .meta.json change on disk to the model and to Studio.
 fn handle_meta_file(
     path: &Path,
     tx_to_studio: &StudioOutbox,
@@ -472,7 +472,7 @@ fn handle_meta_file(
         Ok(m) => m,
         Err(e) => {
             tracing::warn!("Could not read meta file ({:?}): {}", path, e);
-            return true; // dosyayi tanidik ama icerigi bozuk; json dalina dusmesin
+            return true; // recognised file with broken content; must not fall through to the json branch
         }
     };
 
@@ -485,8 +485,8 @@ fn handle_meta_file(
         return true;
     };
 
-    // Yalnizca GERCEKTEN degisenler gonderilir; aksi halde her disk yaziminda
-    // Studio'ya gereksiz patch yagardi.
+    // Only values that REALLY changed are sent; otherwise every disk write
+    // would flood Studio with needless patches.
     let mut patches = Vec::new();
     {
         let mut dm = data_model.blocking_write();
@@ -521,9 +521,9 @@ fn handle_meta_file(
             }
         }
 
-        // Etiketler liste halinde karsilastirilir: attribute gibi single single degil,
-        // cunku tag_text "var/yok" bilgisidir; dosyadan cikarilan tag_text gercekten
-        // silinmistir. Property'lerden ayrilmasinin sebebi de bu.
+        // Tags are compared as a list, not one by one like attributes,
+        // because a tag is present-or-absent information: a tag removed from the file really
+        // was deleted. That is also why tags are handled separately from properties.
         {
             let mut in_file = meta.tags.clone();
             in_file.sort();
@@ -537,17 +537,17 @@ fn handle_meta_file(
             }
         }
 
-        // PROPERTY ile ATTRIBUTE burada bilerek FARKLI davranir.
+        // PROPERTIES and ATTRIBUTES deliberately behave DIFFERENTLY here.
         //
-        // Attribute kullanicinin ekledigi ek bir alandir, silinebilir.
-        // Property ise Roblox'ta her zaman bir degere sahiptir: Anchored "silinemez",
-        // yalnizca true/false olabilir. Bu yuzden bir property'yi meta dosyasindan
-        // cikarmak "Studio'da sil" anlamina GELMEZ; olsa olsa "Syncix bunu artik
-        // kaydetmesin" demektir. Studio o property'yi izlemeye devam ettigi icin
-        // raw_value bir sonraki senkronda restored_count gelir.
+        // An attribute is an extra field the user added; it can be deleted.
+        // A property always has a value in Roblox: Anchored cannot be "deleted",
+        // it can only be true or false. So removing a property from the meta file
+        // does NOT mean "delete it in Studio"; at most it means "Syncix should stop
+        // recording it". Studio keeps observing that property, so its
+        // value comes back on the next sync.
         //
-        // Bu yuzden property yoklugunda hicbir sey yapmiyoruz, ama kullanici
-        // beklentisi bosa cikmasin diye durumu loga yaziyoruz.
+        // So nothing is done when a property is missing, but it is logged so the user's
+        // expectation is not silently ignored.
         let missing_properties: Vec<&String> = node
             .properties
             .keys()
@@ -562,11 +562,11 @@ fn handle_meta_file(
             );
         }
 
-        // Dosyada ARTIK OLMAYAN attribute silinmis demektir.
+        // An attribute that is NO LONGER in the file has been deleted.
         //
-        // Bu ancak yazim kaydi korumasi sayesinde guvenli: own yazdigimiz dosyayi
-        // again okumadigimiz icin "eksik" olan sey gercekten kullanicinin sildigi
-        // seydir, gecikmis bir olayin previous_text hali degil.
+        // This is only safe thanks to the write-log protection: we never read back a file
+        // we wrote ourselves, so whatever is "missing" is something the user actually
+        // deleted, not an old version from a delayed event.
         let delete_list: Vec<String> = node
             .attributes
             .keys()
@@ -594,10 +594,10 @@ fn handle_meta_file(
     true
 }
 
-// Argumanlarin cogu bagimsiz kanal (Studio kuyrugu, model, editor yayini, disk
-// uyarisi) ve hepsi single bir olayin islenmesinde gerekli. Tek bir yapiya
-// toplamak, cagri zincirindeki her halkanin o yapiyi tasimasini gerektirirdi;
-// okunurlugu arttirmiyor.
+// Most arguments are independent channels (Studio queue, model, editor broadcast, disk
+// notification) and all of them are needed to handle a single event. Bundling them
+// into one struct would force every link in the call chain to carry it;
+// it would not make the code easier to read.
 #[allow(clippy::too_many_arguments)]
 fn handle_event(
     event: Event,
@@ -610,18 +610,18 @@ fn handle_event(
     ignore: &[String],
     pending_deletes: &mut std::collections::HashMap<Uuid, std::time::Instant>,
 ) {
-    // Askidayken diskten hicbir sey okunmaz ve Studio'ya hicbir sey gonderilmez.
-    // Asil tehlike buydu: modelde olmayan bir file_path "yeni obje" sanilip Studio'ya
-    // yaratiliyordu; yanlis place bagliyken bu, previous_text oyunun fresh place'e
-    // dolmasi demekti.
+    // While suspended nothing is read from disk and nothing is sent to Studio.
+    // This was the real danger: a file not in the model was taken for a "new object" and
+    // created in Studio; with the wrong place bound, that meant the old game spilling
+    // into the new place.
     if crate::project::is_sync_suspended() {
         return;
     }
 
-    // Silme: uzun sure tamamen yok sayiliyordu, cunku disk yazicisi agaci
-    // yeniden yazarken file_path siliyor ve bunlar yanlis DESTROY uretiyordu.
-    // Artik yazicinin own silmeleri kayitli oldugu icin ayirt edilebiliyor:
-    // kayitta olmayan bir deletion gercek kullanici silmesidir.
+    // Deletions used to be ignored entirely, because the disk writer deletes
+    // files while rewriting the tree and those produced false DESTROYs.
+    // Now the writer's own deletions are recorded, so they can be told apart:
+    // a deletion that is not in the record is a real user deletion.
     if matches!(event.kind, EventKind::Remove(_)) {
         for path in &event.paths {
             if crate::layout::is_ignored(path, sync_dir, ignore) {
@@ -639,8 +639,8 @@ fn handle_event(
                     info!("A file was deleted from disk: {}", path.display());
                     pending_deletes.insert(u, std::time::Instant::now());
                 }
-                // Sessizce dusen silmeler tesise edilemiyordu: fs_path eslestirmesi
-                // bozuldugunda hicbir iz kalmiyordu.
+                // Silently dropped deletes could not be traced: when fs_path matching
+                // was broken, no trace was left.
                 None => info!(
                     "A file was deleted but no instance matched it, so nothing was removed: {}",
                     path.display()
@@ -650,7 +650,7 @@ fn handle_event(
         return;
     }
 
-    // Yalnızca içerik oluşturma/değiştirme olaylarıyla ilgileniyoruz.
+    // Only content create/modify events are of interest.
     let is_relevant = matches!(
         event.kind,
         EventKind::Any | EventKind::Modify(_) | EventKind::Create(_)
@@ -659,8 +659,8 @@ fn handle_event(
         return;
     }
 
-    // Bir file_path yeniden ortaya ciktiysa o instance silinmemis, TASINMIS demektir.
-    // Bekleyen deletion iptal edilir.
+    // If a file reappeared, its instance was not deleted but MOVED.
+    // The pending deletion is cancelled.
     if !pending_deletes.is_empty() {
         let dm = data_model.blocking_read();
         for path in &event.paths {
@@ -678,22 +678,22 @@ fn handle_event(
     }
 
     for path in &event.paths {
-        // Kullanicinin yok saydirdigi yollar okunmaz.
+        // Paths the user chose to ignore are not read.
         if crate::layout::is_ignored(path, sync_dir, ignore) {
             continue;
         }
 
-        // Kendi yazimimizi isleme: disk yazicisi bir dosyayi yazdiginda izleyici
-        // bunu kullanici degisikligi saniyordu. Olaylar gecikmeli geldigi icin
-        // bazen dosyanin ESKI hali okunup model geriye sariliyordu.
+        // Do not process our own writes: when the disk writer wrote a file, the watcher
+        // took it for a user change. Because events arrive late, the OLD
+        // version of the file was sometimes read and the model rolled back.
         if let Ok(current_value) = fs::read_to_string(path) {
             if crate::layout::is_own_write(path, &current_value) {
                 continue;
             }
         }
 
-        // .meta.json uzantisi "json" oldugu icin asagidaki json dalina duser ve
-        // InstanceNode olarak cozulemeyip sessizce yutulurdu. Once burada yakalanir.
+        // The .meta.json extension is "json", so it would fall into the json branch below
+        // and be silently swallowed when it failed to parse as an InstanceNode. It is caught here first.
         if path
             .file_name()
             .and_then(|f| f.to_str())
@@ -807,8 +807,8 @@ fn handle_event(
                         None
                     };
 
-                    // UUID ekiyle search; bulunamazsa (ör. kullanıcı eki sildi) isim
-                    // eşleşmesine düşülür — böylece file_path sahipsiz kalmaz.
+                    // Search by UUID suffix; if not found (e.g. the user removed the suffix) fall back to
+                    // name matching, so the file is never left without an owner.
                     let by_uuid = lua_uuid_opt
                         .as_ref()
                         .and_then(|s| dm.find_by_short_uuid(s));
@@ -862,12 +862,12 @@ fn handle_event(
                         None
                     };
 
-                    // TASIMA. Bir dosyayi baska klasore tasimak isletim sisteminde
-                    // "sil + olustur" olarak gorunuyor. Yukaridaki eslestirmeler
-                    // yalnizca AYNI klasore bakiyor, dolayisiyla tasinan file_path
-                    // sahipsiz kaliyor ve ikinci bir instance yaratiliyordu.
-                    // Bekleyen silmeler arasinda is_same adda ve is_same sinifta bir
-                    // script varsa bu fresh bir obje degil, tasinmis olanidir.
+                    // MOVE. Moving a file to another folder shows up in the operating system as
+                    // "delete + create". The matching above
+                    // only looks at the SAME folder, so a moved file
+                    // had no owner and a second instance was created.
+                    // If a pending deletion has a script with the same name and class,
+                    // this is not a new object but the moved one.
                     let target_uuid = target_uuid.or_else(|| {
                         pending_deletes.keys().copied().find(|u| {
                             dm.get_instance(u)
@@ -877,11 +877,11 @@ fn handle_event(
                     });
 
                     if let Some(uuid) = target_uuid {
-                        // Tasima olarak eslestiyse deletion iptal edilir.
+                        // If it matched as a move, the deletion is cancelled.
                         pending_deletes.remove(&uuid);
 
-                        // Yeni folder_path baska bir ebeveyne isaret ediyorsa objenin
-                        // agactaki yeri de degismeli.
+                        // If the new folder points to another parent, the object's
+                        // place in the tree must change too.
                         let parent_diff = match (parent_uuid_opt, dm.get_instance(&uuid).and_then(|n| n.parent)) {
                             (Some(fresh), previous_text) if Some(fresh) != previous_text => Some(fresh),
                             _ => None,
@@ -944,7 +944,7 @@ fn handle_event(
                                     inst.name = clean_name.clone();
                                 }
                             }
-                            // Editöre bildir + diski tazele (isim değişti, fs_path değişebilir)
+                            // Notify the editor + refresh disk (the name changed, the path may change)
                             {
                                 let dm_read = data_model.blocking_read();
                                 notify_vscode_updated(&dm_read, &uuid, tx_to_vscode, "INSTANCE_UPDATED");
@@ -979,9 +979,9 @@ fn handle_event(
                             }
                         }
 
-                        // NOT: Dosyayı burada yeniden adlandırmıyoruz. Diskin doğru
-                        // isimlendirmesi layout modülünün sorumluluğunda; iki taraf
-                        // farklı kural uygularsa file_path adı savaşı/döngü oluşuyordu.
+                        // NOTE: the file is not renamed here. Correct naming on disk
+                        // is the layout module's responsibility; when the two sides
+                        // applied different rules, file names fought back and forth in a loop.
                     } else if let Some(parent_uuid) = parent_uuid_opt {
                         drop(dm);
                         let new_uuid = Uuid::new_v4();
@@ -1031,7 +1031,7 @@ fn handle_event(
                             let mut dm_write = data_model.blocking_write();
                             let _ = dm_write.upsert_instance(new_node);
                         }
-                        // Editöre bildir + diski tazele
+                        // Notify the editor + refresh disk
                         {
                             let dm_read = data_model.blocking_read();
                             notify_vscode_updated(&dm_read, &new_uuid, tx_to_vscode, "INSTANCE_CREATED");

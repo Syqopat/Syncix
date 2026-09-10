@@ -1,43 +1,44 @@
 #!/bin/sh
-# Luau sözdizimi denetimi.
+# Luau syntax check.
 #
-# luau CLI'da "yalnızca derle" bayrağı yok, dosya çalıştırılıyor. Roblox API'si
-# (game, Instance, plugin) burada bulunmadığı için her dosya çalışma zamanında
-# hata verir; bu BEKLENEN durumdur ve yok sayılır.
+# The luau CLI has no "compile only" flag, so each file is executed. The Roblox API
+# (game, Instance, plugin) does not exist here, so every file fails at runtime;
+# that is EXPECTED and ignored.
 #
-# Ayırt etme kuralı: luau her iki hatayı da "dosya:satır: mesaj" + "stacktrace:"
-# biçiminde basar. Fark şu: DERLEME (sözdizimi) hatasında stacktrace BOŞtur,
-# çünkü hiç kod çalışmamıştır. Çalışma zamanı hatasında en az bir çerçeve vardır.
+# How the two are told apart: luau prints both kinds of error as
+# "file:line: message" + "stacktrace:". The difference: for a COMPILE (syntax)
+# error the stack trace is EMPTY, because no code ran. A runtime error has at
+# least one frame.
 #
-# Kullanım:  sh tools/luau-check.sh dosya1.lua dosya2.lua ...
-#            sh tools/luau-check.sh $(find studio-plugin/src -name "*.lua")
+# Usage:  sh tools/luau-check.sh file1.lua file2.lua ...
+#         sh tools/luau-check.sh $(find studio-plugin/src -name "*.lua")
 
-HATA=0
+FAILED=0
 
 for f in "$@"; do
-	CIKTI=$(luau "$f" 2>&1)
+	OUTPUT=$(luau "$f" 2>&1)
 
-	if [ -z "$CIKTI" ]; then
+	if [ -z "$OUTPUT" ]; then
 		echo "OK                $f"
 		continue
 	fi
 
-	# "stacktrace:" satırından SONRAKİ boş olmayan satır sayısı
-	CERCEVE=$(echo "$CIKTI" | sed -n '/^stacktrace:/,$p' | tail -n +2 | grep -c '[^[:space:]]')
+	# Number of non-empty lines AFTER the "stacktrace:" line
+	FRAMES=$(echo "$OUTPUT" | sed -n '/^stacktrace:/,$p' | tail -n +2 | grep -c '[^[:space:]]')
 
-	if [ "$CERCEVE" -eq 0 ]; then
-		echo "SOZDIZIMI HATASI  $f"
-		echo "$CIKTI" | head -2 | sed 's/^/    /'
-		HATA=1
+	if [ "$FRAMES" -eq 0 ]; then
+		echo "SYNTAX ERROR      $f"
+		echo "$OUTPUT" | head -2 | sed 's/^/    /'
+		FAILED=1
 	else
 		echo "OK                $f"
 	fi
 done
 
-if [ "$HATA" -ne 0 ]; then
-	echo "SONUC: sozdizimi hatasi var"
+if [ "$FAILED" -ne 0 ]; then
+	echo "RESULT: syntax errors found"
 else
-	echo "SONUC: tum dosyalar temiz"
+	echo "RESULT: all files clean"
 fi
 
-exit $HATA
+exit $FAILED

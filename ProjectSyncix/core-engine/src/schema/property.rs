@@ -10,10 +10,10 @@ pub enum PropertyType {
     Vector3,
     Color3,
     CFrame,
-    Enum(Vec<String>), // Enum seçenekleri
+    Enum(Vec<String>), // enum options
     UDim,
     UDim2,
-    Reference, // Instance referansı
+    Reference, // instance reference
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,20 +1,20 @@
-//! Roblox XML (.rbxmx / .rbxlx) dışa aktarımı.
+//! Roblox XML (.rbxmx / .rbxlx) export.
 //!
-//! Neden gerekli: Rojo'da `rojo build` ile projeden bir yer/model dosyası
-//! üretilebiliyordu, Syncix'te bu yoktu (pipeline/mod.rs içindeki export_to_rbxlx
-//! `unimplemented!()` idi). CI'da "kod derleniyor mu, ağaç kuruluyor mu" denetimi
-//! ve Studio'ya elle içe aktarma için gerekli.
+//! Why it is needed: Rojo could build a place/model file from a project with
+//! `rojo build`; Syncix could not (export_to_rbxlx in pipeline/mod.rs
+//! was `unimplemented!()`). It is needed for a CI check that the code builds and the
+//! tree assembles, and for importing into Studio by hand.
 //!
-//! Kapsam dürüstlüğü: Syncix'in modeli yalnızca String, Number, Boolean, Vector3,
-//! Color3 ve UDim2 tutar. Dolayısıyla bu yazıcı, modelin tuttuğu HER ŞEYİ yazar —
-//! kayıp yazıcıda değil modeldedir. Enum değerleri text_value olarak saklandığı için
-//! yaygın olanlar sayısal token'a çevrilir; tanınmayan enum'lar atlanır ve sayısı
-//! bildirilir.
+//! Scope, honestly: Syncix's model holds String, Number, Boolean, Vector3,
+//! Color3 and UDim2. So this writer writes EVERYTHING the model holds —
+//! the loss is in the model, not the writer. Enum values are stored as text, so
+//! common ones are converted to numeric tokens; unknown enums are skipped and their
+//! count is reported.
 
 use crate::model::{DataModel, InstanceNode, PropertyValue};
 use uuid::Uuid;
 
-/// XML text_value kaçışı.
+/// XML text escaping.
 fn escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -23,8 +23,8 @@ fn escape(s: &str) -> String {
         .replace('\'', "&apos;")
 }
 
-/// Yaygın Enum değerleri için sayısal token karşılıkları.
-/// Roblox XML'inde enum'lar `<token>` olarak sayı ile yazılır.
+/// Numeric token equivalents of common Enum values.
+/// In Roblox XML enums are written as a number in `<token>`.
 fn enum_token(raw_value: &str) -> Option<u32> {
     let token = match raw_value {
         // Material
@@ -83,7 +83,7 @@ fn enum_token(raw_value: &str) -> Option<u32> {
     Some(token)
 }
 
-/// Script sınıflarında origin script_code `ProtectedString` olarak yazılır.
+/// For script classes the source is written as a `ProtectedString`.
 fn looks_like_script(class_name: &str) -> bool {
     matches!(class_name, "Script" | "LocalScript" | "ModuleScript")
 }
@@ -96,7 +96,7 @@ struct ExportCounters {
 fn write_property(out_text: &mut String, item_name: &str, raw_value: &PropertyValue, counter: &mut ExportCounters) {
     match raw_value {
         PropertyValue::String(s) => {
-            // Metin bir Enum olabilir; öyleyse token olarak yazılmalı.
+            // The text may be an Enum; if so it must be written as a token.
             if s.starts_with("Enum.") {
                 match enum_token(s) {
                     Some(t) => out_text.push_str(&format!(
@@ -132,7 +132,7 @@ fn write_property(out_text: &mut String, item_name: &str, raw_value: &PropertyVa
             z
         )),
         PropertyValue::Color3 { r, g, b } => {
-            // BasePart.Color Roblox XML'inde Color3uint8 olarak tutulur.
+            // BasePart.Color is kept as Color3uint8 in Roblox XML.
             if item_name == "Color" {
                 let package = 0xFF00_0000u32
                     | ((r * 255.0).round() as u32) << 16
@@ -190,12 +190,12 @@ fn write_property(out_text: &mut String, item_name: &str, raw_value: &PropertyVa
             min,
             max
         )),
-        // Instance referanslari XML'de <Ref> ile referent'a is_bound; bizim UUID'miz
-        // referent degil. Yanlis bir baglanti yazmaktansa atliyoruz.
+        // Instance references are bound to a referent with <Ref> in XML; our UUID
+        // is not a referent. Rather than write a wrong link, they are skipped.
         PropertyValue::Ref(_) => counter.skipped_enums += 1,
-        // Roblox XML'inde BrickColor sayisal palet koduyla yazilir; bizde item_name exists_flag,
-        // script_code yok. Yanlis bir script_code yazmaktansa atliyoruz — is_same bilgiyi Color3
-        // zaten tasiyor.
+        // In Roblox XML BrickColor is written as a numeric palette code; we store the name,
+        // not the code. Rather than write a wrong code it is skipped — Color3 already
+        // carries the same information.
         PropertyValue::BrickColor(_) => counter.skipped_enums += 1,
         PropertyValue::Content(u) => out_text.push_str(&format!(
             "			<Content name=\"{}\"><url>{}</url></Content>
@@ -203,8 +203,8 @@ fn write_property(out_text: &mut String, item_name: &str, raw_value: &PropertyVa
             escape(item_name),
             escape(u)
         )),
-        // Bu tiplerin XML gosterimi bilesik; yanlis yazmaktansa atlaniyorlar.
-        // Ayni print_info Studio ile dogrudan senkronda tam olarak tasiniyor.
+        // These types have compound XML forms; rather than written wrongly, they are skipped.
+        // The same information is carried in full by direct sync with Studio.
         PropertyValue::ColorSequence(_)
         | PropertyValue::NumberSequence(_)
         | PropertyValue::Rect { .. }
@@ -227,7 +227,7 @@ fn write_node(out_text: &mut String, dm: &DataModel, node: &InstanceNode, counte
         escape(&node.name)
     ));
 
-    // Özellikler ada göre sıralı yazılır ki çıktı belirleyici olsun (CI diff'i için).
+    // Properties are written sorted by name so the output is deterministic (for CI diffs).
     let mut key_names: Vec<&String> = node.properties.keys().collect();
     key_names.sort();
     for item_name in key_names {
@@ -241,13 +241,13 @@ fn write_node(out_text: &mut String, dm: &DataModel, node: &InstanceNode, counte
         let origin = node.source.clone().unwrap_or_default();
         out_text.push_str(&format!(
             "\t\t\t<ProtectedString name=\"Source\"><![CDATA[{}]]></ProtectedString>\n",
-            // CDATA içinde "]]>" dizisi bölünmek zorunda.
+            // The sequence "]]>" has to be split inside CDATA.
             origin.replace("]]>", "]]]]><![CDATA[>")
         ));
     }
 
-    // Attribute'lar Roblox XML'inde ikili bir blob olarak tutulur; text_value biçiminde
-    // güvenilir şekilde yazılamaz. Bu yüzden dışa aktarımda atlanır (bkz. README).
+    // Attributes are kept as a binary blob in Roblox XML and cannot be written
+    // reliably as text. So they are skipped on export (see README).
 
     out_text.push_str("\t\t</Properties>\n");
 
@@ -260,10 +260,10 @@ fn write_node(out_text: &mut String, dm: &DataModel, node: &InstanceNode, counte
     out_text.push_str("\t</Item>\n");
 }
 
-/// Tüm ağacı Roblox XML olarak döndürür.
-/// `kok`: verilirse yalnızca o sub ağaç yazılır (model dosyası), verilmezse
-/// bütün service_list yazılır (yer dosyası).
-/// Dönüş: (xml, atlanan_enum_sayisi)
+/// Returns the whole tree as Roblox XML.
+/// `root`: if given, only that subtree is written (model file); otherwise
+/// every service is written (place file).
+/// Returns: (xml, skipped_enum_count)
 pub fn export_rbxmx(dm: &DataModel, root_dir: Option<&Uuid>) -> (String, usize) {
     let mut out_text = String::from("<roblox version=\"4\">\n");
     let mut counter = ExportCounters {
@@ -310,21 +310,21 @@ mod tests {
     fn basic_structure_and_hierarchy() {
         let mut m = DataModel::new();
         let ws = add_instance(&mut m, "Workspace", "Workspace", None);
-        add_instance(&mut m, "Part", "Kutu", Some(ws));
+        add_instance(&mut m, "Part", "Box", Some(ws));
 
         let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.starts_with("<roblox version=\"4\">"));
         assert!(xml.ends_with("</roblox>\n"));
         assert!(xml.contains("class=\"Workspace\""));
         assert!(xml.contains("class=\"Part\""));
-        assert!(xml.contains("<string name=\"Name\">Kutu</string>"));
+        assert!(xml.contains("<string name=\"Name\">Box</string>"));
     }
 
     #[test]
     fn vector3_and_color_are_written_correctly() {
         let mut m = DataModel::new();
         let ws = add_instance(&mut m, "Workspace", "Workspace", None);
-        let p = add_instance(&mut m, "Part", "Kutu", Some(ws));
+        let p = add_instance(&mut m, "Part", "Box", Some(ws));
         {
             let n = m.get_mut_instance(&p).unwrap();
             n.properties.insert(
@@ -339,10 +339,10 @@ mod tests {
 
         let (xml, _) = export_rbxmx(&m, None);
         assert!(xml.contains("<X>1</X><Y>2</Y><Z>3</Z>"));
-        // Kirmizi: 0xFFFF0000
+        // Red: 0xFFFF0000
         assert!(
             xml.contains(&format!("<Color3uint8 name=\"Color\">{}</Color3uint8>", 0xFFFF0000u32)),
-            "renk paketlenmedi: {}",
+            "the colour was not packed: {}",
             xml
         );
     }
@@ -351,7 +351,7 @@ mod tests {
     fn enum_becomes_token_unknown_is_skipped() {
         let mut m = DataModel::new();
         let ws = add_instance(&mut m, "Workspace", "Workspace", None);
-        let p = add_instance(&mut m, "Part", "Kutu", Some(ws));
+        let p = add_instance(&mut m, "Part", "Box", Some(ws));
         {
             let n = m.get_mut_instance(&p).unwrap();
             n.properties.insert(
@@ -359,26 +359,26 @@ mod tests {
                 PropertyValue::String("Enum.Material.Neon".into()),
             );
             n.properties.insert(
-                "Bilinmeyen".into(),
-                PropertyValue::String("Enum.Yok.Boyle".into()),
+                "Unknown".into(),
+                PropertyValue::String("Enum.Not.Real".into()),
             );
         }
 
         let (xml, skipped) = export_rbxmx(&m, None);
         assert!(xml.contains("<token name=\"Material\">288</token>"));
-        assert_eq!(skipped, 1, "taninmayan enum sayilmali");
-        assert!(!xml.contains("Enum.Yok.Boyle"), "gecersiz enum yazilmamali");
+        assert_eq!(skipped, 1, "unknown enum should be counted");
+        assert!(!xml.contains("Enum.Not.Real"), "an invalid enum must not be written");
     }
 
     #[test]
     fn script_source_is_in_cdata() {
         let mut m = DataModel::new();
         let sss = add_instance(&mut m, "ServerScriptService", "ServerScriptService", None);
-        let s = add_instance(&mut m, "Script", "Ana", Some(sss));
-        m.get_mut_instance(&s).unwrap().source = Some("print(\"merhaba\")".into());
+        let s = add_instance(&mut m, "Script", "Main", Some(sss));
+        m.get_mut_instance(&s).unwrap().source = Some("print(\"hello\")".into());
 
         let (xml, _) = export_rbxmx(&m, None);
-        assert!(xml.contains("<![CDATA[print(\"merhaba\")]]>"));
+        assert!(xml.contains("<![CDATA[print(\"hello\")]]>"));
     }
 
     #[test]
@@ -395,13 +395,13 @@ mod tests {
     fn single_subtree_can_be_exported() {
         let mut m = DataModel::new();
         let ws = add_instance(&mut m, "Workspace", "Workspace", None);
-        let folder_path = add_instance(&mut m, "Folder", "Sadece", Some(ws));
+        let folder_path = add_instance(&mut m, "Folder", "OnlyThis", Some(ws));
         add_instance(&mut m, "Part", "Icerik", Some(folder_path));
         add_instance(&mut m, "Part", "Disarida", Some(ws));
 
         let (xml, _) = export_rbxmx(&m, Some(&folder_path));
-        assert!(xml.contains("Sadece"));
+        assert!(xml.contains("OnlyThis"));
         assert!(xml.contains("Icerik"));
-        assert!(!xml.contains("Disarida"), "alt agac disi obje yazilmamali");
+        assert!(!xml.contains("Disarida"), "an object outside the subtree must not be written");
     }
 }

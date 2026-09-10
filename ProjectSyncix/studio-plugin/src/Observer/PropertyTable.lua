@@ -1,17 +1,17 @@
--- OTOMATIK URETILDI - ELLE DUZENLEMEYIN
+-- AUTO-GENERATED - DO NOT EDIT BY HAND
 --
--- Kaynak : Roblox Studio API dokumu (1)
--- Ureten : tools/gen-properties.py
+-- Source    : Roblox Studio API dump (1)
+-- Generator : tools/gen-properties.py
 --
--- Neden var: property listeleri elle yaziliyordu ve yalnizca 12 sinifi
--- kapsiyordu. Model, Humanoid, ParticleEmitter gibi her sey yalnizca yapisal
--- olarak senkron oluyor, tek bir ayari bile gitmiyordu.
+-- Why it exists: property lists used to be written by hand and covered only 12
+-- classes. Model, Humanoid, ParticleEmitter and everything else synced only
+-- structurally; not a single setting went across.
 --
--- Bicim: ["Sinif"] = { u = ustSinif, p = { ["Property"] = tipKodu } }
---   p = ilkel (string/bool/numValue)   d = veri tipi (Vector3, CFrame, ...)
---   e = enum (text olarak)        r = baska bir instance'a referans
+-- Format: ["Class"] = { u = superclass, p = { ["Property"] = typeCode } }
+--   p = primitive (string/bool/number)   d = data type (Vector3, CFrame, ...)
+--   e = enum (as text)                   r = reference to another instance
 --
--- Ust siniftaki property'ler calisma aninda birlestirilir (bkz. PatchBuilder).
+-- Properties of superclasses are merged at runtime (see PatchBuilder).
 
 return {
 	["Accessory"]={u="Accoutrement",p={}},

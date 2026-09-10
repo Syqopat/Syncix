@@ -1,6 +1,6 @@
 --!strict
 -- SubscriptionManager
--- RBXScriptSignal nesnelerini (Eventleri) toplu halde yönetir, Memory Leak oluşmasını engeller.
+-- Manages RBXScriptSignal connections (events) in bulk and prevents memory leaks.
 
 local SubscriptionManager = {}
 SubscriptionManager.__index = SubscriptionManager
@@ -8,17 +8,17 @@ SubscriptionManager.__index = SubscriptionManager
 function SubscriptionManager.new()
     local self = setmetatable({}, SubscriptionManager)
     
-    -- UUID bazında tüm bağlantıları (Connection) tutar
+    -- Keeps every connection per UUID
     self.connections = {}
     
     return self
 end
 
 function SubscriptionManager:OnInit(container)
-    -- İhtiyaç duyulursa diğer servisler çekilir
+    -- Other services are fetched when needed
 end
 
--- Bir instance için fresh bir event aboneliği oluşturur.
+-- Creates a new event subscription for an instance.
 function SubscriptionManager:Subscribe(uuid: string, signal: RBXScriptSignal, callback: (...any) -> ())
     local connection = signal:Connect(callback)
     
@@ -29,7 +29,7 @@ function SubscriptionManager:Subscribe(uuid: string, signal: RBXScriptSignal, ca
     table.insert(self.connections[uuid], connection)
 end
 
--- Bir instance'ın tüm aboneliklerini temizler (Yok edildiğinde memory leak olmaması için).
+-- Clears every subscription of an instance (so nothing leaks when it is destroyed).
 function SubscriptionManager:UnsubscribeAll(uuid: string)
     local instanceConnections = self.connections[uuid]
     if instanceConnections then
@@ -40,7 +40,7 @@ function SubscriptionManager:UnsubscribeAll(uuid: string)
     end
 end
 
--- Tüm sistemdeki abonelikleri siler (Plugin kapanırken).
+-- Removes every subscription in the system (when the plugin shuts down).
 function SubscriptionManager:Shutdown()
     for uuid, _ in pairs(self.connections) do
         self:UnsubscribeAll(uuid)

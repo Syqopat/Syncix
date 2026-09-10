@@ -1,12 +1,12 @@
 /**
- * Ortam çözümlemesi: core'un adresi ve platforma göre dosya yolları.
+ * Environment resolution: the core's address and platform-specific file paths.
  *
- * Neden ayrı bir modül:
- *  - Adres eskiden dört ayrı dosyada 'http://127.0.0.1:8080' olarak sabit yazılıydı.
- *    Port artık değişebiliyor (core dolu portu atlıyor), dolayısıyla tek bir
- *    kaynaktan okunmak zorunda.
- *  - Windows varsayımları (.exe, powershell, taskkill) de aynı şekilde dağınıktı.
- *    Roblox Studio macOS'ta da çalışıyor; bu varsayımlar burada tek yerde toplandı.
+ * Why a separate module:
+ *  - The address used to be hard-coded as 'http://127.0.0.1:8080' in four separate files.
+ *    The port can change now (the core skips a taken port), so it has to be read
+ *    from a single source.
+ *  - Windows assumptions (.exe, powershell, taskkill) were scattered the same way.
+ *    Roblox Studio also runs on macOS; these assumptions are gathered here in one place.
  */
 
 import * as fs from 'fs';
@@ -18,7 +18,7 @@ const PORT_RANGE = 10;
 
 let baseUrl = `http://127.0.0.1:${DEFAULT_PORT}`;
 
-/** Core'un HTTP adresi (ör. http://127.0.0.1:8081). */
+/** HTTP address of the core (e.g. http://127.0.0.1:8081). */
 export function getBaseUrl(): string {
     return baseUrl;
 }
@@ -28,7 +28,7 @@ export function getWsUrl(): string {
     return baseUrl.replace(/^http/, 'ws') + '/rpc';
 }
 
-/** Belirli bir portta Syncix core var mı? Varsa /health cevabını döndürür. */
+/** Is there a Syncix core on the given port? If so, returns its /health reply. */
 export function probe(port: number, timeoutMs = 1200): Promise<any | undefined> {
     return new Promise((resolve) => {
         const req = http.get(`http://127.0.0.1:${port}/health`, (res) => {
@@ -37,7 +37,7 @@ export function probe(port: number, timeoutMs = 1200): Promise<any | undefined> 
             res.on('end', () => {
                 try {
                     const j = JSON.parse(bodyText);
-                    // Portta başka bir program olabilir; Syncix imzası aranır.
+                    // Another program may be on the port; the Syncix signature is checked.
                     resolve(j && typeof j.status === 'string' ? j : undefined);
                 } catch {
                     resolve(undefined);
@@ -52,7 +52,7 @@ export function probe(port: number, timeoutMs = 1200): Promise<any | undefined> 
     });
 }
 
-/** Core'un çalışırken yazdığı port dosyası: <proje>/.syncix/port */
+/** Port file the running core writes: <project>/.syncix/port */
 export function readPortFile(projectRoot: string | undefined): number | undefined {
     if (!projectRoot) return undefined;
     try {
@@ -66,8 +66,8 @@ export function readPortFile(projectRoot: string | undefined): number | undefine
 }
 
 /**
- * İki filePath aynı projeyi mi gösteriyor?
- * Windows'ta büyük/küçük harf ayrımı yok; sondaki ayraç da fark etmemeli.
+ * Do the two paths point at the same project?
+ * Windows is case-insensitive; a trailing separator must not matter either.
  */
 function isSameProject(a: string | undefined, b: string | undefined): boolean {
     if (!a || !b) return false;
@@ -79,20 +79,20 @@ function isSameProject(a: string | undefined, b: string | undefined): boolean {
 }
 
 /**
- * Çalışan core'u bulur ve adresi günceller.
- * Önce port dosyasına bakar (kesin bilgi), yoksa aralığı tarar.
- * Bulamazsa adres değişmez ve undefined döner.
+ * Finds the running core and updates the address.
+ * It checks the port file first (exact information), otherwise scans the range.
+ * If nothing is found the address stays the same and undefined is returned.
  *
- * KRİTİK: bulunan core'un BU projeye ait olduğu doğrulanır.
+ * CRITICAL: the core found is verified to belong to THIS project.
  *
- * Eskiden yalnızca "portta sağlıklı bir Syncix var mı" diye bakılıyordu. İki
- * proje aynı anda açıkken ikincisi, birincisinin core'una bağlanıyordu: editör
- * "bağlı" diyor, ağaç görünüyor, ama yapılan her değişiklik BAŞKA bir oyuna
- * gidiyordu. Sessiz ve tehlikeli bir durumdu; /health zaten `root` alanını
- * taşıdığı için doğrulama bedava.
+ * It used to check only "is there a healthy Syncix on the port". With two
+ * projects open at once, the second connected to the first one's core: the editor
+ * said "connected", the tree showed, but every change went to ANOTHER game.
+ * A silent and dangerous situation; /health already carries the `root` field,
+ * so verifying costs nothing.
  */
 export async function refreshBaseUrl(projectRoot?: string): Promise<any | undefined> {
-    // Proje kökü bilinmiyorsa doğrulanacak bir şey yok; eski davranış korunur.
+    // Without a known project root there is nothing to verify; the old behaviour is kept.
     const checkValue = (health: any) =>
         !projectRoot || isSameProject(health?.root, projectRoot);
 
@@ -123,29 +123,29 @@ export function isWindows(): boolean {
     return process.platform === 'win32';
 }
 
-/** Çalıştırılabilir dosya adı (Windows'ta .exe uzantılı). */
+/** Executable file name (with .exe on Windows). */
 export function coreBinaryName(): string {
     return isWindows() ? 'syncix-core.exe' : 'syncix-core';
 }
 
 /**
- * Gömülü binary'nin extension içindeki yolu.
- * Binary'ler platforma göre ayrı klasörlerde tutulur:
+ * Path of the bundled binary inside the extension.
+ * Binaries are kept in separate folders per platform:
  *   resources/bin/win32-x64/syncix-core.exe
  *   resources/bin/darwin-arm64/syncix-core
- * Eski tek-dosya yerleşimi (resources/bin/syncix-core.exe) da destekleniyor ki
- * eski paketler bozulmasın.
+ * The old single-file layout (resources/bin/syncix-core.exe) is supported too, so
+ * old packages do not break.
  */
 export function bundledCorePaths(extensionPath: string): string[] {
-    const ad = coreBinaryName();
+    const fileName = coreBinaryName();
     return [
-        path.join(extensionPath, 'resources', 'bin', `${process.platform}-${process.arch}`, ad),
-        path.join(extensionPath, 'resources', 'bin', process.platform, ad),
-        path.join(extensionPath, 'resources', 'bin', ad),
+        path.join(extensionPath, 'resources', 'bin', `${process.platform}-${process.arch}`, fileName),
+        path.join(extensionPath, 'resources', 'bin', process.platform, fileName),
+        path.join(extensionPath, 'resources', 'bin', fileName),
     ];
 }
 
-/** Roblox'un plugin klasörü (platforma göre). */
+/** Roblox's plugin folder (per platform). */
 export function robloxPluginsDir(): string | undefined {
     if (isWindows()) {
         const local = process.env.LOCALAPPDATA;
@@ -153,10 +153,10 @@ export function robloxPluginsDir(): string | undefined {
     }
     if (process.platform === 'darwin') {
         const home = process.env.HOME;
-        // macOS'ta Studio plugin'leri kullanıcı Documents altında tutulur.
+        // On macOS Studio plugins live under the user's Documents folder.
         return home ? path.join(home, 'Documents', 'Roblox', 'Plugins') : undefined;
     }
-    // Linux'ta resmi Roblox Studio yok; plugin kurulumu atlanır.
+    // There is no official Roblox Studio on Linux; plugin installation is skipped.
     return undefined;
 }
 

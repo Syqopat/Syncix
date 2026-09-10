@@ -115,10 +115,10 @@ function PatchExecutor:ApplyPatch(patch: any)
         return
     end
 
-    -- SECIM bir instance'a bagli DEGIL: uuid tasimiyor, cunku hangi objelerin
-    -- secili oldugu global bir durum. Bu yuzden hem "uuid yoksa cik" hem de
-    -- instance cozumlemesinden ONCE ele alinmali. Ilk denememde uuid
-    -- kontrolunun bir row ALTINA koymustum ve secim sessizce dusuyordu.
+    -- SELECTION is NOT tied to an instance: it carries no uuid, because which objects
+    -- are selected is global state. So it must be handled before both "exit if no uuid"
+    -- and instance resolution. The first attempt put it one line BELOW the uuid
+    -- check, and selection was silently dropped.
     if patch.event_type == "SELECTION_UPDATE" then
         if self.selectionObserver then
             self.selectionObserver:Apply(patch.data and patch.data.ids or {})
@@ -153,9 +153,9 @@ function PatchExecutor:ApplyPatch(patch: any)
             end)
         end
     elseif patch.event_type == "TAGS_UPDATE" then
-        -- Etiket listesi butun halinde geliyor. Tek tek ekleme/silme takip
-        -- etmek iki tarafta ayri durum tutmayi gerektirirdi; onun yerine
-        -- current lookupSet requested kumeye getiriliyor.
+        -- The tag list arrives as a whole. Tracking single adds and removes
+        -- would need separate state on both sides; instead
+        -- the current set is brought to the requested set.
         local requested = {}
         for _, t in ipairs(patch.data.tags or {}) do
             requested[t] = true
@@ -185,7 +185,7 @@ function PatchExecutor:ApplyPatch(patch: any)
         end
     elseif patch.event_type == "DESTROY" then
         if self.activityLog then
-            self.activityLog:Inbound("silme", instance.Name, nil, nil, uuid)
+            self.activityLog:Inbound("delete", instance.Name, nil, nil, uuid)
         end
         pcall(function()
             instance:Destroy()
@@ -194,9 +194,9 @@ function PatchExecutor:ApplyPatch(patch: any)
     end
 end
 
---- Asset referansi. Eski property'ler (Decal.Texture, SoundId) duz text
---- kabul ediyor; fresh Content tipli olanlar etmiyor. Once Content olarak
---- denenir, o surum yoksa metne dusulur.
+--- Asset reference. Older properties (Decal.Texture, SoundId) accept plain text;
+--- newer Content-typed ones do not. Content is tried first,
+--- falling back to text when that version does not exist.
 local function decodeContent(uri: string): any
     local ok, content = pcall(function()
         return (Content :: any).fromUri(uri)
@@ -215,8 +215,8 @@ local function decodeColorSequence(points: any): ColorSequence?
     for _, k in ipairs(points) do
         table.insert(keyNames, ColorSequenceKeypoint.new(k.t, Color3.new(k.r, k.g, k.b)))
     end
-    -- Roblox first noktanin 0, sonuncusunun 1 olmasini sart kosuyor ve
-    -- siralanmamis listeyi reddediyor.
+    -- Roblox requires the first point at 0 and the last at 1, and
+    -- rejects an unsorted list.
     table.sort(keyNames, function(a, b) return a.Time < b.Time end)
     local ok, array = pcall(ColorSequence.new, keyNames)
     return ok and array or nil
@@ -235,9 +235,9 @@ local function decodeNumberSequence(points: any): NumberSequence?
     return ok and array or nil
 end
 
---- Yazi tipi. Aile bir asset URI'si, kalinlik ve stil enum.
---- Metinden enum'a cevrim basarisiz olursa varsayilana dusulur; yanlis bir
---- datum atamaktansa Roblox'un varsayilani dogru behavior.
+--- Font. The family is an asset URI; weight and style are enums.
+--- If converting text to an enum fails, the default is used; rather than assign a
+--- wrong value, Roblox's default is the right behaviour.
 local function decodeFont(f: any): Font?
     local ok, ink = pcall(function()
         local weight = Enum.FontWeight.Regular
@@ -319,9 +319,9 @@ function PatchExecutor:DecodeValue(propValue: any): any
         elseif propValue.NumberRange then
             return NumberRange.new(propValue.NumberRange.min, propValue.NumberRange.max)
         elseif propValue.Number ~= nil then
-            -- Eski bir core serde'nin etiketli bicimini gonderiyor olabilir
-            -- ({"Number":0.5}). Yeni core'lar duz gonderiyor; bu dal yalnizca
-            -- surum farkina karsi duruyor.
+            -- An older core may be sending serde's tagged form
+            -- ({"Number":0.5}). Newer cores send the plain form; this branch only
+            -- guards against a version mismatch.
             return propValue.Number
         elseif propValue.String ~= nil then
             return propValue.String
@@ -347,7 +347,7 @@ function PatchExecutor:DecodeValue(propValue: any): any
                 p.frictionWeight, p.elasticityWeight
             )
         elseif propValue.Ref ~= nil then
-            -- Bos dize "baglanti yok" demektir; nil dondurmek dogru behavior.
+            -- An empty string means "no reference"; returning nil is the right behaviour.
             if propValue.Ref == "" then
                 return nil
             end
@@ -360,15 +360,15 @@ function PatchExecutor:DecodeValue(propValue: any): any
     return propValue
 end
 
--- Bağlaşık (türetilmiş) property'ler.
+-- Linked (derived) properties.
 --
--- Roblox'ta bir property'yi yazmak kardeşlerini de değiştirir: Position yazıldığında
--- CFrame, Orientation ve Rotation da değişir ve her biri ayrı bir Changed sinyali
--- üretir. Echo koruması yalnızca yazdığımız property'yi beklediği için bu türetilmiş
--- sinyaller echo olarak core'a geri gidiyordu.
+-- In Roblox writing one property changes its siblings too: writing Position also changes
+-- CFrame, Orientation and Rotation, and each produces its own Changed signal.
+-- Echo protection only expected the property we wrote, so these derived
+-- signals went back to the core as echoes.
 --
--- Ölçüm: 40 Position komutu -> 39 itemCount "Orientation" güncellemesi geri geldi.
--- Position'ın kendisi doğru şekilde eleniyordu, sızan yalnızca türetilmişlerdi.
+-- Measured: 40 Position commands -> 39 "Orientation" updates came back.
+-- Position itself was filtered correctly; only the derived ones leaked.
 local LINKED = {
     Position    = { "CFrame", "Orientation", "Rotation" },
     CFrame      = { "Position", "Orientation", "Rotation" },
@@ -377,9 +377,9 @@ local LINKED = {
     Size        = { "CFrame" },
 }
 
--- Yazımdan SONRA, bağlaşık property'lerin Roblox'un hesapladığı GÜNCEL değerlerini
--- beklenti olarak kaydeder. Değer birebir kaydedildiği için kullanıcının daha sonra
--- yaptığı gerçek değişiklikler farklı olur ve elenmez.
+-- AFTER writing, records the CURRENT values Roblox computed for the linked properties
+-- as expectations. Values are recorded exactly, so real changes the user makes
+-- later differ and are not filtered.
 function PatchExecutor:_AwaitReferences(instance: Instance, propName: string)
     if not self.echoGuard then return end
 
@@ -389,20 +389,20 @@ function PatchExecutor:_AwaitReferences(instance: Instance, propName: string)
     local uuid = instance:GetAttribute("__syncix_id")
     if not uuid then return end
 
-    for _, ad in ipairs(siblings) do
+    for _, fieldName in ipairs(siblings) do
         pcall(function()
-            local latest = (instance :: any)[ad]
+            local latest = (instance :: any)[fieldName]
             if latest ~= nil then
-                self.echoGuard:Expect(uuid, ad, latest)
+                self.echoGuard:Expect(uuid, fieldName, latest)
             end
         end)
     end
 end
 
 function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, propValue: any)
-    -- Echo koruması: uygulamadan ÖNCE "bu değeri ben yazıyorum" notu düşülür.
-    -- Roblox'un property sinyalleri deferred olduğu için zamanlama tabanlı kilit
-    -- yetmiyordu; gözlemci incoming değeri bu notla karşılaştırıp kendi yazımızı eler.
+    -- Echo protection: BEFORE applying, an "I am writing this value" note is made.
+    -- Roblox's property signals are deferred, so a timing-based lock
+    -- was not enough; the observer compares the incoming value with this note and filters our own write.
     if self.echoGuard then
         local uuid = instance:GetAttribute("__syncix_id")
         if uuid then
@@ -413,10 +413,10 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
         end
     end
 
-    -- Hatalar sessizce yutulmamalı: teşhis edilemeyen "değer uygulanmadı" sorunlarına yol açıyordu.
+    -- Errors must not be swallowed silently: they led to undiagnosable "value not applied" problems.
     local ok, err = pcall(function()
         if propName == "Contents" and instance:IsA("LocalizationTable") then
-            -- Ceviri girdileri property ile degil SetEntries ile yazilir.
+            -- Translation entries are written with SetEntries, not as a property.
             local HttpService = game:GetService("HttpService")
             local inputs = HttpService:JSONDecode(propValue)
             ;(instance :: any):SetEntries(inputs)
@@ -439,9 +439,9 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
                 instance.Parent = Workspace
             end
         elseif type(propValue) == "table" then
-            -- ÖNEMLİ: Tip kararı DEĞERE göre verilir, property ADINA göre DEĞİL.
-            -- Eskiden "Size"/"Position" her timestamp UDim2 sanılıyordu; bu yüzden bir Part'ın
-            -- Vector3 konumu çözümlenemiyor ve sessizce hiç uygulanmıyordu (objects 0,0,0'da kalıyordu).
+            -- IMPORTANT: the type is decided by the VALUE, NOT by the property NAME.
+            -- "Size"/"Position" used to be taken for UDim2 every time, so a Part's
+            -- Vector3 position could not be resolved and was silently never applied (objects stayed at 0,0,0).
             if propValue.Vector3 then
                 instance[propName] = Vector3.new(propValue.Vector3.x, propValue.Vector3.y, propValue.Vector3.z)
             elseif propValue.Color3 then
@@ -495,7 +495,7 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
                 error("unsupported table value for property: " .. propName)
             end
         elseif type(propValue) == "string" and (propName == "Size" or propName == "Position") and instance:IsA("GuiObject") then
-            -- GUI için text biçimli UDim2 ("0.5,0,0.5,0")
+            -- UDim2 in text form for GUI ("0.5,0,0.5,0")
             local udim = decodeUDim2(propValue)
             if udim then
                 instance[propName] = udim
@@ -516,10 +516,10 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
     end)
 
     if ok then
-        -- Yazım başarılıysa türetilmiş property'lerin fresh değerleri de beklenir.
+        -- If the write succeeded, the new values of derived properties are expected too.
         self:_AwaitReferences(instance, propName)
 
-        -- Akış günlüğü: kullanıcı ne değiştiğini görebilsin ve çakışma varsa uyarılsın.
+        -- Activity log: so the user can see what changed and is warned about conflicts.
         if self.activityLog then
             local applied = nil
             pcall(function()

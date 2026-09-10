@@ -1,13 +1,13 @@
-//! sourcemap.json üretimi.
+//! sourcemap.json generation.
 //!
-//! Neden gerekli: luau-lsp (VS Code'daki Luau dil sunucusu) hangi dosyanın
-//! DataModel'de nereye karşılık geldiğini bilmez. sourcemap.json ona bu haritayı
-//! verir; ancak o zaman `game.ReplicatedStorage.Modul` gibi ifadelerde otomatik
-//! tamamlama ve type_name denetimi çalışır. Rojo'nun en çok kullanılan özelliklerinden
-//! biri budur ve Syncix'te eksikti.
+//! Why it is needed: luau-lsp (the Luau language server in VS Code) does not know
+//! which file maps to which place in the DataModel. sourcemap.json gives it that map;
+//! only then do autocompletion and type checking work in expressions like
+//! `game.ReplicatedStorage.Module`. It is one of Rojo's most used features
+//! and Syncix lacked it.
 //!
-//! Biçim Rojo ile aynıdır, dolayısıyla current_value luau-lsp kurulumları hiçbir
-//! değişiklik gerektirmeden çalışır:
+//! The format is the same as Rojo's, so existing luau-lsp setups work without
+//! any change:
 //! { "name": ..., "className": ..., "filePaths": [...], "children": [...] }
 
 use crate::layout;
@@ -27,8 +27,8 @@ pub struct SourcemapNode {
     pub children: Vec<SourcemapNode>,
 }
 
-/// Yollar sourcemap.json'un bulunduğu dizine göre ve daima ileri eğik çizgiyle
-/// yazılır; luau-lsp Windows'ta da bu biçimi bekler.
+/// Paths are written relative to the directory of sourcemap.json and always with
+/// forward slashes; luau-lsp expects this form on Windows too.
 fn relative_path(fs_path: &Path, root_dir: &Path) -> String {
     let p = fs_path.strip_prefix(root_dir).unwrap_or(fs_path);
     p.to_string_lossy().replace('\\', "/")
@@ -57,8 +57,8 @@ fn node_entry(dm: &DataModel, uuid: &Uuid, sync_dir: &str, root_dir: &Path) -> O
     })
 }
 
-/// Tüm ağacı Rojo uyumlu sourcemap ağacına çevirir.
-/// Kök daima DataModel'dir; service_list onun çocuklarıdır.
+/// Turns the whole tree into a Rojo-compatible sourcemap tree.
+/// The root is always DataModel; services are its children.
 pub fn generate(dm: &DataModel, sync_dir: &str, root_dir: &Path) -> SourcemapNode {
     let mut children: Vec<SourcemapNode> = dm
         .get_all_instances()
@@ -97,7 +97,7 @@ mod tests {
     fn tree_shape_and_class_names_are_kept() {
         let mut m = DataModel::new();
         let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        add_instance(&mut m, "ModuleScript", "Modul", Some(rs));
+        add_instance(&mut m, "ModuleScript", "Module", Some(rs));
 
         let sm = generate(&m, "src_workspace", Path::new("."));
         assert_eq!(sm.class_name, "DataModel");
@@ -106,7 +106,7 @@ mod tests {
         let service_name = &sm.children[0];
         assert_eq!(service_name.name, "ReplicatedStorage");
         assert_eq!(service_name.children.len(), 1);
-        assert_eq!(service_name.children[0].name, "Modul");
+        assert_eq!(service_name.children[0].name, "Module");
         assert_eq!(service_name.children[0].class_name, "ModuleScript");
     }
 
@@ -114,12 +114,12 @@ mod tests {
     fn paths_use_forward_slashes() {
         let mut m = DataModel::new();
         let rs = add_instance(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
-        add_instance(&mut m, "ModuleScript", "Modul", Some(rs));
+        add_instance(&mut m, "ModuleScript", "Module", Some(rs));
 
         let sm = generate(&m, "src_workspace", Path::new("."));
         let fs_path = &sm.children[0].children[0].file_paths[0];
-        assert!(!fs_path.contains('\\'), "ters egik cizgi olmamali: {}", fs_path);
-        assert!(fs_path.ends_with("Modul.lua"), "beklenmeyen yol: {}", fs_path);
+        assert!(!fs_path.contains('\\'), "must not contain backslashes: {}", fs_path);
+        assert!(fs_path.ends_with("Module.lua"), "unexpected path: {}", fs_path);
     }
 
     #[test]

@@ -1,46 +1,42 @@
-// Eklentiyi TEK bir dosyaya paketler.
+// Bundles the extension into a SINGLE file.
 //
-// Neden: Marketplace, icinde ham `node_modules` klasoru olan paketleri
-// "suspicious content" diye reddediyor. Yukleme tam olarak bu yuzden iki kez
-// geri geldi. Bagimliliklari (bizde yalnizca `ws`) cikti dosyasinin icine
-// gomunce node_modules'u hic gondermemiz gerekmiyor.
+// Why: dependencies (only `ws` here) are embedded in the output file, so
+// node_modules never has to ship with the package, and `ws` can no longer go
+// missing from it — it did once, and the extension never opened.
 //
-// Ek fayda: paket kuculuyor ve `ws`in eksik kalmasi imkansiz hale geliyor —
-// bir kez paketten dusmustu ve eklenti hic acilmamisti.
-//
-// `vscode` DISARIDA birakiliyor: onu calisma aninda VS Code'un kendisi
-// sagliyor, pakete girmesi hem gereksiz hem hatali olur.
+// `vscode` is left EXTERNAL: VS Code provides it at runtime; bundling it would
+// be both unnecessary and wrong.
 
 const esbuild = require("esbuild");
 
-const izleme = process.argv.includes("--watch");
+const watch = process.argv.includes("--watch");
 
-const ayarlar = {
+const options = {
   entryPoints: ["src/extension.ts"],
   bundle: true,
   outfile: "out/extension.js",
   external: ["vscode"],
   format: "cjs",
   platform: "node",
-  // VS Code'un calistirdigi Node surumu; daha yenisini hedeflemek gereksiz
-  // donusum yapmamizi onluyor.
+  // The Node version VS Code runs; targeting it avoids needless down-level
+  // transforms.
   target: "node18",
   sourcemap: false,
   minify: false,
   logLevel: "info",
 };
 
-async function calistir() {
-  if (izleme) {
-    const baglam = await esbuild.context(ayarlar);
-    await baglam.watch();
-    console.log("izleniyor...");
+async function run() {
+  if (watch) {
+    const context = await esbuild.context(options);
+    await context.watch();
+    console.log("watching...");
     return;
   }
-  await esbuild.build(ayarlar);
+  await esbuild.build(options);
 }
 
-calistir().catch((hata) => {
-  console.error(hata);
+run().catch((error) => {
+  console.error(error);
   process.exit(1);
 });

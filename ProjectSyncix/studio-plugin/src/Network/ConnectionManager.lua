@@ -1,12 +1,12 @@
 -- ConnectionManager
--- HTTP Polling, Push, Timeout ve Exponential Backoff mantığını yöneten State Machine.
--- Durumlar: Disconnected, Discovering, Connecting, Connected, Reconnecting, Blocked
+-- State machine handling HTTP polling, push, timeouts and exponential backoff.
+-- States: Disconnected, Discovering, Connecting, Connected, Reconnecting, Blocked
 --
--- Release için buraya üç şey eklendi:
---   1. Port keşfi. Port artık sabit 8080 değil; core doluysa sıradakine geçiyor.
---      Eklenti dosya okuyamadığı için aralığı /health ile tarar.
---   2. Sürüm uyum kontrolü. Eski eklenti + fresh core sessizce garip davranıyordu.
---   3. İlk bağlantı onayı. Hangi projectInfo klasörünün bağlandığı kullanıcıya gösterilir.
+-- Three things were added here for the release:
+--   1. Port discovery. The port is no longer fixed at 8080; if taken, the core moves to the next one.
+--      The plugin cannot read files, so it scans the range through /health.
+--   2. Version compatibility check. An old plugin with a new core misbehaved without a word.
+--   3. First-connection approval. The user is shown which project folder connected.
 
 local HttpService = game:GetService("HttpService")
 local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
@@ -14,7 +14,7 @@ local PlaceIdentity = require(script.Parent.Parent.Core.PlaceIdentity)
 local Store = require(script.Parent.Parent.Core.Store)
 local Approval = require(script.Parent.Parent.Core.Approval)
 
--- Bu dort sabit core ile ESLESMEK ZORUNDA. Karsiliklari:
+-- These four constants MUST MATCH the core. Their counterparts:
 --   PLUGIN_VERSION  <-> core-engine/Cargo.toml  version
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
 --   PORT_START  <-> project.rs  DEFAULT_PORT
@@ -30,26 +30,26 @@ ConnectionManager.__index = ConnectionManager
 function ConnectionManager.new()
 	local self = setmetatable({}, ConnectionManager)
 
-	self.serverUrl = nil        -- keşiften sonra dolar
-	self.serverInfo = nil       -- /health cevabı: project, root, port, version
+	self.serverUrl = nil        -- set after discovery
+	self.serverInfo = nil       -- /health reply: project, root, port, version
 	self.state = "Disconnected"
 
-	-- Exponential Backoff için ayarlar
+	-- Exponential backoff settings
 	self.baseRetryWait = 1.0
 	self.maxRetryWait = 30.0
 	self.currentRetryWait = 1.0
 
-	-- Reddedilen köklerin tekrar tekrar sorulmaması için oturum içi hafıza
+	-- Per-session memory so denied roots are not asked again and again
 	self.rejected = {}
 
-	-- Kullanici senkronu elle duraklatti mi?
-	-- Duraklatma yalnizca kullanicinin isOpen istegiyle olur; aglar koptugunda
-	-- kullanilan yol Reconnecting'dir, bu ayri bir durumdur.
+	-- Did the user pause sync by hand?
+	-- Pausing only happens by the user's explicit request; when the network drops
+	-- the path is Reconnecting, which is a separate state.
 	self.wasPaused = false
 
-	-- Elle sabitlenmiş port. nil ise 8080-8089 aralığı taranır.
-	-- Sabitlenmişse YALNIZCA o port denenir: iki projectInfo açıkken hangi projeye
-	-- bağlanılacağını kesinleştirmenin tek yolu bu.
+	-- Port pinned by hand. When nil the range 8080-8089 is scanned.
+	-- When pinned, ONLY that port is tried: with two projects open, this is the only way
+	-- to be certain which project it connects to.
 	self.manualPort = nil
 
 	return self
@@ -62,20 +62,20 @@ function ConnectionManager:OnStart(container)
 	self.patchBuilder = container:Get("PatchBuilder")
 	self.batchQueue = container:Get("BatchQueue")
 	self.activityLog = container:Get("ActivityLog")
-	-- `plugin` global'i ModuleScript'lerde güvenilir değil; ana script'ten
-	-- açıkça geçiriliyor. Onay penceresi ve ayar saklama buna bağlı.
+	-- The `plugin` global is not reliable in ModuleScripts; it is passed
+	-- explicitly from the main script. The approval dialog and settings storage depend on it.
 	self.plugin = container:Get("Plugin").ref
 
-	-- Baglanti izni kapisi.
+	-- Connection permission gate.
 	--
-	-- Varsayilan KAPALI. Sebep: plugin:SetSetting yerel kurulan eklentilerde diske
-	-- yazilmiyor (olculdu), dolayisiyla "hatirla" calismiyordu ve her Studio
-	-- acilisinda pencere cikip senkronu bekletiyordu. Guvenlik degeri, engellemenin
-	-- maliyetini karsilamiyordu.
+	-- OFF by default. Reason: plugin:SetSetting is not written to disk for locally
+	-- installed plugins (measured), so "remember" did not work and on every Studio
+	-- start the window popped up and held sync. The security value did not cover the
+	-- cost of blocking.
 	--
-	-- Yerine: baglanti kurulunca hangi projectInfo klasorune baglanildigi Output'a ve
-	-- panele YAZILIYOR. Kullanici neye baglandigini goruyor, ama flow durmuyor.
-	-- Kapiyi geri acmak isteyen Syncix panelinden "Baglanti izni sor"u acabilir.
+	-- Instead: once connected, the project folder it connected to is WRITTEN to Output and
+	-- to the panel. The user sees what they are connected to, but the flow does not stop.
+	-- Anyone who wants the gate back can turn the permission prompt on in the Syncix panel.
 	self.askPermission = Store.Get(self.plugin, "syncix_ask_permission", false) == true
 
 	local saved = Store.Get(self.plugin, "syncix_port", 0)
@@ -94,7 +94,7 @@ function ConnectionManager:SetState(newState: string)
 	end
 end
 
--- Tek bir portu yoklar. Cevap Syncix core'undan geliyorsa bilgiyi döndürür.
+-- Probes a single port. Returns the info if the answer comes from a Syncix core.
 local function readHealth(port: number)
 	local url = string.format("http://127.0.0.1:%d/health", port)
 	local ok, response = pcall(function()
@@ -110,7 +110,7 @@ local function readHealth(port: number)
 	if not okDecode or type(decoded) ~= "table" then
 		return nil
 	end
-	-- Portta başka bir program olabilir; Syncix imzası aranır.
+	-- Another program may be on the port; the Syncix signature is checked.
 	if decoded.status == nil then
 		return nil
 	end
@@ -119,7 +119,7 @@ local function readHealth(port: number)
 	return decoded
 end
 
--- major.minor karşılaştırır; yama farkı sorun değildir.
+-- Compares major.minor; a patch difference is fine.
 local function versionCompatible(a: string?, b: string?): boolean
 	if type(a) ~= "string" or type(b) ~= "string" then
 		return false
@@ -132,10 +132,10 @@ local function versionCompatible(a: string?, b: string?): boolean
 	return aMajor == bMajor and aMinor == bMinor
 end
 
--- Elle port ayarlama (SettingsPanel'den çağrılır).
+-- Sets the port by hand (called from SettingsPanel).
 function ConnectionManager:SetManualPort(port: number?)
 	self.manualPort = port
-	-- Port değişince eski reddetmeler anlamını yitirir.
+	-- When the port changes, earlier denials lose their meaning.
 	self.rejected = {}
 end
 
@@ -143,7 +143,7 @@ function ConnectionManager:GetManualPort(): number?
 	return self.manualPort
 end
 
--- Kullanıcı ayarı değiştirdiğinde beklemeden yeniden bağlan.
+-- When the user changes the setting, reconnect without waiting.
 function ConnectionManager:ForceReconnect()
 	self.serverUrl = nil
 	self.serverInfo = nil
@@ -152,7 +152,7 @@ function ConnectionManager:ForceReconnect()
 	self:Connect()
 end
 
--- Panelde göstermek için: aralıktaki tüm core'ları listeler (permission/sürüm süzgeci yok).
+-- For the panel: lists every core in the range (no permission or version filter).
 function ConnectionManager:ScanAllPorts()
 	local foundList = {}
 	for port = PORT_START, PORT_START + PORT_RANGE - 1 do
@@ -161,7 +161,7 @@ function ConnectionManager:ScanAllPorts()
 			table.insert(foundList, info)
 		end
 	end
-	-- Elle yazılan port aralık dışında olabilir; o da listelenmeli.
+	-- A hand-typed port may be outside the range; it must be listed too.
 	if self.manualPort and (self.manualPort < PORT_START or self.manualPort >= PORT_START + PORT_RANGE) then
 		local info = readHealth(self.manualPort)
 		if info then
@@ -172,7 +172,7 @@ function ConnectionManager:ScanAllPorts()
 end
 
 function ConnectionManager:Discover()
-	-- Port sabitlenmişse tarama yapılmaz; yalnızca o port denenir.
+	-- When the port is pinned there is no scan; only that port is tried.
 	local first, last
 	if self.manualPort then
 		first, last = self.manualPort, self.manualPort
@@ -186,18 +186,18 @@ function ConnectionManager:Discover()
 			local root = tostring(info.root or "")
 
 			if self.rejected[root] then
-				-- Bu oturumda zaten reddedildi, atla.
+				-- Already denied in this session; skip it.
 				continue
 			end
 
-			-- BASKA bir place'e bagli core'u atla.
+			-- Skip a core bound to ANOTHER place.
 			--
-			-- Eklenti port tararken buldugu ILK saglikli core'a baglaniyordu.
-			-- Iki projectInfo ayni anda acikken bu, yanlis projeye baglanmak demekti:
-			-- core hemen place catismasi verip senkronu askiya aliyor ve
-			-- kullanici "neden calismiyor" diye bakakaliyordu. Artik kendi
-			-- place'imize bagli olan ya da hic baglanmamis (bos) klasoru
-			-- seciyoruz.
+			-- While scanning ports the plugin used to connect to the FIRST healthy core it found.
+			-- With two projects open at once that meant connecting to the wrong project:
+			-- the core immediately raised a place conflict and suspended sync, and
+			-- the user was left wondering why it did not work. Now a folder bound
+			-- to our own place, or a folder never bound (empty),
+			-- is chosen.
 			local myPlace = PlaceIdentity.Resolve()
 			if info.bound_place ~= nil
 				and myPlace ~= ""
@@ -206,7 +206,7 @@ function ConnectionManager:Discover()
 				continue
 			end
 
-			-- Sürüm kapısı: uyumsuzsa bağlanma, sebebini açıkça söyle.
+			-- Version gate: if incompatible, do not connect, and say why plainly.
 			if not versionCompatible(info.version, PLUGIN_VERSION) then
 				warn(string.format(
 					"[Syncix] Version mismatch. Plugin: %s, core: %s (port %d).\n" ..
@@ -224,10 +224,10 @@ function ConnectionManager:Discover()
 				continue
 			end
 
-			-- İzin kapısı yalnızca açıkça istenmişse çalışır (bkz. self.askPermission).
+			-- The permission gate only runs when explicitly asked for (see self.askPermission).
 			local isAllowed = true
-			-- Izin kapisi artik syncix.toml'dan geliyor; panel ayari yalnizca
-			-- core'a hic baglanilamadigi durumda gecerli.
+			-- The permission gate now comes from syncix.toml; the panel setting only
+			-- applies when the core could not be reached at all.
 			if self.askPermission or SyncConfig.AskPermission() then
 				isAllowed = Approval.GetStoredDecision(self.plugin, root)
 			end
@@ -237,9 +237,9 @@ function ConnectionManager:Discover()
 				local decision = Approval.Ask(self.plugin, info)
 
 				if decision == "error" then
-					-- Pencere açılamadı: decision verilmedi. Saklamıyoruz ve kara
-					-- listeye almıyoruz ki bir arayüz aksaklığı senkronu
-					-- kalıcı olarak kilitlemesin; sonraki denemede tekrar sorulur.
+					-- The window could not open: no decision was made. It is not stored or
+					-- blacklisted, so a UI glitch cannot lock sync
+					-- permanently; it is asked again on the next attempt.
 					continue
 				end
 
@@ -272,12 +272,12 @@ function ConnectionManager:Discover()
 	return nil
 end
 
---- Senkronu elle duraklatir/devam ettirir.
+--- Pauses or resumes sync by hand.
 ---
---- Devam ederken TAM YENIDEN SENKRON yapilir: duraklatma sirasinda hem Studio
---- hem editor tarafinda degisiklik olmus olabilir ve hangisinin daha fresh
---- oldugunu bilmiyoruz. Studio'nun anlik goruntusunu yeniden gondermek iki
---- tarafi tek adimda ayni noktaya getirir.
+--- Resuming does a FULL RESYNC: while paused there may have been changes on both the
+--- Studio and the editor side, and we do not know which is
+--- newer. Resending Studio's snapshot brings both
+--- sides to the same point in one step.
 function ConnectionManager:SetPaused(pause: boolean)
 	if self.wasPaused == pause then
 		return
@@ -315,12 +315,12 @@ function ConnectionManager:Connect()
 		self.serverUrl = info.url
 		self.serverInfo = info
 
-		-- syncix.toml'daki ayarlar core uzerinden geliyor. Eklentinin bunlari
-		-- kendi icinde saklamamasi bilincli: iki ayri ayar seti olsaydi hangisinin
-		-- gecerli oldugu belirsizlesirdi. Tek dogruluk kaynagi syncix.toml.
-		-- Klasor baska bir place'e bagliysa kullanici bunu Studio'da gormeli;
-		-- terminale bakmiyor olabilir ve sessiz kalirsa "neden senkron olmuyor"
-		-- sorusunun cevabi hicbir yerde yazmaz.
+		-- The settings in syncix.toml arrive through the core. The plugin deliberately does not
+		-- keep them itself: with two separate sets it would be unclear which one
+		-- applies. The single source of truth is syncix.toml.
+		-- If the folder is bound to another place the user must see it in Studio;
+		-- they may not be looking at the terminal, and if it stayed silent the answer to
+		-- "why is it not syncing" would be written nowhere.
 		if info.place_conflict then
 			warn(string.format(
 				"[Syncix] This folder belongs to a DIFFERENT place. Sync is on hold so nothing gets mixed.\n" ..
@@ -353,7 +353,7 @@ function ConnectionManager:Connect()
 			tostring(info.project), tostring(info.root), info.port, tostring(info.version)
 		))
 
-		-- Eski gönderilemeyen paketleri yolla
+		-- Send old packets that could not be sent
 		if self.retryQueue and self.retryQueue:HasPending() then
 			local pending = self.retryQueue:Flush()
 			for _, payload in ipairs(pending) do
@@ -361,7 +361,7 @@ function ConnectionManager:Connect()
 			end
 		end
 
-		-- Bootstrap / FULL_SYNC (Sıfırdan Senkronizasyon)
+		-- Bootstrap / FULL_SYNC (sync from scratch)
 		if self.patchBuilder then
 			local fullSyncPatch = self.patchBuilder:BuildFullTreeSnapshot()
 			self:Send(fullSyncPatch)
@@ -394,7 +394,7 @@ function ConnectionManager:PingServer(): (boolean, number)
 end
 
 function ConnectionManager:HandleDisconnect()
-	-- Kullanici duraklatmissa yeniden baglanma dongusu calismamali.
+	-- If the user paused, the reconnect loop must not run.
 	if self.wasPaused then
 		return
 	end
@@ -409,9 +409,9 @@ function ConnectionManager:HandleDisconnect()
 end
 
 function ConnectionManager:Send(payload: any)
-	-- Duraklatilmisken hicbir sey gonderilmez. Kuyruga da alinmaz: duraklatma
-	-- bittiginde tam yeniden senkron yapiliyor, birikmis eski paketleri sonradan
-	-- gondermek o senkronu bozardi.
+	-- Nothing is sent while paused. Nothing is queued either: when the pause
+	-- ends a full resync runs, and sending stale packets afterwards
+	-- would spoil that sync.
 	if self.wasPaused then
 		return
 	end
@@ -442,7 +442,7 @@ function ConnectionManager:Send(payload: any)
 	end)
 end
 
--- Long-Polling döngüsü
+-- Long-polling loop
 function ConnectionManager:StartPolling()
 	task.spawn(function()
 		while self.state == "Connected" do
@@ -471,9 +471,9 @@ function ConnectionManager:StartPolling()
 	end)
 end
 
--- BatchQueue sayaçlarını düzenli olarak core'a bildirir.
--- Birleştirmenin gerçekten çalışıp çalışmadığı ancak böyle ölçülebilir; eskiden
--- bunu doğrulamanın tek yolu Studio'da elle object sürüklemekti.
+-- Reports BatchQueue counters to the core regularly.
+-- Only this way can we measure whether coalescing really works; the only way to
+-- verify it used to be dragging objects around in Studio by hand.
 function ConnectionManager:StartMetricsReporting()
 	task.spawn(function()
 		while self.state == "Connected" do
@@ -482,9 +482,9 @@ function ConnectionManager:StartMetricsReporting()
 				break
 			end
 			local counter = self.batchQueue:GetStats()
-			-- Akis ozeti de bildirilir: eklenti bellegindeki gunlugu disaridan
-			-- gorebilmenin tek yolu bu. `syncix status` bu sayilari gosterir,
-			-- ozellikle conflict sayisi sessiz veri kaybinin erken uyarisidir.
+			-- The activity summary is reported too: the only way to see the log in the plugin's
+			-- memory from outside. `syncix status` shows these numbers;
+			-- the conflict count in particular is an early warning of silent data loss.
 			local flow = self.activityLog and self.activityLog:Summary() or nil
 			self:Send({
 				event_type = "PLUGIN_METRICS",

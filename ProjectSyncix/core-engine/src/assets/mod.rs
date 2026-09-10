@@ -1,15 +1,15 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::RwLock;
 
-/// Referans Çözümleyici (ReferenceResolver)
-/// Nesneler arasındaki ObjectValue, Motor, HingeConstraint gibi referansları yönetir.
-/// Eğer referans edilen nesne (UUID) henüz Workspace'te yoksa "Lazy Resolution" için beklemeye alır.
+/// Reference resolver (ReferenceResolver)
+/// Manages references between objects such as ObjectValue, Motor and HingeConstraint.
+/// If the referenced object (UUID) is not in the Workspace yet, it is parked for lazy resolution.
 pub struct ReferenceResolver {
-    /// UUID -> Bu UUID'yi pending_item nesneler ve property isimleri
-    /// Örn: "Part_B" UUID'si yaratıldığında, "ObjectValue_A" nın "Value" propertysine atanacak.
+    /// UUID -> objects and property names waiting for this UUID
+    /// E.g. when the "Part_B" UUID is created, it is assigned to the "Value" property of "ObjectValue_A".
     pending_references: RwLock<HashMap<String, Vec<PendingRef>>>,
 
-    /// Şu ana kadar çözülmüş referansların bir haritası (Hard References)
+    /// Map of references resolved so far (hard references)
     resolved_references: RwLock<HashSet<String>>,
 }
 
@@ -26,7 +26,7 @@ impl ReferenceResolver {
         }
     }
 
-    /// Bir referans talebini sıraya alır.
+    /// Queues a reference request.
     pub fn enqueue_reference(&self, target_uuid: &str, source_uuid: &str, property_name: &str) {
         let mut pending = self.pending_references.write().unwrap();
         let entry = pending.entry(target_uuid.to_string()).or_default();
@@ -36,8 +36,8 @@ impl ReferenceResolver {
         });
     }
 
-    /// Yeni bir UUID sisteme dahil olduğunda (Instance yaratıldığında) çağrılır.
-    /// Eğer bu UUID'yi pending_item referanslar varsa onları çözümler (Resolve).
+    /// Called when a new UUID joins the system (when an instance is created).
+    /// Resolves any references waiting for this UUID.
     pub fn notify_uuid_created(&self, new_uuid: &str) -> Vec<PendingRef> {
         self.resolved_references
             .write()
@@ -46,17 +46,17 @@ impl ReferenceResolver {
 
         let mut pending = self.pending_references.write().unwrap();
         if let Some(waiting_list) = pending.remove(new_uuid) {
-            return waiting_list; // Bunlar Studio tarafında Dispatcher'a yönlendirilip bağlanacak
+            return waiting_list; // routed to the Dispatcher on the Studio side and connected there
         }
 
         Vec::new()
     }
 }
 
-/// Asset Kayıt Sistemi (AssetRegistry)
-/// İleride eklenecek Mesh, Texture, Sound gibi yerel dosyaları veya rbxassetid:// linklerini tutar.
+/// Asset registry (AssetRegistry)
+/// Will hold local files such as meshes, textures and sounds, or rbxassetid:// links.
 pub struct AssetRegistry {
-    /// Yerel file_path yolu -> rbxassetid veya syncix:// URL'si
+    /// Local file path -> rbxassetid or syncix:// URL
     assets: RwLock<HashMap<String, String>>,
 }
 

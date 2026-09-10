@@ -1,7 +1,7 @@
 --!strict
 -- Metrics
--- Ağ performansı, backlog uzunluğu ve ping verilerini toplar.
--- İleride Profiler veya Live Debugger eklentilerine bağlanması için açık uçludur.
+-- Collects network performance, backlog length and ping data.
+-- Open-ended so it can later feed a profiler or live-debugger plugin.
 
 local Metrics = {}
 Metrics.__index = Metrics
@@ -62,7 +62,7 @@ function Metrics:IncrementPatchCount(amount: number)
     self.data.patchCount += amount
 end
 
--- Metriklerin dökümü (Debug amaçlı)
+-- Dump of the metrics (for debugging)
 function Metrics:Dump(): { [string]: number }
     return self.data
 end

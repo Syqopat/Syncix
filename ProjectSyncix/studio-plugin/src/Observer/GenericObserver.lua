@@ -8,16 +8,16 @@ local SERVICE_UUIDS = Services.UUIDS
 
 local Players = game:GetService("Players")
 
---- Bu object, senkron dışı bırakılması gereken bir OYUNCU karakterinin parçası mı?
+--- Is this object part of a PLAYER character that must be left out of sync?
 ---
---- Eskiden içinde Humanoid olan HER Model elenirdi. Amaç doğruydu — player
---- karakterleri Studio'da kendiliğinden belirip kaybolan geçici objects, onları
---- diske yazmak anlamsız — ama kapsam çok genişti: yazarın Workspace'e elle
---- koyduğu NPC'ler, içlerindeki script'ler ve kıyafetleri de eleniyordu. Bir
---- simulator'da NPC'ler oyunun kendisi; editörde hiç görünmüyorlardı.
+--- Every Model with a Humanoid inside used to be excluded. The aim was right — player
+--- characters are temporary objects that appear and vanish on their own in Studio, and
+--- writing them to disk is pointless — but the scope was far too wide: NPCs the author
+--- put in the Workspace by hand, their scripts and clothes were excluded too. In a
+--- simulator the NPCs are the game itself; they never showed up in the editor.
 ---
---- Ayrım şu: eleyeceğimiz şey "Humanoid içeriyor" değil, "Players servisine
---- bağlı bir oyuncunun karakteri". Yazarın koyduğu NPC ise sıradan içerik.
+--- The distinction: what we exclude is not "contains a Humanoid" but "the character of a
+--- player connected to the Players service". An NPC the author placed is ordinary content.
 local function isPlayerCharacter(inst: Instance): boolean
     local model = inst:FindFirstAncestorOfClass("Model")
         or (inst:IsA("Model") and inst :: Model)
@@ -25,8 +25,8 @@ local function isPlayerCharacter(inst: Instance): boolean
         return false
     end
 
-    -- Oyuncu karakteri: adı bağlı bir oyuncunun adıyla eşleşir ve Workspace'in
-    -- doğrudan çocuğudur. Roblox karakterleri tam olarak böyle yerleştiriyor.
+    -- Player character: its name matches a connected player's name and it is a direct child
+    -- of the Workspace. That is exactly how Roblox places characters.
     local ok, player = pcall(function()
         return Players:GetPlayerFromCharacter(model)
     end)
@@ -34,8 +34,8 @@ local function isPlayerCharacter(inst: Instance): boolean
         return true
     end
 
-    -- Play sırasında oluşan geçici karakterler; oyun çalışmıyorken böyle bir
-    -- durum zaten yok.
+    -- Temporary characters created during Play; when the game is not running such a
+    -- situation does not exist.
     if RunService:IsRunning() and model:FindFirstChildOfClass("Humanoid") then
         return true
     end
@@ -86,8 +86,8 @@ end
 function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: boolean)
     if RunService:IsRunning() then return end
     if instance:IsA("Terrain") or instance:IsA("Camera") then return end
-    -- Kullanicinin disladigi siniflar hic izlenmez: yalnizca gonderimi
-    -- susturmak yetmez, object yine de onbellege girip UUID alirdi.
+    -- Classes the user excluded are never observed: silencing only the sending
+    -- is not enough, the object would still enter the cache and get a UUID.
     if not SyncConfig.ClassAllowed(instance.ClassName) then return end
     if isPlayerCharacter(instance) then return end
 
@@ -166,7 +166,7 @@ function GenericObserver:HandlePropertyChanged(instance: Instance, uuid: string,
 
     if propertyName == "Name" or self.patchBuilder:IsWatchedProperty(instance, propertyName) then
         local newValue = (instance :: any)[propertyName]
-        -- Bu değeri az önce Syncix'in kendisi yazdıysa geri gönderme.
+        -- If Syncix itself just wrote this value, do not send it back.
         if self.echoGuard and self.echoGuard:Consume(uuid, propertyName, newValue) then return end
         local patch = self.patchBuilder:BuildPropertyPatch(uuid, propertyName, newValue)
 
@@ -190,7 +190,7 @@ function GenericObserver:HandleAttributeChanged(instance: Instance, uuid: string
     if RunService:IsRunning() then return end
     if not SyncConfig.SendFromStudio() then return end
     if isPlayerCharacter(instance) then return end
-    -- Syncix'in kendi defterleri content degil; degistiklerinde yama uretilmez.
+    -- Syncix's own bookkeeping is not content; changing it produces no patch.
     if attrName == "__syncix_id" or attrName == "__syncix_place" then return end
     if self.commandDispatcher and self.commandDispatcher:IsLocked() then return end
 
@@ -218,7 +218,7 @@ function GenericObserver:HandleInstanceDestroyed(instance: Instance, uuid: strin
 
     local destroyPatch = self.patchBuilder:BuildLifecyclePatch(uuid, instance, "DESTROY")
     if self.activityLog then
-        self.activityLog:Outbound("silme", instance.Name, nil, nil, uuid)
+        self.activityLog:Outbound("delete", instance.Name, nil, nil, uuid)
     end
     self.batchQueue:Enqueue(destroyPatch)
     self.subscriptions:UnsubscribeAll(uuid)

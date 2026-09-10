@@ -1,34 +1,34 @@
 -- ActivityLog
--- Syncix'in ne yaptığını görünür kılan akış günlüğü.
+-- Activity log that makes what Syncix does visible.
 --
--- NEDEN VAR:
--- Rojo'da "patch visualizer" var çünkü Rojo tek yönlü çalışıyor ve bağlandığında
--- büyük bir farkı tek seferde onaya sunuyor. Bizde durum farklı ve aslında daha
--- kötü: değişiklikler sürekli akıyor ve TAMAMEN SESSİZ uygulanıyordu. Kullanıcı
--- yerinde bir şeyin değiştiğini ancak gözüyle fark ederse anlıyordu — Position
--- hatasında tam olarak bu oldu, objects 0,0,0'a düştü ve kimse günlerce görmedi.
+-- WHY IT EXISTS:
+-- Rojo has a "patch visualizer" because Rojo works one-way and, on connect,
+-- presents one large diff for approval. Our situation is different and actually
+-- worse: changes flow continuously and were applied COMPLETELY SILENTLY. The user
+-- only noticed something had changed if they happened to see it — that is exactly what
+-- happened with the Position bug: objects dropped to 0,0,0 and nobody noticed for days.
 --
--- Rojo'nun onay diyaloğunu kopyalamak bize uymaz: sürekli ve çift yönlü bir akışta
--- her değişikliği onaylatmak kullanılamaz hale gelir. Onun yerine AKIŞ GÜNLÜĞÜ:
--- engellemez, ama ne gelip ne gittiğini geriye dönük gösterir.
+-- Copying Rojo's approval dialog does not suit us: in a continuous, two-way flow
+-- approving every change would be unusable. Instead, an ACTIVITY LOG:
+-- it does not block, but shows afterwards what came in and what went out.
 --
--- İkinci iş: ÇAKIŞMA UYARISI. Aynı property'yi kısa süre içinde hem kullanıcı hem
--- Syncix değiştirirse biri sessizce eziliyordu. Artık işaretleniyor.
+-- Second job: CONFLICT WARNING. When the user and Syncix changed the same property
+-- within a short time, one of them was silently overwritten. Now it is flagged.
 
 local ActivityLog = {}
 ActivityLog.__index = ActivityLog
 
--- Bellekte tutulan en fazla kayıt. Panel zaten last birkaç onu gösteriyor;
--- sınırsız büyümek uzun oturumlarda bellek sızıntısı olurdu.
+-- Maximum number of entries kept in memory. The panel only shows the last few dozen;
+-- growing without limit would leak memory in long sessions.
 local MAX_ENTRIES = 80
 
--- Bu süre içinde hem outgoing hem incoming değişiklik varsa çakışma sayılır.
+-- If there are both outgoing and incoming changes within this time, it counts as a conflict.
 local CONFLICT_WINDOW = 3
 
 function ActivityLog.new()
 	local self = setmetatable({}, ActivityLog)
 	self.entries = {}
-	-- (uuid|property) -> { datum = ..., timestamp = ... }  last GİDEN değişiklikler
+	-- (uuid|property) -> { datum = ..., timestamp = ... }  the last OUTGOING changes
 	self.lastOutgoing = {}
 	self.conflictCount = 0
 	return self
@@ -59,13 +59,13 @@ local function shortValue(datum): string
 end
 
 function ActivityLog:_Add(entry)
-	table.insert(self.entries, 1, entry) -- en yenisi başta
+	table.insert(self.entries, 1, entry) -- newest first
 	if #self.entries > MAX_ENTRIES then
 		table.remove(self.entries)
 	end
 end
 
---- Studio'da olan ve core'a GÖNDERİLEN bir değişiklik.
+--- A change made in Studio and SENT to the core.
 function ActivityLog:Outbound(pass: string, targetName: string, field: string?, datum: any, uuid: string?)
 	if uuid and field then
 		self.lastOutgoing[keyName(uuid, field)] = { datum = datum, timestamp = os.clock() }
@@ -81,9 +81,9 @@ function ActivityLog:Outbound(pass: string, targetName: string, field: string?, 
 	})
 end
 
---- Core'dan GELEN ve Studio'ya applied bir değişiklik.
---- Kısa süre önce aynı field Studio'dan gönderilmişse ve değer farklıysa
---- bu bir çakışmadır: kullanıcının değişikliği eziliyor demektir.
+--- A change that CAME from the core and was applied in Studio.
+--- If the same field was sent from Studio a moment ago with a different value,
+--- this is a conflict: the user's change is being overwritten.
 function ActivityLog:Inbound(pass: string, targetName: string, field: string?, datum: any, uuid: string?)
 	local conflict = false
 
@@ -116,7 +116,7 @@ function ActivityLog:Inbound(pass: string, targetName: string, field: string?, d
 	})
 end
 
---- Panelde göstermek için en fresh kayıtlar.
+--- The newest entries, for showing in the panel.
 function ActivityLog:Recent(itemCount: number)
 	local output = {}
 	for i = 1, math.min(itemCount, #self.entries) do

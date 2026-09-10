@@ -1,7 +1,7 @@
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
--- Sürüm artık semver: core ile major.minor eşleşmesi aranıyor (bkz. ConnectionManager).
+-- The version is semver now: major.minor must match the core (see ConnectionManager).
 local SYNCIX_VERSION = "0.1.1"
 
 local function startSyncix()
@@ -33,10 +33,10 @@ local function startSyncix()
 
     local container = ServiceContainer.new()
 
-    -- `plugin` global'i ModuleScript'lerde güvenilir biçimde bulunmuyor.
-    -- Onay penceresi ve ayar saklama için buradan açıkça geçiriliyor.
-    -- Tabloya sarılıyor: ServiceContainer kayıt sırasında service.OnInit'e bakıyor,
-    -- bir Instance üzerinde olmayan üyeyi aramak failure verir.
+    -- The `plugin` global is not reliably available in ModuleScripts.
+    -- It is passed explicitly from here for the approval dialog and settings storage.
+    -- It is wrapped in a table: ServiceContainer checks service.OnInit when registering,
+    -- and looking up a member that does not exist on an Instance throws an error.
     container:Register("Plugin", { ref = plugin })
 
     container:Register("RuntimeCache", RuntimeCache.new())
@@ -64,16 +64,16 @@ local function startSyncix()
     print("[Syncix] All services started and wired up.")
 end
 
--- YALNIZCA duzenleme oturumunda calis.
+-- Run ONLY in the edit session.
 --
--- Bu Studio surumu Play'e basildiginda eklentileri oyunun SUNUCU ve ISTEMCI
--- oturumlarinda da calistiriyor (yerlesik eklentiler de ayni sekilde
--- davraniyor). O kopyalarin yapacagi bir is yok: senkron edilecek bir duzenleme
--- agaci yok, istemci tarafinda HTTP zaten kapali.
+-- When Play is pressed, this Studio version also runs plugins in the game's SERVER and CLIENT
+-- sessions (built-in plugins behave the same
+-- way). Those copies have nothing to do: there is no edit tree to sync,
+-- and HTTP is off on the client side anyway.
 --
--- Kapi EN BASTA olmali. Ilk denememde startSyncix'in ICINE koymustum, ama
--- HTTP denetimi ondan once isRunning: Play sirasinda istemci oturumu
--- "Allow HTTP Requests" uyarisini basmaya devam ediyordu.
+-- The gate must be at the VERY TOP. The first attempt put it INSIDE startSyncix, but
+-- the HTTP check ran before it: during Play the client session
+-- kept printing the "Allow HTTP Requests" warning.
 if not RunService:IsEdit() then
     return
 end

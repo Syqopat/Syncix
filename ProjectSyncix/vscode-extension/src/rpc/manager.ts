@@ -6,7 +6,7 @@ import { getWsUrl } from '../core/env';
 export class RpcManager {
     private ws: WebSocket | null = null;
     private isConnected: boolean = false;
-    // Port degisebildigi icin adres baglanma aninda cozulur (bkz. core/env.ts).
+    // The port can change, so the address is resolved at connect time (see core/env.ts).
     private get uri(): string { return getWsUrl(); }
     
     private pendingQueue = new PendingRequestQueue();
@@ -58,8 +58,8 @@ export class RpcManager {
             const wasConnected = this.isConnected;
             this.isConnected = false;
             this._onConnectionChange.fire(false);
-            // Yalnızca gerçek kopuşta uyarı göster; arka plandaki her
-            // yeniden bağlanma denemesinde bildirim spam'i yapma.
+            // Only warn on a real disconnect; do not spam a notification
+            // on every background reconnect attempt.
             if (wasConnected) {
                 vscode.window.showWarningMessage('Syncix: offline (RPC disconnected)');
             }

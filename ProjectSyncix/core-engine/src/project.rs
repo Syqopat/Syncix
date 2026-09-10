@@ -1,64 +1,64 @@
-//! Proje yapılandırması ve kimliği.
+//! Project configuration and identity.
 //!
-//! Buradaki iki şey release için kritik:
-//!  1. Port artık sabit değil. syncix.toml'dan okunur, doluysa sıradaki denenir ve
-//!     SEÇİLEN port diske yazılır. Editör ve CLI o dosyadan okur, tahmin etmez.
-//!  2. Core artık kendini tanıtır (proje adı, kök directory, sürüm). Studio eklentisi
-//!     hangi projeye bağlandığını kullanıcıya gösterebilsin diye gerekli.
+//! Two things here matter for a release:
+//!  1. The port is no longer fixed. It is read from syncix.toml; if taken the next one is
+//!     tried and the CHOSEN port is written to disk. The editor and the CLI read that file instead of guessing.
+//!  2. The core introduces itself (project name, root directory, version). The Studio plugin
+//!     needs this to show the user which project it connected to.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Place kimligi uyusmadiginda syncing askiya alinir.
+/// Sync is suspended when the place identity does not match.
 ///
-/// Global tutulmasinin sebebi: bayragi okumasi gereken uc yer birbirinden
-/// bagimsiz calisiyor (file_path izleyici own thread'inde, disk yazicisi own
-/// gorevinde, command_name dongusu ana gorevde). Her birine ayri kanal cekmek yerine
-/// single bir atomik bayrak, bu uc yerin de is_same anda susmasini garanti ediyor.
+/// Why it is global: the three places that must read the flag run independently
+/// (the file watcher in its own thread, the disk writer in its own task,
+/// the command loop in the main task). Instead of wiring a channel to each,
+/// a single atomic flag guarantees that all three go quiet at the same moment.
 static SYNC_SUSPENDED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub fn set_sync_suspended(suspended: bool) {
     SYNC_SUSPENDED.store(suspended, std::sync::atomic::Ordering::SeqCst);
 }
 
-/// Senkron suspended mi? Askidayken HICBIR direction calismaz: ne disk okunur, ne
-/// diske yazilir, ne Studio'ya command_name gider. Amac, karar verilene kadar iki
-/// tarafi da oldugu gibi birakmak.
+/// Is sync suspended? While suspended NO direction runs: nothing is read from disk,
+/// nothing is written to disk, no command goes to Studio. The point is to leave
+/// both sides as they are until a decision is made.
 pub fn is_sync_suspended() -> bool {
     SYNC_SUSPENDED.load(std::sync::atomic::Ordering::SeqCst)
 }
 
-/// Core'un own sürümü (Cargo.toml'dan gelir; single origin).
+/// The core's own version (from Cargo.toml; single source).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Tel protokolü sürümü. Studio eklentisi ile core arasındaki message biçimi
-/// uyumsuz hale geldiğinde ARTTIRILIR. Sürüm numarasından bağımsızdır:
-/// 0.3.1 -> 0.3.2 gibi bir yama protokolü bozmaz, bu sayı aynı kalır.
+/// Wire protocol version. It is INCREASED when the message format between the Studio
+/// plugin and the core becomes incompatible. It is independent of the version number:
+/// a patch such as 0.3.1 -> 0.3.2 does not break the protocol, and this number stays the same.
 pub const PROTOCOL_VERSION: u32 = 1;
 
-/// Port araması bu aralıkta yapılır. Studio eklentisi de aynı aralığı tarar.
+/// Ports are searched in this range. The Studio plugin scans the same range.
 pub const PORT_SCAN_SPAN: u16 = 10;
 
 pub const DEFAULT_PORT: u16 = 8080;
 
-/// Senkronun hangi yonlerde aktif oldugu.
+/// Which directions sync is active in.
 ///
-/// Rojo single yonlu calisiyor: file_path sistemi single dogruluk kaynagi, Studio yalnizca
-/// alici. Syncix fallback_value olarak cift yonlu, ama herkes bunu istemiyor —
-/// takim halinde calisan biri Studio'yu salt okunur tutmak, tersine bir tasarimci
-/// diskin ezilmesini istemeyebilir. Bu yuzden direction bir ayar.
+/// Rojo works one-way: the file system is the single source of truth and Studio only
+/// receives. Syncix is two-way by default, but not everyone wants that —
+/// someone on a team may want Studio read-only, while a designer may not want
+/// the disk overwritten. So the direction is a setting.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SyncMode {
-    /// Iki direction de is_enabled. Varsayilan.
+    /// Both directions enabled. The default.
     TwoWay,
-    /// Studio -> disk. Studio'da yapilan degisiklik diske yazilir; diskteki
-    /// degisiklik Studio'ya GITMEZ. Sahne tasarimini Studio'da yapip kodu
-    /// surum kontrolunde tutmak isteyenler icin.
+    /// Studio -> disk. Changes made in Studio are written to disk; changes on disk
+    /// do NOT go to Studio. For people who design scenes in Studio and want the
+    /// result in version control.
     StudioToDisk,
-    /// Disk -> Studio. Rojo'nun calisma sekli: file_path sistemi dogruluk kaynagi.
+    /// Disk -> Studio. Rojo-style workflow: the file system is the source of truth.
     DiskToStudio,
-    /// Hicbir direction otomatik degil; yalnizca acikca given komutlar islenir
-    /// (syncix pull, syncix set, ...). Riskli bir sahnede gozetimli calismak icin.
+    /// No direction is automatic; only explicitly given commands are carried out
+    /// (syncix pull, syncix set, ...). For working under supervision on a risky scene.
     Manual,
 }
 
@@ -82,35 +82,35 @@ impl SyncMode {
         }
     }
 
-    /// Studio'da olan bir degisiklik modele ve diske yansitilsin mi?
+    /// Should a change made in Studio be reflected in the model and on disk?
     pub fn accepts_from_studio(&self) -> bool {
         matches!(self, Self::TwoWay | Self::StudioToDisk)
     }
 
-    /// Diskte olan bir degisiklik Studio'ya gonderilsin mi?
+    /// Should a change made on disk be sent to Studio?
     pub fn accepts_from_disk(&self) -> bool {
         matches!(self, Self::TwoWay | Self::DiskToStudio)
     }
 }
 
-/// Oyun calisirken (Play) editorden received degisikliklere ne olacak.
+/// What happens to changes from the editor while the game is running (Play).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PlayBehavior {
-    /// Kuyruga alinir, Play bitince uygulanir. Varsayilan.
+    /// Queued and applied once Play ends. Default.
     Queue,
-    /// Atilir. Play sirasinda hicbir sey olmasin diyenler icin.
+    /// Dropped. For people who want nothing to happen during Play.
     Ignore,
-    /// Dogrudan uygulanir. Play bitince Studio oturumla birlikte atacagi icin
-    /// degisiklik kaybolur; yalnizca bilerek isteyen acsin.
+    /// Applied directly. Studio discards the session when Play ends, so the
+    /// change is lost; turn this on only if you mean it.
     Apply,
 }
 
 impl PlayBehavior {
     fn resolve_arg(s: &str) -> Option<Self> {
         match s.trim().to_ascii_lowercase().as_str() {
-            "queue" | "kuyruk" => Some(Self::Queue),
-            "ignore" | "yoksay" | "drop" => Some(Self::Ignore),
-            "apply" | "uygula" => Some(Self::Apply),
+            "queue" => Some(Self::Queue),
+            "ignore" | "drop" => Some(Self::Ignore),
+            "apply" => Some(Self::Apply),
             _ => None,
         }
     }
@@ -124,68 +124,68 @@ impl PlayBehavior {
     }
 }
 
-/// Silmeye dair safety_settings ayarlari.
+/// Safety settings regarding deletion.
 #[derive(Clone, Debug)]
 pub struct SafetySettings {
-    /// Uzlastirici sildigi dosyalari cop kutusuna tasisin mi.
-    /// Kapatilirsa file_list dogrudan silinir ve restored_count donusu olmaz.
+    /// Whether the reconciler moves the files it deletes to the trash.
+    /// When off, files are deleted directly and there is no way back.
     pub trash_enabled: bool,
-    /// Cop kutusunda saklanacak run_name sayisi.
+    /// Number of runs kept in the trash.
     pub trash_keep_runs: usize,
-    /// Diskten silinen bir dosyanin gercek deletion sayilmasi icin beklenecek sure.
-    /// Tasima islemleri isletim sisteminde sil+generate olarak goruldugu icin
-    /// bu time_window gerekiyor. Yavas disklerde arttirilabilir.
+    /// How long to wait before a file deleted from disk counts as a real deletion.
+    /// Moves show up in the operating system as delete + create, so
+    /// this window is needed. Can be raised on slow disks.
     pub delete_grace_ms: u64,
-    /// `syncix rm` onay istesin mi.
+    /// Whether `syncix rm` asks for confirmation.
     pub confirm_delete: bool,
 }
 
-/// Neyin syncing edilecegini belirleyen ayarlar.
+/// Settings determining what is synced.
 #[derive(Clone, Debug)]
 #[derive(Default)]
 pub struct ScopeSettings {
-    /// Izlenecek service_list. Bos birakilirsa eklentinin fallback_value listesi gecerli.
+    /// Services to observe. If left empty, the plugin's default list applies.
     pub service_list: Vec<String>,
-    /// Bu siniflar hic syncing edilmez (ornegin "Camera", "Terrain").
+    /// These classes are never synced (for example "Camera", "Terrain").
     pub class_ignore_list: Vec<String>,
-    /// Bu property'ler hic syncing edilmez. Gurultulu ya da makineye ozel
-    /// alanlari elemek icin.
+    /// These properties are never synced. For filtering out noisy or
+    /// machine-specific fields.
     pub property_ignore_list: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
 pub struct ProjectConfig {
-    /// Senkron klasörü, core'un çalışma dizinine göre (ör. "../src").
+    /// Sync folder, relative to the core's working directory (e.g. "../src").
     pub sync_dir: String,
-    /// syncix.toml'un bulunduğu directory, absolute fs_path.
+    /// The directory containing syncix.toml, as an absolute path.
     pub root: PathBuf,
-    /// Kullanıcıya gösterilecek proje adı (kök klasörün adı).
+    /// Project name shown to the user (the name of the root folder).
     pub name: String,
-    /// syncix.toml'da istenen port. Dolu olabilir; gerçekte bağlanılan port
-    /// `bind_with_fallback` tarafından belirlenir.
+    /// Port requested in syncix.toml. It may be taken; the port actually bound
+    /// is decided by `bind_with_fallback`.
     pub wanted_port: u16,
-    /// sourcemap.json her senkronda güncellensin mi (luau-lsp için).
+    /// Whether sourcemap.json is updated on every sync (for luau-lsp).
     pub sourcemap: bool,
-    /// Senkron dışı bırakılacak yollar (glob). Bu file_list ne okunur ne silinir.
+    /// Paths excluded from sync (glob). These files are neither read nor deleted.
     pub ignore: Vec<String>,
-    /// Port command_name satırından açıkça istendiyse true olur ve devretme yapılmaz.
-    /// Sebep: kullanıcı Studio eklentisine de aynı portu yazıyor; core sessizce
-    /// başka bir porta kayarsa iki taraf ayrışır ve sebebi anlaşılmaz.
+    /// True when the port was requested explicitly on the command line; then there is no fallback.
+    /// Reason: the user types the same port into the Studio plugin; if the core silently
+    /// moved to another port the two sides would diverge for no visible reason.
     pub port_fixed: bool,
 
-    /// Senkron yonu.
+    /// Sync direction.
     pub mode_value: SyncMode,
-    /// Disk yazicisinin bekleme suresi. Kucuk raw_value daha hizli yansitir ama
-    /// yazim sayisini arttirir.
+    /// Wait time of the disk writer. A small value reflects changes faster but
+    /// increases the number of writes.
     pub debounce_ms: u64,
-    /// Play sirasinda received degisikliklerin akibeti.
+    /// What happens to changes that arrive during Play.
     pub play: PlayBehavior,
-    /// Ilk baglantida Studio'da izin sorulsun mu.
+    /// Whether Studio asks for permission on the first connection.
     pub prompt_permission: bool,
-    /// Syncix'in yaptigi degisiklikler Studio'nun restored_count al yigina girsin mi.
+    /// Whether Syncix's changes go onto Studio's undo stack.
     pub restore_cmd: bool,
-    /// Script'lerin yanina .meta.json yazilsin mi. Kapatilirsa script'lerin
-    /// property ve attribute'lari diske hic yazilmaz.
+    /// Whether a .meta.json is written next to scripts. When off, scripts'
+    /// properties and attributes are never written to disk.
     pub meta_files: bool,
     pub safety_settings: SafetySettings,
     pub scope_settings: ScopeSettings,
@@ -203,8 +203,8 @@ impl Default for SafetySettings {
 }
 
 
-/// TOML'dan bir bolumu okumak icin kucuk yardimcilar.
-/// Bilinmeyen key_names sessizce yutulmaz; cagiran taraf warning basar.
+/// Small helpers for reading a section from TOML.
+/// Unknown keys are not silently swallowed; the caller prints a warning.
 fn string_list(v: Option<&toml::Value>) -> Vec<String> {
     v.and_then(|x| x.as_array())
         .map(|a| {
@@ -231,8 +231,8 @@ fn read_number(section: Option<&toml::Value>, key_name: &str, fallback_value: u6
 }
 
 impl ProjectConfig {
-    /// Çalışma dizininden yukarı doğru syncix.toml arar.
-    /// Core hem proje kökünden hem core-engine/ içinden çalıştırılabiliyor.
+    /// Looks for syncix.toml upwards from the working directory.
+    /// The core can be run from the project root as well as from inside core-engine/.
     pub fn load() -> Self {
         for (config_path, base) in [("../syncix.toml", ".."), ("syncix.toml", ".")] {
             let path = Path::new(config_path);
@@ -249,16 +249,16 @@ impl ProjectConfig {
             return Self::resolve_arg(&value, base);
         }
 
-        // syncix.toml yoksa taşınabilir varsayılanlar.
+        // Without syncix.toml, portable defaults.
         Self::resolve_arg(&toml::Value::Table(Default::default()), "..")
     }
 
-    /// Ayrıştırma testten de çağrılabilsin diye ayrı: yapılandırma davranışı
-    /// file_path sistemine bağlı olmadan doğrulanabilmeli.
+    /// Kept separate so tests can call it too: configuration behaviour must be
+    /// verifiable without depending on the file system.
     pub fn resolve_arg(value: &toml::Value, base: &str) -> Self {
-        // Anahtarlar hem kök seviyede hem bölüm içinde kabul ediliyor.
-        // Sebep: previous_text syncix.toml'lar düz yazılmıştı ve bir yükseltme kimsenin
-        // dosyasını bozmamalı. Bölüm varsa o kazanır.
+        // Keys are accepted both at the top level and inside sections.
+        // Reason: old syncix.toml files were flat, and an upgrade must not break anyone's
+        // file. If the section exists, it wins.
         let sync = value.get("sync");
         let files = value.get("files");
         let safety = value.get("safety");
@@ -346,29 +346,29 @@ impl ProjectConfig {
         }
     }
 
-    /// Bu class_str syncing edilecek mi?
+    /// Is this class synced?
     pub fn class_allowed(&self, class_str: &str) -> bool {
         !self.scope_settings.class_ignore_list.iter().any(|d| d == class_str)
     }
 
-    /// Bu property syncing edilecek mi?
+    /// Is this property synced?
     pub fn property_allowed(&self, item_name: &str) -> bool {
         !self.scope_settings.property_ignore_list.iter().any(|d| d == item_name)
     }
 
-    /// Bu klasorun is_bound oldugu place'in identity dosyasi: <proje>/.syncix/place
+    /// The identity file of the place this folder is bound to: <project>/.syncix/place
     pub fn place_file(&self) -> PathBuf {
         self.runtime_dir().join("place")
     }
 
-    /// Klasore daha once hangi place baglanmis? Hic baglanmadiysa None.
+    /// Which place was bound to this folder before? None if never bound.
     pub fn linked_place(&self) -> Option<String> {
         let file_content = fs::read_to_string(self.place_file()).ok()?;
         let k = file_content.trim().to_string();
         (!k.is_empty()).then_some(k)
     }
 
-    /// Klasoru bir place'e baglar.
+    /// Binds the folder to a place.
     pub fn bind_place(&self, identity: &str) {
         let dir = self.runtime_dir();
         if let Err(e) = fs::create_dir_all(&dir) {
@@ -388,13 +388,13 @@ impl ProjectConfig {
         self.runtime_dir().join("port")
     }
 
-    /// luau-lsp'nin okuduğu sourcemap dosyası, proje kökünde.
+    /// The sourcemap file luau-lsp reads, at the project root.
     pub fn sourcemap_file(&self) -> PathBuf {
         self.root.join("sourcemap.json")
     }
 
-    /// Gerçekte bağlanılan portu diske yazar. Editör ve CLI bunu okur.
-    /// Böylece "8080 olduğunu varsay" tahmini tamamen ortadan kalkar.
+    /// Writes the port actually bound to disk. The editor and the CLI read it.
+    /// That removes the "assume it is 8080" guess entirely.
     pub fn write_port_file(&self, port: u16) {
         let dir = self.runtime_dir();
         if let Err(e) = fs::create_dir_all(&dir) {
@@ -406,14 +406,14 @@ impl ProjectConfig {
         }
     }
 
-    /// Core kapanırken bayat port dosyası bırakmamak için.
+    /// So the core does not leave a stale port file behind when it exits.
     pub fn clear_port_file(&self) {
         let _ = fs::remove_file(self.port_file());
     }
 }
 
-/// Windows'ta `fs::canonicalize` yolun başına `\\?\` (extended-length) öneki koyar.
-/// Bu fs_path Studio'daki onay penceresinde kullanıcıya gösterildiği için temizlenir.
+/// On Windows `fs::canonicalize` puts a `\\?\` (extended-length) prefix in front of the path.
+/// The path is shown to the user in Studio's approval dialog, so it is cleaned up.
 fn clean_path(p: PathBuf) -> PathBuf {
     let s = p.to_string_lossy();
     if let Some(remaining) = s.strip_prefix(r"\\?\") {
@@ -422,9 +422,9 @@ fn clean_path(p: PathBuf) -> PathBuf {
     p
 }
 
-/// İki sürümün birlikte çalışıp çalışamayacağını söyler.
-/// Kural: major ve minor eşleşmeli, patch farkı serbest.
-/// (0.3.1 ile 0.3.9 uyumlu; 0.3.x ile 0.4.x değil.)
+/// Says whether two versions can work together.
+/// Rule: major and minor must match, the patch may differ.
+/// (0.3.1 and 0.3.9 are compatible; 0.3.x and 0.4.x are not.)
 pub fn versions_compatible(a: &str, b: &str) -> bool {
     fn major_minor(v: &str) -> (u32, u32) {
         let mut it = v.split('.');
@@ -473,21 +473,21 @@ mod config_tests {
         assert!(c.restore_cmd);
     }
 
-    /// Asıl istenen ayar: Rojo gibi single yönlü çalışabilmek.
+    /// The setting that was actually asked for: working one-way, like Rojo.
     #[test]
     fn one_way_mode() {
         let c = resolve_arg("[sync]\nmode = \"disk_to_studio\"\n");
         assert_eq!(c.mode_value, SyncMode::DiskToStudio);
-        assert!(c.mode_value.accepts_from_disk(), "disk -> Studio açık olmalı");
-        assert!(!c.mode_value.accepts_from_studio(), "Studio -> disk kapalı olmalı");
+        assert!(c.mode_value.accepts_from_disk(), "disk -> Studio must be on");
+        assert!(!c.mode_value.accepts_from_studio(), "Studio -> disk must be off");
 
         let t = resolve_arg("[sync]\nmode = \"studio_to_disk\"\n");
         assert!(t.mode_value.accepts_from_studio());
         assert!(!t.mode_value.accepts_from_disk());
     }
 
-    /// "rojo" ve "push" gibi takma adlar aynı modu vermeli: kullanıcı hangi
-    /// kelimeyi aklında tutuyorsa onu yazabilmeli.
+    /// Aliases such as "rojo" and "push" must give the same mode: users should be able
+    /// to type whichever word they remember.
     #[test]
     fn mode_aliases() {
         assert_eq!(SyncMode::resolve_arg("rojo"), Some(SyncMode::DiskToStudio));
@@ -497,7 +497,7 @@ mod config_tests {
         assert_eq!(SyncMode::resolve_arg("off"), Some(SyncMode::Manual));
     }
 
-    /// Manual modda hiçbir yön otomatik çalışmamalı.
+    /// In manual mode no direction may run automatically.
     #[test]
     fn manual_mode_disables_both_directions() {
         let c = resolve_arg("[sync]\nmode = \"manual\"\n");
@@ -505,7 +505,7 @@ mod config_tests {
         assert!(!c.mode_value.accepts_from_disk());
     }
 
-    /// Yazım hatası senkronu kırmamalı; varsayılana düşüp uyarmalı.
+    /// A typo must not break sync; it falls back to the default and warns.
     #[test]
     fn unknown_mode_falls_back_to_default() {
         let c = resolve_arg("[sync]\nmode = \"disk-to-studioo\"\n");
@@ -530,16 +530,16 @@ mod config_tests {
         assert!(c.property_allowed("Anchored"));
     }
 
-    /// Eski syncix.toml'lar düz yazılmıştı (bölümsüz). Bir yükseltme kimsenin
-    /// dosyasını bozmamalı.
+    /// Old syncix.toml files were flat (no sections). An upgrade must not break
+    /// anyone's file.
     #[test]
     fn flat_legacy_format_still_parses() {
-        let c = resolve_arg("sync_dir = \"kaynak\"\nport = 25565\n");
+        let c = resolve_arg("sync_dir = \"source\"\nport = 25565\n");
         assert_eq!(c.wanted_port, 25565);
-        assert!(c.sync_dir.ends_with("kaynak"), "sync_dir: {}", c.sync_dir);
+        assert!(c.sync_dir.ends_with("source"), "sync_dir: {}", c.sync_dir);
     }
 
-    /// Saçma değerler kabul edilmemeli: 0 ms debounce sonsuz yazım demek.
+    /// Nonsense values must be rejected: a 0 ms debounce means writing forever.
     #[test]
     fn out_of_range_values_are_clamped() {
         let c = resolve_arg("[sync]\ndebounce_ms = 0\n\n[safety]\ntrash_keep = 0\n");
@@ -561,41 +561,41 @@ mod place_identity_tests {
         c
     }
 
-    /// İlk bağlanan place klasörü sahiplenir.
+    /// The first place to connect claims the folder.
     #[test]
     fn first_connected_place_claims_folder() {
-        let c = scratch_dir("ilk");
-        assert_eq!(c.linked_place(), None, "yeni klasör bir place'e bağlı olmamalı");
+        let c = scratch_dir("first");
+        assert_eq!(c.linked_place(), None, "a new folder must not be bound to a place");
         c.bind_place("place-A");
         assert_eq!(c.linked_place(), Some("place-A".to_string()));
     }
 
-    /// Kimlik core yeniden başlasa da kalmalı: dosyadan okunuyor.
+    /// The identity must survive a core restart: it is read from a file.
     #[test]
     fn identity_is_stable() {
         let c = scratch_dir("kalici");
         c.bind_place("place-A");
-        // Aynı köke bakan ikinci bir yapılandırma nesnesi
+        // A second configuration object looking at the same root
         let mut c2 = ProjectConfig::resolve_arg(&toml::Value::Table(Default::default()), ".");
         c2.root = c.root.clone();
         assert_eq!(c2.linked_place(), Some("place-A".to_string()));
     }
 
-    /// Asıl mesele: farklı bir place aynı klasöre bağlanırsa fark edilmeli.
+    /// The point: a different place connecting to the same folder must be noticed.
     #[test]
     fn different_place_is_detected() {
-        let c = scratch_dir("farkli");
+        let c = scratch_dir("different");
         c.bind_place("place-A");
         let is_bound = c.linked_place().unwrap();
-        assert_ne!(is_bound, "place-B", "B, A'ya bağlı klasöre girmemeli");
-        // Karar verildikten sonra fresh sahip yazılabilmeli.
+        assert_ne!(is_bound, "place-B", "B must not enter a folder bound to A");
+        // Once the decision is made, a new owner can be written.
         c.bind_place("place-B");
         assert_eq!(c.linked_place(), Some("place-B".to_string()));
     }
 
-    /// Süzgeçler hem eklentide hem core'da uygulanıyor. Core tarafı, previous_text bir
-    /// eklenti bağlandığında ayarın yine de geçerli olması için gerekli —
-    /// bir süre yalnızca eklentide vardı ve o hâlde ayar sessizce etkisizdi.
+    /// The filters are applied in both the plugin and the core. The core side is needed so
+    /// the setting still applies when an older plugin connects —
+    /// for a while it existed only in the plugin, and then the setting silently did nothing.
     #[test]
     fn filters_reject_excluded() {
         let c = ProjectConfig::resolve_arg(
@@ -609,13 +609,13 @@ ignore_properties = [\"Transparency\"]
         );
         assert!(!c.class_allowed("Camera"));
         assert!(!c.class_allowed("Terrain"));
-        assert!(c.class_allowed("Part"), "listede olmayan sınıf geçmeli");
+        assert!(c.class_allowed("Part"), "a class not on the list must pass");
 
         assert!(!c.property_allowed("Transparency"));
-        assert!(c.property_allowed("Anchored"), "listede olmayan property geçmeli");
+        assert!(c.property_allowed("Anchored"), "a property not on the list must pass");
     }
 
-    /// Boş liste "hiçbir şey geçmesin" değil, "kısıtlama yok" demek.
+    /// An empty list means "no restriction", not "let nothing through".
     #[test]
     fn empty_filter_allows_everything() {
         let c = ProjectConfig::resolve_arg(&toml::Value::Table(Default::default()), ".");
@@ -623,7 +623,7 @@ ignore_properties = [\"Transparency\"]
         assert!(c.property_allowed("Transparency"));
     }
 
-    /// Askıya alma üç yerden de görülebilmeli ve restored_count alınabilmeli.
+    /// Suspension must be visible from all three places and must be reversible.
     #[test]
     fn suspension_works() {
         set_sync_suspended(false);

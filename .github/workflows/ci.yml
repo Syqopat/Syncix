@@ -1,17 +1,17 @@
 name: CI
 
-# Her itmede üç katman da denetlenir:
-#   1. Rust birim testleri  — property tip dönüşümü, UUID kalıcılığı, döngü dedektörü
-#   2. Luau sözdizimi       — Studio eklentisi ve oyun scriptleri
-#   3. TypeScript derlemesi — VS Code eklentisi
-# Bu iş akışının varlık sebebi: "Position" hatası (her Vector3 yazımının sessizce
-# düşmesi) aylarca fark edilmedi çünkü o katmanda hiç test yoktu.
+# Every push checks all three layers:
+#   1. Rust unit tests      — property type conversion, UUID stability, loop detector
+#   2. Luau syntax          — the Studio plugin and the example game's scripts
+#   3. TypeScript build     — the VS Code extension
+# This workflow exists because of the Position bug (every Vector3 write silently
+# dropped), which went unnoticed because that layer had no tests at all.
 
-# Kaynak agaci depo kokunde degil, ProjectSyncix/ altinda. GitHub Actions
-# yalnizca kok .github/workflows'u okur, bu yuzden dosya burada durur ve her
-# `run:` adimi asagidaki `defaults` ile o klasorde calisir. `uses:` adimlarinin
-# yol girdileri bu varsayilandan ETKILENMEZ; onlar tek tek ProjectSyncix/ ile
-# baslatilmali.
+# The source tree is not at the repository root but under ProjectSyncix/. GitHub
+# Actions only reads .github/workflows at the root, so this file lives here and every
+# `run:` step runs in that folder through `defaults` below. The path inputs of
+# `uses:` steps are NOT affected by that default; each has to start with
+# ProjectSyncix/.
 
 defaults:
   run:
@@ -24,10 +24,10 @@ on:
 
 jobs:
   rust:
-    name: Core testleri
-    # Windows: urun yalnizca Windows'ta dagitiliyor ve yol eslestirme testleri
-    # C:\ bicimli mutlak yollarla calisiyor. Ubuntu'da ters egik cizgi ayirici
-    # sayilmadigi icin bu testler anlamsizca dusuyordu (CI'nin ilk calismasi).
+    name: Core tests
+    # Windows: the product ships for Windows only, and the path-matching tests use
+    # C:\-style absolute paths. On Ubuntu a backslash is not a separator, so those
+    # tests failed for no meaningful reason (CI's very first run).
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ProjectSyncix/core-engine
-      - name: Testler
+      - name: Tests
         working-directory: ProjectSyncix/core-engine
         run: cargo test --all-features
       - name: Clippy
@@ -45,43 +45,48 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
   luau:
-    name: Luau sözdizimi
+    name: Luau syntax
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: CompeyDev/setup-rokit@v0.1.2
         with:
           path: ProjectSyncix
-      - name: Eklenti ve oyun scriptleri
+      - name: Plugin and example scripts
         run: sh tools/luau-check.sh $(find studio-plugin/src example -name "*.lua")
+      - name: Requires, constants and call arities
+        run: python3 tools/require-check.py
 
   typescript:
-    name: Editör eklentisi
+    name: Editor extension
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Bağımlılıklar
+      - name: Dependencies
         working-directory: ProjectSyncix/vscode-extension
         run: npm ci || npm install
-      - name: Derleme
+      - name: Type check
+        working-directory: ProjectSyncix/vscode-extension
+        run: npm run typecheck
+      - name: Build
         working-directory: ProjectSyncix/vscode-extension
         run: npm run compile
 
-  surum-hizasi:
-    name: Sürüm hizası
+  version-alignment:
+    name: Version alignment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cargo.toml ile package.json aynı sürümde mi
+      - name: Cargo.toml, package.json and the plugin share one version
         run: |
           CARGO=$(grep -m1 '^version' core-engine/Cargo.toml | cut -d'"' -f2)
           PKG=$(node -p "require('./vscode-extension/package.json').version")
           PLUGIN=$(grep -m1 'SYNCIX_VERSION' studio-plugin/src/init.server.lua | cut -d'"' -f2)
-          echo "core=$CARGO  eklenti=$PKG  plugin=$PLUGIN"
+          echo "core=$CARGO  extension=$PKG  plugin=$PLUGIN"
           if [ "$CARGO" != "$PKG" ] || [ "$CARGO" != "$PLUGIN" ]; then
-            echo "HATA: sürümler uyuşmuyor. Üçü de aynı olmalı."
+            echo "ERROR: the versions do not match. All three must be the same."
             exit 1
           fi

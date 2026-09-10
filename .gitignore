@@ -4,9 +4,5 @@ bin/
 obj/
 .vs/
 
-# Motor loglari — makineye ozel, depoda isi yok
+# Engine logs are machine-specific.
 *.log
-
-# Eski bicimde birakilmis test artigi sync klasoru.
-# Gercek ornek ProjectSyncix/example altinda.
-/src_workspace/

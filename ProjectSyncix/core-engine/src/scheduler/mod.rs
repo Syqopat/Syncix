@@ -19,7 +19,7 @@ pub struct Job {
     pub timeout: Duration,
 }
 
-/// Uzun süren (Heavy) asenkron görevleri işleyen Thread Pool Yöneticisi
+/// Thread pool manager that runs long (heavy) async jobs
 pub struct JobScheduler {
     sender: mpsc::Sender<Job>,
 }
@@ -29,23 +29,23 @@ impl JobScheduler {
         // Kanal kapasitesi 1000
         let (tx, mut rx) = mpsc::channel::<Job>(1000);
 
-        // N amount worker thread başlat
+        // Start N worker threads
         for _i in 0..worker_count {
-            let _rx_clone = tx.clone(); // Gerçek uygulamada MPMC veya crossbeam kullanılabilir.
-                                        // Şimdilik basitleştirilmiş single receiver modeli kuruyoruz:
+            let _rx_clone = tx.clone(); // a real implementation could use MPMC or crossbeam.
+                                        // For now a simplified single-receiver model:
         }
 
-        // Basitçe single bir asenkron dispatcher kuralım (Gerçek projede tokio::task::spawn ile dağıtılır)
+        // Simply set up one async dispatcher (a real project would distribute with tokio::task::spawn)
         tokio::spawn(async move {
             while let Some(job) = rx.recv().await {
                 info!("Job started: [{}]", job.id);
 
-                // Job'ı timeout ile sarmala
+                // Wrap the job in a timeout
                 let result = tokio::time::timeout(job.timeout, job.task).await;
 
                 match result {
                     Ok(Ok(_)) => info!("Job completed: [{}]", job.id),
-                    Ok(Err(e)) => error!("Job hata verdi: [{}] - {}", job.id, e),
+                    Ok(Err(e)) => error!("Job failed: [{}] - {}", job.id, e),
                     Err(_) => warn!("Job timed out: [{}]", job.id),
                 }
             }
@@ -54,11 +54,11 @@ impl JobScheduler {
         Self { sender: tx }
     }
 
-    /// Yeni bir görev (Job) kuyruğa ekler
+    /// Adds a new job to the queue
     pub async fn enqueue_job(&self, job: Job) -> Result<(), String> {
         self.sender
             .send(job)
             .await
-            .map_err(|e| format!("Kuyruk dolu veya koptu: {}", e))
+            .map_err(|e| format!("The queue is full or closed: {}", e))
     }
 }

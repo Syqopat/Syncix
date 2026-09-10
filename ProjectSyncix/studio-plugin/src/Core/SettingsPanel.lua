@@ -1,27 +1,27 @@
 -- SettingsPanel
--- Studio araç çubuğundaki Syncix düğmesi ve ayar/durum paneli.
+-- The Syncix button on Studio's toolbar and the settings/status panel.
 --
--- Buradaki asıl iş PORT SEÇİMİ. Eklenti normalde 8080-8089 aralığını tarayıp first
--- cevap veren core'a bağlanır. İki projectInfo aynı anda açıksa bu YANLIŞ projeye
--- bağlanabilir. Port alanına bir sayı yazıldığında tarama kapanır ve yalnızca o
--- port denenir; orada Syncix yoksa bağlanılmaz. Böylece "bu Studio penceresi şu
--- projeye bağlansın" kesin olarak söylenebilir.
+-- The main job here is PORT SELECTION. The plugin normally scans 8080-8089 and connects
+-- to the first core that answers. With two projects open at once this can connect to the
+-- WRONG project. When a number is typed into the port field, scanning stops and only that
+-- port is tried; if Syncix is not there, it does not connect. That way "this Studio window
+-- connects to that project" can be stated for certain.
 --
--- Varsayılan bilerek "Automatic"tir, 8080 değildir: core requested port doluysa
--- kendiliğinden 8081'e geçebiliyor; alanda sabit 8080 yazsaydı o durumda hiç
--- bağlanamazdınız.
+-- The default is deliberately "Automatic", not 8080: if the requested port is taken the
+-- core may move to 8081 by itself; with a fixed 8080 in the field you would never
+-- connect in that case.
 
 local Store = require(script.Parent.Store)
 
 local SettingsPanel = {}
 SettingsPanel.__index = SettingsPanel
 
--- Palet.
+-- Palette.
 --
--- Iki zemin tonu var: panelin arkasi KOYU, kartlar bir ton isOpen. Ayrimi
--- cizgiyle degil tonla yapmak, kucuk bir panelde daha az gurultu uretiyor.
--- Mavi, logodaki maviyle ayni (#4C8DF5) — panel, ikon ve magaza girdisi
--- tek bir renge dayaniyor.
+-- There are two background tones: the panel's back is DARK, cards are one tone lighter.
+-- Separating with tone rather than lines produces less noise in a small panel.
+-- The blue is the same as the logo's (#4C8DF5) — the panel, the icon and the store listing
+-- rest on one colour.
 local COLOR = {
 	bg     = Color3.fromRGB(22, 24, 29),
 	card     = Color3.fromRGB(30, 33, 40),
@@ -35,20 +35,20 @@ local COLOR = {
 	blue     = Color3.fromRGB(76, 141, 245),
 }
 
--- Bosluk olcegi. Elle piksel yazmak yerine buradan seciliyor; panelin her
--- yerinde ayni ritim olusuyor.
+-- Spacing scale. Chosen from here instead of typing pixels by hand, so the whole panel
+-- shares one rhythm.
 local SPACING = { narrow = 6, medium = 10, wide = 14 }
 
--- Arac cubugu ikonu.
+-- Toolbar icon.
 --
--- Roblox plugin dugmesine ikon koymanin tek yolu, gorseli Roblox'a asset
--- olarak yuklemek: yerel bir dosya kullanilamiyor. Kaynagi
--- vscode-extension/resources/logo.png; ayni marker kenar cubugu ikonunda ve
--- magaza girdisinde de kullaniliyor.
+-- The only way to put an icon on a Roblox plugin button is to upload the image to Roblox
+-- as an asset: a local file cannot be used. Its source is
+-- vscode-extension/resources/logo.png; the same mark is used for the sidebar icon and
+-- the store listing.
 --
--- Once Roblox'un yerlesik ROBUX ikonu vardi (urunle ilgisi yoktu), sonra bos
--- dize denendi ve Studio onu "yuklenemedi" sayip baklava seklinde bir yer
--- tutucu gosterdi.
+-- First it was Roblox's built-in ROBUX icon (nothing to do with the product), then an empty
+-- string was tried and Studio treated it as "failed to load" and showed a diamond-shaped
+-- placeholder.
 local ICON = "rbxassetid://73929349055328"
 
 function SettingsPanel.new()
@@ -59,25 +59,25 @@ function SettingsPanel:OnStart(container)
 	self.plugin = container:Get("Plugin").ref
 	self.connectionManager = container:Get("ConnectionManager")
 	self.activityLog = container:Get("ActivityLog")
-	-- Panelde iki view var: "projeler" (hangi core'lar isRunning) ve
-	-- "akis" (Syncix ne degistirdi). Varsayilan flow, cunku asil eksik oydu:
-	-- degisiklikler tamamen sessiz uygulaniyordu.
+	-- The panel has two views: "projects" (which cores are running) and
+	-- "activity" (what Syncix changed). Activity is the default, because that was what was really
+	-- missing: changes were applied completely silently.
 	self.view = "activity"
 
 	if not self.plugin then
 		return
 	end
 
-	-- Arac cubugu, panelin TAMAMEN DISINDA tutuluyor ve her sey pcall icinde.
+	-- The toolbar is kept COMPLETELY OUTSIDE the panel and everything runs in pcall.
 	--
-	-- Burasi StartAll icinden cagriliyor; buradaki bir failure butun eklentiyi
-	-- baslatmadan dusuruyor. Ikon denemesi yuzunden senkronun hic calismamasi
-	-- kabul edilemez; basarisizlikta yalnizca button eksik kalir.
+	-- This is called from inside StartAll; an error here stops the whole plugin
+	-- from starting. Sync never working because of an icon attempt is
+	-- unacceptable; on failure only the button is missing.
 	--
-	-- Ikon: once Roblox'un yerlesik ROBUX ikonu vardi (urunle ilgisi yoktu),
-	-- sonra bos dize denendi ve Studio onu "yuklenemedi" sayip baklava seklinde
-	-- yer tutucu gosterdi. Once argumansiz cagri deneniyor; bu Studio surumunde
-	-- desteklenmiyorsa bos dizeli surume dusuluyor.
+	-- Icon: first it was Roblox's built-in ROBUX icon (nothing to do with the product),
+	-- then an empty string was tried and Studio treated it as "failed to load" and showed a
+	-- diamond-shaped placeholder. A call without arguments is tried first; if this Studio version
+	-- does not support it, it falls back to the empty-string version.
 	local toolbar
 	if not pcall(function()
 		toolbar = self.plugin:CreateToolbar("Syncix")
@@ -89,7 +89,7 @@ function SettingsPanel:OnStart(container)
 	if not pcall(function()
 		self.button = toolbar:CreateButton("Syncix", "Syncix status and port settings", ICON)
 	end) then
-		-- Ikon yuklenemezse button yine de olusmali; senkron ikona bagli degil.
+		-- Even if the icon fails to load the button must still be created; sync does not depend on the icon.
 		pcall(function()
 			self.button = toolbar:CreateButton("Syncix", "Syncix status and port settings", "")
 		end)
@@ -107,16 +107,16 @@ function SettingsPanel:OnStart(container)
 end
 
 -- ---------------------------------------------------------------------------
--- KUCUK BIR TASARIM DUZENI
+-- A SMALL DESIGN SYSTEM
 --
--- Eski panel her ogeyi elle piksel konumuna koyuyordu (y = 10, 32, 96, 154...).
--- Iki sorunu vardi: bir oge buyudugunde altindakiler ustune biniyordu ve
--- genislikler sabit oldugu icin narrow panelde tasiyordu (330 + 74 = 404 piksel,
--- panelin narrow hali 380).
+-- The old panel placed every element at hand-picked pixel positions (y = 10, 32, 96, 154...).
+-- That had two problems: when an element grew, the ones below overlapped it, and
+-- because widths were fixed they overflowed in a narrow panel (330 + 74 = 404 pixels,
+-- while the panel's narrow state is 380).
 --
--- Artik dikey flow UIListLayout ile, yatay yerlesim ORANLA yapiliyor. Hicbir
--- yerde elle Y konumu yok; ogeler kendi boylarini soyluyor, duzen siralamayi
--- hallediyor.
+-- Now the vertical flow uses UIListLayout and horizontal placement uses RATIOS. There is no
+-- hand-written Y position anywhere; elements report their own heights and the layout
+-- handles the ordering.
 -- ---------------------------------------------------------------------------
 
 local function corner(parentNode, radius)
@@ -169,7 +169,7 @@ local function title(parentNode, text, order)
 	return l
 end
 
---- Icerigi gruplayan card. Panelin arkasindan bir ton isOpen.
+--- Card that groups content. One tone lighter than the panel's back.
 local function card(parentNode, order)
 	local k = Instance.new("Frame")
 	k.BackgroundColor3 = COLOR.card
@@ -184,7 +184,7 @@ local function card(parentNode, order)
 	return k
 end
 
---- Yatay row. Genislikler ORANLA veriliyor ki narrow panelde tasmasin.
+--- Horizontal row. Widths are given as RATIOS so it does not overflow in a narrow panel.
 local function row(parentNode, height, order)
 	local r = Instance.new("Frame")
 	r.BackgroundTransparency = 1
@@ -199,14 +199,14 @@ local function row(parentNode, height, order)
 	return r
 end
 
--- Liste satirlarinin ICI mutlak yerlesim kullaniyor: her row sabit
--- yukseklikte ve icindeki uc field (direction, title, timestamp) hizali durmali.
--- Ust bolumdeki flow tabanli `etiket` bunun icin uygun degil, o yuzden
--- konumlu bir es var.
+-- The INSIDE of list rows uses absolute placement: every row has a fixed
+-- height and its three fields (direction, title, timestamp) must line up.
+-- The flow-based `label` of the upper part does not suit this, so there is
+-- a positioned counterpart.
 --
--- Bu ikisi bir sure YOKTU: `etiket`in imzasini degistirdim ama list
--- icindeki sekiz cagriyi guncellemeyi unuttum. UDim2 degerleri color
--- parametresine gitti ve panel her yenilenmede failure verdi.
+-- For a while these two DID NOT EXIST: the signature of `label` was changed but the eight
+-- calls inside the list were not updated. UDim2 values went into the colour
+-- parameter and the panel threw an error on every refresh.
 local function boxLabel(parentNode, text, size, position, color, bold)
 	local l = Instance.new("TextLabel")
 	l.Size = size
@@ -279,9 +279,9 @@ function SettingsPanel:Toggle()
 	frame.BorderSizePixel = 0
 	frame.Parent = self.gui
 
-	-- Ust bolum: kartlar dikey akista.
-	-- AutomaticSize sayesinde durum yazisi uzayinca card da uzuyor ve
-	-- altindakiler kendiliginden asagi kayiyor.
+	-- Upper part: cards in a vertical flow.
+	-- Thanks to AutomaticSize, when the status text grows the card grows and
+	-- the ones below move down by themselves.
 	local parentNode = Instance.new("Frame")
 	parentNode.BackgroundTransparency = 1
 	parentNode.Size = UDim2.new(1, 0, 0, 0)
@@ -290,10 +290,10 @@ function SettingsPanel:Toggle()
 	innerPadding(parentNode, SPACING.wide)
 	verticalFlow(parentNode, SPACING.medium)
 
-	-- Kimlik satiri: logodaki blue kare + ad.
+	-- Identity line: the blue square in the logo + name.
 	local identity = row(parentNode, 18, 1)
-	-- Logonun kendisi. Yuklenemezse (asset erisimi yoksa) arkasindaki blue
-	-- kare gorunur kalir; panel ikona bagli degil.
+	-- The logo itself. If it fails to load (no asset access), the blue square behind it
+	-- stays visible; the panel does not depend on the icon.
 	local marker = Instance.new("ImageLabel")
 	marker.Size = UDim2.new(0, 16, 0, 16)
 	marker.BackgroundColor3 = COLOR.blue
@@ -304,13 +304,13 @@ function SettingsPanel:Toggle()
 	marker.LayoutOrder = 1
 	marker.Parent = identity
 	corner(marker, 4)
-	local ad = label(identity, "SYNCIX", COLOR.ink, 12, true)
-	ad.AutomaticSize = Enum.AutomaticSize.None
-	ad.Size = UDim2.new(1, -22, 1, 0)
-	ad.TextYAlignment = Enum.TextYAlignment.Center
-	ad.LayoutOrder = 2
+	local titleLabel = label(identity, "SYNCIX", COLOR.ink, 12, true)
+	titleLabel.AutomaticSize = Enum.AutomaticSize.None
+	titleLabel.Size = UDim2.new(1, -22, 1, 0)
+	titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+	titleLabel.LayoutOrder = 2
 
-	-- DURUM
+	-- STATUS
 	title(parentNode, "Status", 2)
 	local statusCard = card(parentNode, 3)
 	local statusRow = Instance.new("Frame")
@@ -319,8 +319,8 @@ function SettingsPanel:Toggle()
 	statusRow.AutomaticSize = Enum.AutomaticSize.Y
 	statusRow.Parent = statusCard
 
-	-- Renkli nokta: durum rengini yazinin renginden ayirmak, "bagli" halinde
-	-- metnin beyaz kalip yalnizca noktanin green olmasini sagliyor.
+	-- Coloured dot: separating the status colour from the text colour keeps the text white
+	-- when connected, with only the dot green.
 	self.statusDot = Instance.new("Frame")
 	self.statusDot.Size = UDim2.new(0, 8, 0, 8)
 	self.statusDot.Position = UDim2.new(0, 0, 0, 4)
@@ -333,7 +333,7 @@ function SettingsPanel:Toggle()
 	self.statusText.Position = UDim2.new(0, 16, 0, 0)
 	self.statusText.Size = UDim2.new(1, -16, 0, 0)
 
-	-- BAGLANTI
+	-- CONNECTION
 	title(parentNode, "Connection", 4)
 	local connectionCard = card(parentNode, 5)
 	label(
@@ -361,7 +361,7 @@ function SettingsPanel:Toggle()
 	local applyFn = makeButton(portRow, "Apply", 0.38, COLOR.blue, 2)
 	local cleanup = makeButton(portRow, "Automatic", 0.30, COLOR.box, 3)
 
-	-- SENKRON
+	-- SYNC
 	title(parentNode, "Sync", 6)
 	local syncRow = row(parentNode, 30, 7)
 	self.pauseButton = makeButton(syncRow, "...", 0.5, COLOR.box, 1)
@@ -382,7 +382,7 @@ function SettingsPanel:Toggle()
 		self:Refresh()
 	end)
 
-	-- SEKMELER
+	-- TABS
 	local tabRow = row(parentNode, 26, 8)
 	self.tabFlow = makeButton(tabRow, "Recent changes", 0.5, COLOR.box, 1)
 	self.projectTab = makeButton(tabRow, "Projects", 0.5, COLOR.box, 2)
@@ -395,7 +395,7 @@ function SettingsPanel:Toggle()
 		self:Refresh()
 	end)
 
-	-- LISTE: kalan yuksekligi doldurur.
+	-- LIST: fills remaining height.
 	self.list = Instance.new("ScrollingFrame")
 	self.list.BackgroundColor3 = COLOR.card
 	self.list.BorderSizePixel = 0
@@ -405,9 +405,9 @@ function SettingsPanel:Toggle()
 	self.list.Parent = frame
 	corner(self.list, 8)
 
-	-- Listenin yeri parentNode bolumun GERCEK yuksekligine gore ayarlanir.
-	-- Sabit bir numValue yazmak, durum yazisi uzadiginda listenin ustune
-	-- binmesine yol aciyordu.
+	-- The list's position follows the upper part's REAL height.
+	-- Writing a fixed number made the list overlap it
+	-- whenever the status text grew.
 	local function layoutList()
 		local y = parentNode.AbsoluteSize.Y
 		self.list.Position = UDim2.new(0, SPACING.wide, 0, y)
@@ -424,12 +424,12 @@ function SettingsPanel:Toggle()
 		self:ApplyPort("")
 	end)
 
-	-- Panel acikken durumu canli tut.
+	-- Keep the status live while the panel is open.
 	--
-	-- Refresh pcall icinde: burada olusan bir failure task'i olduruyordu ve panel
-	-- bir daha HIC guncellenmiyordu. Sonuc yaniltiyordu — Output "Connected"
-	-- derken panelde "Not connected" yaziyordu, cunku yazan kod artik
-	-- calismiyordu. Hata bir kez bildirilir, dongu devam eder.
+	-- Refresh runs in pcall: an error here used to kill the task and the panel
+	-- NEVER updated again. The result was misleading — Output said "Connected"
+	-- while the panel said "Not connected", because the code writing it was no longer
+	-- running. The error is reported once and the loop continues.
 	task.spawn(function()
 		local errorReported = false
 		while self.gui do
@@ -453,7 +453,7 @@ function SettingsPanel:ApplyPort(text: string)
 	local clean = string.gsub(text or "", "%s", "")
 
 	if clean == "" then
-		Store.Set(self.plugin, "syncix_port", 0) -- 0 = otomatik
+		Store.Set(self.plugin, "syncix_port", 0) -- 0 = automatic
 		self.connectionManager:SetManualPort(nil)
 		print("[Syncix] Port: automatic. Looking for a running core...")
 	else
@@ -492,8 +492,8 @@ function SettingsPanel:Refresh()
 			"Sync PAUSED\nNothing is sent to or applied from the editor.\n"
 			.. "Press Resume sync to re-sync the full tree."
 	elseif cm.state == "Connected" and info then
-		-- Bagliyken ink BEYAZ kaliyor, yalnizca nokta green. Butun blogu
-		-- yesile boyamak okunurlugu dusuruyordu.
+		-- When connected the text stays WHITE and only the dot is green. Painting the whole block
+		-- green made it harder to read.
 		statusColor = COLOR.green
 		self.statusText.TextColor3 = COLOR.ink
 		self.statusText.Text = string.format(
@@ -515,8 +515,8 @@ function SettingsPanel:Refresh()
 		)
 	end
 
-	-- Cakisma varsa durum satirinda goster: sessizce ezilmis bir degisiklik
-	-- kullanicinin haberi olmadan kaybolmasin.
+	-- Show conflicts in the status line: a silently overwritten change must not
+	-- disappear without the user knowing.
 	if self.activityLog then
 		local summary = self.activityLog:Summary()
 		if summary.conflict > 0 then
@@ -546,12 +546,12 @@ function SettingsPanel:Refresh()
 	self:FillList()
 end
 
---- Recent degisiklikler akisi.
+--- Recent changes feed.
 ---
---- Rojo'nun patch visualizer'i bagliniverince buyuk bir farki onaya sunar; biz
---- surekli ve cift yonlu calistigimiz icin onay istemek kullanilamaz olurdu.
---- Bunun yerine ne gelip ne gittigini geriye donuk gosteriyoruz. Cakisan
---- degisiklikler red isaretlenir.
+--- Rojo's patch visualizer presents a large diff for approval on connect; we
+--- work continuously and two-way, so asking for approval would be unusable.
+--- Instead we show afterwards what came in and what went out. Conflicting
+--- changes are marked red.
 function SettingsPanel:FillFlow()
 	local entries = self.activityLog:Recent(40)
 
@@ -593,7 +593,7 @@ function SettingsPanel:FillFlow()
 			subItem = subItem .. "  =  " .. k.datum
 		end
 		if k.conflict then
-			subItem = subItem .. "   [CAKISMA]"
+			subItem = subItem .. "   [CONFLICT]"
 		end
 		boxLabel(row, subItem, UDim2.new(1, -110, 0, 14), UDim2.new(0, 36, 0, 18), k.conflict and COLOR.red or COLOR.muted)
 
@@ -617,7 +617,7 @@ function SettingsPanel:FillList()
 		end
 	end
 
-	-- Sekme gorunumleri
+	-- Tab views
 	if self.tabFlow then
 		self.tabFlow.BackgroundColor3 = (self.view == "activity") and COLOR.blue or COLOR.box
 		self.projectTab.BackgroundColor3 = (self.view == "projects") and COLOR.blue or COLOR.box
@@ -628,10 +628,10 @@ function SettingsPanel:FillList()
 		return
 	end
 
-	-- Proje taramasi ON portu tek tek yokluyor; panel her 2 saniyede bir
-	-- yenilendigi icin bu, saniyede bes HTTP istegi demekti ve baglantiyi
-	-- calkantiya sokuyordu (Output'ta surekli Connected -> Disconnected).
-	-- Sonuc onbelleklenip en fazla 10 saniyede bir tazeleniyor.
+	-- The project scan probes TEN ports one by one; since the panel refreshes every
+	-- 2 seconds, that meant five HTTP requests per second and made the
+	-- connection churn (Output kept printing Connected -> Disconnected).
+	-- The result is cached and refreshed at most every 10 seconds.
 	local scanNow = os.clock()
 	if not self.projectCache or (scanNow - (self.projectCacheTime or 0)) > 10 then
 		self.projectCache = self.connectionManager:ScanAllPorts()

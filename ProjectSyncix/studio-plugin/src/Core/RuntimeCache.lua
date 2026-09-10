@@ -1,6 +1,6 @@
 --!strict
 -- RuntimeCache
--- Hızlı erişim için UUID <-> Instance eşleşmelerini ve O(1) arama yapılarını tutar.
+-- Keeps UUID <-> Instance mappings and O(1) lookup structures for fast access.
 
 local RuntimeCache = {}
 RuntimeCache.__index = RuntimeCache
@@ -8,29 +8,29 @@ RuntimeCache.__index = RuntimeCache
 function RuntimeCache.new()
     local self = setmetatable({}, RuntimeCache)
     
-    -- UUID'den Instance'a hızlı erişim
+    -- Fast lookup from UUID to Instance
     self.uuidToInstance = {}
     
-    -- Instance'dan UUID'ye hızlı erişim
+    -- Fast lookup from Instance to UUID
     self.instanceToUuid = {}
     
-    -- "Kirli" (Değişmiş ama henüz gönderilmemiş) nesneleri tutar
+    -- Keeps "dirty" objects (changed but not sent yet)
     self.dirtyStates = {}
     
     return self
 end
 
 function RuntimeCache:OnInit(container)
-    -- İhtiyaç duyulursa diğer servisler buradan çekilir
+    -- Other services are fetched from here when needed
 end
 
--- Bir instance'ı önbelleğe kaydeder.
+-- Stores an instance in the cache.
 function RuntimeCache:CacheInstance(uuid: string, instance: Instance)
     self.uuidToInstance[uuid] = instance
     self.instanceToUuid[instance] = uuid
 end
 
--- Bir instance'ı önbellekten çıkarır (DESTROY sonrası).
+-- Removes an instance from the cache (after DESTROY).
 function RuntimeCache:Remove(uuid: string)
     local instance = self.uuidToInstance[uuid]
     if instance then
@@ -40,27 +40,27 @@ function RuntimeCache:Remove(uuid: string)
     self.dirtyStates[uuid] = nil
 end
 
--- UUID vererek Instance döndürür.
+-- Returns the Instance for a UUID.
 function RuntimeCache:GetInstance(uuid: string): Instance?
     return self.uuidToInstance[uuid]
 end
 
--- Instance vererek UUID döndürür.
+-- Returns the UUID for an Instance.
 function RuntimeCache:GetUuid(instance: Instance): string?
     return self.instanceToUuid[instance]
 end
 
--- Bir instance'ın "kirli" (Dirty) olarak işaretlenmesi (ağa gönderilecekler için)
+-- Marks an instance as "dirty" (to be sent over the network)
 function RuntimeCache:MarkDirty(uuid: string)
     self.dirtyStates[uuid] = true
 end
 
--- Gönderimden sonra "kirli" bayrağını temizler.
+-- Clears the "dirty" flag after sending.
 function RuntimeCache:ClearDirty(uuid: string)
     self.dirtyStates[uuid] = nil
 end
 
--- Tüm "kirli" (değişmiş) nesnelerin UUID'lerini döndürür.
+-- Returns the UUIDs of all "dirty" (changed) objects.
 function RuntimeCache:GetDirtyUuids()
     local uuids = {}
     for uuid, _ in pairs(self.dirtyStates) do

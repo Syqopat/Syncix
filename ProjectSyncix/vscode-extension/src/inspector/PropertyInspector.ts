@@ -5,10 +5,10 @@ import { EditorStateManager } from '../state/EditorStateManager';
 import { WorkspaceExplorer } from '../explorer/WorkspaceExplorer';
 import { getBaseUrl } from '../core/env';
 
-// Adres artik sabit degil: core dolu portu atlayabiliyor, tek kaynaktan okunur.
+// The address is no longer fixed: the core may skip a taken port; it is read from a single source.
 const BASE = () => getBaseUrl();
 
-/** Küçük HTTP yardımcıları (core ile konuşur). */
+/** Small HTTP helpers (talk to the core). */
 function httpGetJson(path: string): Promise<any> {
     return new Promise((resolve, reject) => {
         const req = http.get(BASE() + path, (res) => {
@@ -38,9 +38,9 @@ function httpPostJson(path: string, data: any): Promise<void> {
 }
 
 /**
- * Görsel Property Inspector.
- * Seçili objenin tüm property + attribute'larını uygun widget'larla gösterir
- * ve düzenlemeyi SET_PROPERTY / SET_ATTRIBUTE ile Studio'ya iletir.
+ * Visual Property Inspector.
+ * Shows every property and attribute of the selected object with suitable widgets
+ * and sends edits to Studio with SET_PROPERTY / SET_ATTRIBUTE.
  */
 export class PropertyInspector {
     public static currentPanel: PropertyInspector | undefined;
@@ -60,14 +60,14 @@ export class PropertyInspector {
         private rpc: RpcManager,
         private explorer: WorkspaceExplorer
     ) {
-        // Seçim değişince Inspector'ı güncelle
+        // Update the Inspector when the selection changes
         this.stateManager.onSelectionChanged((ids) => {
             if (this.panel && this.panel.visible && ids.length > 0) {
                 this.loadProperties(ids[0]);
             }
         });
 
-        // Studio'da bir şey değişince (canlı) gösterilen objeyi tazele
+        // When something changes in Studio (live), refresh the object shown
         this.rpc.onMessage((msg) => {
             if (!this.panel || !this.panel.visible || !this.currentId) return;
             if (msg.event_type === 'INSTANCE_UPDATED' && msg.data?.id === this.currentId) {
@@ -115,7 +115,7 @@ export class PropertyInspector {
         }
         const sel = this.stateManager.selectedNodeIds;
         if (sel.length > 0) { this.loadProperties(sel[0]); }
-        else { this.panel.webview.html = this.wrap('<p class="dim">Bir obje seç (soldaki Syncix ağacından).</p>'); }
+        else { this.panel.webview.html = this.wrap('<p class="dim">Select an object in the Syncix tree on the left.</p>'); }
     }
 
     public inspect(node: any) {
@@ -130,11 +130,11 @@ export class PropertyInspector {
             if (o.error) { this.panel.webview.html = this.wrap(`<p class="err">${o.error}</p>`); return; }
             this.panel.webview.html = this.render(o);
         } catch (err: any) {
-            this.panel.webview.html = this.wrap(`<p class="err">Yüklenemedi: ${err?.message ?? err}</p>`);
+            this.panel.webview.html = this.wrap(`<p class="err">Could not load: ${err?.message ?? err}</p>`);
         }
     }
 
-    /** PropertyValue serde biçiminden bir düzenleyici satırı üretir. */
+    /** Builds an editor row from a PropertyValue in serde form. */
     private renderField(name: string, pv: any, kind: 'prop' | 'attr'): string {
         const id = `${kind}_${name}`;
         // pv: {"Number":x} | {"Boolean":b} | {"String":s} | {"Vector3":{x,y,z}} | {"Color3":{r,g,b}} | {"UDim2":{xs,xo,ys,yo}}
@@ -187,10 +187,10 @@ export class PropertyInspector {
         const body = `
             <div class="crumb">${breadcrumb}</div>
             <h2>${o.name} <span class="cls">${o.class_name}</span></h2>
-            <div class="sec">Özellikler</div>
-            ${propRows || '<p class="dim">(property yok)</p>'}
+            <div class="sec">Properties</div>
+            ${propRows || '<p class="dim">(no properties)</p>'}
             <div class="sec">Attribute'lar</div>
-            ${attrRows || '<p class="dim">(attribute yok)</p>'}
+            ${attrRows || '<p class="dim">(no attributes)</p>'}
         `;
         return this.wrap(body);
     }

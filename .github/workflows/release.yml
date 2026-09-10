@@ -1,14 +1,16 @@
 name: Release
 
-# Sürüm etiketi itildiğinde (v0.1.0 gibi) çalışır.
+# Runs when a version tag (such as v0.1.1) is pushed, or by hand.
 #
-# Neden CI şart: core binary'si her platform için o platformda derlenmeli.
-# Windows'ta macOS binary'si üretilemez (macOS SDK gerekir). Bu iş akışı üç
-# binary'yi kendi makinelerinde derleyip tek bir .vsix içinde toplar; böylece
-# kullanıcı hangi işletim sisteminde olursa olsun tek kurulumla çalışır.
+# The core binary has to be compiled on the platform it is built for, so it is
+# built on a Windows runner and then packed into the .vsix together with the
+# Studio plugin. The release ships a Windows binary only: the code is written to
+# be portable, but it has never been run on macOS or Linux, and shipping an
+# untested binary would be a claim rather than a fact. Roblox Studio does not
+# exist on Linux at all.
 
-# CI ile ayni sebep: kaynak agaci ProjectSyncix/ altinda, is akisi dosyasi
-# depo kokunde olmak zorunda. Ayrintilar icin ci.yml'deki nota bak.
+# Same reason as CI: the source tree lives under ProjectSyncix/, while workflow
+# files have to be at the repository root. See the note in ci.yml.
 
 defaults:
   run:
@@ -21,37 +23,33 @@ on:
 
 jobs:
   core:
-    name: Core (${{ matrix.hedef }})
+    name: Core (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: windows-latest
-            hedef: x86_64-pc-windows-msvc
-            klasor: win32-x64
-            dosya: syncix-core.exe
-          # macOS ve Linux hedefleri BILEREK cikarildi. Kod tasinabilir
-          # yazildi ama o platformlarda hic calistirilmadi; test edilmemis
-          # binary yayinlamak, calisiyor iddiasinda bulunmak olur.
-          # Roblox Studio zaten Linux'ta yok.
+            target: x86_64-pc-windows-msvc
+            folder: win32-x64
+            file: syncix-core.exe
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.hedef }}
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ProjectSyncix/core-engine
-      - name: Derle
+      - name: Build
         working-directory: ProjectSyncix/core-engine
-        run: cargo build --release --target ${{ matrix.hedef }}
+        run: cargo build --release --target ${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-${{ matrix.klasor }}
-          path: ProjectSyncix/core-engine/target/${{ matrix.hedef }}/release/${{ matrix.dosya }}
+          name: core-${{ matrix.folder }}
+          path: ProjectSyncix/core-engine/target/${{ matrix.target }}/release/${{ matrix.file }}
 
-  paket:
-    name: VSIX paketi
+  package:
+    name: VSIX package
     needs: core
     runs-on: ubuntu-latest
     steps:
@@ -63,38 +61,38 @@ jobs:
         with:
           path: ProjectSyncix
 
-      - name: Studio eklentisini derle
+      - name: Build the Studio plugin
         run: rojo build studio-plugin/default.project.json -o vscode-extension/resources/SyncixPlugin.rbxm
 
-      - name: Binary'leri indir
+      - name: Download the binaries
         uses: actions/download-artifact@v4
         with:
-          path: ProjectSyncix/indirilen
+          path: ProjectSyncix/downloaded
 
-      - name: Binary'leri yerleştir
+      - name: Place the binaries
         run: |
-          for d in indirilen/core-*; do
-            klasor="${d#indirilen/core-}"
-            mkdir -p "vscode-extension/resources/bin/$klasor"
-            cp "$d"/* "vscode-extension/resources/bin/$klasor/"
-            chmod +x "vscode-extension/resources/bin/$klasor/"* || true
+          for d in downloaded/core-*; do
+            folder="${d#downloaded/core-}"
+            mkdir -p "vscode-extension/resources/bin/$folder"
+            cp "$d"/* "vscode-extension/resources/bin/$folder/"
+            chmod +x "vscode-extension/resources/bin/$folder/"* || true
           done
           find vscode-extension/resources/bin -type f -exec ls -la {} \;
 
-      - name: Paketle
+      - name: Package
         working-directory: ProjectSyncix/vscode-extension
         run: |
           npm ci || npm install
           npm run compile
           npx --yes @vscode/vsce package --out ../syncix.vsix
 
-      - name: Sürüme ekle
+      - name: Attach to the release
         uses: softprops/action-gh-release@v2
         with:
           files: ProjectSyncix/syncix.vsix
           body: |
-            Kurulum: syncix.vsix dosyasını indir, VS Code'da
-            Extensions panelinde "..." > "Install from VSIX..." ile kur.
+            Install: download syncix.vsix, then in VS Code open the Extensions
+            panel and choose "..." > "Install from VSIX...".
 
-            Studio eklentisi ve core binary'si paketin içinde gelir,
-            ayrıca bir şey indirmeye gerek yoktur.
+            The Studio plugin and the core binary ship inside the package;
+            there is nothing else to download.

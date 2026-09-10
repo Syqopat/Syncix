@@ -1,27 +1,27 @@
-//! Roblox'a yayınlama (Open Cloud).
+//! Publishing to Roblox (Open Cloud).
 //!
-//! UYARLAMA NOTU — Rojo'nun `upload` komutundan farkları:
+//! ADAPTATION NOTE — how this differs from Rojo's `upload` command:
 //!
-//! 1. ÇEREZ YOK. Rojo'nun previous_text sürümleri .ROBLOSECURITY çerezini kabul ediyordu;
-//!    bu çerez hesabın TAMAMINA erişim verir ve sızarsa hesap gider. Burada
-//!    yalnızca Open Cloud API anahtarı kabul edilir, o da yalnızca verdiğiniz
-//!    izinlere sahiptir ve iptal edilebilir.
+//! 1. NO COOKIES. Older Rojo versions accepted the .ROBLOSECURITY cookie;
+//!    that cookie grants access to the WHOLE account, and if it leaks the account is gone.
+//!    Here only an Open Cloud API key is accepted, which has only the permissions
+//!    you give it and can be revoked.
 //!
-//! 2. ANAHTAR PROJEDE TUTULMAZ. Anahtar yalnızca SYNCIX_API_KEY ortam
-//!    değişkeninden okunur. syncix.toml'a yazılmasına izin verilmez; aksi halde
-//!    first_item `git commit` ile herkese açık olurdu.
+//! 2. THE KEY NEVER LIVES IN THE PROJECT. It is read only from the SYNCIX_API_KEY
+//!    environment variable. Writing it to syncix.toml is not allowed; otherwise
+//!    the first `git commit` would make it public.
 //!
-//! 3. VARSAYILAN KURU ÇALIŞMA. Komut hiçbir şey yayınlamaz; ne yapacağını anlatır
-//!    ve durur. Gerçekten yayınlamak için `--onayla` gerekir. Yayınlama restored_count
-//!    alınamaz bir dış işlemdir, kazara tetiklenmemeli.
+//! 3. DRY RUN BY DEFAULT. The command publishes nothing; it explains what it would do
+//!    and stops. Actually publishing requires an explicit confirmation flag. Publishing is
+//!    an external action that cannot be undone and must not be triggered by accident.
 //!
-//! 4. TLS için sistemdeki curl kullanılır. Yalnızca bu command_name için projeye bir TLS
-//!    yığını eklemek (reqwest + rustls) binary'yi kat kat büyütürdü; curl Windows
-//!    10+, macOS ve çoğu Linux dağıtımında hazır gelir.
+//! 4. The system's curl is used for TLS. Adding a TLS stack (reqwest + rustls) to
+//!    the project for this one command would multiply the binary's size; curl ships
+//!    with Windows 10+, macOS and most Linux distributions.
 
 use std::path::PathBuf;
 
-/// syncix.toml içindeki [upload] bölümü.
+/// The [upload] section of syncix.toml.
 #[derive(Debug, Clone, Default)]
 pub struct UploadConfig {
     pub universe_id: Option<u64>,
@@ -46,11 +46,11 @@ impl UploadConfig {
     }
 }
 
-/// Anahtarın projeye sızmadığını doğrular.
+/// Checks that the key has not leaked into the project.
 ///
-/// syncix.toml'da api_key benzeri bir alan görürsek bu ciddi bir hatadır:
-/// file_path sürüm kontrolüne girer ve key_name herkese açılır. Yayınlamayı
-/// reddedip sebebini söylüyoruz.
+/// An api_key-like field in syncix.toml is a serious mistake: the file goes into
+/// version control and the key becomes public. Publishing is refused and the reason
+/// is given.
 pub fn has_key_leak(root: &std::path::Path) -> bool {
     let Ok(text_value) = std::fs::read_to_string(root.join("syncix.toml")) else {
         return false;
@@ -68,7 +68,7 @@ pub struct UploadPlan {
     pub skipped_enums: usize,
 }
 
-/// Yayınlama için kullanılacak Open Cloud uç noktası.
+/// Open Cloud endpoint used for publishing.
 pub fn target_url(universe_id: u64, place_id: u64) -> String {
     format!(
         "https://apis.roblox.com/universes/v1/{}/places/{}/versions?versionType=Saved",
@@ -76,9 +76,9 @@ pub fn target_url(universe_id: u64, place_id: u64) -> String {
     )
 }
 
-/// Kullanıcının own çalıştırabilmesi için tam command_name.
-/// Anahtar ortam değişkeninden okunur; komutun içine gömülmez ki terminal
-/// geçmişinde ve ekran görüntülerinde görünmesin.
+/// The full command, so users can run it themselves.
+/// The key is read from the environment variable, not embedded in the command, so it
+/// does not show up in terminal history or screenshots.
 pub fn curl_command(plan: &UploadPlan) -> String {
     format!(
         "curl -X POST \"{}\" \\\n  -H \"x-api-key: $SYNCIX_API_KEY\" \\\n  -H \"Content-Type: application/xml\" \\\n  --data-binary \"@{}\"",
@@ -109,7 +109,7 @@ mod tests {
             skipped_enums: 0,
         };
         let k = curl_command(&plan);
-        // Anahtar ortam degiskeni olarak gecmeli, duz text_value olarak degil.
+        // The key must be passed as an environment variable, not as plain text.
         assert!(k.contains("$SYNCIX_API_KEY"));
         assert!(!k.to_lowercase().contains("roblosecurity"));
     }
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn missing_setting_returns_empty() {
-        let cfg = UploadConfig::load(std::path::Path::new("/olmayan/klasor"));
+        let cfg = UploadConfig::load(std::path::Path::new("/missing/folder"));
         assert!(cfg.universe_id.is_none());
         assert!(cfg.place_id.is_none());
     }

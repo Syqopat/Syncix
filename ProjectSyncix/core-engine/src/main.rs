@@ -53,8 +53,8 @@ use crate::model::InstanceNode;
 use crate::server::AppState;
 use crate::transport::{EventType, Payload, StudioOutbox};
 
-/// Bir command_name hedefini çözümler: tam UUID, kısa UUID öneki veya isim.
-/// İsim birden extra objeyle eşleşirse belirsizlik nedeniyle None döner.
+/// Resolves a command target: full UUID, short UUID prefix or name.
+/// If a name matches more than one object, None is returned because it is ambiguous.
 fn resolve_id(dm: &model::DataModel, target: &str) -> Option<uuid::Uuid> {
     match dm.resolve_target(target) {
         model::ResolveResult::One(u) => Some(u),
@@ -70,8 +70,8 @@ fn resolve_id(dm: &model::DataModel, target: &str) -> Option<uuid::Uuid> {
     }
 }
 
-/// CLI'dan received string değeri uygun PropertyValue'ya çevirir.
-/// "true"/"false" -> Boolean, "x,y,z" -> Vector3, sayı -> Number, aksi -> String.
+/// Turns a string value from the CLI into the matching PropertyValue.
+/// "true"/"false" -> Boolean, "x,y,z" -> Vector3, number -> Number, otherwise -> String.
 fn parse_property_value(s: &str) -> model::PropertyValue {
     use model::PropertyValue;
     let t = s.trim();
@@ -82,8 +82,8 @@ fn parse_property_value(s: &str) -> model::PropertyValue {
         return PropertyValue::Boolean(false);
     }
 
-    // Hex renk: "#ff8800" veya "ff8800" -> Color3
-    // (Eskiden düz text_value olarak Studio'ya gidip reddediliyordu.)
+    // Hex colour: "#ff8800" or "ff8800" -> Color3
+    // (It used to reach Studio as plain text and be rejected.)
     let hex = t.strip_prefix('#').unwrap_or(t);
     if hex.len() == 6 && hex.chars().all(|c| c.is_ascii_hexdigit()) && t.starts_with('#') {
         if let (Ok(r), Ok(g), Ok(b)) = (
@@ -114,17 +114,17 @@ fn parse_property_value(s: &str) -> model::PropertyValue {
     PropertyValue::String(t.to_string())
 }
 
-/// Terminalden girilen metni, property'nin modeldeki MEVCUT değerinin tipine
-/// uydurur. Uyduramazsa None döner ve çağıran genel ayrıştırıcıya düşer.
+/// Fits text typed in the terminal to the type of the property's CURRENT value in the
+/// model. If it cannot, returns None and the caller falls back to the general parser.
 ///
-/// Neden exists_flag: `syncix set <part> BrickColor "Really red"` düz text_value üretiyordu ve
-/// Studio tarafında atama sessizce başarısız oluyordu. Aynı sorun CFrame, UDim2,
-/// NumberRange gibi tiplerde de vardı — terminalden hiç ayarlanamıyorlardı.
+/// Why it exists: `syncix set <part> BrickColor "Really red"` produced plain text and
+/// the assignment silently failed in Studio. The same problem existed for CFrame, UDim2,
+/// NumberRange and similar types — they could not be set from the terminal at all.
 fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &str) -> Option<model::PropertyValue> {
     use model::PropertyValue as P;
     let t = text_value.trim();
 
-    /// "1, 2, 3" -> [1.0, 2.0, 3.0]; sayı olmayan varsa None.
+    /// "1, 2, 3" -> [1.0, 2.0, 3.0]; None if anything is not a number.
     fn numbers(t: &str) -> Option<Vec<f32>> {
         t.split(',')
             .map(|p| p.trim().parse::<f32>().ok())
@@ -133,10 +133,10 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
 
     match current_value {
         P::BrickColor(_) => Some(P::BrickColor(t.to_string())),
-        // Ref hedefi UUID ya da kısa tutamaç olabilir; çözümleme Studio tarafında.
+        // A Ref target may be a UUID or a short handle; resolution happens on the Studio side.
         P::Ref(_) => Some(P::Ref(t.to_string())),
         P::String(_) => Some(P::String(t.to_string())),
-        // Asset id'si text_value olarak yaziliyor: "rbxassetid://123".
+        // Asset ids are written as text: "rbxassetid://123".
         P::Content(_) => Some(P::Content(t.to_string())),
         P::Vector2 { .. } => match numbers(t)?[..] {
             [x, y] => Some(P::Vector2 { x, y }),
@@ -148,7 +148,7 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
         },
         P::NumberRange { .. } => match numbers(t)?[..] {
             [min, max] => Some(P::NumberRange { min, max }),
-            // Tek sayı verilirse aralık o noktaya sabitlenir.
+            // A single number pins the range to that point.
             [single] => Some(P::NumberRange { min: single, max: single }),
             _ => None,
         },
@@ -159,7 +159,7 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
         P::CFrame { rot, .. } => {
             let s = numbers(t)?;
             match s.len() {
-                // Sadece konum verildi: current_value dönme korunur. En sık istenen bu.
+                // Only a position was given: the current rotation is kept. This is the most common request.
                 3 => Some(P::CFrame {
                     pos: [s[0], s[1], s[2]],
                     rot: *rot,
@@ -171,7 +171,7 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                 _ => None,
             }
         }
-        // Color3 için "#ff8800" ve "1,0.5,0" ikisi de geçerli.
+        // For Color3 both "#ff8800" and "1,0.5,0" are valid.
         P::Color3 { .. } => {
             if let P::Color3 { r, g, b } = parse_property_value(t) {
                 return Some(P::Color3 { r, g, b });
@@ -196,7 +196,7 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                 friction_weight: fw,
                 elasticity_weight: ew,
             }),
-            // Üç değer en sık kullanılan hali; ağırlıklar Roblox varsayılanında kalır.
+            // Three values is the most common form; the weights stay at Roblox's defaults.
             [d, f, e] => Some(P::PhysicalProperties {
                 density: d,
                 friction: f,
@@ -206,8 +206,8 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
             }),
             _ => None,
         },
-        // Eğri tipleri terminalden nokta nokta yazılamaz; given değerler
-        // zaman ekseninde EŞİT aralıklarla dağıtılır. "1,0" = baştan sona sönme.
+        // Curve types cannot be typed point by point in the terminal; the given values
+        // are spread at EQUAL intervals along the time axis. "1,0" = fade out from start to end.
         P::NumberSequence(_) => {
             let v = numbers(t)?;
             if v.is_empty() {
@@ -225,7 +225,7 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                     .collect(),
             ))
         }
-        // "#ff0000,#0000ff" gibi: renkler eşit aralıklarla dağıtılır.
+        // Like "#ff0000,#0000ff": colours are spread at equal intervals.
         P::ColorSequence(_) => {
             let mut points = Vec::new();
             let pieces: Vec<&str> = t.split(',').map(|x| x.trim()).collect();
@@ -238,27 +238,27 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                         g,
                         b,
                     }),
-                    // Biri bile renk değilse tamamı reddedilir: yarısı uygulanan
-                    // bir eğri, hiç uygulanmayandan daha kafa karıştırıcı.
+                    // If even one is not a colour the whole value is rejected: a curve applied
+                    // halfway is more confusing than one not applied at all.
                     _ => return None,
                 }
             }
             (!points.is_empty()).then_some(P::ColorSequence(points))
         }
-        // Yalnızca aile değiştirilir; kalınlık ve stil current_value haliyle korunur.
+        // Only the family changes; weight and style keep their current values.
         P::Font { weight, style, .. } => Some(P::Font {
             family: t.to_string(),
             weight: weight.clone(),
             style: style.clone(),
         }),
-        // Kalanlar (Vector3, Number, Boolean) genel ayrıştırıcıda zaten doğru çıkıyor.
+        // The rest (Vector3, Number, Boolean) already come out right in the general parser.
         _ => None,
     }
 }
 
-/// Tel formatındaki bir JSON değeri PropertyValue'ya çevirir.
-/// Hem raw skalerleri (5, "hi", true) hem de {Vector3:{..}}/{Color3:{..}} tablolarını
-/// hem de serde enum formatını ({"Number":5}) kabul eder.
+/// Turns a JSON value in wire format into a PropertyValue.
+/// Accepts raw scalars (5, "hi", true), {Vector3:{..}}/{Color3:{..}} tables
+/// and the serde enum form ({"Number":5}).
 fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
     use model::PropertyValue;
     match v {
@@ -374,8 +374,8 @@ fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
     }
 }
 
-/// PropertyValue'yu Studio plugininin (PatchExecutor) beklediği on_wire formatına çevirir.
-/// Skalarlar raw gönderilir; Vector3/Color3 tablo olarak sarılır.
+/// Converts a PropertyValue into the wire format the Studio plugin (PatchExecutor) expects.
+/// Scalars are sent raw; Vector3/Color3 are wrapped in tables.
 pub fn pv_to_wire(pv: &model::PropertyValue) -> serde_json::Value {
     use model::PropertyValue;
     match pv {
@@ -432,18 +432,18 @@ pub fn pv_to_wire(pv: &model::PropertyValue) -> serde_json::Value {
 
 #[tokio::main]
 async fn main() {
-    // CLI kipi: argüman verilmişse istemci gibi davran, sunucu açma.
-    // Aynı binary hem sunucu hem CLI olduğu için PowerShell/Node bağımlılığı yok.
+    // CLI mode: with arguments, act as a client and do not start a server.
+    // The same binary is both server and CLI, so there is no PowerShell/Node dependency.
     let cli_args: Vec<String> = std::env::args().skip(1).collect();
     if let Some(script_code) = cli::execute_run(&cli_args) {
         std::process::exit(script_code);
     }
 
-    // Log filtresi: hyper/tower gibi bağımlılıkların DEBUG gürültüsünü kapat,
-    // Syncix'in own olayları DEBUG seviyesine kadar görünsün.
-    // İstenirse RUST_LOG ortam değişkeni ile ezilebilir.
-    // Loglar hem konsola hem dosyaya yazılır (../syncix-core.log); çünkü core
-    // artık VS Code tarafından arka planda başlatılabiliyor ve konsolu görünmüyor.
+    // Log filter: silence the DEBUG noise of dependencies like hyper/tower,
+    // while Syncix's own events show down to DEBUG level.
+    // The RUST_LOG environment variable can override it.
+    // Logs go to both the console and a file (../syncix-core.log), because the core
+    // can be started in the background by VS Code, where its console is not visible.
     use tracing_subscriber::prelude::*;
     let file_appender = tracing_appender::rolling::never("../", "syncix-core.log");
     let (file_writer, _log_guard) = tracing_appender::non_blocking(file_appender);
@@ -466,8 +466,8 @@ async fn main() {
         project::PROTOCOL_VERSION
     );
 
-    // Proje yapılandırması: syncing klasörü, port ve proje kimliği.
-    // `syncix serve 25565` biçiminde açık port verilmişse ayarın önüne geçer.
+    // Project configuration: sync folder, port and project identity.
+    // An explicit port such as `syncix serve 25565` takes precedence over the setting.
     let mut cfg_raw = project::ProjectConfig::load();
     if let Some(p) = cli_args
         .get(1)
@@ -476,8 +476,8 @@ async fn main() {
     {
         info!("Port requested on the command line: {}", p);
         cfg_raw.wanted_port = p;
-        // Açıkça istenen port SABİTTİR: doluysa sıradakine kaymaz.
-        // Aksi halde Studio eklentisine yazdığın port ile core'un portu ayrışırdı.
+        // An explicitly requested port is FIXED: if it is taken, the core does not move to the next one.
+        // Otherwise the port typed into the Studio plugin and the core's port would diverge.
         cfg_raw.port_fixed = true;
     }
     let cfg = Arc::new(cfg_raw);
@@ -486,24 +486,24 @@ async fn main() {
     info!("Sync folder: {}", sync_dir);
     fs::create_dir_all(sync_dir).unwrap();
 
-    // Portu ŞİMDİ bağlıyoruz: gerçek port AppState'e girmeli, çünkü /health onu
-    // dışarı bildiriyor ve Studio eklentisi ile editör o bilgiyle buluyor.
+    // Bind the port NOW: the real port has to go into AppState, because /health
+    // reports it and that is how the Studio plugin and the editor find the core.
     let Some((listener, actual_port)) = server::bind_with_fallback(&cfg) else {
         error!("Syncix could not start: no port available.");
         std::process::exit(1);
     };
     cfg.write_port_file(actual_port);
 
-    // 1. Merkezi Sistemlerin Başlatılması
+    // 1. Start the central systems
     let _event_bus = Arc::new(EventBus::new());
     let data_model = model::create_shared_model();
 
-    // Transport (HTTP) kanalları
-    // Studio'ya outgoing mesajlar kayıpsız teslimat için kuyruğa (Outbox) alınır.
+    // Transport (HTTP) channels
+    // Messages to Studio are queued (Outbox) for lossless delivery.
     let studio_outbox = Arc::new(StudioOutbox::new());
     let (tx_to_core, mut rx_from_studio) = mpsc::channel::<Payload>(100);
 
-    // VS Code RPC Kanalı
+    // VS Code RPC channel
     let (tx_to_vscode, _) = broadcast::channel::<String>(100);
 
     let health_monitor = Arc::new(crate::health::HealthMonitor::new());
@@ -514,20 +514,20 @@ async fn main() {
         tx_to_vscode,
         health_monitor: health_monitor.clone(),
         data_model: data_model.clone(),
-        chaos_mode_enabled: false, // Normalde Config'den alınmalı
+        chaos_mode_enabled: false, // should normally come from the config
         project: cfg.clone(),
         actual_port,
         place_clash_state: Arc::new(std::sync::Mutex::new(None)),
     });
 
-    // 2. Disk Yazıcısı (Debounced): Model her değiştiğinde tetiklenir; kısa bir sessizlik
-    // sonrası tüm ağacı Studio Explorer'ın birebir kopyası olarak diske yazar.
-    // Debounce sayesinde sürükleme gibi hızlı değişimlerde disk fırtınası oluşmaz.
-    // NOT: Diske YAZMAK yalnızca burasının işidir; file_sync sadece okur.
+    // 2. Disk writer (debounced): triggered whenever the model changes; after a short quiet
+    // period it writes the whole tree to disk as an exact copy of Studio's Explorer.
+    // Debouncing prevents a storm of disk writes during fast changes such as dragging.
+    // NOTE: WRITING to disk is this task's job alone; file_sync only reads.
     let disk_notify = Arc::new(tokio::sync::Notify::new());
-    // Model, Studio bu oturumda FULL_SYNC'i tamamlayana kadar diskin otoritesi
-    // DEGILDIR. O ana kadar yazici diske yazabilir ama hicbir file_path silemez;
-    // bos modelle uzlastirma butun syncing klasorunu cope tasiyordu.
+    // Until Studio completes a FULL_SYNC in this session the model is NOT the
+    // authority over the disk. Until then the writer may write but may not delete any file;
+    // reconciling against an empty model moved the whole sync folder to the trash.
     let model_authoritative = Arc::new(std::sync::atomic::AtomicBool::new(false));
     {
         let model_authoritative_writer = model_authoritative.clone();
@@ -537,7 +537,7 @@ async fn main() {
         tokio::spawn(async move {
             loop {
                 notify_for_writer.notified().await;
-                // Sessizlik olana kadar bekle (art arda received değişiklikleri birleştir)
+                // Wait for quiet (merge changes arriving back to back)
                 loop {
                     tokio::select! {
                         _ = notify_for_writer.notified() => continue,
@@ -546,9 +546,9 @@ async fn main() {
                         )) => break,
                     }
                 }
-                // Askidayken diske DOKUNMA. Uzlastirici modeli dogruluk sayar;
-                // model askidayken eksik ya da yanlis olabilecegi icin diski
-                // ona uydurmak dosyalari silmek demek olurdu.
+                // Do NOT touch the disk while suspended. The reconciler treats the model as the truth;
+                // while suspended the model may be incomplete or wrong, so bringing the disk
+                // in line with it would mean deleting files.
                 if crate::project::is_sync_suspended() {
                     continue;
                 }
@@ -557,9 +557,9 @@ async fn main() {
                     model_authoritative_writer.load(std::sync::atomic::Ordering::SeqCst);
                 layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore, allow_removal);
 
-                // sourcemap.json: luau-lsp'nin otomatik tamamlama yapabilmesi için
-                // hangi dosyanın DataModel'de nereye karşılık geldiğini bildirir.
-                // Ağaç her değiştiğinde tazelenir; ayrı bir izleyici sürece gerek yok.
+                // sourcemap.json: tells luau-lsp which file maps to which place in the DataModel,
+                // so it can offer autocompletion.
+                // Refreshed whenever the tree changes; no separate watcher process is needed.
                 if cfg_for_writer.sourcemap {
                     let file_content = sourcemap::json(&dm, sync_dir, &cfg_for_writer.root);
                     let dest = cfg_for_writer.sourcemap_file();
@@ -576,8 +576,8 @@ async fn main() {
         });
     }
 
-    // 2b. File Watcher'ı başlat (Diskteki değişiklikleri okur; ASLA diske yazmaz).
-    // Editör bildirimi ve disk tazeleme için kanalları da alır.
+    // 2b. Start the file watcher (reads changes on disk; NEVER writes to disk).
+    // It also receives the channels for editor notifications and disk refreshes.
     let outbox_for_watcher = studio_outbox.clone();
     let data_model_for_watcher = data_model.clone();
     let vscode_for_watcher = app_state.tx_to_vscode.clone();
@@ -597,13 +597,13 @@ async fn main() {
         .await;
     });
 
-    // 3. HTTP Transport Katmanını başlat (Studio ile haberleşir)
+    // 3. Start the HTTP transport layer (talks to Studio)
     let state_clone = app_state.clone();
     tokio::spawn(async move {
         server::start_server(state_clone, listener).await;
     });
 
-    // Kapanışta bayat port dosyası bırakma: aksi halde editör ölü bir porta bağlanmaya çalışır.
+    // Do not leave a stale port file on exit: otherwise the editor tries to connect to a dead port.
     {
         let cfg_for_exit = cfg.clone();
         tokio::spawn(async move {
@@ -616,8 +616,8 @@ async fn main() {
     }
 
     let cfg_for_loop = cfg.clone();
-    // Ayarlarin gercekten uygulandigi acilista goruinsun; "ayarladim ama olmadi"
-    // durumunu tesis etmenin en ucuz yolu.
+    // Show the settings actually applied at startup; the cheapest way to settle
+    // "I set it but it did nothing".
     tracing::info!(
         "Sync mode: {} | play: {} | debounce: {} ms | trash: {} (keep {}) | undo: {}",
         cfg.mode_value.name_of(),
@@ -630,29 +630,29 @@ async fn main() {
     layout::configure_trash(cfg.safety_settings.trash_enabled, cfg.safety_settings.trash_keep_runs);
     layout::configure_meta(cfg.meta_files);
 
-    // 4. Message Dispatcher (Event Bus'ı dinleyip yönlendirme yapar)
-    // Production-Ready: Çekirdek transport'u bilmez, sadece kanaldan Payload okur.
+    // 4. Message dispatcher (listens to the event bus and routes)
+    // The core does not know the transport; it only reads Payloads from the channel.
     while let Some(payload) = rx_from_studio.recv().await {
-        // Studio -> disk yonu kapaliysa Studio'dan received higbir degisiklik
-        // modele islenmez. Tek istisna FULL_SYNC: disk_to_studio modunda bile
-        // core'un Studio'daki UUID'leri bilmesi gerekiyor, yoksa hangi objeye
-        // yazacagini bulamaz.
+        // With the Studio -> disk direction off, no change coming from Studio
+        // is applied to the model. The one exception is FULL_SYNC: even in disk_to_studio mode
+        // the core has to know Studio's UUIDs, otherwise it cannot find which object
+        // to write to.
         if !cfg_for_loop.mode_value.accepts_from_studio() && payload.event_type != EventType::FullSync {
             continue;
         }
 
         if payload.event_type == EventType::FullSync {
-            // PLACE KIMLIGI KAPISI
+            // PLACE IDENTITY GATE
             //
-            // Bir sync klasoru TEK bir place'e aittir. Baska bir place is_same
-            // klasore baglandiginda eskiden iki tree sessizce birlesiyordu:
-            // service_name UUID'leri butun place'lerde is_same oldugu icin ikisi is_same
-            // iskelete oturuyor, StarterPlayerScripts gibi TEKIL objeler ikiser
-            // tane oluyordu. Ustelik diskteki previous_text file_list "yeni obje" sanilip
-            // fresh place'in icine yaratiliyordu.
+            // A sync folder belongs to ONE place. When another place connected to the same
+            // folder, the two trees used to merge silently:
+            // service UUIDs are the same in every place, so both
+            // landed on the same skeleton and SINGLETON objects such as StarterPlayerScripts
+            // were duplicated. On top of that, old files on disk were taken for "new objects"
+            // and created inside the new place.
             //
-            // Artik birlestirmiyoruz: farkli bir place gelirse duruyoruz ve
-            // karari kullaniciya birakiyoruz (syncix bind).
+            // We no longer merge: if a different place arrives we stop and
+            // leave the decision to the user (syncix bind).
             let incoming_place = payload
                 .data
                 .get("place_key")
@@ -662,13 +662,13 @@ async fn main() {
 
             if !incoming_place.is_empty() {
                 match cfg_for_loop.linked_place() {
-                    // Klasor bos ya da first_item kez baglaniyor: sahiplen.
+                    // The folder is empty or being bound for the first time: claim it.
                     None => {
                         cfg_for_loop.bind_place(&incoming_place);
                         tracing::info!("This folder is now bound to the connected place.");
                     }
                     Some(current_value) if current_value == incoming_place => {
-                        // Ayni place, sorun yok.
+                        // Same place, no problem.
                         if let Ok(mut c) = app_state.place_clash_state.lock() {
                             *c = None;
                         }
@@ -704,8 +704,8 @@ async fn main() {
                                 incoming_place_id: pid,
                             });
                         }
-                        // Modele DOKUNMA ve her yonu stop_core: karar verilene
-                        // kadar iki taraf da oldugu gibi kalmali.
+                        // Do NOT touch the model and stop every direction: until a decision is made
+                        // both sides must stay as they are.
                         crate::project::set_sync_suspended(true);
                         continue;
                     }
@@ -719,8 +719,8 @@ async fn main() {
                 
                 {
                     let mut dm = data_model.write().await;
-                    // Recovery: FULL_SYNC geldiğinde previous_text state tamamen atılır.
-                    // Böylece Studio tarafında silinmiş objeler bellekte kalmaz.
+                    // Recovery: when a FULL_SYNC arrives the old state is discarded completely.
+                    // That way objects deleted on the Studio side do not linger in memory.
                     *dm = crate::model::DataModel::new();
                     for node_data in instances {
                         if let (Some(class_name), Some(name), Some(syncix_id)) = (
@@ -728,12 +728,12 @@ async fn main() {
                             node_data.get("name").and_then(|v| v.as_str()),
                             node_data.get("syncix_id").and_then(|v| v.as_str()),
                         ) {
-                            // Kullanicinin disladigi siniflar modele hic girmez.
+                            // Classes the user excluded never enter the model.
                             //
-                            // Ayni suzgec eklentide de exists_flag; buradaki ikinci kapi
-                            // previous_text bir eklenti baglandiginda ayarin yine de
-                            // gecerli olmasi icin. Ayar iki taraftan birinde
-                            // uygulanmazsa "disladim ama geliyor" durumu olusur.
+                            // The plugin applies the same filter; this second gate is there so the
+                            // setting still applies when an older plugin connects. If either
+                            // side failed to apply the setting, you would get
+                            // "I excluded it but it still comes".
                             if !cfg_for_loop.class_allowed(class_name) {
                                 continue;
                             }
@@ -748,12 +748,12 @@ async fn main() {
                                     }
                                 }
 
-                                // Script origin kodu
+                                // Script source code
                                 if let Some(src) = node_data.get("source").and_then(|v| v.as_str()) {
                                     instance.source = Some(src.to_string());
                                 }
 
-                                // Attribute'lar
+                                // Attributes
                                 if let Some(attrs) = node_data.get("attributes").and_then(|v| v.as_object()) {
                                     for (k, val) in attrs {
                                         if let Some(pv) = parse_wire_value(val) {
@@ -762,7 +762,7 @@ async fn main() {
                                     }
                                 }
 
-                                // CollectionService etiketleri
+                                // CollectionService tags
                                 if let Some(t) = node_data.get("tags").and_then(|v| v.as_array()) {
                                     instance.tags = t
                                         .iter()
@@ -770,7 +770,7 @@ async fn main() {
                                         .collect();
                                 }
 
-                                // Property'ler (geniş scope_settings — generic properties objesi)
+                                // Properties (wide scope — generic properties object)
                                 if let Some(props) = node_data.get("properties").and_then(|v| v.as_object()) {
                                     for (k, val) in props {
                                         if !cfg_for_loop.property_allowed(k) {
@@ -787,7 +787,7 @@ async fn main() {
                                     continue;
                                 }
                                 added_count += 1;
-                                // Disk yazımı artık merkezi debounced yazıcı (layout) tarafından yapılır.
+                                // Disk writing is done by the central debounced writer (layout).
 
                                 ws_nodes.push(serde_json::json!({
                                     "id": instance.syncix_id,
@@ -803,7 +803,7 @@ async fn main() {
                 }
                 
                 tracing::info!("FULL_SYNC complete. {} instances added or updated.", added_count);
-                // Artik model Studio'nun agaci: uzlastirici fazlaliklari silebilir.
+                // The model is now Studio's tree: the reconciler may delete extras.
                 model_authoritative.store(true, std::sync::atomic::Ordering::SeqCst);
                 
                 // Notify VS Code with FULL_SYNC
@@ -821,7 +821,7 @@ async fn main() {
             {
                 let dm = data_model.read().await;
                 for instance in dm.get_all_instances().values() {
-                    // İç kök "Game" (DataModel) düğümünü dışarı gönderme
+                    // Do not send the internal root "Game" (DataModel) node out
                     if instance.class_name == "DataModel" {
                         continue;
                     }
@@ -844,7 +844,7 @@ async fn main() {
             });
             let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
         } else if payload.event_type == EventType::RenameInstance {
-            // VS Code -> Studio: Yeniden adlandırma
+            // VS Code -> Studio: rename
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let new_name = payload.data.get("newName").and_then(|v| v.as_str()).unwrap_or("");
             let resolved = {
@@ -871,8 +871,8 @@ async fn main() {
                 }
                 if let Some(instance) = updated_instance {
                     let _ = &old_name;
-                    // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
-                    // Studio'ya uygula
+                    // Disk writing is done by the central debounced writer (layout).
+                    // Apply to Studio
                     studio_outbox.push(Payload {
                         version: "v1".to_string(),
                         event_type: EventType::CompositeUpdate,
@@ -887,7 +887,7 @@ async fn main() {
                             }]
                         }),
                     });
-                    // VS Code Explorer'a yansıt
+                    // Reflect in the VS Code Explorer
                     let ws_msg = serde_json::json!({
                         "event_type": "INSTANCE_UPDATED",
                         "data": {
@@ -901,7 +901,7 @@ async fn main() {
                     });
                     let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
                     tracing::info!(
-                        "VS Code RENAME işlendi: {} -> {}",
+                        "VS Code RENAME handled: {} -> {}",
                         old_name.unwrap_or_default(),
                         instance.name
                     );
@@ -912,11 +912,11 @@ async fn main() {
                 tracing::warn!("RENAME_INSTANCE target not found: {}", id);
             }
         } else if payload.event_type == EventType::CreateInstance {
-            // VS Code -> Studio: Yeni instance yaratma.
-            // UUID yalnızca burada, CREATE anında üretilir (Data Integrity kuralı).
+            // VS Code -> Studio: create a new instance.
+            // The UUID is generated only here, at CREATE time (data integrity rule).
             let class_name = payload.data.get("className").and_then(|v| v.as_str()).unwrap_or("");
             let parent_id = payload.data.get("parentId").and_then(|v| v.as_str()).unwrap_or("");
-            // İsim verilmemişse sınıf adı kullanılır (previous_text davranış korunur).
+            // Without a given name the class name is used (the old behaviour is kept).
             let node_name = payload
                 .data
                 .get("name")
@@ -927,8 +927,8 @@ async fn main() {
                 tracing::warn!("CREATE_INSTANCE: className was empty, ignored.");
             } else {
                 let mut instance = InstanceNode::new(class_name, node_name);
-                // Istemci bir UUID verdiyse onu kullan; ice aktarma bu sayede
-                // olusturdugu objeyi ismiyle degil kimligiyle hedefleyebiliyor.
+                // If the client supplied a UUID, use it; that lets an import target the object
+                // it created by identity rather than by name.
                 if let Some(given) = payload
                     .data
                     .get("id")
@@ -938,8 +938,8 @@ async fn main() {
                     instance.syncix_id = given;
                 }
                 {
-                    // Parent çözümlemesi: UUID veya isim (örn. "Workspace").
-                    // Boşsa varsayılan olarak Workspace servisine bağlanır.
+                    // Parent resolution: UUID or name (e.g. "Workspace").
+                    // When empty it attaches to the Workspace service by default.
                     let dm = data_model.read().await;
                     let effective_parent = if parent_id.is_empty() { "Workspace" } else { parent_id };
                     instance.parent = resolve_id(&dm, effective_parent);
@@ -951,8 +951,8 @@ async fn main() {
                 };
                 match insert_result {
                     Ok(()) => {
-                        // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
-                        // Studio'ya CREATE gönder
+                        // Disk writing is done by the central debounced writer (layout).
+                        // Send CREATE to Studio
                         studio_outbox.push(Payload {
                             version: "v1".to_string(),
                             event_type: EventType::CompositeUpdate,
@@ -968,7 +968,7 @@ async fn main() {
                                 }]
                             }),
                         });
-                        // VS Code Explorer'a yansıt
+                        // Reflect in the VS Code Explorer
                         let ws_msg = serde_json::json!({
                             "event_type": "INSTANCE_CREATED",
                             "data": {
@@ -987,20 +987,20 @@ async fn main() {
                 }
             }
         } else if payload.event_type == EventType::DeleteInstance {
-            // VS Code -> Studio: Silme
+            // VS Code -> Studio: delete
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let resolved = {
                 let dm = data_model.read().await;
                 resolve_id(&dm, id)
             };
             if let Some(uuid) = resolved {
-                // Servis düğümleri silinemez
+                // Service nodes cannot be deleted
                 let is_service = {
                     let dm = data_model.read().await;
                     dm.get_instance(&uuid).map(|i| i.parent.is_none()).unwrap_or(false)
                 };
                 if is_service {
-                    tracing::warn!("DELETE_INSTANCE: servisler silinemez ({}).", id);
+                    tracing::warn!("DELETE_INSTANCE: services cannot be deleted ({}).", id);
                     continue;
                 }
                 let removed_instance = {
@@ -1008,8 +1008,8 @@ async fn main() {
                     dm.remove_instance(&uuid)
                 };
                 if let Some(instance) = removed_instance {
-                    // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
-                    // Studio'ya DESTROY gönder
+                    // Disk writing is done by the central debounced writer (layout).
+                    // Send DESTROY to Studio
                     studio_outbox.push(Payload {
                         version: "v1".to_string(),
                         event_type: EventType::CompositeUpdate,
@@ -1020,7 +1020,7 @@ async fn main() {
                             }]
                         }),
                     });
-                    // VS Code Explorer'a yansıt
+                    // Reflect in the VS Code Explorer
                     let ws_msg = serde_json::json!({
                         "event_type": "INSTANCE_REMOVED",
                         "data": {
@@ -1037,7 +1037,7 @@ async fn main() {
                 tracing::warn!("DELETE_INSTANCE target not found: {}", id);
             }
         } else if payload.event_type == EventType::ReparentInstance {
-            // VS Code/CLI -> Studio: Taşıma
+            // VS Code/CLI -> Studio: move
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let new_parent_field = payload
                 .data
@@ -1055,7 +1055,7 @@ async fn main() {
                     tracing::warn!("REPARENT_INSTANCE: an instance cannot be moved into itself.");
                     continue;
                 }
-                // Servis düğümleri taşınamaz
+                // Service nodes cannot be moved
                 let is_service = {
                     let dm = data_model.read().await;
                     dm.get_instance(&uuid).map(|i| i.parent.is_none()).unwrap_or(false)
@@ -1077,8 +1077,8 @@ async fn main() {
                             dm.get_instance(&uuid).cloned()
                         };
                         if let Some(instance) = instance {
-                            // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
-                            // Studio'ya REPARENT gönder
+                            // Disk writing is done by the central debounced writer (layout).
+                            // Send REPARENT to Studio
                             studio_outbox.push(Payload {
                                 version: "v1".to_string(),
                                 event_type: EventType::CompositeUpdate,
@@ -1092,7 +1092,7 @@ async fn main() {
                                     }]
                                 }),
                             });
-                            // VS Code Explorer'a yansıt
+                            // Reflect in the VS Code Explorer
                             let ws_msg = serde_json::json!({
                                 "event_type": "INSTANCE_MOVED",
                                 "data": {
@@ -1111,7 +1111,7 @@ async fn main() {
                 tracing::warn!("REPARENT_INSTANCE target or parent not found (id={}, parent={})", id, new_parent_field);
             }
         } else if payload.event_type == EventType::SetProperty {
-            // VS Code/CLI -> Studio: Bir özelliği ayarla
+            // VS Code/CLI -> Studio: set a property
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let property = payload
                 .data
@@ -1119,8 +1119,8 @@ async fn main() {
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
-            // Değer hem CLI'dan string ("0.5", "true", "1,2,3") hem de Inspector'dan
-            // tiplenmiş ({"Color3":{...}}, sayı, bool) gelebilir.
+            // The value may come as a string from the CLI ("0.5", "true", "1,2,3") or typed
+            // from the Inspector ({"Color3":{...}}, number, bool).
             let value_json = payload
                 .data
                 .get("value")
@@ -1139,12 +1139,12 @@ async fn main() {
             if property.is_empty() {
                 tracing::warn!("SET_PROPERTY: the property name was empty.");
             } else if let Some(uuid) = resolved {
-                // Terminalden received değer düz metindir; type_name bilgisi taşımaz.
-                // O yüzden önce property'nin MEVCUT değerinin tipine uydurulmaya
-                // çalışılır: `set X BrickColor "Really red"` text_value değil BrickColor,
-                // `set X CFrame 0,10,0` text_value değil CFrame olur.
-                // Tip kararı yine değere göre veriliyor — sadece kıyaslanan değer
-                // modelde zaten duran değer.
+                // A value from the terminal is plain text; it carries no type information.
+                // So it is first fitted to the type of the property's CURRENT
+                // value: `set X BrickColor "Really red"` becomes a BrickColor, not text,
+                // `set X CFrame 0,10,0` becomes a CFrame, not text.
+                // The type decision is still made from a value — the value compared
+                // is simply the one already in the model.
                 let current_value = {
                     let dm = data_model.read().await;
                     dm.get_instance(&uuid)
@@ -1159,10 +1159,10 @@ async fn main() {
                         .unwrap_or_else(|| model::PropertyValue::String(value_str.clone())),
                 };
 
-                // Referans hedefi burada tam UUID'ye çözülür. Kullanıcı kısa
-                // tutamaç ya da isim yazabiliyor ("syncix set door Part0 hinge"),
-                // ama Studio'daki önbellek yalnızca tam UUID ile aranıyor;
-                // çözülmeden gönderilirse referans sessizce nil kalırdı.
+                // The reference target is resolved to a full UUID here. The user may type a short
+                // handle or a name ("syncix set door Part0 hinge"),
+                // but the cache in Studio is looked up by full UUID only;
+                // sent unresolved, the reference would silently stay nil.
                 if let model::PropertyValue::Ref(dest) = &pv {
                     if !dest.is_empty() {
                         let resolved_n = {
@@ -1216,7 +1216,7 @@ async fn main() {
                             }]
                         }),
                     });
-                    // VS Code Explorer'a bildir (isim değişmiş olabilir)
+                    // Notify the VS Code Explorer (the name may have changed)
                     let instance = {
                         let dm = data_model.read().await;
                         dm.get_instance(&uuid).cloned()
@@ -1243,12 +1243,12 @@ async fn main() {
                 tracing::warn!("SET_PROPERTY target not found: {}", id);
             }
         } else if payload.event_type == EventType::Selection {
-            // Secim iki yonlu bir AYNA: Studio'da tiklanan obje editorde,
-            // editorde tiklanan obje Studio'da secilir.
+            // Selection is a two-way MIRROR: an object clicked in Studio is selected in the editor,
+            // an object clicked in the editor is selected in Studio.
             //
-            // Model'e yazilmiyor cunku secim projenin icerigi degil, anlik bir
-            // status_info. Diske yazilsaydi her tiklama bir file_path degisikligi olur,
-            // surum kontrolu gurultuye bogulurdu.
+            // It is not written to the model because selection is not project content but momentary
+            // state. Written to disk, every click would be a file change and
+            // version control would drown in noise.
             let identities: Vec<String> = payload
                 .data
                 .get("ids")
@@ -1260,8 +1260,8 @@ async fn main() {
                 })
                 .unwrap_or_default();
 
-            // Kaynak, mesajin restored_count donmesini onlemek icin tasiniyor: Studio'dan
-            // received secimi Studio'ya restored_count gondermek sonsuz bir ping-pong olurdu.
+            // The source travels with the message to stop it bouncing back: sending a selection
+            // that came from Studio back to Studio would be an endless ping-pong.
             let origin = payload
                 .data
                 .get("source")
@@ -1307,8 +1307,8 @@ async fn main() {
                         .collect()
                 })
                 .unwrap_or_default();
-            // Siralanmis ve tekrarsiz: iki taraf is_same listeyi is_same sirada gorsun,
-            // yoksa her karsilastirma "degisti" der ve gereksiz yama uretilir.
+            // Sorted and deduplicated: both sides see the same list in the same order,
+            // otherwise every comparison says "changed" and produces needless patches.
             tag_list.sort();
             tag_list.dedup();
 
@@ -1346,7 +1346,7 @@ async fn main() {
                 tracing::warn!("SET_TAGS target not found: {}", id);
             }
         } else if payload.event_type == EventType::SetAttribute {
-            // VS Code/CLI -> Studio: Bir Attribute ayarla
+            // VS Code/CLI -> Studio: set an attribute
             let id = payload.data.get("id").and_then(|v| v.as_str()).unwrap_or("");
             let name = payload
                 .data
@@ -1354,9 +1354,9 @@ async fn main() {
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
-            // value alani JSON null ise bu bir SILME istegidir.
-            // Studio tarafinda SetAttribute(item_name, nil) attribute'u kaldirir; is_same
-            // anlami on_wire uzerinde null ile tasiyoruz, ayri bir event tipi gerekmiyor.
+            // A JSON null value field means this is a DELETE request.
+            // On the Studio side SetAttribute(name, nil) removes the attribute; the same meaning
+            // travels as null on the wire, so no separate event type is needed.
             let deletion = payload
                 .data
                 .get("value")
@@ -1429,7 +1429,7 @@ async fn main() {
                                 let mut instance = InstanceNode::new(class_name, name);
                                 instance.syncix_id = uuid;
 
-                                // Parent UUID (hiyerarşi için)
+                                // Parent UUID (for the hierarchy)
                                 if let Some(parent_str) = patch
                                     .get("data")
                                     .and_then(|d| d.get("parent"))
@@ -1440,7 +1440,7 @@ async fn main() {
                                     }
                                 }
 
-                                // Script origin kodu
+                                // Script source code
                                 if let Some(src) = patch
                                     .get("data")
                                     .and_then(|d| d.get("source"))
@@ -1449,7 +1449,7 @@ async fn main() {
                                     instance.source = Some(src.to_string());
                                 }
 
-                                // Attribute'lar
+                                // Attributes
                                 if let Some(attrs) = patch
                                     .get("data")
                                     .and_then(|d| d.get("attributes"))
@@ -1462,7 +1462,7 @@ async fn main() {
                                     }
                                 }
 
-                                // Property'ler (geniş scope_settings)
+                                // Properties (wide scope)
                                 if let Some(props) = patch
                                     .get("data")
                                     .and_then(|d| d.get("properties"))
@@ -1483,9 +1483,9 @@ async fn main() {
                                     }
                                 }
                                 
-                                // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
+                                // Disk writing is done by the central debounced writer (layout).
 
-                                // Notify VS Code (her sınıf için, serializer olsun olmasın)
+                                // Notify VS Code (for every class, with or without a serializer)
                                 let ws_msg = serde_json::json!({
                                     "event_type": "INSTANCE_CREATED",
                                     "data": {
@@ -1499,7 +1499,7 @@ async fn main() {
                                 });
                                 let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
                                 tracing::info!(
-                                    "Studio CREATE işlendi: {} ({})",
+                                    "Studio CREATE handled: {} ({})",
                                     instance.name,
                                     instance.class_name
                                 );
@@ -1513,9 +1513,9 @@ async fn main() {
                             patch.get("data").and_then(|d| d.get("value")),
                         ) {
                             if let Ok(uuid) = uuid::Uuid::parse_str(syncix_id) {
-                                // Echo döngüsü tespiti: aynı property kısa sürede defalarca
-                                // gidip geliyorsa echo engelleme kaçırmış demektir. Eskiden bu
-                                // tamamen sessizdi; artık hangi property olduğu loga düşer.
+                                // Echo loop detection: if the same property bounces back and forth many times in a short
+                                // time, echo suppression missed it. This used to be
+                                // completely silent; now the property involved is logged.
                                 if health_monitor
                                     .loop_detector
                                     .persist(syncix_id, property)
@@ -1552,9 +1552,9 @@ async fn main() {
                                 
                                 if let Some(instance) = updated_instance {
                                     let _ = &old_name;
-                                    // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
+                                    // Disk writing is done by the central debounced writer (layout).
 
-                                    // Notify VS Code (her sınıf için)
+                                    // Notify VS Code (for every class)
                                     let ws_msg = serde_json::json!({
                                         "event_type": "INSTANCE_UPDATED",
                                         "data": {
@@ -1568,7 +1568,7 @@ async fn main() {
                                     });
                                     let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
                                     tracing::info!(
-                                        "Studio PROPERTY_UPDATE işlendi: {} -> {}",
+                                        "Studio PROPERTY_UPDATE handled: {} -> {}",
                                         instance.name,
                                         property
                                     );
@@ -1590,7 +1590,7 @@ async fn main() {
                                 };
                                 
                                 if let Some(instance) = removed_instance {
-                                    // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
+                                    // Disk writing is done by the central debounced writer (layout).
                                     let ws_msg = serde_json::json!({
                                         "event_type": "INSTANCE_REMOVED",
                                         "data": {
@@ -1602,14 +1602,14 @@ async fn main() {
                                     tracing::info!("Studio DESTROY handled: {}", instance.name);
                                 } else {
                                     tracing::warn!(
-                                        "DESTROY bilinmeyen UUID için yok sayıldı: {}",
+                                        "DESTROY ignored for an unknown UUID: {}",
                                         uuid
                                     );
                                 }
                             }
                         }
                     } else if p_type == "REPARENT" {
-                        // Studio'da obje başka bir ebeveyne taşındı.
+                        // The object was moved to another parent in Studio.
                         let syncix_id = patch
                             .get("data")
                             .and_then(|d| d.get("syncix_id"))
@@ -1636,8 +1636,8 @@ async fn main() {
                                         dm.get_instance(&uuid).cloned()
                                     };
                                     if let Some(instance) = instance {
-                                        // Disk yazımı merkezi debounced yazıcı (layout) tarafından yapılır.
-                                        // VS Code Explorer'a taşımayı bildir
+                                        // Disk writing is done by the central debounced writer (layout).
+                                        // Report the move to the VS Code Explorer
                                         let ws_msg = serde_json::json!({
                                             "event_type": "INSTANCE_MOVED",
                                             "data": {
@@ -1648,9 +1648,9 @@ async fn main() {
                                         });
                                         let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
                                         tracing::info!(
-                                            "Studio REPARENT işlendi: {} -> parent {}",
+                                            "Studio REPARENT handled: {} -> parent {}",
                                             instance.name,
-                                            new_parent.map(|u| u.to_string()).unwrap_or_else(|| "yok".to_string())
+                                            new_parent.map(|u| u.to_string()).unwrap_or_else(|| "none".to_string())
                                         );
                                     }
                                 }
@@ -1660,7 +1660,7 @@ async fn main() {
                             }
                         }
                     } else if p_type == "ATTRIBUTE_UPDATE" {
-                        // Studio'da bir attribute değişti.
+                        // An attribute changed in Studio.
                         let syncix_id = patch
                             .get("data")
                             .and_then(|d| d.get("syncix_id"))
@@ -1695,33 +1695,33 @@ async fn main() {
             }
         }
 
-        // Her olaydan sonra model değişmiş olabilir; diski (Studio Explorer aynası)
-        // güncellemek için debounced yazıcıyı uyar.
+        // The model may have changed after any event; notify the debounced writer so the
+        // disk (the mirror of Studio's Explorer) is updated.
         disk_notify.notify_one();
     }
 }
 
 // ===========================================================================
-// PROPERTY TİP DÖNÜŞÜMÜ TESTLERİ
+// PROPERTY TYPE CONVERSION TESTS
 //
-// Neden burası: projedeki iki gerçek report_error da tam olarak bu katmandan geçti.
-//   1. Position hatası — Vector3 değerler Studio'ya ulaşıyordu ama on_wire formatı
-//      yanlış yorumlanınca sessizce düşüyordu, tüm objeler 0,0,0'da kaldı.
-//   2. Renk hatası — "#5aa832" düz String olarak gidiyordu, Studio reddediyordu.
-// İkisi de model testleriyle yakalanamazdı; ağaç mantığı kusursuzdu.
-// Buradaki testler on_wire formatını KİLİTLER: biçim değişirse test kırılır.
+// Why here: both real bugs in this project went through exactly this layer.
+//   1. The Position bug — Vector3 values reached Studio but the wire format
+//      was misread and silently dropped; every object stayed at 0,0,0.
+//   2. The colour bug — "#5aa832" went as a plain String and Studio rejected it.
+// Neither could have been caught by model tests; the tree logic was flawless.
+// These tests LOCK the wire format: if the format changes, a test breaks.
 // ===========================================================================
 #[cfg(test)]
 mod property_tests {
     use super::*;
     use model::PropertyValue;
 
-    /// Tel formatı gidiş-dönüşü: pv -> wire -> pv aynı değeri vermeli.
-    /// Bir type_name bu döngüde kaybolursa syncing sessizce veri kaybeder.
+    /// Wire-format round trip: pv -> wire -> pv must give the same value.
+    /// If a type is lost in this loop, sync silently loses data.
     #[test]
     fn wire_format_round_trip_all_types() {
         let samples = vec![
-            PropertyValue::String("Merhaba".into()),
+            PropertyValue::String("Hello".into()),
             PropertyValue::Number(42.5),
             PropertyValue::Boolean(true),
             PropertyValue::Boolean(false),
@@ -1733,18 +1733,18 @@ mod property_tests {
         for sample in samples {
             let wire = pv_to_wire(&sample);
             let restored_count = parse_wire_value(&wire)
-                .unwrap_or_else(|| panic!("tel degeri cozulemedi: {:?} -> {}", sample, wire));
-            assert_eq!(restored_count, sample, "gidis-donus bozuldu: {}", wire);
+                .unwrap_or_else(|| panic!("could not parse wire value: {:?} -> {}", sample, wire));
+            assert_eq!(restored_count, sample, "round-trip broken: {}", wire);
         }
     }
 
-    /// Vector3 on_wire üzerinde ASLA düz text_value olmamalı.
-    /// Düz text_value gönderilirse Studio "Vector3 expected" diyerek reddeder ve
-    /// obje 0,0,0'da kalır — Position hatasının tam olarak yaptığı şey.
+    /// Vector3 must NEVER be plain text on the wire.
+    /// Sent as plain text, Studio rejects it with "Vector3 expected" and
+    /// the object stays at 0,0,0 — exactly what the Position bug did.
     #[test]
     fn vector3_goes_as_table_on_wire() {
         let wire = pv_to_wire(&PropertyValue::Vector3 { x: 1.0, y: 2.0, z: 3.0 });
-        assert!(wire.is_object(), "Vector3 tablo olmali, duz deger degil: {}", wire);
+        assert!(wire.is_object(), "Vector3 must be a table, not a plain value: {}", wire);
         assert!(wire.get("Vector3").is_some(), "Vector3 anahtari bulunmali: {}", wire);
         assert_eq!(wire["Vector3"]["y"].as_f64().unwrap(), 2.0);
     }
@@ -1755,27 +1755,27 @@ mod property_tests {
         assert!(wire.get("Color3").is_some(), "Color3 anahtari bulunmali: {}", wire);
     }
 
-    /// CLI ve HTTP'den received metinlerin doğru tipe çevrilmesi.
-    /// "0,0.5,-60" String kalırsa konum uygulanmaz; hatanın input_value tarafı budur.
+    /// Text from the CLI and HTTP must be converted to the right type.
+    /// If "0,0.5,-60" stays a String the position is not applied; this is the input side of the bug.
     #[test]
     fn text_parses_as_vector3() {
         assert_eq!(
             parse_property_value("0,0.5,-60"),
             PropertyValue::Vector3 { x: 0.0, y: 0.5, z: -60.0 }
         );
-        // Haritada gerçekten kullanılan negatif değerler
+        // Negative values actually used in the map
         assert_eq!(
             parse_property_value("-20, 0.5, -6"),
             PropertyValue::Vector3 { x: -20.0, y: 0.5, z: -6.0 }
         );
-        // Sıfır vektörü Number olarak yorumlanmamalı
+        // The zero vector must not be read as a Number
         assert_eq!(
             parse_property_value("0,0,0"),
             PropertyValue::Vector3 { x: 0.0, y: 0.0, z: 0.0 }
         );
     }
 
-    /// Hex renk hatası: "#5aa832" String kalırsa Studio reddeder.
+    /// The hex colour bug: if "#5aa832" stays a String, Studio rejects it.
     #[test]
     fn hex_color_parses_as_color3() {
         match parse_property_value("#5aa832") {
@@ -1784,12 +1784,12 @@ mod property_tests {
                 assert_eq!((g * 255.0).round() as u8, 0xa8);
                 assert_eq!((b * 255.0).round() as u8, 0x32);
             }
-            other => panic!("hex renk Color3 olmaliydi, gelen: {:?}", other),
+            other => panic!("a hex colour must become Color3, got: {:?}", other),
         }
     }
 
-    /// Diyez olmadan hex sayılmaz: "abcdef" bir isim olabilir, "123456" bir sayıdır.
-    /// Bu ayrım olmazsa isim alanları yanlışlıkla renge dönüşür.
+    /// Without a hash it is not hex: "abcdef" could be a name, "123456" is a number.
+    /// Without this distinction, name fields would accidentally turn into colours.
     #[test]
     fn text_without_hash_is_not_a_color() {
         assert_eq!(parse_property_value("abcdef"), PropertyValue::String("abcdef".into()));
@@ -1802,12 +1802,12 @@ mod property_tests {
         assert_eq!(parse_property_value("False"), PropertyValue::Boolean(false));
         assert_eq!(parse_property_value("5"), PropertyValue::Number(5.0));
         assert_eq!(parse_property_value("-3.5"), PropertyValue::Number(-3.5));
-        assert_eq!(parse_property_value("Kutu"), PropertyValue::String("Kutu".into()));
+        assert_eq!(parse_property_value("Box"), PropertyValue::String("Box".into()));
     }
 
-    /// Enum değerleri text_value olarak geçmeli; çözümlemeyi Studio tarafı yapar.
-    /// Burada sayıya ya da başka bir tipe dönüşürse Material/Font gibi
-    /// property'ler sessizce uygulanmaz.
+    /// Enum values must pass as text; the Studio side does the resolving.
+    /// If they turned into a number or another type here, properties such as Material/Font
+    /// would silently not apply.
     #[test]
     fn enum_text_passes_through() {
         assert_eq!(
@@ -1818,8 +1818,8 @@ mod property_tests {
         assert_eq!(wire.as_str(), Some("Enum.Material.Neon"));
     }
 
-    /// Studio'dan raw skaler de gelebilir, serde enum biçimi de.
-    /// İkisi de kabul edilmezse Studio kaynaklı güncellemeler düşer.
+    /// Studio may send a raw scalar or the serde enum form.
+    /// If either were not accepted, updates coming from Studio would be dropped.
     #[test]
     fn raw_and_serde_forms_are_accepted() {
         assert_eq!(
@@ -1827,8 +1827,8 @@ mod property_tests {
             Some(PropertyValue::Number(7.0))
         );
         assert_eq!(
-            parse_wire_value(&serde_json::json!("metin")),
-            Some(PropertyValue::String("metin".into()))
+            parse_wire_value(&serde_json::json!("text")),
+            Some(PropertyValue::String("text".into()))
         );
         assert_eq!(
             parse_wire_value(&serde_json::json!(true)),
@@ -1846,8 +1846,8 @@ mod type_coercion_tests {
     use super::*;
     use model::PropertyValue as P;
 
-    /// Asıl report_error buydu: `set <part> BrickColor "Really red"` düz String üretiyor,
-    /// Studio'da atama sessizce başarısız oluyordu.
+    /// This was the real bug: `set <part> BrickColor "Really red"` produced a plain String,
+    /// and the assignment silently failed in Studio.
     #[test]
     fn brickcolor_text_stays_brickcolor() {
         let current_value = P::BrickColor("Medium stone grey".into());
@@ -1857,7 +1857,7 @@ mod type_coercion_tests {
         );
     }
 
-    /// Üç sayı verildiğinde dönme korunmalı: kullanıcı sadece taşımak istiyor.
+    /// With three numbers the rotation must be kept: the user only wants to move it.
     #[test]
     fn cframe_three_numbers_keep_rotation() {
         let rot = [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
@@ -1893,18 +1893,18 @@ mod type_coercion_tests {
         );
     }
 
-    /// Metin property'sine sayı benzeri bir değer yazılabilmeli:
-    /// genel ayrıştırıcı "5"i Number yapardı ve Studio metni reddederdi.
+    /// A number-like value must be writable to a text property:
+    /// the general parser would turn "5" into a Number and Studio would reject the text.
     #[test]
     fn string_property_does_not_become_number() {
-        let current_value = P::String("merhaba".into());
+        let current_value = P::String("hello".into());
         assert_eq!(
             coerce_to_existing_type(&current_value, "5"),
             Some(P::String("5".into()))
         );
     }
 
-    /// Uydurulamayan input_value None dönmeli ki çağıran genel ayrıştırıcıya düşsün.
+    /// Input that cannot be fitted must return None so the caller falls back to the general parser.
     #[test]
     fn bad_input_returns_none() {
         let current_value = P::Vector2 { x: 0.0, y: 0.0 };
@@ -1943,13 +1943,13 @@ mod wire_format_tests {
     use super::*;
     use model::{ColorKeypoint, NumberKeypoint, PropertyValue as P};
 
-    /// Bir type_name yalnızca yazılıp okunabildiğinde gerçekten taşınmış olur.
-    /// Tek yönlü eklenen tipler "gönderildi ama karşı tarafta kayboldu"
-    /// durumunun kaynağıydı.
+    /// A type has only really been carried once it can be both written and read.
+    /// Types added in one direction only were the source of
+    /// "sent, but lost on the other side".
     fn round_trip(pv: P) {
         let on_wire = pv_to_wire(&pv);
         let restored_count = parse_wire_value(&on_wire);
-        assert_eq!(restored_count, Some(pv.clone()), "tel formatı: {:?}", on_wire);
+        assert_eq!(restored_count, Some(pv.clone()), "wire format: {:?}", on_wire);
     }
 
     #[test]
@@ -1965,7 +1965,7 @@ mod wire_format_tests {
         ]));
     }
 
-    /// Envelope Roblox'un rastgelelik payı; düşerse parçacık efekti düzleşir.
+    /// The envelope is Roblox's randomness margin; if it drops, particle effects flatten.
     #[test]
     fn number_sequence_keeps_envelope() {
         let pv = P::NumberSequence(vec![
@@ -2000,35 +2000,35 @@ mod wire_format_tests {
         });
     }
 
-    /// Studio'ya outgoing değer serde'nin etiketli biçiminde OLMAMALI.
+    /// A value sent to Studio must NOT be in serde's tagged form.
     ///
-    /// Bu bir regresyon testi: disk tarafı bir süre `PropertyValue`'yu doğrudan
-    /// JSON'a koyuyordu, serde de onu {"Number":0.5} diye yazıyordu. Eklenti düz
-    /// biçimi beklediği için "unsupported table value for property: Transparency"
-    /// diyerek reddediyordu — canlı kullanımda yakalandı.
+    /// This is a regression test: for a while the disk side put `PropertyValue` straight
+    /// into JSON, and serde wrote it as {"Number":0.5}. The plugin expects the plain
+    /// form, so it rejected it with "unsupported table value for property: Transparency"
+    /// — caught in live use.
     #[test]
     fn wire_format_has_no_serde_tag() {
         for pv in [
             P::Number(0.5),
-            P::String("merhaba".into()),
+            P::String("hello".into()),
             P::Boolean(true),
         ] {
             let on_wire = pv_to_wire(&pv);
             assert!(
                 !on_wire.is_object(),
-                "ilkel değer düz gitmeli, tablo değil: {:?} -> {}",
+                "a primitive value must go plain, not as a table: {:?} -> {}",
                 pv,
                 on_wire
             );
-            // Serde'nin hali gerçekten farklı olmalı; test own varsayımını doğrulasın.
+            // Serde's form really must be different; the test verifies its own assumption.
             let serde_form = serde_json::to_value(&pv).unwrap();
-            assert!(serde_form.is_object(), "serde etiketli yazmalı: {}", serde_form);
+            assert!(serde_form.is_object(), "serde must write the tagged form: {}", serde_form);
             assert_ne!(on_wire, serde_form);
         }
     }
 
-    /// Daha önce eklenen tipler de kırılmamalı: fresh dallar sıralı if/else
-    /// zincirine giriyor ve yanlış sırada eklenen bir branch öncekini gölgeleyebilir.
+    /// Previously added types must not break either: new branches join an ordered if/else
+    /// chain, and a branch added in the wrong place can shadow an earlier one.
     #[test]
     fn legacy_types_still_work() {
         round_trip(P::BrickColor("Really red".into()));

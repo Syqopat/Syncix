@@ -46,8 +46,8 @@ export class DiagnosticsPanel {
     }
 
     private _getHtmlForWebview() {
-        // Webview ownVersion surecinde calisir; core adresi HTML'e gomulur cunku
-        // port artik sabit degil (core dolu portu atlayabiliyor).
+        // The webview runs in its own process; the core address is embedded in the HTML because
+        // the port is no longer fixed (the core may skip a taken port).
         const base = getBaseUrl();
         return `
             <!DOCTYPE html>

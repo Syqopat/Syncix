@@ -4,6 +4,24 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **English throughout.** Every identifier, comment, log line, test fixture,
+  CI job and tool message is in English now. Three of these changes are
+  visible to users:
+  - Settings the plugin saves in Studio use English keys. A folder approval or
+    a manual port override saved by an earlier build is not carried over;
+    Studio asks once more.
+  - The Turkish CLI aliases `--onayla`, `--sil` and `yayinla` are gone. Use
+    `--confirm`, `--delete` and `upload`, which have always been the documented
+    forms.
+  - The place-conflict object in `/health` uses `folder_place`,
+    `incoming_place`, `incoming_name` and `incoming_place_id`.
+- The example game's localization table ships Spanish instead of Turkish as its
+  second language.
+
 ## [0.1.1] - 2026-09-10
 
 ### Fixed

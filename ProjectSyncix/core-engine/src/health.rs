@@ -6,25 +6,25 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant as StdInstant};
 use tokio::time::Instant;
 
-/// /health cevabı. Artık sadece "ayakta mıyım" demiyor; core kendini tanıtıyor.
-/// Studio eklentisi bunu okuyup hangi projeye bağlandığını kullanıcıya gösteriyor,
-/// sürüm uyumunu kontrol ediyor ve doğru portu buluyor.
-/// Studio eklentisinin davranisini belirleyen, syncix.toml'dan received ayarlar.
+/// /health response. It no longer just says "I am up"; the core introduces itself.
+/// The Studio plugin reads it to show the user which project it connected to,
+/// check version compatibility and find the right port.
+/// Settings from syncix.toml that shape the Studio plugin's behaviour.
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct PluginConfig {
     /// "two_way" | "studio_to_disk" | "disk_to_studio" | "manual"
     pub mode: String,
     /// "queue" | "ignore" | "apply"
     pub play_mode: String,
-    /// Ilk baglantida Studio'da izin sorulsun mu.
+    /// Whether Studio asks for permission on the first connection.
     pub ask_permission: bool,
-    /// Syncix'in degisiklikleri Studio'nun restored_count al yigina girsin mi.
+    /// Whether Syncix's changes go onto Studio's undo stack.
     pub undo: bool,
-    /// Izlenecek service_list. Bos ise eklentinin fallback_value listesi gecerli.
+    /// Services to observe. If empty, the plugin's default list applies.
     pub services: Vec<String>,
-    /// Hic izlenmeyecek siniflar.
+    /// Classes that are never observed.
     pub ignore_classes: Vec<String>,
-    /// Hic izlenmeyecek property'ler.
+    /// Properties that are never observed.
     pub ignore_properties: Vec<String>,
 }
 
@@ -39,45 +39,45 @@ pub struct HealthStatus {
     pub root: String,
     pub port: u16,
 
-    // --- Durum ---
+    // --- Status ---
     pub uptime_seconds: u64,
     pub active_connections: usize,
     pub messages_processed: usize,
     pub studio_connected: bool,
 
-    // --- Metrikler (madde 7: doğrulanamayan davranışı ölçülebilir hale getirir) ---
+    // --- Metrics (make behaviour that could not be verified measurable) ---
     pub inbound_from_studio: usize,
     pub outbound_to_studio: usize,
     pub loops_detected: usize,
     pub plugin_queued: usize,
     pub plugin_coalesced: usize,
 
-    /// Bu folder_path hangi place'e is_bound? Hic baglanmadiysa None.
+    /// Which place is this folder bound to? None if it was never bound.
     ///
-    /// Eklenti port tararken buna bakiyor: own place'ine is_bound core'u tercih
-    /// ediyor, baska bir place'e is_bound core'u atliyor. Yoksa iki proje acikken
-    /// buldugu ILK core'a baglanip gereksiz place_clash cikariyordu.
+    /// The plugin checks this while scanning ports: it prefers a core bound to its own place
+    /// and skips a core bound to another place. Otherwise, with two projects open, it
+    /// connected to the FIRST core it found and raised a needless place conflict.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bound_place: Option<String>,
 
-    /// Klasor baska bir place'e bagliysa dolu olur; syncing suspended demektir.
+    /// Set when the folder is bound to another place; that means sync is suspended.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub place_conflict: Option<crate::server::PlaceConflict>,
-    /// Senkron suspended mi (su an yalnizca place catismasinda oluyor).
+    /// Whether sync is suspended (currently only happens on a place conflict).
     pub sync_suspended: bool,
 
-    /// Eklentinin uygulayacagi ayarlar.
+    /// Settings the plugin applies.
     ///
-    /// Eklenti bunlari own icinde tutmuyor; single dogruluk kaynagi syncix.toml.
-    /// Aksi halde is_same proje icin iki ayri ayar seti olusur ve hangisinin
-    /// gecerli oldugu belirsizlesir. Eklenti baglanirken /health okudugu icin
-    /// ek bir kanal acmaya gerek kalmiyor.
+    /// The plugin does not keep them itself; syncix.toml is the single source of truth.
+    /// Otherwise there would be two sets of settings for the same project and it would be
+    /// unclear which one applies. The plugin reads /health when it connects, so
+    /// no extra channel is needed.
     pub config: PluginConfig,
 
-    // --- Eklenti akış günlüğü özeti ---
-    // Eklentinin belleğindeki günlüğü dışarıdan görebilmenin single yolu bu.
-    /// Modeldeki obje sayısı. Editörün status_info çubuğu bunu gösterir; eskiden
-    /// mesajları sayarak tahmin ediliyordu ve zamanla gerçekten sapıyordu.
+    // --- Plugin activity log summary ---
+    // The only way to see, from outside, the log held in the plugin's memory.
+    /// Number of objects in the model. The editor's status bar shows it; it used to
+    /// be estimated by counting messages and really did drift over time.
     pub object_count: usize,
 
     pub activity_total: usize,
@@ -86,17 +86,17 @@ pub struct HealthStatus {
     pub conflicts: usize,
 }
 
-/// Echo döngüsü dedektörü.
+/// Echo loop detector.
 ///
-/// Neden exists_flag: echo engelleme Roblox'un deferred signal'ları yüzünden kusursuz değil.
-/// Bir döngü oluştuğunda hiçbir yerde iz bırakmıyordu, yani sessizce CPU yakıyordu.
-/// Bu sınıf aynı (uuid, property) çiftinin kısa sürede kaç kez gidip geldiğini sayar
-/// ve eşiği aşınca bir kez uyarı basar. PatchExecutor'a warn eklemenin renk hatasını
-/// bulması gibi, görünmez olanı görünür yapar.
+/// Why it exists: echo suppression is not perfect because of Roblox's deferred signals.
+/// When a loop formed it left no trace anywhere, so it silently burned CPU.
+/// This counts how often the same (uuid, property) pair bounces back and forth in a short time
+/// and prints one warning once a threshold is crossed. Like the warning that revealed the
+/// colour bug in PatchExecutor, it makes the invisible visible.
 pub struct LoopDetector {
-    /// (uuid, property) -> o pencerede görülen zaman damgaları
+    /// (uuid, property) -> timestamps seen in the window
     seen: Mutex<HashMap<(String, String), Vec<StdInstant>>>,
-    /// Eşik aşıldığında again again uyarmamak için susturulanlar
+    /// Suppressed entries, so a crossed threshold does not warn again and again
     suppressed: Mutex<HashMap<(String, String), StdInstant>>,
     time_window: Duration,
     threshold: usize,
@@ -108,21 +108,21 @@ impl LoopDetector {
         Self {
             seen: Mutex::new(HashMap::new()),
             suppressed: Mutex::new(HashMap::new()),
-            // 2 saniyede 12 defadan extra aynı property gidip geliyorsa bu normal
-            // bir kullanıcı düzenlemesi değildir; sürükleme bile bu sıklıkta
-            // BatchQueue tarafından birleştirilerek gelir.
+            // More than 12 round trips of the same property within 2 seconds is not a normal
+            // user edit; even a drag arrives at this rate
+            // already merged by BatchQueue.
             time_window: Duration::from_secs(2),
             threshold: 12,
             counter: AtomicUsize::new(0),
         }
     }
 
-    /// Bir property değişimini kaydeder. Döngü şüphesi varsa true döner.
+    /// Records a property change. Returns true if a loop is suspected.
     pub fn persist(&self, uuid: &str, property: &str) -> bool {
         let key_name = (uuid.to_string(), property.to_string());
         let current_time = StdInstant::now();
 
-        // Zaten uyarı verilmişse 30 saniye boyunca sus.
+        // If a warning was already given, stay quiet for 30 seconds.
         {
             let mut suppressed = self.suppressed.lock().unwrap();
             if let Some(t) = suppressed.get(&key_name) {
@@ -134,19 +134,19 @@ impl LoopDetector {
         }
 
         let mut seen = self.seen.lock().unwrap();
-        let liste = seen.entry(key_name.clone()).or_default();
-        liste.retain(|t| current_time.duration_since(*t) < self.time_window);
-        liste.push(current_time);
+        let entry_list = seen.entry(key_name.clone()).or_default();
+        entry_list.retain(|t| current_time.duration_since(*t) < self.time_window);
+        entry_list.push(current_time);
 
-        if liste.len() > self.threshold {
-            liste.clear();
+        if entry_list.len() > self.threshold {
+            entry_list.clear();
             drop(seen);
             self.suppressed.lock().unwrap().insert(key_name, current_time);
             self.counter.fetch_add(1, Ordering::SeqCst);
             return true;
         }
 
-        // Bellek sızmasın: sözlük büyüdüyse ölü kayıtları at.
+        // Keep memory bounded: when the map grows, drop stale entries.
         if seen.len() > 512 {
             seen.retain(|_, v| {
                 v.retain(|t| current_time.duration_since(*t) < self.time_window);
@@ -182,7 +182,7 @@ pub struct HealthMonitor {
     activity_out: AtomicUsize,
     conflicts: AtomicUsize,
 
-    /// Studio'nun en last_item ne zaman poll ettiği. Bağlı mı değil mi bunu buradan biliyoruz.
+    /// When Studio last polled. This is how we know whether it is connected.
     last_studio_contact: Mutex<Option<StdInstant>>,
 
     pub loop_detector: LoopDetector,
@@ -227,15 +227,15 @@ impl HealthMonitor {
         self.outbound_to_studio.fetch_add(1, Ordering::SeqCst);
     }
 
-    /// Studio eklentisi own BatchQueue sayaçlarını bildirir.
-    /// Birleştirmenin gerçekten çalışıp çalışmadığı ancak böyle ölçülebilir:
-    /// queued kaç değişiklik input_value, coalesced kaçı single mesajda birleşti.
+    /// The Studio plugin reports its own BatchQueue counters.
+    /// Only this way can we measure whether merging really works:
+    /// queued is how many changes came in, coalesced is how many were merged into one message.
     pub fn set_plugin_metrics(&self, queued: usize, coalesced: usize) {
         self.plugin_queued.store(queued, Ordering::SeqCst);
         self.plugin_coalesced.store(coalesced, Ordering::SeqCst);
     }
 
-    /// Eklentinin akış günlüğü özeti.
+    /// Summary of the plugin's activity log.
     pub fn set_activity(&self, total_count: usize, received: usize, outgoing: usize, conflict: usize) {
         self.activity_total.store(total_count, Ordering::SeqCst);
         self.activity_in.store(received, Ordering::SeqCst);
@@ -317,8 +317,8 @@ pub async fn health_handler(
     let mut status_info = state
         .health_monitor
         .get_status_with_count(&state.project, state.actual_port, number_value);
-    // Catisma /health uzerinden disari veriliyor: hem CLI hem editor hem
-    // Studio eklentisi is_same yerden ogrensin, uc ayri kanal olmasin.
+    // Conflict is exposed via /health: so CLI, editor, and Studio plugin
+    // all learn it from the same place, avoiding three separate channels.
     status_info.place_conflict = state
         .place_clash_state
         .lock()
@@ -351,7 +351,7 @@ mod tests {
                 warning += 1;
             }
         }
-        // Eşik aşılır, uyarı verilir, sonra 30 sn susturulur: single uyarı beklenir.
+        // The threshold is crossed, a warning is given, then it is silenced for 30 s: one warning expected.
         assert_eq!(warning, 1);
         assert_eq!(d.total_count(), 1);
     }
@@ -362,7 +362,7 @@ mod tests {
         for _ in 0..40 {
             d.persist("uuid-1", "Position");
         }
-        // Başka bir property temiz sayfa ile başlamalı.
+        // A different property must start with a clean slate.
         assert!(!d.persist("uuid-1", "Size"));
         assert!(!d.persist("uuid-2", "Position"));
     }

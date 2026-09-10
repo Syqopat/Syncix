@@ -9,7 +9,7 @@ impl Serializer for PartSerializer {
     }
 
     fn serialize(&self, instance: &InstanceNode) -> Result<String, String> {
-        // AI-Friendly JSON üretimi
+        // AI-friendly JSON output
         serde_json::to_string_pretty(instance).map_err(|e| e.to_string())
     }
 

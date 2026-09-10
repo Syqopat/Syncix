@@ -1,34 +1,34 @@
 use crate::model::{InstanceNode, InstancePatch};
 use tokio::sync::broadcast;
 
-/// Sistemin merkezi sinir ağı (Event Bus).
-/// Tüm bileşenler (Watcher, Transport, DataModel) sadece buraya message bırakır veya buradan okur.
-/// Birbirlerini doğrudan çağırmazlar (Decoupling).
+/// Central event bus of the system.
+/// Every component (Watcher, Transport, DataModel) only posts messages here or reads them from here.
+/// Components never call each other directly (decoupling).
 #[derive(Debug, Clone)]
 pub enum SyncEvent {
-    /// Dosya sisteminden veya Studio'dan received, "Tüm nesneyi ez" komutu.
+    /// Full overwrite of an object, coming from the file system or from Studio.
     FullNodeUpdate(InstanceNode),
 
-    /// Sadece belirli özellikleri değiştiren yama komutu (Incremental Sync).
+    /// Patch that changes only specific properties (incremental sync).
     PatchUpdate(InstancePatch),
 
-    /// Bir nesnenin silindiğini bildiren command_name.
+    /// Signals that an object was deleted.
     NodeDeleted(uuid::Uuid),
 }
 
-/// Tüm sistemin paylaştığı Event Bus.
+/// Event bus shared by the whole system.
 pub struct EventBus {
     sender: broadcast::Sender<SyncEvent>,
 }
 
 impl EventBus {
     pub fn new() -> Self {
-        // 1024 mesajlık bir kapasite (Batching ve yoğun yük için uygun)
+        // Capacity of 1024 messages (enough for batching and bursts).
         let (sender, _) = broadcast::channel(1024);
         Self { sender }
     }
 
-    /// Bir olayı sisteme yayınlar (Publish)
+    /// Publishes an event to the system.
     pub fn publish(
         &self,
         event: SyncEvent,
@@ -36,7 +36,7 @@ impl EventBus {
         self.sender.send(event).map_err(Box::new)
     }
 
-    /// Olayları dinlemek için bir alıcı (Subscriber) oluşturur
+    /// Creates a receiver (subscriber) for listening to events.
     pub fn subscribe(&self) -> broadcast::Receiver<SyncEvent> {
         self.sender.subscribe()
     }

@@ -1,19 +1,19 @@
--- Eklentinin calisma ayarlari.
+-- The plugin's runtime settings.
 --
--- Tek dogruluk kaynagi syncix.toml. Core bu ayarlari /health cevabinda
--- gonderiyor, eklenti baglanirken okuyup buraya yaziyor.
+-- The single source of truth is syncix.toml. The core sends these settings in its /health
+-- response; the plugin reads them on connect and writes them here.
 --
--- Neden eklenti kendi ayarini tutmuyor: iki ayri ayar seti olsaydi (biri
--- panelde, biri dosyada) hangisinin gecerli oldugu belirsizlesirdi. Kullanici
--- dosyada "disk_to_studio" yazip Studio'da hala iki yonlu behavior gorurse
--- bunun sebebini bulmasi cok zor olur. Bu yuzden dosya kazanir.
+-- Why the plugin keeps no settings of its own: with two separate sets of settings (one
+-- in the panel, one in the file) it would be unclear which applies. A user who
+-- wrote "disk_to_studio" in the file and still saw two-way behaviour in Studio
+-- would have a very hard time finding out why. So the file wins.
 --
--- Tek istisna Pause/Resume: o bir ayar degil, anlik bir durum. Panelde kaliyor.
+-- The one exception is Pause/Resume: that is not a setting but momentary state. It stays in the panel.
 
 local SyncConfig = {}
 
--- Baglanti kurulana kadar gecerli olan varsayilanlar. Core baglandigi anda
--- Apply() bunlarin uzerine yaziyor.
+-- Defaults that apply until a connection is made. As soon as the core connects,
+-- Apply() overwrites them.
 local current = {
 	mode = "two_way",
 	play_mode = "queue",
@@ -24,20 +24,20 @@ local current = {
 	ignore_properties = {},
 }
 
--- Liste yerine lookupSet: her property degisikliginde list taramak pahali olurdu.
+-- A set instead of a list: scanning a list on every property change would be expensive.
 local ignoredClasses = {}
 local ignoredProperties = {}
 
 local function toSet(list: { string }?): { [string]: boolean }
 	local lookupSet = {}
-	for _, ad in ipairs(list or {}) do
-		lookupSet[ad] = true
+	for _, fieldName in ipairs(list or {}) do
+		lookupSet[fieldName] = true
 	end
 	return lookupSet
 end
 
---- Core'dan incoming ayarlari uygular. Alan eksikse current datum korunur:
---- eski bir core'a baglanildiginda ayarlarin sifirlanmasi yanlis olur.
+--- Applies the settings from the core. A missing field keeps its current value:
+--- resetting settings when connecting to an older core would be wrong.
 function SyncConfig.Apply(incoming: any)
 	if type(incoming) ~= "table" then
 		return
@@ -55,13 +55,13 @@ function SyncConfig.Mode(): string
 	return current.mode
 end
 
---- Studio'da olan bir degisiklik core'a gonderilsin mi?
---- disk_to_studio modunda Studio yalnizca alici; gozlemci hic konusmamali.
+--- Should a change made in Studio be sent to the core?
+--- In disk_to_studio mode Studio only receives; the observer must not speak at all.
 function SyncConfig.SendFromStudio(): boolean
 	return current.mode == "two_way" or current.mode == "studio_to_disk"
 end
 
---- Core'dan incoming bir degisiklik Studio'ya uygulansin mi?
+--- Should a change from the core be applied in Studio?
 function SyncConfig.ApplyToStudio(): boolean
 	return current.mode == "two_way" or current.mode == "disk_to_studio"
 end
@@ -78,9 +78,9 @@ function SyncConfig.AskPermission(): boolean
 	return current.ask_permission == true
 end
 
---- Bos list "varsayilani kullan" demek; kullanicinin hicbir svc
---- istemedigi anlamina gelmez. Bos birakmak en sik durum oldugu icin
---- bunu "hicbiri" saymak, ayari acan herkesin senkronu kirmasi olurdu.
+--- An empty list means "use the default"; it does not mean the user wants no
+--- services. Leaving it empty is the most common case, so treating it
+--- as "none" would break sync for everyone who opens the setting.
 function SyncConfig.ServiceList(): { string }?
 	if #current.services == 0 then
 		return nil
@@ -92,8 +92,8 @@ function SyncConfig.ClassAllowed(cls: string): boolean
 	return not ignoredClasses[cls]
 end
 
-function SyncConfig.PropertyAllowed(ad: string): boolean
-	return not ignoredProperties[ad]
+function SyncConfig.PropertyAllowed(fieldName: string): boolean
+	return not ignoredProperties[fieldName]
 end
 
 return SyncConfig

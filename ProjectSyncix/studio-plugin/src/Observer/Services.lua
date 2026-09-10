@@ -1,11 +1,11 @@
--- Senkron edilen servislerin TEK kaynagi.
+-- The SINGLE source of the synced services.
 --
--- Neden ayri bir dosya: bu list GenericObserver ve PatchBuilder icinde iki kez
--- elle yazilmisti. Birine svc eklenip digerine eklenmediginde object agacta
--- gorunuyor ama degisiklikleri izlenmiyordu — sessiz ve tesisi zor bir failure.
+-- Why a separate file: this list was written by hand twice, in GenericObserver and
+-- PatchBuilder. When a service was added to one and not the other, the object showed
+-- in the tree but its changes were not observed — a silent failure that was hard to diagnose.
 --
--- Sabit UUID'ler: servislerin kimligi core yeniden basladiginda da ayni kalmali,
--- yoksa her acilisita agacin kokleri degisir ve tum subItem agac yeniden yazilir.
+-- Fixed UUIDs: a service's identity must stay the same when the core restarts,
+-- otherwise the tree's roots change on every start and the whole subtree is rewritten.
 
 local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
 
@@ -28,11 +28,11 @@ Services.UUIDS = {
 	MaterialService     = "00000000-0000-4000-8000-00000000000e",
 }
 
--- Sirali list: agacin kok siralamasi her acilista ayni olsun.
+-- Ordered list: the tree's root order is the same on every start.
 --
--- Players, Chat ve TestService bilerek disarida. Players calisma aninda dolan
--- bir svc; icerigi yazarin urunu degil, oyuncularin. Chat eski sohbet
--- sistemi, yerini TextChatService aldi. TestService yalnizca test kosmak icin.
+-- Players, Chat and TestService are left out on purpose. Players fills at runtime;
+-- its contents belong to the players, not to the author. Chat is the old chat
+-- system, replaced by TextChatService. TestService is only for running tests.
 local NAMES = {
 	"Workspace",
 	"ReplicatedStorage",
@@ -45,24 +45,24 @@ local NAMES = {
 	"Lighting",
 	"SoundService",
 	"Teams",
-	-- Modern sohbet kurulumu: TextChannel, TextChatCommand, pencere ayarlari.
+	-- Modern chat setup: TextChannel, TextChatCommand, window settings.
 	"TextChatService",
-	-- Ceviri tablolarinin durdugu yer.
+	-- Where translation tables live.
 	"LocalizationService",
-	-- Ozel MaterialVariant tanimlari.
+	-- Custom MaterialVariant definitions.
 	"MaterialService",
 }
 
---- Senkron edilecek servisleri dondurur.
---- GetService bir svc bu Studio surumunde yoksa failure atiyor; o yuzden her
---- cagri korumali ve eksik svc sessizce atlaniyor.
+--- Returns the services to sync.
+--- GetService throws when a service does not exist in this Studio version, so every
+--- call is guarded and a missing service is skipped silently.
 function Services.List(): { Instance }
 	local list = {}
-	-- Kullanici syncix.toml'da kendi listesini verdiyse o gecerli.
+	-- If the user gave their own list in syncix.toml, that one applies.
 	local requested = SyncConfig.ServiceList() or NAMES
-	for _, ad in ipairs(requested) do
+	for _, fieldName in ipairs(requested) do
 		local ok, svc = pcall(function()
-			return game:GetService(ad)
+			return game:GetService(fieldName)
 		end)
 		if ok and svc then
 			table.insert(list, svc)

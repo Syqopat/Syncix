@@ -5,26 +5,18 @@ core-engine/target/
 vscode-extension/node_modules/
 vscode-extension/out/
 
-# Syncix calisma dosyalari
+# Syncix working files
 .syncix/
-# Reconciler'in aldigi yedekler: makineye ozel, tarihli anlik goruntuler.
-# Diskte kalirlar, depoya girmezler.
-.syncix-yedek/
 syncix-core.log
-*.vsix
 
 # Editor
 .vscode/
 .DS_Store
 
-# Uretilen dosyalar
+# Generated files
 sourcemap.json
 *.rbxmx
 *.rbxlx
 
-# vsce paketi: her surumde yeniden uretiliyor, depoda tutulmuyor.
+# vsce package: rebuilt for every release, not kept in the repository.
 *.vsix
-ikon-onizleme.png
-
-# Local editor agent rules; personal tooling, not part of the project.
-.agents/

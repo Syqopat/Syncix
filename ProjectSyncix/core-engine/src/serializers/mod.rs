@@ -5,16 +5,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// Tüm Serializer'ların uygulaması gereken arayüz.
+/// Interface every serializer must implement.
 pub trait Serializer: Send + Sync {
     fn serialize(&self, instance: &InstanceNode) -> Result<String, String>;
     fn deserialize(&self, data: &str) -> Result<InstanceNode, String>;
     fn get_class_name(&self) -> &'static str;
 }
 
-/// Sınıf ayrımı yapmayan genel serializer.
-/// Kayıtlı özel bir serializer'ı olmayan HER sınıf (Folder, Script, Model, GUI, service_list...)
-/// bunun üzerinden diske yazılır. Böylece Studio'daki her obje bir file_path olarak görünür.
+/// General serializer that does not distinguish classes.
+/// EVERY class without a registered custom serializer (Folder, Script, Model, GUI, services...)
+/// is written to disk through it. That way every object in Studio appears as a file.
 pub struct GenericSerializer;
 
 impl Serializer for GenericSerializer {
@@ -31,13 +31,13 @@ impl Serializer for GenericSerializer {
     }
 }
 
-/// Serializer'ları barındıran merkezi kayıt defteri (Registry & Factory).
-/// Performans ve Genişletilebilirlik: Çekirdek motor hangi instance türünü işlediğini bilmez.
-/// Gelen verinin `class_name`'ine bakar ve bu defterden ilgili Serializer'ı çeker.
-/// 50 fresh nesne eklense bile `main.rs` veya `model.rs` değişmez (Open/Closed Principle).
+/// Central registry holding the serializers (registry & factory).
+/// Performance and extensibility: the core engine does not know which instance type it handles.
+/// It looks at the incoming data's `class_name` and takes the matching serializer from this registry.
+/// Even if 50 new types were added, `main.rs` and `model.rs` would not change (open/closed principle).
 pub struct SerializerRegistry {
     serializers: HashMap<String, Box<dyn Serializer>>,
-    /// Kayıtlı özel serializer'ı olmayan sınıflar için genel yedek.
+    /// General fallback for classes without a registered custom serializer.
     fallback: Box<dyn Serializer>,
 }
 
@@ -49,14 +49,14 @@ impl SerializerRegistry {
         }
     }
 
-    /// Yeni bir serializer kaydeder.
+    /// Registers a new serializer.
     pub fn register(&mut self, serializer: Box<dyn Serializer>) {
         let class_name = serializer.get_class_name().to_string();
         self.serializers.insert(class_name, serializer);
     }
 
-    /// İlgili sınıf için serializer döndürür.
-    /// Özel bir serializer yoksa genel serializer'a düşer; yani HER sınıf yazılabilir.
+    /// Returns the serializer for the given class.
+    /// Without a custom serializer it falls back to the general one, so EVERY class can be written.
     pub fn get(&self, class_name: &str) -> Option<&dyn Serializer> {
         Some(
             self.serializers
@@ -67,14 +67,14 @@ impl SerializerRegistry {
     }
 }
 
-/// Tüm sistemde paylaşılacak olan thread-safe registry.
+/// Thread-safe registry shared by the whole system.
 pub type SharedRegistry = Arc<RwLock<SerializerRegistry>>;
 
-/// İçerisinde varsayılan (Part vb.) serializer'ların yüklü olduğu kayıt defterini oluşturur.
+/// Creates the registry with the default serializers (Part, ...) loaded.
 pub fn create_default_registry() -> SharedRegistry {
     let mut registry = SerializerRegistry::new();
 
-    // Tüm current_value serializer'lar burada kaydedilir.
+    // All existing serializers are registered here.
     registry.register(Box::new(part::PartSerializer));
 
     Arc::new(RwLock::new(registry))

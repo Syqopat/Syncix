@@ -1,11 +1,11 @@
 -- Store
--- Eklenti ayarları için iki katmanlı kalıcı depo.
+-- Two-layer persistent store for plugin settings.
 --
--- 1. plugin:SetSetting — Creator Store'dan kurulmuş eklentilerde çalışır.
---    .rbxm dosyası doğrudan Plugins klasörüne bırakıldığında (bizim dağıtım biçimimiz)
---    eklentinin kayıtlı kimliği olmadığı için diske YAZILMIYOR; ölçüldü.
--- 2. game niteliği — yedek katman. `game` gözlemcinin izlediği servislerin dışında
---    olduğu için senkrona sızmaz; place kaydedildiğinde kalıcı olur.
+-- 1. plugin:SetSetting — works for plugins installed from the Creator Store.
+--    When the .rbxm file is dropped straight into the Plugins folder (our distribution form)
+--    the plugin has no registered identity, so it is NOT WRITTEN TO DISK; measured.
+-- 2. A game attribute — fallback layer. `game` is outside the services the observer watches,
+--    so it does not leak into sync; it persists when the place is saved.
 
 local HttpService = game:GetService("HttpService")
 

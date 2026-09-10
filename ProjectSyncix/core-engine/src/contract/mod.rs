@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// Syncix Public API Contract
-/// Bu modül Core, Studio, CLI ve AI eklentileri arasındaki kesin (strict) iletişim şemasını tanımlar.
-/// Değişiklikler Backward Compatibility kurallarına tabi olmalıdır.
+/// Syncix public API contract
+/// This module defines the strict message schema between the core, Studio, the CLI and AI extensions.
+/// Changes must follow backward-compatibility rules.
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageEnvelope {
@@ -20,7 +20,7 @@ impl MessageEnvelope {
     pub fn new(event_type: &str, data: Value) -> Self {
         Self {
             event_type: event_type.to_string(),
-            api_version: 1, // Şimdilik v1 API kullanıyoruz
+            api_version: 1, // v1 API for now
             request_id: None,
             transaction_id: None,
             retry_count: 0,
@@ -40,7 +40,7 @@ impl MessageEnvelope {
     }
 }
 
-/// DTO (Data Transfer Object) Tanımları
+/// DTO (data transfer object) definitions
 pub mod dto {
     use super::*;
 

@@ -17,7 +17,7 @@ use crate::health::{health_handler, HealthMonitor};
 use crate::transport::{EventType, Payload, StudioOutbox};
 use rand::Rng;
 
-/// Sunucu durumu. Kanalları (channels) barındırır.
+/// Server state. Holds the channels.
 pub struct AppState {
     pub studio_outbox: Arc<StudioOutbox>,
     pub tx_to_core: tokio::sync::mpsc::Sender<Payload>,
@@ -25,40 +25,40 @@ pub struct AppState {
     pub health_monitor: Arc<HealthMonitor>,
     pub data_model: crate::model::SharedDataModel,
     pub chaos_mode_enabled: bool, // Failure Injection feature flag
-    /// Proje kimliği: /health ile dışarı verilir, Studio eklentisi hangi projeye
-    /// bağlandığını kullanıcıya gösterebilsin diye gerekli.
+    /// Project identity: exposed through /health so the Studio plugin can show the user
+    /// which project it connected to.
     pub project: Arc<crate::project::ProjectConfig>,
-    /// Gerçekte bağlanılan port (istenen port dolu olabilir).
+    /// The port actually bound (the requested one may be taken).
     pub actual_port: u16,
-    /// Bu klasore BASKA bir place baglanmaya calistiysa burada durur.
+    /// Set when ANOTHER place tried to connect to this folder.
     ///
-    /// Bir sync klasoru single bir place'e aittir. Baska bir place baglandiginda
-    /// iki tree sessizce birlestiriliyordu: service_name UUID'leri butun place'lerde
-    /// is_same oldugu icin StarterPlayerScripts gibi TEKIL objeler ikiser tane
-    /// oluyordu. Artik birlestirmek yerine duruyoruz ve karari kullaniciya
-    /// birakiyoruz.
+    /// A sync folder belongs to one place. When another place connected, the
+    /// two trees were merged silently: service UUIDs are the same in every place,
+    /// so SINGLETON objects such as StarterPlayerScripts ended up
+    /// duplicated. Now, instead of merging, we stop and leave the decision to the
+    /// user.
     pub place_clash_state: Arc<std::sync::Mutex<Option<PlaceConflict>>>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
 pub struct PlaceConflict {
-    /// Klasorun is_bound oldugu place.
+    /// The place this folder is bound to.
     pub folder_place: String,
-    /// Baglanmaya calisan place.
+    /// Place attempting to connect.
     pub incoming_place: String,
     pub incoming_name: String,
     pub incoming_place_id: String,
 }
 
-/// İstenen porta bağlanmayı dener, doluysa sıradakileri dener.
+/// Tries to bind the requested port; if it is taken, tries the following ones.
 ///
-/// Eskiden port sabit 8080'di: ikinci bir proje açıldığında ya da 8080'i başka bir
-/// program tuttuğunda core sessizce çöküyor, kullanıcı sebebini göremiyordu.
+/// The port used to be fixed at 8080: when a second project was opened or another
+/// program held 8080, the core silently crashed and the user could not see why.
 pub fn bind_with_fallback(
     cfg: &crate::project::ProjectConfig,
 ) -> Option<(std::net::TcpListener, u16)> {
     let first_item = cfg.wanted_port;
-    // Port açıkça istendiyse devretme yok: yalnızca o port denenir.
+    // If the port was requested explicitly there is no fallback: only that port is tried.
     let upper = if cfg.port_fixed {
         first_item.saturating_add(1)
     } else {
@@ -98,7 +98,7 @@ pub fn bind_with_fallback(
     None
 }
 
-/// Dış istemcilerden (VS Code RPC, CLI) received command_name adlarını çekirdek event'lerine çevirir.
+/// Maps command names from external clients (VS Code RPC, CLI) to core events.
 fn map_command(event_type: &str) -> Option<EventType> {
     match event_type {
         "GET_TREE" => Some(EventType::GetTree),
@@ -114,9 +114,9 @@ fn map_command(event_type: &str) -> Option<EventType> {
     }
 }
 
-/// HTTP Sunucusunu başlatır. Roblox Studio eklentisi ve VS Code uzantısı bu sunucu ile konuşur.
-/// Dinleyici dışarıda açılır: gerçek portun AppState'e girmesi gerektiği için
-/// bağlanma işi start_server'dan önce yapılmak zorunda.
+/// Starts the HTTP server. The Roblox Studio plugin and the VS Code extension talk to it.
+/// The listener is opened outside: the real port has to go into AppState, so
+/// binding has to happen before start_server.
 pub async fn start_server(state: Arc<AppState>, listener: std::net::TcpListener) {
     let app = Router::new()
         .route("/health", get(health_handler))
@@ -146,31 +146,31 @@ pub async fn start_server(state: Arc<AppState>, listener: std::net::TcpListener)
     }
 }
 
-/// Düzgün kapanma. `syncix down` bunu çağırır.
+/// Clean shutdown. `syncix down` calls this.
 ///
-/// Eskiden core'u durdurmanın single yolu süreç adından öldürmekti (taskkill /IM),
-/// bu da diğer projelerin core'unu da kapatıyordu ve yalnızca Windows'ta çalışıyordu.
-/// Sunucu 127.0.0.1'e bağlı olduğu için bu uç nokta yalnızca yerel makineden erişilebilir.
+/// The only way to stop the core used to be killing it by process name (taskkill /IM),
+/// which also killed other projects' cores and only worked on Windows.
+/// The server is bound to 127.0.0.1, so this endpoint is only reachable from the local machine.
 async fn shutdown_handler(State(state): State<Arc<AppState>>) -> axum::response::Response {
     info!("Shutdown requested, Syncix Core is stopping.");
     state.project.clear_port_file();
     tokio::spawn(async {
-        // Cevabın istemciye ulaşması için kısa bir gecikme.
+        // A short delay so the reply reaches the client.
         tokio::time::sleep(std::time::Duration::from_millis(150)).await;
         std::process::exit(0);
     });
     (axum::http::StatusCode::OK, "OK").into_response()
 }
 
-/// sourcemap.json içeriğini döndürür (luau-lsp uyumlu).
+/// Returns the contents of sourcemap.json (luau-lsp compatible).
 async fn sourcemap_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let dm = state.data_model.read().await;
     let file_content = crate::sourcemap::json(&dm, &state.project.sync_dir, &state.project.root);
     ([(axum::http::header::CONTENT_TYPE, "application/json")], file_content)
 }
 
-/// Ağacı Roblox XML (.rbxmx / .rbxlx) olarak döndürür.
-/// `?target=<hedef>` verilirse yalnızca o sub ağaç yazılır.
+/// Returns the tree as Roblox XML (.rbxmx / .rbxlx).
+/// With `?target=<target>` only that subtree is written.
 async fn build_handler(
     State(state): State<Arc<AppState>>,
     axum::extract::Query(q): axum::extract::Query<std::collections::HashMap<String, String>>,
@@ -209,7 +209,7 @@ async fn build_handler(
         axum::http::header::CONTENT_TYPE,
         axum::http::HeaderValue::from_static("text/xml"),
     );
-    // Atlanan Enum sayısı başlıkla bildirilir ki CLI kullanıcıyı uyarabilsin.
+    // The number of skipped Enums is reported in a header so the CLI can warn the user.
     headers.insert(
         axum::http::HeaderName::from_static("x-syncix-skipped-enums"),
         axum::http::HeaderValue::from_str(&skipped.to_string())
@@ -220,7 +220,7 @@ async fn build_handler(
 
 async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload>> {
     state.health_monitor.inc_messages();
-    // Poll gelmesi Studio'nun ayakta olduğunun single kanıtı; bağlantı durumunu buradan biliyoruz.
+    // A poll is the only proof that Studio is up; the connection state comes from here.
     state.health_monitor.touch_studio();
 
     if state.chaos_mode_enabled {
@@ -235,10 +235,10 @@ async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload
         }
     }
 
-    // Long-poll: kuyrukta message varsa hemen döner, yoksa 10 saniyeye kadar bekler.
-    // 10 saniye sınırı önemli: Studio'nun HTTP istemcisi 30 saniyede timeout'a düşer ve
-    // bağlantı kopmuş sanılarak gereksiz reconnect + FULL_SYNC döngüsü oluşur.
-    // Outbox kuyruğu sayesinde iki poll arasında gönderilen mesajlar kaybolmaz.
+    // Long-poll: returns at once if the queue has a message, otherwise waits up to 10 seconds.
+    // The 10-second limit matters: Studio's HTTP client times out at 30 seconds, and a
+    // connection thought to be lost causes a needless reconnect + FULL_SYNC loop.
+    // Thanks to the outbox, messages sent between two polls are not lost.
     let message = state
         .studio_outbox
         .pop_or_wait(std::time::Duration::from_secs(10))
@@ -258,7 +258,7 @@ async fn push_handler(
     if state.chaos_mode_enabled {
         let mut rng = rand::thread_rng();
         if rng.gen_bool(0.05) {
-            // 5% şansla Packet Drop (Crash Simulation)
+            // Packet drop with 5% probability (crash simulation)
             warn!("Chaos Engineering: Payload Dropped (Push)");
             return (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
@@ -270,8 +270,8 @@ async fn push_handler(
 
     state.health_monitor.touch_studio();
 
-    // Eklentinin BatchQueue sayaçları. Birleştirmenin gerçekten çalışıp çalışmadığı
-    // ancak bu iki sayı ile ölçülebilir; elle sürükleyerek doğrulamaya gerek kalmaz.
+    // The plugin's BatchQueue counters. Only these two numbers can show whether merging
+    // really works; no need to verify it by dragging things by hand.
     if payload.event_type == EventType::PluginMetrics {
         let queued = payload
             .data
@@ -292,11 +292,11 @@ async fn push_handler(
                 .and_then(|x| x.as_u64())
                 .unwrap_or(0) as usize
         };
-        // Eklenti sürümü denetimi.
+        // Plugin version check.
         //
-        // Sürüm kapısı şimdiye kadar yalnızca eklentinin kendisindeydi. Sürüm
-        // kontrolü YAPMAYAN previous_text bir eklenti bağlanırsa core sessizce kabul
-        // ediyordu ve uyumsuzluk garip davranış olarak ortaya çıkıyordu.
+        // Until now the version gate lived only in the plugin itself. If an older plugin
+        // that did NOT check versions connected, the core silently accepted it
+        // and the mismatch surfaced as strange behaviour.
         if let Some(plugin_version) = payload.data.get("plugin_version").and_then(|x| x.as_str()) {
             if !crate::project::versions_compatible(plugin_version, crate::project::VERSION) {
                 warn!(
@@ -316,9 +316,9 @@ async fn push_handler(
         return (axum::http::StatusCode::OK, "OK").into_response();
     }
 
-    // Bu liste, eklentiden GELEN mesajlarin gecebildigi single kapi. Listede
-    // olmayan bir message sessizce dusuyor — fresh bir message tipi eklerken buraya
-    // eklemeyi unutmak, "gonderiyorum ama hicbir sey olmuyor" demek.
+    // This list is the only gate messages FROM the plugin can pass. A message
+    // missing from the list is silently dropped — forgetting to add a new message type
+    // here means "I am sending it but nothing happens".
     if payload.event_type == EventType::ClientUpdate
         || payload.event_type == EventType::CompositeUpdate
         || payload.event_type == EventType::FullSync
@@ -332,7 +332,7 @@ async fn push_handler(
     (axum::http::StatusCode::OK, "OK").into_response()
 }
 
-/// CLI ve diğer HTTP istemcileri için command_name endpoint'i.
+/// Command endpoint for the CLI and other HTTP clients.
 /// Body: { "event_type": "CREATE_INSTANCE" | "RENAME_INSTANCE" | "DELETE_INSTANCE" | "GET_TREE", "data": {...} }
 async fn command_handler(
     State(state): State<Arc<AppState>>,
@@ -342,13 +342,13 @@ async fn command_handler(
 
     let event_type = v.get("event_type").and_then(|e| e.as_str()).unwrap_or("");
 
-    // FULL_SYNC / PULL: Studio'ya "ağacı yeniden gönder" isteği.
-    // Bu command_name çekirdeğe DEĞİL doğrudan Studio'ya gider; cevabı normal FULL_SYNC
-    // yolundan işlenir ve modeli sıfırdan kurar.
-    // BIND: place catismasini cozer. Iki secenek exists_flag ve ikisi de veri kaybettirir,
-    // o yuzden karar kullanicinin.
-    //   studio -> bu place dogru kabul edilir, folder_path onun uzerine yazilir
-    //   disk   -> folder_path dogru kabul edilir, icerigi bu place'e yuklenir
+    // FULL_SYNC / PULL: asks Studio to "send the tree again".
+    // This command goes straight to Studio, NOT to the core; the reply is handled on the
+    // normal FULL_SYNC path and rebuilds the model from scratch.
+    // BIND: resolves a place conflict. There are two options and both can lose data,
+    // so the decision is the user's.
+    //   studio -> this place is taken as correct; the folder is overwritten from it
+    //   disk   -> the folder is taken as correct; its contents are loaded into this place
     if event_type == "BIND" {
         let direction = v
             .get("data")
@@ -363,9 +363,9 @@ async fn command_handler(
 
         match direction {
             "studio" => {
-                // Klasoru received place'e bagla ve senkronu ac. Bir sonraki
-                // FULL_SYNC'te tree Studio'dan yeniden kurulur; uzlastirici
-                // klasoru ona uydurur (silinenler cop kutusuna gider).
+                // Bind the folder to the incoming place and resume sync. On the next
+                // FULL_SYNC the tree is rebuilt from Studio; the reconciler
+                // brings the folder in line with it (deleted files go to the trash).
                 state.project.bind_place(&c.incoming_place);
                 crate::project::set_sync_suspended(false);
                 if let Ok(mut g) = state.place_clash_state.lock() {
@@ -380,10 +380,10 @@ async fn command_handler(
                 return (axum::http::StatusCode::OK, "OK").into_response();
             }
             "disk" => {
-                // Klasor dogru kabul edildi: kimligi received place'e ceviriyoruz
-                // ki bundan sonra is_same sey again place_clash saymasin, ama agaci
-                // Studio'dan ISTEMIYORUZ; diskteki file_list izleyici uzerinden
-                // Studio'ya akacak.
+                // The folder was taken as correct: its identity is switched to the incoming place
+                // so the same thing does not count as a place conflict again, but the tree
+                // is NOT requested from Studio; the files on disk flow to Studio
+                // through the watcher.
                 state.project.bind_place(&c.incoming_place);
                 crate::project::set_sync_suspended(false);
                 if let Ok(mut g) = state.place_clash_state.lock() {
@@ -424,8 +424,8 @@ async fn command_handler(
         return (axum::http::StatusCode::BAD_REQUEST, "data must be an object").into_response();
     }
 
-    // CREATE_INSTANCE: UUID'yi BURADA uretip cevapta donduruyoruz.
-    // Boylece cagiran, olusturdugu objeyi ismiyle degil kimligiyle hedefleyebilir.
+    // CREATE_INSTANCE: the UUID is generated HERE and returned in the reply,
+    // so the caller can target the object it created by identity rather than by name.
     let mut generated_id: Option<String> = None;
     if core_event == EventType::CreateInstance {
         let id = data
@@ -437,8 +437,8 @@ async fn command_handler(
         generated_id = Some(id);
     }
 
-    // Hedef doğrulama burada syncing yapılır ki CLI'ya anlamlı sonuç dönebilelim.
-    // Çözümlenen UUID data'ya restored_count yazılır; çekirdek her zaman kesin UUID alır.
+    // Target validation happens here synchronously so the CLI gets a meaningful result.
+    // The resolved UUID is written back into data; the core always receives an exact UUID.
     match core_event {
         EventType::RenameInstance
         | EventType::DeleteInstance
@@ -516,7 +516,7 @@ async fn command_handler(
                         return (
                             axum::http::StatusCode::CONFLICT,
                             format!(
-                                "Parent '{}' belirsiz: {} eşleşme var. Kısa UUID kullanın:\n{}",
+                                "Parent '{}' is ambiguous: {} matches. Use a short UUID:\n{}",
                                 parent,
                                 candidates.len(),
                                 list
@@ -528,7 +528,7 @@ async fn command_handler(
             }
         }
         EventType::ReparentInstance => {
-            // Hem taşınacak obje (id) hem de fresh parent_ref (newParentId) çözümlenir.
+            // Both the object being moved (id) and the new parent (newParentId) are resolved.
             let dm = state.data_model.read().await;
             for (field, label) in [("id", "Target"), ("newParentId", "New parent")] {
                 let target = data
@@ -565,7 +565,7 @@ async fn command_handler(
                         return (
                             axum::http::StatusCode::CONFLICT,
                             format!(
-                                "{} '{}' belirsiz: {} eşleşme var. Kısa UUID kullanın:\n{}",
+                                "{} '{}' is ambiguous: {} matches. Use a short UUID:\n{}",
                                 label,
                                 target,
                                 candidates.len(),
@@ -600,8 +600,8 @@ async fn command_handler(
     }
 }
 
-/// Tek bir objenin tam verisini (özellikler dahil) döndürür (CLI 'props' için).
-/// ?target=<isim|uuid|kısa-uuid>
+/// Returns the full data of a single object, properties included (for the CLI's 'props').
+/// ?target=<name|uuid|short-uuid>
 async fn object_handler(
     State(state): State<Arc<AppState>>,
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
@@ -614,7 +614,7 @@ async fn object_handler(
             if let Some(node) = dm.get_instance(&uuid) {
                 Json(serde_json::to_value(node).unwrap_or(serde_json::json!(null)))
             } else {
-                Json(serde_json::json!({ "error": "bulunamadı" }))
+                Json(serde_json::json!({ "error": "not found" }))
             }
         }
         ResolveResult::NotFound => Json(serde_json::json!({ "error": format!("Target not found: {}", target) })),
@@ -627,8 +627,8 @@ async fn object_handler(
     }
 }
 
-/// Model bütünlüğünü denetler (CLI 'check' için).
-/// Öksüz parent/child referanslarını ve sınıf dağılımını raporlar.
+/// Checks model integrity (for the CLI's 'check').
+/// Reports orphaned parent/child references and the class distribution.
 async fn verify_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
     let dm = state.data_model.read().await;
     let instances = dm.get_all_instances();
@@ -659,14 +659,14 @@ async fn verify_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::
     Json(serde_json::json!({
         "ok": ok,
         "errors": errors,
-        "totalObjects": instances.len().saturating_sub(1), // iç kök hariç
+        "totalObjects": instances.len().saturating_sub(1), // internal root excluded
         "rootServices": roots,
         "scriptsWithSource": scripts_with_source,
         "byClass": by_class,
     }))
 }
 
-/// Mevcut DataModel ağacını JSON olarak döndürür (CLI 'list' ve debugging için).
+/// Returns the current DataModel tree as JSON (for the CLI's 'list' and debugging).
 async fn tree_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
     let dm = state.data_model.read().await;
     let mut nodes = Vec::new();
@@ -684,7 +684,7 @@ async fn tree_handler(State(state): State<Arc<AppState>>) -> Json<serde_json::Va
     Json(serde_json::json!(nodes))
 }
 
-/// VS Code Extension için WebSocket tabanlı RPC Handler
+/// WebSocket-based RPC handler for the VS Code extension
 async fn rpc_ws_handler(
     ws: WebSocketUpgrade,
     State(state): State<Arc<AppState>>,
@@ -705,7 +705,7 @@ async fn handle_rpc_socket(socket: WebSocket, state: Arc<AppState>) {
             .active_connections
     );
 
-    // Core'dan VS Code'a (Push Events)
+    // Core to VS Code (push events)
     let mut send_task = tokio::spawn(async move {
         while let Ok(msg) = rx_from_core.recv().await {
             if sender.send(Message::Text(msg)).await.is_err() {
@@ -744,7 +744,7 @@ async fn handle_rpc_socket(socket: WebSocket, state: Arc<AppState>) {
         }
     });
 
-    // Herhangi bir bağlantı koptuğunda ikisini de kapat
+    // When either connection drops, close both
     tokio::select! {
         _ = (&mut send_task) => recv_task.abort(),
         _ = (&mut recv_task) => send_task.abort(),
@@ -752,7 +752,7 @@ async fn handle_rpc_socket(socket: WebSocket, state: Arc<AppState>) {
 
     state.health_monitor.remove_connection();
     warn!(
-        "VS Code RPC İstemcisi koptu. Kalan Aktif: {}",
+        "VS Code RPC client disconnected. Active connections: {}",
         state
             .health_monitor
             .get_status(&state.project, state.actual_port)

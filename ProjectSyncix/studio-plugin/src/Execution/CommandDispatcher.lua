@@ -1,7 +1,7 @@
 --!strict
 -- CommandDispatcher
--- Rust Core'dan incoming (Ağdan okunan) paketleri analiz edip ilgili Executor'a (Yürütücüye) gönderir.
--- Bu yapı ileride "Undo/Redo" (Command Pattern) altyapısının temelini oluşturur.
+-- Analyses packets coming from the Rust core over the network and sends them to the matching executor.
+-- This structure is the foundation for a future undo/redo (command pattern) system.
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local RunService = game:GetService("RunService")
@@ -13,7 +13,7 @@ CommandDispatcher.__index = CommandDispatcher
 function CommandDispatcher.new()
     local self = setmetatable({}, CommandDispatcher)
     
-    -- Syncix kaynaklı güncellemeler uygulanırken Observer'ın tepki vermesini engelleyen kilit.
+    -- Lock that keeps the observer from reacting while Syncix-originated updates are applied.
     self.isLocked = false 
     
     return self
@@ -37,20 +37,20 @@ function CommandDispatcher:Unlock()
     self.isLocked = false
 end
 
---- Bir degisiklik grubunu Studio'nun GERI AL yiginina kaydederek uygular.
+--- Applies a group of changes by recording it on Studio's UNDO stack.
 ---
---- Neden gerekli: Syncix'in yaptigi degisiklikler Studio'nun undo yigininin
---- disindaydi, yani kotu bir senkron geldiginde Ctrl+Z ise yaramiyordu.
---- Position hatasinda tam olarak bu yasandi: objects 0,0,0'a dustu ve geri
---- donusu yoktu. Artik her senkron grubu tek bir geri alinabilir adim.
+--- Why it is needed: Syncix's changes were outside Studio's undo stack,
+--- so Ctrl+Z did nothing when a bad sync arrived.
+--- That is exactly what happened with the Position bug: objects dropped to 0,0,0 with no
+--- way back. Now every sync group is one undoable step.
 ---
---- API cagrisi pcall icinde: ChangeHistoryService bazi Studio durumlarinda
---- (ornegin oyun calisirken) recording acmayi reddediyor; o durumda degisiklik
---- yine de uygulanmali, sadece geri alinamaz olmali.
-function CommandDispatcher:IsUndoable(ad: string, is: () -> ())
-    -- Geri al kapaliysa entry acilmaz; is yine de yapilir.
+--- The API call runs in pcall: ChangeHistoryService refuses to start recording in some
+--- Studio states (e.g. while the game is running); the change must still be applied
+--- then, just not undoably.
+function CommandDispatcher:IsUndoable(actionName: string, applyChanges: () -> ())
+    -- With undo off no recording is opened; the work is still done.
     if not SyncConfig.UndoEnabled() then
-        local ok, failure = pcall(is)
+        local ok, failure = pcall(applyChanges)
         if not ok then
             warn("[Syncix] Sync step failed: " .. tostring(failure))
         end
@@ -59,10 +59,10 @@ function CommandDispatcher:IsUndoable(ad: string, is: () -> ())
 
     local entryId = nil
     pcall(function()
-        entryId = ChangeHistoryService:TryBeginRecording(ad, ad)
+        entryId = ChangeHistoryService:TryBeginRecording(actionName, actionName)
     end)
 
-    local ok, failure = pcall(is)
+    local ok, failure = pcall(applyChanges)
 
     if entryId then
         pcall(function()
@@ -79,34 +79,34 @@ function CommandDispatcher:IsUndoable(ad: string, is: () -> ())
     end
 end
 
---- Oyun calisirken incoming degisiklikleri biriktirir, Play bitince uygular.
+--- Holds changes that arrive while the game runs and applies them when Play ends.
 ---
---- ONEMLI: bu backlog gunumuz Studio surumunde HIC DEVREYE GIRMIYOR ve bu
---- gercek bir testle olculdu.
+--- IMPORTANT: this backlog NEVER KICKS IN on current Studio versions, and that was
+--- measured with a real test.
 ---
---- Play'e basildiginda Studio eklentileri oyunun sunucu ve istemci
---- oturumlarinda yeniden baslatiyor; o kopyalar init.server.lua'daki IsEdit
---- kapisinda duruyor. Geriye core'a bagli tek ornek kaliyor: DUZENLEME
---- oturumundaki. Onun agaci calismadigi icin RunService:IsRunning() onun
---- icin hep false, yani asagidaki dal hicbir timestamp secilmiyor.
+--- When Play is pressed, Studio restarts plugins in the game's server and client
+--- sessions; those copies stop at the IsEdit gate in init.server.lua.
+--- The only instance still connected to the core is the one in the EDIT
+--- session. Its tree is not running, so RunService:IsRunning() is always false for it,
+--- and the branch below is never taken.
 ---
---- Peki neden duruyor: Studio Play sirasinda ayri bir oturum kopyasi
---- kullaniyor, yani editorden incoming degisiklik duzenleme agacina yaziliyor ve
---- Stop'a basildiginda oldugu gibi duruyor. Amaclanan behavior zaten
---- saglaniyor — bu kod onun yedegi. Studio bu izolasyonu degistirirse
---- devreye girer.
+--- So why keep it: during Play Studio uses a separate copy of the session,
+--- so a change from the editor is written to the edit tree and stays as it is
+--- when Stop is pressed. The intended behaviour is already
+--- there — this code is its fallback. If Studio ever changes that isolation,
+--- it kicks in.
 ---
---- Olculen: Play sirasinda Transparency 0.7 gonderildi. Studio'nun agacinda
---- datum 0.7 olarak gorundu (kuyruga alinmadi), Output'ta "Play mode ended"
---- satiri cikmadi, ve kullanici Play sirasinda parcayi opak, Stop sonrasi
---- saydam gordu.
+--- Measured: Transparency 0.7 was sent during Play. In Studio's tree the
+--- value showed 0.7 (it was not queued), no "Play mode ended" line appeared
+--- in Output, and the user saw the part opaque during Play and transparent
+--- after Stop.
 function CommandDispatcher:_OnPlayEnded()
     if self._playListener then return end
     self._playListener = true
 
-    -- Heartbeat uzerinden kenar tespiti. RunService'in calisma durumu icin
-    -- guvenilir bir property sinyali yok; Heartbeat ise duzenleme halinde de
-    -- isRunning, yani Play bittigi anda burasi haberdar oluyor.
+    -- Edge detection via Heartbeat. There is no reliable property signal for RunService's
+    -- running state; Heartbeat, however, runs in edit mode too,
+    -- so this learns the moment Play ends.
     local wasRunning = true
     RunService.Heartbeat:Connect(function()
         local isRunning = RunService:IsRunning()
@@ -131,9 +131,9 @@ end
 function CommandDispatcher:Dispatch(payload: any)
     if not payload or not payload.event_type then return end
 
-    -- Oyun calisirken degisiklik uygulanmaz; Play bitince sirayla islenir.
-    -- FULL_SYNC_REQUEST istisna: agaci okumak Studio'yu degistirmez ve core'un
-    -- dogrulama yolunu Play boyunca kapatmanin bir sebebi yok.
+    -- No changes are applied while the game runs; they are processed in order when Play ends.
+    -- FULL_SYNC_REQUEST is the exception: reading the tree does not change Studio, and there is
+    -- no reason to shut down the core's verification path for the whole of Play.
     if RunService:IsRunning() and payload.event_type ~= "FULL_SYNC_REQUEST" then
         local behavior = SyncConfig.PlayBehavior()
         if behavior == "ignore" then
@@ -145,21 +145,21 @@ function CommandDispatcher:Dispatch(payload: any)
             self:_OnPlayEnded()
             return
         end
-        -- "apply": kullanici bilerek istedi; Play bitince Studio oturumla
-        -- birlikte atacagi icin degisiklik kaybolabilir.
+        -- "apply": the user asked for it knowingly; since Studio discards the session
+        -- when Play ends, the change may be lost.
     end
 
-    -- Senkron duraklatilmissa incoming degisiklikler UYGULANMAZ.
-    -- Yalnizca gondermeyi durdurmak yetmezdi: editorden incoming yamalar Studio'yu
-    -- degistirmeye devam ederdi ve "duraklattim" diyen kullanici yine de
-    -- yerinin degistigini gorurdu.
+    -- When sync is paused, incoming changes are NOT APPLIED.
+    -- Stopping only the sending would not be enough: patches from the editor would keep
+    -- changing Studio, and a user who had paused would still see
+    -- their place change.
     if self.connectionManager and self.connectionManager:IsPaused() then
         return
     end
 
-    -- studio_to_disk modunda Studio yalnizca kaynak; core'dan incoming hicbir
-    -- degisiklik uygulanmaz. FULL_SYNC_REQUEST istisna: agaci okumak Studio'yu
-    -- degistirmiyor ve o modda zaten tek is akisi bu.
+    -- In studio_to_disk mode Studio is only the source; no change from the core
+    -- is applied. FULL_SYNC_REQUEST is the exception: reading the tree does not
+    -- change Studio, and it is the only workflow in that mode anyway.
     if not SyncConfig.ApplyToStudio() and payload.event_type ~= "FULL_SYNC_REQUEST" then
         return
     end
@@ -175,9 +175,9 @@ function CommandDispatcher:Dispatch(payload: any)
             self.patchExecutor:ApplyFullNode(payload.data)
         end)
     elseif payload.event_type == "FULL_SYNC_REQUEST" then
-        -- Core agacin tamamini yeniden istiyor. Bu, dogrulamanin tek guvenilir
-        -- yoludur: core'un modeli komut gonderilirken zaten guncellendigi icin
-        -- modeli okumak komutun Studio'ya ULASTIGINI kanitlamaz.
+        -- The core asks for the whole tree again. This is the only reliable way to
+        -- verify: the core's model is already updated while the command is sent, so
+        -- reading the model does not prove that the command REACHED Studio.
         if self.patchBuilder and self.connectionManager then
             local snapshot = self.patchBuilder:BuildFullTreeSnapshot()
             self.connectionManager:Send(snapshot)
@@ -188,17 +188,17 @@ function CommandDispatcher:Dispatch(payload: any)
     self:Unlock()
 end
 
--- Patch uygulama.
+-- Applying patches.
 --
--- ÖNEMLİ TASARIM KARARI (rollback kaldırıldı):
--- Eskiden tüm patch'ler tek bir pcall içinde uygulanıyor, herhangi biri failure verince
--- ROLLBACK çalışıp uygulanmış değerleri eski haline geri yazıyordu. Bu, fresh oluşturulan
--- objelerde konumun 0,0,0'a dönmesine ve ardından Studio'nun bu eski değeri echo olarak
--- göndererek Core'daki DOĞRU değeri ezmesine yol açıyordu.
+-- IMPORTANT DESIGN DECISION (rollback removed):
+-- All patches used to be applied inside one pcall; when any failed,
+-- a ROLLBACK wrote the applied values back to their old state. For newly created
+-- objects that put the position back to 0,0,0, and Studio then sent that old value as an
+-- echo, overwriting the CORRECT value in the core.
 --
--- Artık: Core tek doğruluk kaynağıdır. Her patch bağımsız uygulanır; biri başarısız olursa
--- yalnızca o patch atlanır ve uyarı basılır. Rollback yapılmaz — çünkü geri almak,
--- Core ile Studio'yu birbirinden ayırır (Core fresh değeri bilir, Studio eskiye döner).
+-- Now: the core is the single source of truth. Each patch is applied independently; if one fails
+-- only that patch is skipped and a warning is printed. There is no rollback — because undoing
+-- separates the core from Studio (the core knows the new value, Studio goes back to the old one).
 function CommandDispatcher:ExecuteTransaction(patches: any)
     if type(patches) ~= "table" then return end
 

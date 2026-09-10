@@ -1,31 +1,31 @@
-//! LocalizationTable içeriği ile CSV arasında dönüşüm.
+//! Conversion between LocalizationTable contents and CSV.
 //!
-//! UYARLAMA NOTU:
-//! Rojo `.csv` dosyalarını LocalizationTable'a çevirir. Bunu körü körüne kopyalamak
-//! yerine önce şuna baktım: LocalizationTable'ın `Contents` property'si zaten bir
-//! JSON METNİDİR. Yani bizim current_value String property yolumuza olduğu gibi oturuyor;
-//! çeviri tablolarını syncing etmek için fresh bir kanal açmaya gerek yok.
+//! ADAPTATION NOTE:
+//! Rojo turns `.csv` files into LocalizationTables. Rather than copying that blindly,
+//! the first question was: a LocalizationTable's `Contents` property already is a
+//! JSON STRING. So it fits the existing String property path as is;
+//! no new channel is needed to sync translation tables.
 //!
-//! Geriye single soru kalıyor: diske JSON olarak mı yazalım, CSV olarak mı?
-//! CSV'nin single gerçek faydası çevirilerin tabloda (Excel, Sheets) düzenlenebilmesi.
-//! Ama dönüşüm KAYIPLI olursa çeviri verisi bozulur — virgül, tırnak, satır sonu
-//! ve boş hücre içeren çeviriler gerçek hayatta çok yaygındır.
+//! One question remains: write it to disk as JSON or as CSV?
+//! CSV's one real benefit is that translations can be edited in a table (Excel, Sheets).
+//! But if the conversion were LOSSY, translation data would be corrupted — translations
+//! containing commas, quotes, line breaks and empty cells are very common in practice.
 //!
-//! Bu yüzden dönüşümü kayıpsız yazdım ve gidiş-dönüş testleriyle kilitledim:
-//! virgüllü, tırnaklı, satır sonlu, unicode ve boş değerli input_list test ediliyor.
-//! Kayıpsız olduğunu kanıtlayamasaydım CSV'yi atlar, JSON'da bırakırdım.
+//! So the conversion is lossless and locked with round-trip tests:
+//! inputs with commas, quotes, line breaks, unicode and empty values are all tested.
+//! Had losslessness not been provable, CSV would have been dropped and JSON kept.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// Roblox LocalizationTable girdisi.
+/// A Roblox LocalizationTable entry.
 ///
-/// ALAN ADLARI ROBLOX'A AITTIR, PascalCase'dir. Ilk denemede kucuk harf
-/// kullanilmisti ve Studio soyle dedi:
+/// THE FIELD NAMES BELONG TO ROBLOX AND ARE PascalCase. The first attempt used
+/// lowercase, and Studio said:
 ///   "Entry at index 1 had invalid Key/Source/Context: Cannot create entry
 ///    with empty source text and no key."
-/// Yani alanlar hic taninmamis, hepsi bos sayilmisti. Bu yuzden isimler
-/// serde rename ile birebir Roblox bicimine sabitlendi.
+/// So none of the fields was recognised and all were treated as empty. That is why the
+/// names are pinned to Roblox's exact form with serde rename.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Entry {
     #[serde(rename = "Key", default)]
@@ -41,16 +41,16 @@ pub struct Entry {
 }
 
 // ---------------------------------------------------------------------------
-// CSV yazma/okuma
+// CSV writing/reading
 //
-// Kendi CSV işleyicimizi yazıyoruz çünkü ihtiyacımız dar ve kurallar nettir
-// (RFC 4180). Bir kütüphane eklemek bu kadarı için gereksiz ağırlık olurdu,
-// ama kayıpsızlık şart olduğu için kaçış kuralları testlerle kilitleniyor.
+// We write our own CSV handler because our needs are narrow and the rules are clear
+// (RFC 4180). Adding a library for this much would be needless weight,
+// but losslessness is mandatory, so the escaping rules are locked by tests.
 // ---------------------------------------------------------------------------
 
 fn write_cell(s: &str) -> String {
-    // Virgül, tırnak, satır sonu veya baştaki/sondaki boşluk varsa tırnaklanır;
-    // içerideki tırnaklar ikiye katlanır.
+    // Quoted when it contains a comma, quote, line break or leading/trailing space;
+    // quotes inside are doubled.
     let needs_escape = s.contains(',')
         || s.contains('"')
         || s.contains('\n')
@@ -64,7 +64,7 @@ fn write_cell(s: &str) -> String {
     }
 }
 
-/// Bir CSV satırını hücrelere ayırır (tırnak içindeki virgül ve satır sonları korunur).
+/// Splits a CSV row into cells (commas and line breaks inside quotes are kept).
 fn split_line(input_value: &str) -> Vec<String> {
     let mut cells = Vec::new();
     let mut current_value = String::new();
@@ -95,7 +95,7 @@ fn split_line(input_value: &str) -> Vec<String> {
     cells
 }
 
-/// Tüm metni satırlara böler; tırnak içindeki satır sonları bölme sayılmaz.
+/// Splits the whole text into rows; line breaks inside quotes do not split.
 fn split_lines(text_value: &str) -> Vec<String> {
     let mut line_list = Vec::new();
     let mut current_value = String::new();
@@ -105,7 +105,7 @@ fn split_lines(text_value: &str) -> Vec<String> {
     while let Some(c) = char_list.next() {
         match c {
             '"' => {
-                // Kaçırılmış tırnak (""), tırnak durumunu değiştirmez.
+                // An escaped quote ("") does not change the quote state.
                 if in_quotes && char_list.peek() == Some(&'"') {
                     current_value.push('"');
                     current_value.push('"');
@@ -118,7 +118,7 @@ fn split_lines(text_value: &str) -> Vec<String> {
             '\n' if !in_quotes => {
                 line_list.push(std::mem::take(&mut current_value));
             }
-            '\r' if !in_quotes => { /* CRLF: \r atlanır */ }
+            '\r' if !in_quotes => { /* CRLF: \r is skipped */ }
             _ => current_value.push(c),
         }
     }
@@ -133,7 +133,7 @@ pub fn json_to_csv(contents: &str) -> Result<String, String> {
     let input_list: Vec<Entry> =
         serde_json::from_str(contents).map_err(|e| format!("Could not parse Contents: {}", e))?;
 
-    // Diller birleşiminden sütun düzeni; sıralı olmalı ki çıktı belirleyici olsun.
+    // Column order from the union of languages; sorted so the output is deterministic.
     let mut locales: Vec<String> = Vec::new();
     for g in &input_list {
         for d in g.values.keys() {
@@ -176,7 +176,7 @@ pub fn csv_to_json(csv: &str) -> Result<String, String> {
 
     let headers = split_line(&line_list[0]);
     if headers.len() < 4 {
-        return Err("CSV başlığı en az Key,Source,Context,Example içermeli".to_string());
+        return Err("The CSV header must contain at least Key,Source,Context,Example".to_string());
     }
 
     let mut input_list: Vec<Entry> = Vec::new();
@@ -190,8 +190,8 @@ pub fn csv_to_json(csv: &str) -> Result<String, String> {
         let mut values = BTreeMap::new();
         for (i, title) in headers.iter().enumerate().skip(4) {
             let raw_value = al(i);
-            // Boş hücre "çeviri yok" demektir; JSON'a boş dize yazmak
-            // gidiş-dönüşte olmayan bir çeviri uydurmak olurdu.
+            // An empty cell means "no translation"; writing an empty string to JSON
+            // would invent a translation that never existed in the round trip.
             if !raw_value.is_empty() {
                 values.insert(title.clone(), raw_value);
             }
@@ -216,16 +216,16 @@ mod tests {
     fn sample() -> String {
         serde_json::json!([
             {
-                "Key": "selam",
+                "Key": "greeting",
                 "Source": "Hello",
                 "Context": "",
-                "Values": { "tr": "Merhaba", "de": "Hallo" }
+                "Values": { "es": "Hola", "de": "Hallo" }
             },
             {
-                "Key": "veda",
+                "Key": "farewell",
                 "Source": "Bye",
-                "Context": "ana_menu",
-                "Values": { "tr": "Hoşça kal" }
+                "Context": "main_menu",
+                "Values": { "es": "Adiós" }
             }
         ])
         .to_string()
@@ -245,20 +245,20 @@ mod tests {
     fn header_row_is_correct() {
         let csv = json_to_csv(&sample()).unwrap();
         let first_item = csv.lines().next().unwrap();
-        assert_eq!(first_item, "Key,Source,Context,Example,de,tr");
+        assert_eq!(first_item, "Key,Source,Context,Example,de,es");
     }
 
-    /// Gercek hayattaki ceviriler virgul, tirnak ve line_text sonu icerir.
-    /// Bunlar bozulursa ceviri verisi sessizce kaybolur.
+    /// Real-world translations contain commas, quotes and line breaks.
+    /// If those break, translation data is silently lost.
     #[test]
     fn tricky_characters_are_lossless() {
         let tricky = serde_json::json!([{
-            "Key": "zor",
+            "Key": "tricky",
             "Source": "a,b \"c\" d",
             "Context": "",
             "Values": {
-                "tr": "virgul, tirnak \" ve\nsatir sonu",
-                "en": " bosluklu "
+                "es": "coma, comilla \" y\nsalto de linea",
+                "en": " with spaces "
             }
         }])
         .to_string();
@@ -277,7 +277,7 @@ mod tests {
             "Key": "u",
             "Source": "x",
             "Context": "",
-            "Values": { "tr": "Hoşça kal ğüşiöç", "ja": "こんにちは", "emoji": "🎮🚀" }
+            "Values": { "es": "Adiós, señor: ñáéíóú ¿¡", "ja": "こんにちは", "emoji": "🎮🚀" }
         }])
         .to_string();
 
@@ -288,12 +288,12 @@ mod tests {
         assert_eq!(a, b);
     }
 
-    /// Bos hucre "ceviri yok" demektir; bos dize olarak restored_count gelmemeli,
-    /// yoksa olmayan bir ceviri uydurmus oluruz.
+    /// An empty cell means "no translation"; it must not come back as an empty string,
+    /// or we would have invented a translation.
     #[test]
     fn empty_cell_invents_no_translation() {
         let input_value = serde_json::json!([
-            { "Key": "a", "Source": "A", "Context": "", "Values": { "tr": "A-tr" } },
+            { "Key": "a", "Source": "A", "Context": "", "Values": { "es": "A-es" } },
             { "Key": "b", "Source": "B", "Context": "", "Values": { "de": "B-de" } }
         ])
         .to_string();
@@ -301,9 +301,9 @@ mod tests {
         let csv = json_to_csv(&input_value).unwrap();
         let restored_count: Vec<Entry> = serde_json::from_str(&csv_to_json(&csv).unwrap()).unwrap();
 
-        assert_eq!(restored_count[0].values.len(), 1, "a icin yalnizca tr olmali");
+        assert_eq!(restored_count[0].values.len(), 1, "only es is expected for a");
         assert!(!restored_count[0].values.contains_key("de"));
-        assert_eq!(restored_count[1].values.len(), 1, "b icin yalnizca de olmali");
+        assert_eq!(restored_count[1].values.len(), 1, "only de is expected for b");
     }
 
     #[test]
@@ -314,16 +314,16 @@ mod tests {
 
     #[test]
     fn bad_input_errors_without_panic() {
-        assert!(json_to_csv("{bozuk").is_err());
+        assert!(json_to_csv("{broken").is_err());
         assert!(csv_to_json("A,B").is_err());
     }
 
     #[test]
     fn crlf_line_endings_are_accepted() {
-        let csv = "Key,Source,Context,Example,tr\r\nselam,Hello,,,Merhaba\r\n";
+        let csv = "Key,Source,Context,Example,es\r\ngreeting,Hello,,,Hola\r\n";
         let input_list: Vec<Entry> = serde_json::from_str(&csv_to_json(csv).unwrap()).unwrap();
         assert_eq!(input_list.len(), 1);
-        assert_eq!(input_list[0].key, "selam");
-        assert_eq!(input_list[0].values.get("tr").unwrap(), "Merhaba");
+        assert_eq!(input_list[0].key, "greeting");
+        assert_eq!(input_list[0].values.get("es").unwrap(), "Hola");
     }
 }

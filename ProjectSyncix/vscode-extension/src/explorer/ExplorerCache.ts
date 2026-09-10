@@ -112,8 +112,8 @@ export class ExplorerCache {
     }
 
     /**
-     * Parent'ı olmayan node'ları (Roblox servisleri) döndürür.
-     * Bunlar Explorer'da kök seviyesinde gösterilir.
+     * Returns the nodes without a parent (Roblox services).
+     * They are shown at the root level of the Explorer.
      */
     public getRootNodes(): NodeData[] {
         const roots: NodeData[] = [];
@@ -126,9 +126,9 @@ export class ExplorerCache {
     }
 
     /**
-     * Toplu yükleme (FULL_SYNC) sonrasında tüm parent-child bağlarını sıfırdan kurar.
-     * Node'lar sıralamadan bağımsız geldiğinde (örn. GET_TREE HashMap sırası)
-     * addNode'daki tekil bağlama yeterli olmaz; bu fonksiyon tutarlılığı garanti eder.
+     * Rebuilds every parent-child link from scratch after a bulk load (FULL_SYNC).
+     * When nodes arrive in no particular order (e.g. GET_TREE HashMap order),
+     * the single linking in addNode is not enough; this function guarantees consistency.
      */
     public rebuildChildLinks() {
         for (const node of this.nodes.values()) {

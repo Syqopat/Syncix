@@ -1,9 +1,9 @@
 use std::io::Result;
 use std::path::{Path, PathBuf};
 
-/// Sanal Dosya Sistemi (VFS) Provider Arayüzü
-/// Bütün file_path okuma/yazma/listeleme işlemleri bu trait üzerinden yapılır.
-/// LocalDisk, In-Memory, veya Cloud storage gibi sistemlere genişletilebilir.
+/// Virtual file system (VFS) provider interface
+/// All file read/write/list operations go through this trait.
+/// It can be extended to local disk, in-memory or cloud storage.
 pub trait FileSystemProvider: Send + Sync {
     fn read_to_string(&self, path: &Path) -> Result<String>;
     fn write_to_string(&self, path: &Path, contents: &str) -> Result<()>;
@@ -16,7 +16,7 @@ pub trait FileSystemProvider: Send + Sync {
     fn remove_dir_all(&self, path: &Path) -> Result<()>;
 }
 
-/// Standart Local Disk Sağlayıcısı (std::fs)
+/// Standard local disk provider (std::fs)
 pub struct LocalDiskProvider;
 
 impl LocalDiskProvider {

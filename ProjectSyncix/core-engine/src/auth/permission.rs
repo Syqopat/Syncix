@@ -21,22 +21,22 @@ impl OperationPermissionManager {
         }
     }
 
-    /// Yeni bir author (plugin, user, agent vb.) için yetki atar.
+    /// Grants a permission to a new author (plugin, user, agent, ...).
     pub fn grant(&mut self, author_id: &str, operation: OperationType) {
         let perms = self.permissions.entry(author_id.to_string()).or_default();
         perms.insert(operation);
     }
 
-    /// Author'dan spesifik bir yetkiyi alır.
+    /// Revokes a specific permission from an author.
     pub fn revoke(&mut self, author_id: &str, operation: &OperationType) {
         if let Some(perms) = self.permissions.get_mut(author_id) {
             perms.remove(operation);
         }
     }
 
-    /// Author'un belirli bir operasyonu yapma yetkisi olup olmadığını kontrol eder.
+    /// Checks whether an author may perform a given operation.
     pub fn can_execute(&self, author_id: &str, operation: &OperationType) -> Result<(), String> {
-        // Eğer author "SYSTEM" veya "ROOT" ise her zaman izin verilebilir (opsiyonel)
+        // An author "SYSTEM" or "ROOT" could always be allowed (optional)
         if author_id == "SYSTEM" {
             return Ok(());
         }
@@ -70,7 +70,7 @@ mod tests {
             .can_execute(author, &OperationType::CreateInstance)
             .is_ok());
 
-        // Yetki verilmemiş bir operasyon reddedilmeli
+        // An operation that was never granted must be rejected
         let result = manager.can_execute(author, &OperationType::DeleteInstance);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("Permission denied"));

@@ -16,35 +16,35 @@ pub enum ModelError {
     InvalidParent(Uuid),
 }
 
-/// Syncix'in bağımsız, own iç veri modeli.
+/// Syncix's own, self-contained data model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct InstanceNode {
     pub class_name: String,
     pub name: String,
     pub syncix_id: Uuid,
-    /// Model versiyonlaması (Migration için)
+    /// Model version (for migrations)
     pub schema_version: u32,
-    /// Çakışma yönetimi (Conflict Resolution) için. Unix timestamp milisaniye.
+    /// For conflict resolution. Unix timestamp in milliseconds.
     pub last_updated: i64,
     pub properties: BTreeMap<String, PropertyValue>,
     pub children: Vec<Uuid>,
     pub parent: Option<Uuid>,
-    /// Script sınıfları için origin kodu (Script/LocalScript/ModuleScript).
+    /// Source code for script classes (Script/LocalScript/ModuleScript).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
-    /// Roblox Attribute'ları (SetAttribute ile eklenen özel değerler).
+    /// Roblox attributes (custom values added with SetAttribute).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub attributes: BTreeMap<String, PropertyValue>,
-    /// CollectionService etiketleri.
+    /// CollectionService tags.
     ///
-    /// Property değil ayrı bir kanal: Roblox'ta tag_list instance üzerinde bir
-    /// alan olarak durmuyor, CollectionService'te tutuluyor. Etiketle çalışan
-    /// bir oyunda mantığın önemli bir kısmı buradan geçtiği için, taşınmadığı
-    /// sürece editör oyunun yarısını göremiyordu.
+    /// A separate channel, not a property: in Roblox tags do not live on the instance
+    /// as a field; CollectionService keeps them. In a game that relies on tags a large
+    /// share of the logic runs through them, so while tags were not carried the
+    /// editor could not see half the game.
     ///
-    /// Sıralı ve tekrarsız tutulmalı; küme yerine Vec kullanılıp yazarken
-    /// sıralanıyor ki iki taraf aynı listeyi aynı sırada görsün.
+    /// Must be kept sorted and without duplicates; a Vec is used instead of a set and
+    /// sorted when written, so both sides see the same list in the same order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
 }
@@ -98,7 +98,7 @@ pub enum PropertyValue {
     Boolean(bool),
     Vector3 { x: f32, y: f32, z: f32 },
     Color3 { r: f32, g: f32, b: f32 },
-    /// GUI için: UDim2 = (X: scale/offset, Y: scale/offset)
+    /// For GUI: UDim2 = (X: scale/offset, Y: scale/offset)
     UDim2 {
         xs: f32,
         xo: f32,
@@ -113,8 +113,8 @@ pub enum PropertyValue {
         scale: f32,
         offset: f32,
     },
-    /// Konum + 3x3 dönme matrisi. Orientation yeterli değil: bir parçanın
-    /// gerçek yönelimi Euler açılarıyla tam ifade edilemiyor.
+    /// Position + 3x3 rotation matrix. Orientation is not enough: a part's
+    /// real orientation cannot be fully expressed with Euler angles.
     CFrame {
         pos: [f32; 3],
         rot: [f32; 9],
@@ -123,42 +123,42 @@ pub enum PropertyValue {
         min: f32,
         max: f32,
     },
-    /// Başka bir instance'a referans (ObjectValue.Value, Motor6D.Part0,
-    /// Model.PrimaryPart gibi). Değer hedefin UUID'sidir; boş dize = nil.
+    /// Reference to another instance (ObjectValue.Value, Motor6D.Part0,
+    /// Model.PrimaryPart, ...). The value is the target's UUID; an empty string = nil.
     ///
-    /// Bunun ayrı bir type_name olması şart: text_value olarak taşınsa iki taraf onu
-    /// düz bir text_value sanıp instance'a çeviremezdi.
+    /// It must be a separate type: carried as text, neither side could tell it
+    /// from plain text and turn it into an instance.
     Ref(String),
-    /// Roblox'un adlandırılmış renk paleti ("Really red", "Deep orange").
+    /// Roblox's named colour palette ("Really red", "Deep orange").
     ///
-    /// Ref ile aynı gerekçe: bir süre düz String olarak taşındı ve Studio
-    /// tarafında `part.BrickColor = "Really red"` ataması sessizce başarısız
-    /// oldu — text_value, BrickColor'a örtük olarak dönüşmüyor. Tip kararı değere
-    /// göre verildiği için değerin kendisi tipini taşımak zorunda.
+    /// Same reasoning as Ref: for a while it was carried as a plain String and
+    /// `part.BrickColor = "Really red"` silently failed on the Studio side
+    /// — text does not convert to BrickColor implicitly. Types are decided from the
+    /// value, so the value itself has to carry its type.
     BrickColor(String),
-    /// Asset referansi: "rbxassetid://123". MeshId, SoundId, Image, Texture.
+    /// Asset reference: "rbxassetid://123". MeshId, SoundId, Image, Texture.
     ///
-    /// String'den ayri tutuluyor cunku Roblox'un fresh Content tipi duz text_value
-    /// atamasini kabul etmiyor; hangi yolla yazilacagini bilmek gerekiyor.
+    /// Kept apart from String because Roblox's newer Content type does not accept a plain
+    /// text assignment; we need to know which way to write it.
     Content(String),
-    /// Renk egrisi: ParticleEmitter.Color, UIGradient.Color, Beam.Color.
-    /// Her nokta (zaman, renk); Roblox search degerleri own hesapliyor.
+    /// Colour curve: ParticleEmitter.Color, UIGradient.Color, Beam.Color.
+    /// Each point is (time, colour); Roblox computes the values in between itself.
     ColorSequence(Vec<ColorKeypoint>),
-    /// Sayi egrisi: seffaflik, boyut, UIGradient.Transparency.
-    /// envelope Roblox'un rastgelelik payi; sifir birakilamaz, print_info tasiyor.
+    /// Number sequence curve: transparency, size, UIGradient.Transparency.
+    /// envelope is Roblox's random variance; cannot be left zero, carries info.
     NumberSequence(Vec<NumberKeypoint>),
-    /// 9-slice UI icin dikdortgen (ImageLabel.SliceCenter).
+    /// Rectangle for 9-slice UI (ImageLabel.SliceCenter).
     Rect {
         min: [f32; 2],
         max: [f32; 2],
     },
-    /// Yazi tipi. Enum degil bilesik bir yapi: aile + kalinlik + stil.
+    /// Font. Not an enum but a compound value: family + weight + style.
     Font {
         family: String,
         weight: String,
         style: String,
     },
-    /// Ozel fizik: yogunluk, surtunme, esneklik ve agirliklari.
+    /// Custom physics: density, friction, elasticity and their weights.
     PhysicalProperties {
         density: f32,
         friction: f32,
@@ -183,8 +183,8 @@ pub struct NumberKeypoint {
     pub envelope: f32,
 }
 
-/// İki nesne arasındaki farkları tutan yama (Patch) yapısı.
-/// Ağa tüm objeyi değil, sadece bu Patch'i göndereceğiz.
+/// Patch structure holding the differences between two objects.
+/// Instead of the whole object, only this patch goes over the wire.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstancePatch {
     pub syncix_id: Uuid,
@@ -192,21 +192,21 @@ pub struct InstancePatch {
 }
 
 impl InstanceNode {
-    /// Eski bir node ile bu node'u kıyaslar ve sadece değişen özellikleri Patch olarak döndürür.
-    /// Performans Gerekçesi: Ağa megabaytlarca veri basmak yerine sadece değişen Color3 veya Position basılır.
+    /// Compares an old node with this one and returns only the changed properties as a patch.
+    /// Performance: instead of pushing megabytes, only the changed Color3 or Position is sent.
     pub fn diff(&self, old_node: &InstanceNode) -> Option<InstancePatch> {
         if self.syncix_id != old_node.syncix_id {
-            return None; // Farklı nesneler kıyaslanamaz
+            return None; // different objects cannot be compared
         }
 
         let mut changed_properties = BTreeMap::new();
 
-        // İsim değişti mi? (Name özel bir property gibi muamele görür)
+        // Did the name change? (Name is treated as a special property)
         if self.name != old_node.name {
             changed_properties.insert("Name".to_string(), PropertyValue::String(self.name.clone()));
         }
 
-        // Parent değişti mi?
+        // Did the parent change?
         if self.parent != old_node.parent {
             if let Some(parent_uuid) = self.parent {
                 changed_properties.insert("Parent".to_string(), PropertyValue::String(parent_uuid.to_string()));
@@ -221,7 +221,7 @@ impl InstanceNode {
                     changed_properties.insert(key.clone(), new_val.clone());
                 }
             } else {
-                // Yeni özellik eklendiyse
+                // A new property was added
                 changed_properties.insert(key.clone(), new_val.clone());
             }
         }
@@ -236,11 +236,11 @@ impl InstanceNode {
         }
     }
 }
-/// Hedef çözümleme sonucu (UUID / kısa UUID / isim ile arama).
+/// Result of target resolution (search by UUID / short UUID / name).
 pub enum ResolveResult {
     One(Uuid),
     NotFound,
-    /// (isim, class_name, uuid) listesi
+    /// List of (name, class_name, uuid)
     Ambiguous(Vec<(String, String, Uuid)>),
 }
 
@@ -264,10 +264,10 @@ impl DataModel {
         &self.instances
     }
 
-    /// Yeni bir instance ekler. Çakışma kontrolü yapar.
+    /// Adds a new instance. Performs a conflict check.
     pub fn upsert_instance(&mut self, incoming: InstanceNode) -> Result<(), ModelError> {
         if let Some(existing) = self.instances.get(&incoming.syncix_id) {
-            // Conflict Resolution: Gelen veri daha eskiyse reddet
+            // Conflict resolution: reject incoming data that is older
             if incoming.last_updated < existing.last_updated {
                 return Err(ModelError::VersionConflict {
                     current: existing.last_updated,
@@ -276,7 +276,7 @@ impl DataModel {
             }
         }
 
-        // Eğer ebeveyni varsa, ebeveynin children listesine add_instance
+        // If it has a parent, add it to the parent's children list
         if let Some(parent_id) = incoming.parent {
             if let Some(parent) = self.instances.get_mut(&parent_id) {
                 if !parent.children.contains(&incoming.syncix_id) {
@@ -291,7 +291,7 @@ impl DataModel {
         Ok(())
     }
 
-    /// Bir düğümün tüm torunlarını (kendisi hariç) toplar.
+    /// Collects every descendant of a node (the node itself excluded).
     fn collect_descendants(&self, id: &Uuid) -> Vec<Uuid> {
         let mut result = Vec::new();
         let mut stack: Vec<Uuid> = self
@@ -299,7 +299,7 @@ impl DataModel {
             .get(id)
             .map(|n| n.children.clone())
             .unwrap_or_default();
-        // Döngü koruması
+        // Cycle protection
         let mut guard = 0;
         while let Some(cur) = stack.pop() {
             result.push(cur);
@@ -314,15 +314,15 @@ impl DataModel {
         result
     }
 
-    /// Bir objeyi ve TÜM torunlarını siler (cascade). Studio'da Destroy() sub ağacı
-    /// da yok ettiği için core modelinin de aynısını yapması gerekir; aksi halde
-    /// öksüz (dangling) çocuklar modelde kalıp state ayrışmasına fs_path açar.
+    /// Deletes an object and ALL of its descendants (cascade). Destroy() in Studio removes
+    /// the subtree too, so the core model has to do the same; otherwise
+    /// orphaned (dangling) children stay in the model and the state drifts apart.
     pub fn remove_instance(&mut self, id: &Uuid) -> Option<InstanceNode> {
-        // Önce torunları sil
+        // Delete the descendants first
         for d in self.collect_descendants(id) {
             self.instances.remove(&d);
         }
-        // Sonra düğümün kendisini sil ve ebeveyninin children listesinden çıkar
+        // Then delete the node itself and remove it from its parent's children list
         if let Some(instance) = self.instances.remove(id) {
             if let Some(parent_id) = instance.parent {
                 if let Some(parent) = self.instances.get_mut(&parent_id) {
@@ -335,9 +335,9 @@ impl DataModel {
         }
     }
 
-    /// Bir objeyi fresh bir ebeveyne taşır. Eski ebeveynin children listesinden
-    /// çıkarır, fresh ebeveynin listesine ekler ve node'un parent alanını günceller.
-    /// Dönen değer: (eski_parent, yeni_parent) — VS Code bildirimi için.
+    /// Moves an object to a new parent. Removes it from the old parent's children list,
+    /// adds it to the new parent's list and updates the node's parent field.
+    /// Returns: (old_parent, new_parent) — for the VS Code notification.
     pub fn reparent(
         &mut self,
         id: &Uuid,
@@ -353,20 +353,20 @@ impl DataModel {
             return Ok((old_parent, new_parent));
         }
 
-        // Eski ebeveynin children listesinden çıkar
+        // Remove from the old parent's children list
         if let Some(op) = old_parent {
             if let Some(parent) = self.instances.get_mut(&op) {
                 parent.children.retain(|c| c != id);
             }
         }
 
-        // Node'un parent alanını güncelle
+        // Update the node's parent field
         if let Some(inst) = self.instances.get_mut(id) {
             inst.parent = new_parent;
             inst.last_updated = Utc::now().timestamp_millis();
         }
 
-        // Yeni ebeveynin children listesine add_instance
+        // Add to the new parent's children list
         if let Some(np) = new_parent {
             if let Some(parent) = self.instances.get_mut(&np) {
                 if !parent.children.contains(id) {
@@ -386,8 +386,8 @@ impl DataModel {
         self.instances.get_mut(id)
     }
 
-    /// İsimle instance arar (büyük/küçük harf duyarsız, tam eşleşme).
-    /// CLI ve komutlarda UUID yerine isim kullanılabilmesi için.
+    /// Finds instances by name (case-insensitive, exact match).
+    /// So the CLI and commands can use a name instead of a UUID.
     pub fn find_by_name(&self, name: &str) -> Vec<Uuid> {
         let lower = name.to_lowercase();
         self.instances
@@ -397,7 +397,7 @@ impl DataModel {
             .collect()
     }
 
-    /// Belirli bir ebeveynin, given isimdeki çocuklarını döndürür (büyük/küçük harf duyarsız).
+    /// Returns the children of a given parent with the given name (case-insensitive).
     fn children_named(&self, parent: &Uuid, name: &str) -> Vec<Uuid> {
         let lower = name.to_lowercase();
         if let Some(p) = self.instances.get(parent) {
@@ -416,7 +416,7 @@ impl DataModel {
         }
     }
 
-    /// İsimdeki kök (service_name) düğümlerini döndürür.
+    /// Returns the root (service) nodes with the given name.
     fn roots_named(&self, name: &str) -> Vec<Uuid> {
         let lower = name.to_lowercase();
         self.instances
@@ -430,13 +430,13 @@ impl DataModel {
             .collect()
     }
 
-    /// Nokta ile ayrılmış fs_path çözümler: "Workspace.Model.Part" veya "game.Workspace.Baseplate".
+    /// Resolves a dotted path: "Workspace.Model.Part" or "game.Workspace.Baseplate".
     pub fn resolve_path(&self, path: &str) -> ResolveResult {
         let mut segments: Vec<&str> = path.split('.').filter(|s| !s.is_empty()).collect();
         if segments.is_empty() {
             return ResolveResult::NotFound;
         }
-        // İsteğe bağlı "game" öneki
+        // Optional "game" prefix
         if segments[0].eq_ignore_ascii_case("game") {
             segments.remove(0);
         }
@@ -444,7 +444,7 @@ impl DataModel {
             return ResolveResult::NotFound;
         }
 
-        // İlk segment: kök service_name
+        // First segment: the root service
         let roots = self.roots_named(segments[0]);
         let mut current = match roots.len() {
             1 => roots[0],
@@ -463,7 +463,7 @@ impl DataModel {
             }
         };
 
-        // Kalan segmentleri çocuklar üzerinden yürü
+        // Walk the remaining segments through the children
         for seg in &segments[1..] {
             let matches = self.children_named(&current, seg);
             current = match matches.len() {
@@ -487,15 +487,15 @@ impl DataModel {
         ResolveResult::One(current)
     }
 
-    /// Bir command_name hedefini çözümler. Sırasıyla dener:
-    /// 1. Nokta içeren fs_path (Workspace.Model.Part)
-    /// 2. Tam UUID
-    /// 3. Kısa UUID öneki (en az 6 hane, örn. "d8d0cf78")
-    /// 4. İsim (tam eşleşme; single sonuçsa)
+    /// Resolves a command target. Tries, in order:
+    /// 1. A dotted path (Workspace.Model.Part)
+    /// 2. A full UUID
+    /// 3. A short UUID prefix (at least 6 characters, e.g. "d8d0cf78")
+    /// 4. A name (exact match; if there is a single result)
     ///
-    /// Belirsizlikte candidate_list döner ki istemciye anlamlı report_error verilebilsin.
+    /// On ambiguity the candidates are returned so the client can give a meaningful error.
     pub fn resolve_target(&self, target: &str) -> ResolveResult {
-        // Nokta içeriyorsa fs_path olarak yorumla (UUID '-' içerir, '.' içermez)
+        // Treat it as a path if it contains a dot (a UUID contains '-', never '.')
         if target.contains('.') {
             return self.resolve_path(target);
         }
@@ -541,8 +541,8 @@ impl DataModel {
         None
     }
 
-    /// Sprint 5: Data Integrity & Resync (Consistency Check)
-    /// Ağacın bütünlüğünü tarar. Öksüz (dangling) parent veya child referanslarını tespit eder.
+    /// Data integrity and resync (consistency check)
+    /// Scans the tree for integrity. Detects orphaned (dangling) parent or child references.
     pub fn verify_consistency(&self) -> Result<(), Vec<String>> {
         let mut errors = Vec::new();
 
@@ -551,7 +551,7 @@ impl DataModel {
             if let Some(parent_id) = node.parent {
                 if !self.instances.contains_key(&parent_id) {
                     errors.push(format!(
-                        "Node {} ({}) parent {} ID'sini gösteriyor ancak o Parent yok.",
+                        "Node {} ({}) points at parent {}, but that parent does not exist.",
                         node.name, id, parent_id
                     ));
                 } else {
@@ -566,14 +566,14 @@ impl DataModel {
             for child_id in &node.children {
                 if !self.instances.contains_key(child_id) {
                     errors.push(format!(
-                        "Node {} ({}) child {} ID'sine sahip ancak o Child yok.",
+                        "Node {} ({}) lists child {}, but that child does not exist.",
                         node.name, id, child_id
                     ));
                 } else {
                     let child_node = self.instances.get(child_id).unwrap();
                     if child_node.parent != Some(*id) {
                         errors.push(format!(
-                            "Child {} ({}) parent olarak başka bir ID gösteriyor.",
+                            "Child {} ({}) points at a different parent.",
                             child_node.name, child_id
                         ));
                     }
@@ -589,8 +589,8 @@ impl DataModel {
     }
 }
 
-/// Thread-safe (Thread-güvenli) DataModel wrapper'ı.
-/// Tüm çekirdek servisleri (Watcher, HTTP Server vb.) bu yapıyı paylaşacak.
+/// Thread-safe DataModel wrapper.
+/// Every core service (watcher, HTTP server, ...) shares this structure.
 pub type SharedDataModel = Arc<RwLock<DataModel>>;
 
 pub fn create_shared_model() -> SharedDataModel {
@@ -601,7 +601,7 @@ pub fn create_shared_model() -> SharedDataModel {
 mod tests {
     use super::*;
 
-    /// Test yardımcısı: parent altına isimli bir düğüm ekler ve id'sini döndürür.
+    /// Test helper: adds a named node under the parent and returns its id.
     fn add(model: &mut DataModel, class: &str, name: &str, parent: Option<Uuid>) -> Uuid {
         let mut node = InstanceNode::new(class, name);
         node.parent = parent;
@@ -610,20 +610,20 @@ mod tests {
         id
     }
 
-    /// Bir düğüm silinince TÜM sub ağacı da silinmeli (Studio'daki Destroy davranışı).
+    /// When a node is deleted its WHOLE subtree must go too (Destroy() behaviour in Studio).
     #[test]
     fn test_cascade_delete_removes_descendants() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
-        let folder = add(&mut m, "Folder", "Klasor", Some(ws));
-        let part = add(&mut m, "Part", "Kutu", Some(folder));
+        let folder = add(&mut m, "Folder", "Container", Some(ws));
+        let part = add(&mut m, "Part", "Box", Some(folder));
         let decal = add(&mut m, "Decal", "Doku", Some(part));
 
         assert!(m.remove_instance(&folder).is_some());
 
-        assert!(m.get_instance(&folder).is_none(), "klasor silinmeli");
-        assert!(m.get_instance(&part).is_none(), "cocuk da silinmeli");
-        assert!(m.get_instance(&decal).is_none(), "torun da silinmeli");
+        assert!(m.get_instance(&folder).is_none(), "the folder must be deleted");
+        assert!(m.get_instance(&part).is_none(), "the child must be deleted too");
+        assert!(m.get_instance(&decal).is_none(), "the grandchild must be deleted too");
         assert!(m.get_instance(&ws).is_some(), "ebeveyn durmali");
         assert!(
             !m.get_instance(&ws).unwrap().children.contains(&folder),
@@ -631,14 +631,14 @@ mod tests {
         );
     }
 
-    /// Taşıma: previous_text ebeveynden çıkmalı, fresh ebeveyne eklenmeli, model tutarlı kalmalı.
+    /// Move: it must leave the old parent, join the new one, and the model must stay consistent.
     #[test]
     fn test_reparent_updates_both_parents() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let a = add(&mut m, "Folder", "A", Some(ws));
         let b = add(&mut m, "Folder", "B", Some(ws));
-        let part = add(&mut m, "Part", "Kutu", Some(a));
+        let part = add(&mut m, "Part", "Box", Some(a));
 
         let (old, new) = m.reparent(&part, Some(b)).expect("reparent basarisiz");
         assert_eq!(old, Some(a));
@@ -649,24 +649,24 @@ mod tests {
         assert!(m.verify_consistency().is_ok(), "model tutarli kalmali");
     }
 
-    /// KİMLİK KURALI: UUID yalnızca CREATE anında üretilir. Yeniden adlandırma,
-    /// taşıma veya again received FULL_SYNC onu ASLA değiştirmemeli.
-    /// Bu kural bozulursa iki taraf aynı objeyi iki farklı obje sanar ve
-    /// syncing sessizce ikizlenir; bu yüzden ayrı ayrı test ediliyor.
+    /// IDENTITY RULE: a UUID is generated only at CREATE time. A rename,
+    /// a move or a repeated FULL_SYNC must NEVER change it.
+    /// If this rule breaks, the two sides take the same object for two different objects and
+    /// sync silently duplicates it; that is why each case is tested separately.
     #[test]
     fn uuid_survives_rename() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
-        let part = add(&mut m, "Part", "EskiAd", Some(ws));
+        let part = add(&mut m, "Part", "OldName", Some(ws));
 
-        m.get_mut_instance(&part).unwrap().name = "YeniAd".to_string();
+        m.get_mut_instance(&part).unwrap().name = "NewName".to_string();
 
         assert_eq!(m.get_instance(&part).unwrap().syncix_id, part);
-        match m.resolve_target("YeniAd") {
-            ResolveResult::One(u) => assert_eq!(u, part, "yeni isim ayni UUID'ye cozulmeli"),
-            _ => panic!("yeniden adlandirilan obje bulunamadi"),
+        match m.resolve_target("NewName") {
+            ResolveResult::One(u) => assert_eq!(u, part, "the new name must resolve to the same UUID"),
+            _ => panic!("renamed object not found"),
         }
-        assert!(matches!(m.resolve_target("EskiAd"), ResolveResult::NotFound));
+        assert!(matches!(m.resolve_target("OldName"), ResolveResult::NotFound));
     }
 
     #[test]
@@ -675,77 +675,77 @@ mod tests {
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let a = add(&mut m, "Folder", "A", Some(ws));
         let b = add(&mut m, "Folder", "B", Some(ws));
-        let part = add(&mut m, "Part", "Kutu", Some(a));
+        let part = add(&mut m, "Part", "Box", Some(a));
 
-        m.reparent(&part, Some(b)).expect("reparent basarisiz");
+        m.reparent(&part, Some(b)).expect("reparent failed");
 
         assert_eq!(m.get_instance(&part).unwrap().syncix_id, part);
         assert_eq!(m.get_instance(&part).unwrap().parent, Some(b));
     }
 
-    /// FULL_SYNC her yeniden bağlanmada tüm ağacı yeniden gönderir.
-    /// Aynı UUID ile received düğüm fresh bir obje yaratmamalı, mevcudu güncellemeli.
+    /// FULL_SYNC resends the whole tree on every reconnect.
+    /// A node arriving with the same UUID must update the existing object, not create a new one.
     #[test]
     fn repeated_full_sync_does_not_duplicate() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
-        let part = add(&mut m, "Part", "Kutu", Some(ws));
+        let part = add(&mut m, "Part", "Box", Some(ws));
         let prior_count = m.get_instance(&ws).unwrap().children.len();
 
-        // Studio yeniden bağlandı: aynı UUID, güncellenmiş isimle again geliyor.
-        let mut again = InstanceNode::new("Part", "KutuYeniAd");
+        // Studio reconnected: same UUID, arriving again with an updated name.
+        let mut again = InstanceNode::new("Part", "BoxNewName");
         again.syncix_id = part;
         again.parent = Some(ws);
-        m.upsert_instance(again).expect("tekrar upsert basarisiz");
+        m.upsert_instance(again).expect("repeat upsert failed");
 
         assert_eq!(
             m.get_instance(&ws).unwrap().children.len(),
             prior_count,
-            "ayni UUID ikinci bir cocuk olusturmamali"
+            "the same UUID must not create a second child"
         );
-        assert_eq!(m.get_instance(&part).unwrap().name, "KutuYeniAd");
+        assert_eq!(m.get_instance(&part).unwrap().name, "BoxNewName");
         assert!(m.verify_consistency().is_ok());
     }
 
-    /// Hedef çözümleme: nokta-fs_path, kısa UUID ve isim.
+    /// Target resolution: dotted path, short UUID and name.
     #[test]
     fn test_resolve_target_path_shortuuid_and_name() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
-        let folder = add(&mut m, "Folder", "Dekor", Some(ws));
-        let part = add(&mut m, "Part", "Sutun", Some(folder));
+        let folder = add(&mut m, "Folder", "Decor", Some(ws));
+        let part = add(&mut m, "Part", "Pillar", Some(folder));
 
-        // Yol ile
-        match m.resolve_target("Workspace.Dekor.Sutun") {
+        // By path
+        match m.resolve_target("Workspace.Decor.Pillar") {
             ResolveResult::One(id) => assert_eq!(id, part),
-            _ => panic!("yol cozumlenemedi"),
+            _ => panic!("path could not be resolved"),
         }
-        // Kısa UUID ile
+        // By short UUID
         let short = &part.to_string()[0..8];
         match m.resolve_target(short) {
             ResolveResult::One(id) => assert_eq!(id, part),
-            _ => panic!("kisa uuid cozumlenemedi"),
+            _ => panic!("short uuid could not be resolved"),
         }
-        // İsim ile (single eşleşme)
-        match m.resolve_target("Sutun") {
+        // By name (single match)
+        match m.resolve_target("Pillar") {
             ResolveResult::One(id) => assert_eq!(id, part),
-            _ => panic!("isim cozumlenemedi"),
+            _ => panic!("the name could not be resolved"),
         }
-        // Olmayan dest
-        assert!(matches!(m.resolve_target("YokBoyleBirSey"), ResolveResult::NotFound));
+        // Non-existent target
+        assert!(matches!(m.resolve_target("NonExistent"), ResolveResult::NotFound));
     }
 
-    /// Aynı isimde iki kardeş varsa isim çözümlemesi belirsiz olmalı (yanlış objeyi seçmemeli).
+    /// With two siblings of the same name, name resolution must be ambiguous (never pick the wrong one).
     #[test]
     fn test_resolve_target_ambiguous_name() {
         let mut m = DataModel::new();
         let ws = add(&mut m, "Workspace", "Workspace", None);
-        let _p1 = add(&mut m, "Part", "Kutu", Some(ws));
-        let _p2 = add(&mut m, "Part", "Kutu", Some(ws));
+        let _p1 = add(&mut m, "Part", "Box", Some(ws));
+        let _p2 = add(&mut m, "Part", "Box", Some(ws));
 
-        match m.resolve_target("Kutu") {
+        match m.resolve_target("Box") {
             ResolveResult::Ambiguous(list) => assert_eq!(list.len(), 2),
-            _ => panic!("belirsizlik tespit edilmeliydi"),
+            _ => panic!("ambiguity should have been detected"),
         }
     }
 
@@ -755,19 +755,19 @@ mod tests {
         let mut node = InstanceNode::new("Part", "TestPart");
         let id = node.syncix_id;
 
-        // İlk ekleme başarılı olmalı
+        // The first insert must succeed
         assert!(model.upsert_instance(node.clone()).is_ok());
 
-        // Eski versiyon ile güncellemeyi dene (Conflict)
+        // Try an update with an older version (conflict)
         node.last_updated -= 1000;
         node.name = "OldName".to_string();
         let result = model.upsert_instance(node.clone());
         assert!(matches!(result, Err(ModelError::VersionConflict { .. })));
 
-        // İsmin değişmediğini doğrula
+        // Check that the name did not change
         assert_eq!(model.get_instance(&id).unwrap().name, "TestPart");
 
-        // Yeni versiyon ile güncelle
+        // Update with a newer version
         node.last_updated += 2000;
         node.name = "NewName".to_string();
         assert!(model.upsert_instance(node).is_ok());
@@ -780,7 +780,7 @@ mod tests {
         let node = InstanceNode::new("Part", "ConcurrentPart");
         let id = node.syncix_id;
 
-        // Thread 1: Ekleme yapar
+        // Thread 1: inserts
         let model_clone1 = shared_model.clone();
         let node_clone = node.clone();
         let t1 = tokio::spawn(async move {
@@ -788,7 +788,7 @@ mod tests {
             lock.upsert_instance(node_clone).unwrap();
         });
 
-        // Thread 2: Okuma yapar (Thread 1 bitmesini bekledikten sonra)
+        // Thread 2: reads (after waiting for thread 1 to finish)
         let model_clone2 = shared_model.clone();
         let t2 = tokio::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_millis(50)).await;

@@ -1,13 +1,13 @@
-//! Syncix command_name satırı arayüzü.
+//! Syncix command-line interface.
 //!
-//! Neden core binary'sinin içinde:
-//!  1. Taşınabilirlik. Eski CLI syncix.ps1 idi; PowerShell'e bağlıydı ve macOS'ta
-//!     çalışmıyordu. Aynı binary hem sunucu hem istemci olunca ek çalışma ortamı
-//!     (PowerShell, Node) gerekmiyor.
-//!  2. Doğruluk. Hex renk hatası tam olarak dönüşüm mantığının CLI'da olup core'da
-//!     olmamasından çıkmıştı. Değer çözümlemesi artık single yerde: parse_property_value.
+//! Why it lives inside the core binary:
+//!  1. Portability. The old CLI was syncix.ps1; it depended on PowerShell and did not
+//!     run on macOS. With one binary acting as both server and client, no extra runtime
+//!     (PowerShell, Node) is needed.
+//!  2. Correctness. The hex colour bug came precisely from the conversion logic living in
+//!     the CLI and not in the core. Value parsing now lives in one place: parse_property_value.
 //!
-//! Kullanım: `syncix-core <komut> [argümanlar]`. Argümansız çalıştırılırsa sunucu açılır.
+//! Usage: `syncix-core <command> [arguments]`. Run without arguments, it starts the server.
 
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -31,25 +31,25 @@ fn print_ok(m: &str) {
 fn print_info(m: &str) {
     println!("{}{}{}", CYAN, m, RESET);
 }
-fn soluk(m: &str) {
+fn print_dim(m: &str) {
     println!("{}{}{}", DIM, m, RESET);
 }
 
 // ---------------------------------------------------------------------------
-// Basit HTTP istemcisi
+// Minimal HTTP client
 //
-// Yalnızca 127.0.0.1'e JSON istekleri atıyoruz; bunun için tam bir HTTP istemci
-// kütüphanesi (reqwest + TLS zinciri) eklemek gereksiz ağırlık olurdu.
-// "Connection: close" gönderildiği için cevabı file_path sonuna kadar okumak yeterli.
+// We only send JSON requests to 127.0.0.1; adding a full HTTP client library
+// (reqwest + a TLS chain) for that would be needless weight.
+// "Connection: close" is sent, so reading the response to the end of the stream is enough.
 // ---------------------------------------------------------------------------
 
 struct HttpReply {
     status_info: u16,
     body: String,
-    /// Yanit başlıkları (küçük harfe çevrilmiş adlarla).
-    /// Şimdilik yalnızca x-syncix-skipped-enums için gerekli: yayınlanacak yer
-    /// dosyasında kaç Enum değerinin atlandığını bilmeden yayın yapmak,
-    /// eksik bir sürümü oyunculara göndermek olurdu.
+    /// Response headers (with lowercased names).
+    /// Currently needed only for x-syncix-skipped-enums: publishing without knowing how many
+    /// Enum values were skipped in the place file would mean sending
+    /// an incomplete build to players.
     headers: std::collections::HashMap<String, String>,
 }
 
@@ -97,14 +97,14 @@ fn http_request(port: u16, http_method: &str, fs_path: &str, body: Option<&str>)
     })
 }
 
-/// HTTP yanit basliklarini ayristirir.
+/// Parses HTTP response headers.
 ///
-/// Ayri bir fonksiyon olmasinin sebebi test edilebilirlik: title okuma yolu
-/// `syncix upload` icin onemli (skipped Enum sayisi oradan geliyor) ve bir TCP
-/// baglantisi kurmadan dogrulanabilmesi gerekiyor.
+/// It is a separate function for testability: the header path matters
+/// for `syncix upload` (the skipped-Enum count comes from it) and must be verifiable
+/// without opening a TCP connection.
 fn parse_headers(raw: &str) -> std::collections::HashMap<String, String> {
     let mut lookup = std::collections::HashMap::new();
-    // Ilk line_text status_info satiridir (HTTP/1.1 200 OK), title degil.
+    // The first line is the status line (HTTP/1.1 200 OK), not a header.
     for line_text in raw.lines().skip(1) {
         if let Some((item_name, raw_value)) = line_text.split_once(':') {
             lookup.insert(item_name.trim().to_lowercase(), raw_value.trim().to_string());
@@ -130,7 +130,7 @@ fn url_encode(s: &str) -> String {
 // Core'u bulma
 // ---------------------------------------------------------------------------
 
-/// Çalışma dizininden yukarı doğru .syncix/port dosyası arar.
+/// Looks for a .syncix/port file upwards from the working directory.
 fn from_port_file() -> Option<u16> {
     let mut directory: PathBuf = std::env::current_dir().ok()?;
     for _ in 0..6 {
@@ -147,7 +147,7 @@ fn from_port_file() -> Option<u16> {
     None
 }
 
-/// Çalışan core'un portunu bulur: önce port dosyası, sonra aralık taraması.
+/// Finds the running core's port: the port file first, then a range scan.
 fn core_port() -> Option<u16> {
     if let Some(p) = from_port_file() {
         if http_request(p, "GET", "/health", None).map(|c| c.status_info == 200).unwrap_or(false) {
@@ -166,7 +166,7 @@ fn require_core() -> Option<u16> {
         Some(p) => Some(p),
         None => {
             report_error("Syncix Core is not running.");
-            soluk("  Start it with: syncix up   (or Syncix: Restart Core in VS Code)");
+            print_dim("  Start it with: syncix up   (or Syncix: Restart Core in VS Code)");
             None
         }
     }
@@ -182,8 +182,8 @@ fn fetch_json(port: u16, fs_path: &str) -> Option<serde_json::Value> {
     }
 }
 
-/// Komutu core'a gönderir; report_error durumunda sunucunun mesajını olduğu gibi gösterir
-/// (belirsiz dest uyarıları buradan gelir).
+/// Sends a command to the core; on error, shows the server's message as is
+/// (ambiguous-target warnings come from here).
 fn send_command(port: u16, event_type: &str, data: serde_json::Value) -> bool {
     let body = serde_json::json!({ "event_type": event_type, "data": data }).to_string();
     match http_request(port, "POST", "/command", Some(&body)) {
@@ -267,7 +267,7 @@ fn print_help() {
 fn status_info() -> i32 {
     let Some(port) = core_port() else {
         report_error("Syncix Core is not running.");
-        soluk("  Start it with: syncix up");
+        print_dim("  Start it with: syncix up");
         return 1;
     };
     let Some(h) = fetch_json(port, "/health") else {
@@ -291,7 +291,7 @@ fn status_info() -> i32 {
         print_ok("  Studio       : connected");
     } else {
         println!("{}  Studio       : not connected{}", YELLOW, RESET);
-        soluk("    (Is Studio open? The plugin may be waiting on the approval dialog.)");
+        print_dim("    (Is Studio open? The plugin may be waiting on the approval dialog.)");
     }
 
     print_info("Metrics");
@@ -410,7 +410,7 @@ fn find_node<'a>(node_list: &'a [TreeRow], dest: &str) -> Option<&'a TreeRow> {
         .or_else(|| node_list.iter().find(|d| d.item_name.to_lowercase() == h))
 }
 
-fn listele(dest: Option<&str>) -> i32 {
+fn list_instances(dest: Option<&str>) -> i32 {
     let Some(port) = require_core() else { return 1 };
     let Some(node_list) = fetch_tree(port) else { return 1 };
 
@@ -432,7 +432,7 @@ fn listele(dest: Option<&str>) -> i32 {
     child_entries.sort_by(|a, b| a.item_name.cmp(&b.item_name));
 
     if child_entries.is_empty() {
-        soluk("(no children)");
+        print_dim("(no children)");
         return 0;
     }
     for c in child_entries {
@@ -487,7 +487,7 @@ fn property_list(dest: &str) -> i32 {
     if let Some(e) = o.get("error").and_then(|x| x.as_str()) {
         report_error(e);
         if let Some(candidate_list) = o.get("candidates").and_then(|x| x.as_array()) {
-            soluk("  Candidates:");
+            print_dim("  Candidates:");
             for a in candidate_list {
                 println!(
                     "    {} ({}) -> {}",
@@ -505,7 +505,7 @@ fn property_list(dest: &str) -> i32 {
         o.get("name").and_then(|x| x.as_str()).unwrap_or("?"),
         o.get("class_name").and_then(|x| x.as_str()).unwrap_or("?")
     ));
-    soluk(&format!(
+    print_dim(&format!(
         "  parent: {}",
         o.get("parent").and_then(|x| x.as_str()).unwrap_or("-")
     ));
@@ -519,7 +519,7 @@ fn property_list(dest: &str) -> i32 {
                 println!("    {:<18} {}", k, p[k]);
             }
         }
-        _ => soluk("  (no synced properties yet)"),
+        _ => print_dim("  (no synced properties yet)"),
     }
 
     if let Some(a) = o.get("attributes").and_then(|x| x.as_object()) {
@@ -533,7 +533,7 @@ fn property_list(dest: &str) -> i32 {
 
     if let Some(s) = o.get("source").and_then(|x| x.as_str()) {
         if !s.is_empty() {
-            soluk(&format!("  source: {} lines", s.lines().count()));
+            print_dim(&format!("  source: {} lines", s.lines().count()));
         }
     }
     0
@@ -583,22 +583,22 @@ fn init_project() -> i32 {
         print_ok(&format!("Created sync folder: {}", syncing.display()));
     }
 
-    // .syncix çalışma klasörü sürüm kontrolüne girmemeli.
+    // The .syncix working folder must stay out of version control.
     let gitignore = root_dir.join(".gitignore");
     let current_value = std::fs::read_to_string(&gitignore).unwrap_or_default();
     if !current_value.contains(".syncix") {
         let fresh = format!("{}\n# Syncix runtime files\n.syncix/\nsyncix-core.log\n", current_value);
         let _ = std::fs::write(&gitignore, fresh);
-        soluk("  .gitignore updated (.syncix/)");
+        print_dim("  .gitignore updated (.syncix/)");
     }
 
-    soluk("\nNext: open the folder in VS Code; the Syncix core starts automatically.");
+    print_dim("\nNext: open the folder in VS Code; the Syncix core starts automatically.");
     0
 }
 
 fn launch(port: Option<u16>) -> i32 {
-    // Belirli bir port istenmişse orada zaten bir core exists_flag mı diye bakılır;
-    // istenmemişse herhangi bir core yeterlidir.
+    // If a specific port was requested, check whether a core already exists there;
+    // otherwise any core will do.
     match port {
         Some(p) => {
             if http_request(p, "GET", "/health", None).map(|c| c.status_info == 200).unwrap_or(false) {
@@ -619,7 +619,7 @@ fn launch(port: Option<u16>) -> i32 {
         return 1;
     };
 
-    // Kendini sunucu kipinde arka planda başlatır.
+    // Starts itself in server mode in the background.
     let mut command_name = std::process::Command::new(&own);
     command_name.arg("serve");
     if let Some(p) = port {
@@ -632,7 +632,7 @@ fn launch(port: Option<u16>) -> i32 {
 
     match command_name.spawn() {
         Ok(_) => {
-            // Ayağa kalkmasını bekle
+            // Wait for it to come up
             for _ in 0..20 {
                 std::thread::sleep(std::time::Duration::from_millis(250));
                 if let Some(p) = core_port() {
@@ -661,22 +661,22 @@ fn stop_core() -> i32 {
             0
         }
         Err(_) => {
-            // Sunucu bağlantıyı kapatarak cevapsız çıkabilir; bu expected_value durumdur.
+            // The server may close the connection without replying; that is expected.
             print_ok("Syncix Core stopped.");
             0
         }
     }
 }
 
-/// Studio'dan ağacı yeniden ister ve cevabın gelmesini bekler.
+/// Asks Studio for the tree again and waits for the reply.
 ///
-/// Bu fonksiyon selftest'in omurgası. Önceden doğrulama /object okuyarak
-/// yapılıyordu; ama core komutu gönderirken modeli ZATEN güncelliyor, dolayısıyla
-/// modeli okumak komutun Studio'ya ulaştığını KANITLAMAZ. Burada Studio'yu
-/// konuşturuyoruz: received anlık görüntü single doğruluk kaynağıdır.
+/// This function is the backbone of selftest. Verification used to read /object;
+/// but the core updates the model ALREADY while sending the command, so
+/// reading the model does NOT PROVE the command reached Studio. Here Studio is
+/// made to speak: the snapshot that comes back is the single source of truth.
 ///
-/// Cevabın geldiği, /health üzerindeki "Studio'dan gelen mesaj" sayacının
-/// artmasından anlaşılır.
+/// That a reply arrived is seen from the "messages from Studio" counter on /health
+/// going up.
 fn wait_for_fresh_snapshot(port: u16) -> bool {
     let prior = fetch_json(port, "/health")
         .and_then(|h| h.get("inbound_from_studio").and_then(|x| x.as_u64()))
@@ -692,7 +692,7 @@ fn wait_for_fresh_snapshot(port: u16) -> bool {
             .and_then(|h| h.get("inbound_from_studio").and_then(|x| x.as_u64()))
             .unwrap_or(0);
         if current_time > prior {
-            // Anlık görüntü işlendikten sonra modelin oturması için kısa bekleme.
+            // A short wait so the model settles after the snapshot is processed.
             std::thread::sleep(std::time::Duration::from_millis(400));
             return true;
         }
@@ -700,18 +700,18 @@ fn wait_for_fresh_snapshot(port: u16) -> bool {
     false
 }
 
-/// Uçtan uca senaryo: core ve Studio gerçekten birlikte çalışıyor mu?
+/// End-to-end scenario: do the core and Studio really work together?
 ///
-/// Bu komutun varlık sebebi Position hatasıdır: değerler core'da doğru görünüyordu,
-/// Studio'ya ulaşmıyordu. Burada her adımdan sonra değer Studio'nun durumundan
-/// GERİ OKUNUR; "gönderdim, olmuştur" varsayımı yapılmaz.
+/// This command exists because of the Position bug: values looked right in the core
+/// but never reached Studio. Here, after every step, the value is READ BACK
+/// from Studio's state; there is no "I sent it, so it happened" assumption.
 fn selftest() -> i32 {
     let Some(port) = require_core() else { return 1 };
 
     let Some(h) = fetch_json(port, "/health") else { return 1 };
     if !h.get("studio_connected").and_then(|x| x.as_bool()).unwrap_or(false) {
         report_error("Studio is not connected; the end-to-end test cannot run.");
-        soluk("  Open Roblox Studio, wait for the Syncix plugin to connect, then retry.");
+        print_dim("  Open Roblox Studio, wait for the Syncix plugin to connect, then retry.");
         return 1;
     }
 
@@ -727,10 +727,10 @@ fn selftest() -> i32 {
     };
 
     print_info("Syncix end-to-end test");
-    soluk("  After each step the tree is re-requested from Studio;");
-    soluk("  verification uses Studio's reply, not the core's own model.");
+    print_dim("  After each step the tree is re-requested from Studio;");
+    print_dim("  verification uses Studio's reply, not the core's own model.");
 
-    // 1. Oluştur
+    // 1. Create
     let was_created = send_command(
         port,
         "CREATE_INSTANCE",
@@ -746,7 +746,7 @@ fn selftest() -> i32 {
         return 1;
     };
 
-    // 2. Vector3 konum — Position hatasının tam senaryosu
+    // 2. Vector3 position — the exact scenario of the Position bug
     send_command(
         port,
         "SET_PROPERTY",
@@ -762,7 +762,7 @@ fn selftest() -> i32 {
         .unwrap_or(false);
     step(2, "Vector3 position", position_ok, "position was not applied in Studio".into());
 
-    // 3. Renk — hex dönüşümü
+    // 3. Colour — hex conversion
     send_command(
         port,
         "SET_PROPERTY",
@@ -775,7 +775,7 @@ fn selftest() -> i32 {
         .unwrap_or(false);
     step(3, "hex color", color_ok, "color was not applied".into());
 
-    // 4. Yeniden adlandırma — UUID değişmemeli
+    // 4. Rename — the UUID must not change
     let renamed_to = "SyncixSelftestYeniAd";
     send_command(
         port,
@@ -787,7 +787,7 @@ fn selftest() -> i32 {
     let name_ok = tree2.iter().any(|d| d.id == id && d.item_name == renamed_to);
     step(4, "rename (UUID preserved)", name_ok, "name did not change or UUID drifted".into());
 
-    // 5. Silme
+    // 5. Delete
     send_command(port, "DELETE_INSTANCE", serde_json::json!({ "id": id }));
     wait_for_fresh_snapshot(port);
     let tree3 = fetch_tree(port).unwrap_or_default();
@@ -800,12 +800,12 @@ fn selftest() -> i32 {
         0
     } else {
         report_error(&format!("{} step(s) failed.", failed));
-        soluk("  Check the [Syncix] warnings in the Studio Output window.");
+        print_dim("  Check the [Syncix] warnings in the Studio Output window.");
         1
     }
 }
 
-/// -o bayrağını ve varsayılan file_path adını çözer.
+/// Resolves the -o flag and the default file name.
 fn output_file(cli_args: &[String], fallback_value: &str) -> String {
     for (i, a) in cli_args.iter().enumerate() {
         if (a == "-o" || a == "--output") && i + 1 < cli_args.len() {
@@ -815,7 +815,7 @@ fn output_file(cli_args: &[String], fallback_value: &str) -> String {
     fallback_value.to_string()
 }
 
-/// -o ve değerini eleyerek geriye remaining positional argümanları döndürür.
+/// Returns the remaining positional arguments with -o and its value removed.
 fn positional(cli_args: &[String]) -> Vec<String> {
     let mut out_text = Vec::new();
     let mut to_skip = false;
@@ -833,16 +833,16 @@ fn positional(cli_args: &[String]) -> Vec<String> {
     out_text
 }
 
-/// luau-lsp'nin otomatik tamamlama yapabilmesi için sourcemap.json üretir.
+/// Generates sourcemap.json so luau-lsp can offer autocompletion.
 ///
-/// Normalde core bu dosyayı her senkronda kendisi tazeler (syncix.toml içindeki
-/// `sourcemap` ayarı). Bu command_name single seferlik üretim ya da CI için.
-/// Uzlastirici tarafindan silinen file_list cop kutusuna tasiniyor.
-/// Bu command_name orada ne oldugunu gosterir; olmadigi surece kullanici silinen
-/// dosyanin restored_count alinabilir oldugunu hicbir zaman ogrenemez.
-/// Silinecek objeyi ve sub agacini gosterip onay ister.
-/// Terminal etkilesimli degilse (borulanmis input_value) deletion reddedilir:
-/// cevapsiz bir soruyu "evet" saymak, silmenin dogasi geregi yanlis taraf.
+/// Normally the core refreshes this file itself on every sync (the `sourcemap`
+/// setting in syncix.toml). This command is for one-off generation or CI.
+/// Files removed by the reconciler are moved to the trash.
+/// This command shows what is there; without it the user would never learn that a
+/// deleted file can be restored.
+/// Shows the object to delete and its subtree and asks for confirmation.
+/// If the terminal is not interactive (piped input), the deletion is refused:
+/// treating an unanswered question as "yes" is, for a deletion, the wrong side to err on.
 fn confirm_delete(port: u16, dest: &str) -> bool {
     let fs_path = format!("/object?target={}", url_encode(dest));
     match fetch_json(port, &fs_path).filter(|d| d.get("error").is_none()) {
@@ -855,7 +855,7 @@ fn confirm_delete(port: u16, dest: &str) -> bool {
             let item_name = d.get("name").and_then(|v| v.as_str()).unwrap_or(dest);
             let class_str = d.get("class_name").and_then(|v| v.as_str()).unwrap_or("?");
             if child_entry > 0 {
-                // Silme basamakli: dogrudan child_entries degil, altindaki her sey gider.
+                // Deletion cascades: not just the direct children, everything below goes.
                 println!(
                     "Delete {} ({}) and everything inside it ({} direct child object(s))?",
                     item_name, class_str, child_entry
@@ -905,15 +905,15 @@ fn show_tags(port: u16, dest: &str) -> i32 {
     0
 }
 
-/// Yururlukteki ayarlari gosterir.
+/// Shows the settings in effect.
 ///
-/// Neden gerekli: "ayari yazdim ama bir sey degismedi" en sik sikayet.
-/// Ayari yazdigin yer ile programin okudugu yer is_same mi, cevabi burada.
-/// Place catismasini gosterir ve --studio / --disk ile cozer.
+/// Why it is needed: "I wrote the setting but nothing changed" is the most common complaint.
+/// Whether the place you wrote the setting and the place the program reads are the same — the answer is here.
+/// Shows a place conflict and resolves it with --studio / --disk.
 ///
-/// Neden bir command_name: iki secenek de veri kaybettirebilir. Syncix'in own
-/// basina birini secmesi, kullanicinin haberi olmadan bir tarafi silmesi
-/// demek olurdu. Bu yuzden karar burada, acikca veriliyor.
+/// Why a command: both options can lose data. For Syncix to pick one on its
+/// own would mean deleting one side without the user knowing.
+/// So the decision is made here, explicitly.
 fn bind_cmd(cli_args: &[String]) -> i32 {
     let Some(port) = require_core() else { return 1 };
     let Some(health_json) = fetch_json(port, "/health") else {
@@ -942,7 +942,7 @@ fn bind_cmd(cli_args: &[String]) -> i32 {
     let al = |item_name: &str| c.get(item_name).and_then(|x| x.as_str()).unwrap_or("?").to_string();
 
     let Some(direction) = direction else {
-        // Karar verilmeden once ne oldugunu goster.
+        // Show what happened before a decision is made.
         report_error("This folder belongs to a different place. Sync is on hold.");
         println!();
         println!("  folder is bound to : {}", al("folder_place"));
@@ -956,7 +956,7 @@ fn bind_cmd(cli_args: &[String]) -> i32 {
         println!("Choose one:");
         println!("  syncix bind --studio   this place is right; the folder is rewritten from it");
         println!("  syncix bind --disk     the folder is right; its contents go into this place");
-        soluk("  Files the reconciler removes go to the trash (syncix trash).");
+        print_dim("  Files the reconciler removes go to the trash (syncix trash).");
         return 1;
     };
 
@@ -1007,7 +1007,7 @@ fn show_config() -> i32 {
     println!("  confirm_delete   {}", c.safety_settings.confirm_delete);
     println!();
 
-    let liste = |v: &Vec<String>| {
+    let entry_list = |v: &Vec<String>| {
         if v.is_empty() {
             "(default)".to_string()
         } else {
@@ -1015,9 +1015,9 @@ fn show_config() -> i32 {
         }
     };
     println!("[scope]");
-    println!("  services           {}", liste(&c.scope_settings.service_list));
-    println!("  ignore_classes     {}", liste(&c.scope_settings.class_ignore_list));
-    println!("  ignore_properties  {}", liste(&c.scope_settings.property_ignore_list));
+    println!("  services           {}", entry_list(&c.scope_settings.service_list));
+    println!("  ignore_classes     {}", entry_list(&c.scope_settings.class_ignore_list));
+    println!("  ignore_properties  {}", entry_list(&c.scope_settings.property_ignore_list));
     println!();
 
     println!("[server]");
@@ -1026,15 +1026,15 @@ fn show_config() -> i32 {
     println!("[editor]");
     println!("  sourcemap      {}", c.sourcemap);
     println!();
-    // Calisan core previous_text ayarla baslamis olabilir; bu en yaniltici status_info.
+    // The running core may have started with an old setting; that is the most misleading state.
     if let Some(port) = core_port() {
         if port != c.wanted_port {
-            soluk(&format!(
+            print_dim(&format!(
                 "  Note: a core is running on port {}, which differs from the configured port.",
                 port
             ));
         }
-        soluk("  Settings are read at startup; restart the core after editing (syncix down && syncix up).");
+        print_dim("  Settings are read at startup; restart the core after editing (syncix down && syncix up).");
     }
     0
 }
@@ -1058,7 +1058,7 @@ fn trash_list() -> i32 {
 fn trash_restore(run_name: Option<&str>) -> i32 {
     let settings_data = crate::project::ProjectConfig::load();
     let runs = crate::layout::trash_runs(&settings_data.sync_dir);
-    // Ad verilmediyse en fresh run_name restored_count alinir; en sik istenen bu.
+    // Without a name, the newest run is restored; that is the most common request.
     let selected = match run_name {
         Some(t) => t.to_string(),
         None => match runs.first() {
@@ -1076,7 +1076,7 @@ fn trash_restore(run_name: Option<&str>) -> i32 {
     let (restored_count, skipped) = crate::layout::restore_from_trash(&settings_data.sync_dir, &selected);
     print_ok(&format!("Restored {} file(s) from {}.", restored_count, selected));
     if skipped > 0 {
-        // Uzerine yazmak restored_count almayi own basina bir veri kaybina cevirirdi.
+        // Overwriting would turn restoring into a data loss of its own.
         print_info(&format!(
             "{} file(s) were skipped because a file already exists at that path.",
             skipped
@@ -1108,12 +1108,12 @@ fn build_sourcemap(cli_args: &[String]) -> i32 {
 
     let number_value = reply.matches("\"className\"").count();
     print_ok(&format!("Wrote {} ({} instances).", dest, number_value));
-    soluk("  Once luau-lsp reads this file, paths like game.ReplicatedStorage.X get");
-    soluk("  autocomplete and type checking.");
+    print_dim("  Once luau-lsp reads this file, paths like game.ReplicatedStorage.X get");
+    print_dim("  autocomplete and type checking.");
     0
 }
 
-/// Ağacı Roblox XML olarak dosyaya yazar (rojo build karşılığı).
+/// Writes the tree to a file as Roblox XML (the counterpart of rojo build).
 fn run_build(cli_args: &[String]) -> i32 {
     let Some(port) = require_core() else { return 1 };
     let dest_file = output_file(cli_args, "build.rbxmx");
@@ -1151,21 +1151,21 @@ fn run_build(cli_args: &[String]) -> i32 {
         object_total,
         reply.body.len()
     ));
-    soluk("  In Studio: right click > Insert from File...");
+    print_dim("  In Studio: right click > Insert from File...");
     0
 }
 
-/// Roblox'a yayınlama. VARSAYILAN OLARAK HİÇBİR ŞEY YAYINLAMAZ.
+/// Publishing to Roblox. BY DEFAULT IT PUBLISHES NOTHING.
 ///
-/// Yayınlama restored_count alınamaz bir dış işlemdir: yayınlanan sürüm oyuncuların
-/// göreceği sürümdür. Bu yüzden command_name önce ne yapacağını anlatır ve durur;
-/// gerçekten yayınlamak için `--onayla` gerekir.
+/// Publishing is an external action that cannot be undone: the published version is the
+/// one players see. So the command first explains what it would do and stops;
+/// actually publishing requires an explicit confirmation flag.
 fn publish_place(cli_args: &[String]) -> i32 {
     let Some(port) = require_core() else { return 1 };
 
-    let is_confirmed = cli_args.iter().any(|a| a == "--confirm" || a == "--onayla");
+    let is_confirmed = cli_args.iter().any(|a| a == "--confirm");
 
-    // Proje kökünü ve ayarları /health üzerinden al.
+    // Get the project root and settings from /health.
     let Some(health_json) = fetch_json(port, "/health") else {
         report_error("Could not reach the core.");
         return 1;
@@ -1174,11 +1174,11 @@ fn publish_place(cli_args: &[String]) -> i32 {
         health_json.get("root").and_then(|x| x.as_str()).unwrap_or("."),
     );
 
-    // Güvenlik kapısı: key_name projeye yazılmış olmamalı.
+    // Safety gate: the key must not have been written into the project.
     if crate::upload::has_key_leak(&root_dir) {
         report_error("syncix.toml contains something that looks like an API key.");
-        soluk("  Keys must NOT live in project files; the first commit makes them public.");
-        soluk("  Remove it and use the SYNCIX_API_KEY environment variable instead.");
+        print_dim("  Keys must NOT live in project files; the first commit makes them public.");
+        print_dim("  Remove it and use the SYNCIX_API_KEY environment variable instead.");
         return 1;
     }
 
@@ -1188,15 +1188,15 @@ fn publish_place(cli_args: &[String]) -> i32 {
 
     let (Some(universe_id), Some(place_id)) = (universe, place) else {
         report_error("No publish target configured.");
-        soluk("  Add this to syncix.toml:");
-        soluk("");
-        soluk("    [upload]");
-        soluk("    universe_id = 1234567890");
-        soluk("    place_id    = 9876543210");
+        print_dim("  Add this to syncix.toml:");
+        print_dim("");
+        print_dim("    [upload]");
+        print_dim("    universe_id = 1234567890");
+        print_dim("    place_id    = 9876543210");
         return 1;
     };
 
-    // Yer dosyasını canlı modelden üret.
+    // Build the place file from the live model.
     let reply = match http_request(port, "GET", "/build", None) {
         Ok(c) if c.status_info == 200 => c,
         Ok(c) => {
@@ -1238,42 +1238,42 @@ fn publish_place(cli_args: &[String]) -> i32 {
     println!("  contents : {} instances, {} bytes", plan.object_total, plan.byte_count);
     println!("  endpoint : {}", crate::upload::target_url(plan.universe_id, plan.place_id));
 
-    // Atlanan Enum varsa yayinlanacak file_path EKSIKTIR; kullanici bunu
-    // yayindan once bilmeli, sonra degil.
+    // If Enums were skipped the file to publish is INCOMPLETE; the user must know
+    // that before publishing, not after.
     if plan.skipped_enums > 0 {
         println!();
         println!(
             "{}WARNING: {} enum value(s) could not be exported.{}",
             YELLOW, plan.skipped_enums, RESET
         );
-        soluk("  The published file will be missing settings like Material and Shape.");
-        soluk("  If that is not acceptable, say so before publishing and we will extend the table.");
+        print_dim("  The published file will be missing settings like Material and Shape.");
+        print_dim("  If that is not acceptable, say so before publishing and we will extend the table.");
     }
 
     let has_key = std::env::var("SYNCIX_API_KEY").is_ok();
     if !has_key {
         println!();
         report_error("The SYNCIX_API_KEY environment variable is not set.");
-        soluk("  Get an Open Cloud key at: create.roblox.com > Creator Hub > API Keys");
-        soluk("  Grant it the 'universe-places:write' permission.");
-        soluk("  Sonra: $env:SYNCIX_API_KEY = \"...\"   (PowerShell)");
+        print_dim("  Get an Open Cloud key at: create.roblox.com > Creator Hub > API Keys");
+        print_dim("  Grant it the 'universe-places:write' permission.");
+        print_dim("  Then: $env:SYNCIX_API_KEY = \"...\"   (PowerShell)");
         return 1;
     }
 
     if !is_confirmed {
         println!();
         println!("{}Nothing was published.{}", YELLOW, RESET);
-        soluk("  Publishing cannot be undone: the published version is what players see.");
-        soluk("  If you are sure:  syncix upload --confirm");
-        soluk("");
-        soluk("  Or run it yourself:");
+        print_dim("  Publishing cannot be undone: the published version is what players see.");
+        print_dim("  If you are sure:  syncix upload --confirm");
+        print_dim("");
+        print_dim("  Or run it yourself:");
         for line_text in crate::upload::curl_command(&plan).lines() {
-            soluk(&format!("    {}", line_text));
+            print_dim(&format!("    {}", line_text));
         }
         return 0;
     }
 
-    // --onayla verildi: sistemdeki curl ile gönder.
+    // Confirmation given: send with the system's curl.
     print_info("Publishing...");
     let out_text = std::process::Command::new("curl")
         .arg("-sS")
@@ -1311,17 +1311,17 @@ fn publish_place(cli_args: &[String]) -> i32 {
         }
         Err(e) => {
             report_error(&format!("Could not run curl: {}", e));
-            soluk("  curl ships with Windows 10+, macOS and most Linux distributions.");
-            soluk("  Otherwise run the command above with your own tool.");
+            print_dim("  curl ships with Windows 10+, macOS and most Linux distributions.");
+            print_dim("  Otherwise run the command above with your own tool.");
             1
         }
     }
 }
 
-/// .rbxmx / .rbxlx dosyasini agaca alir (rojo'da olup bizde olmayan last_item madde).
+/// Brings a .rbxmx / .rbxlx file into the tree (the last item Rojo had and Syncix lacked).
 ///
-/// Her node_entry icin once CREATE_INSTANCE, sonra property'ler gonderilir. Ust upper
-/// olusturma sirasi onemli: child_entry, ebeveyni olusturulmadan gonderilemez.
+/// For every node a CREATE_INSTANCE is sent first, then its properties. Top-down
+/// creation order matters: a child cannot be sent before its parent exists.
 fn import_rbxmx(cli_args: &[String]) -> i32 {
     let Some(file_path) = cli_args.get(1) else {
         report_error("Usage: syncix import <file.rbxmx> [parent]");
@@ -1354,13 +1354,13 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
 
     print_info(&format!("Importing {} instance(s) into {}", total_count, parent_ref));
     if skipped > 0 {
-        soluk(&format!(
+        print_dim(&format!(
             "  {} property value(s) use types Syncix does not model and were skipped.",
             skipped
         ));
     }
 
-    // Ozyinelemeli olusturma. Her node_entry once yaratilir, sonra ozellikleri yazilir.
+    // Recursive creation. Each node is created first, then its properties are written.
     fn generate(
         port: u16,
         node_entry: &crate::rbxmx_import::ImportedNode,
@@ -1368,9 +1368,9 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         counter: &mut usize,
         failed: &mut usize,
     ) {
-        // Kimligi ONCEDEN uretiyoruz: boylece olusturulan objeyi ismiyle degil
-        // kimligiyle hedefleyebiliyoruz. Isimle hedeflemek, ice aktarilan tree
-        // current_value bir ismi tekrarladiginda belirsizlik hatasi veriyordu.
+        // The identity is generated IN ADVANCE, so the created object can be targeted by
+        // identity rather than by name. Targeting by name failed with an ambiguity error
+        // when the imported tree repeated an existing name.
         let identity = uuid::Uuid::new_v4().to_string();
         let ok = send_command(
             port,
@@ -1390,9 +1390,9 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         std::thread::sleep(std::time::Duration::from_millis(120));
 
         for (item_name, raw_value) in &node_entry.properties {
-            // Deger metne cevrilmiyor: text_value type_name bilgisini kaybediyor ve CFrame,
-            // UDim, NumberRange gibi tipler ice aktarmada tamamen dusuyordu.
-            // Tel formati zaten tipi tasiyor, dogrudan o gonderiliyor.
+            // The value is not turned into text: text loses the type, and types like CFrame,
+            // UDim and NumberRange were dropped entirely on import.
+            // The wire format already carries the type, so it is sent directly.
             let value_as_json = crate::pv_to_wire(raw_value);
             send_command(
                 port,
@@ -1424,33 +1424,33 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
 
     if failed > 0 {
         report_error(&format!("{} instance(s) could not be created.", failed));
-        soluk("  A name may be ambiguous; check with syncix tree.");
+        print_dim("  A name may be ambiguous; check with syncix tree.");
         return 1;
     }
 
     print_ok(&format!("Imported {} instance(s).", counter));
-    soluk("  Run syncix pull to confirm the result from Studio.");
+    print_dim("  Run syncix pull to confirm the result from Studio.");
     0
 }
 
 // ---------------------------------------------------------------------------
-// Giriş
+// Entry point
 // ---------------------------------------------------------------------------
 
-/// Argümanları işler. Sunucu kipinde çalışılması gerekiyorsa None döner.
+/// Handles the arguments. Returns None when the server mode should run.
 pub fn execute_run(cli_args: &[String]) -> Option<i32> {
     let Some(command_name) = cli_args.first().map(|s| s.as_str()) else {
-        return None; // argüman yok -> sunucu kipi
+        return None; // no arguments -> server mode
     };
-    // `syncix serve` ya da `syncix serve 25565`: sunucu kipi.
-    // Port verilmişse syncix.toml'daki değerin yerine geçer.
+    // `syncix serve` or `syncix serve 25565`: server mode.
+    // A given port overrides the value in syncix.toml.
     if command_name == "serve" {
         return None;
     }
 
     let arg = |i: usize| cli_args.get(i).map(|s| s.as_str());
-    // Değerler boşluk içerebilir (örn. `set Kutu Position 0, 5, -60`); remaining tüm
-    // argümanlar birleştirilir.
+    // Values may contain spaces (e.g. `set Box Position 0, 5, -60`); all remaining
+    // arguments are joined.
     let remaining = |i: usize| cli_args[i.min(cli_args.len())..].join(" ");
 
     let outcome = match command_name {
@@ -1464,7 +1464,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         }
         "status" | "st" => status_info(),
         "tree" => tree(arg(1)),
-        "ls" | "list" => listele(arg(1)),
+        "ls" | "list" => list_instances(arg(1)),
         "find" | "search" => match arg(1) {
             Some(k) => search(k),
             None => {
@@ -1500,8 +1500,8 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             }
         },
         "attr" => match (arg(1), arg(2)) {
-            // Silme: `syncix attr <hedef> <ad> --sil`
-            (Some(h), Some(n)) if arg(3) == Some("--sil") || arg(3) == Some("--delete") => {
+            // Delete: `syncix attr <target> <name> --delete`
+            (Some(h), Some(n)) if arg(3) == Some("--delete") => {
                 let Some(port) = require_core() else { return Some(1) };
                 if send_command(
                     port,
@@ -1576,9 +1576,9 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         "rm" | "del" | "delete" => match arg(1) {
             Some(h) => {
                 let Some(port) = require_core() else { return Some(1) };
-                // Silme cocuklariyla birlikte gider ve Studio'da restored_count alinabilse de
-                // editor tarafinda restored_count donusu yok. Ne silindigini once GOSTERIP
-                // onay istiyoruz; --yes betiklerde bu adimi atlar.
+                // Deletion takes the children along, and although Studio can undo it,
+                // the editor side has no way back. So what would be deleted is SHOWN first and
+                // confirmation is asked; --yes skips this step in scripts.
                 let confirmed = cli_args.iter().any(|a| a == "--yes" || a == "-y")
                     || !crate::project::ProjectConfig::load().safety_settings.confirm_delete;
                 if !confirmed && !confirm_delete(port, h) {
@@ -1616,7 +1616,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
                 1
             }
         },
-        "upload" | "yayinla" => publish_place(cli_args),
+        "upload" => publish_place(cli_args),
         "sourcemap" => build_sourcemap(cli_args),
         "build" => run_build(cli_args),
         "import" => import_rbxmx(cli_args),
@@ -1624,7 +1624,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             let Some(port) = require_core() else { return Some(1) };
             if send_command(port, "FULL_SYNC", serde_json::json!({})) {
                 print_ok("Asked Studio to resend the tree.");
-                soluk("  The reply is processed within a few seconds; then try syncix tree.");
+                print_dim("  The reply is processed within a few seconds; then try syncix tree.");
                 0
             } else {
                 1
@@ -1634,14 +1634,14 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         "tag" | "tags" => match arg(1) {
             Some(h) => {
                 let Some(port) = require_core() else { return Some(1) };
-                // Argumansiz cagri yalnizca gosterir; yanlislikla tag_text
-                // silinmesin diye "bos liste" ile "listeleme" ayrilmis durumda.
+                // A call without arguments only lists: "empty list" and "listing" are kept
+                // apart so tags are not deleted by accident.
                 if cli_args.len() <= 2 {
                     show_tags(port, h)
                 } else {
-                    // "--none" single basina "hepsini temizle" demek. Bos liste
-                    // gondermek icin baska bir fs_path yok: argumansiz cagri
-                    // listeleme anlamina geliyor.
+                    // "--none" on its own means "clear all". There is no other way to send an
+                    // empty list: a call without arguments means
+                    // listing.
                     let tag_list: Vec<String> = if cli_args[2..] == ["--none".to_string()] {
                         Vec::new()
                     } else {
@@ -1665,7 +1665,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             }
             None => {
                 report_error("Usage: syncix tag <target> [tag ...]   (no tags = show)");
-                soluk("  Clear every tag with: syncix tag <target> --none");
+                print_dim("  Clear every tag with: syncix tag <target> --none");
                 1
             }
         },
@@ -1679,7 +1679,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         "down" | "stop" => stop_core(),
         unknown => {
             report_error(&format!("Unknown command: {}", unknown));
-            soluk("  Run syncix help to see the command list.");
+            print_dim("  Run syncix help to see the command list.");
             1
         }
     };
@@ -1694,13 +1694,13 @@ mod tests {
     #[test]
     fn url_encoding_of_spaces_and_dot_paths() {
         assert_eq!(url_encode("Workspace.Simulator"), "Workspace.Simulator");
-        assert_eq!(url_encode("iki kelime"), "iki%20kelime");
+        assert_eq!(url_encode("two words"), "two%20words");
         assert_eq!(url_encode("a&b=c"), "a%26b%3Dc");
     }
 
     #[test]
     fn missing_port_file_does_not_crash() {
-        // Sadece panik olmadığını doğrular; ortama göre Some/None dönebilir.
+        // Only checks that it does not panic; it may return Some/None depending on the environment.
         let _ = from_port_file();
     }
 
@@ -1709,15 +1709,15 @@ mod tests {
         let node_list = vec![
             TreeRow {
                 id: "aabbccdd-1111-2222-3333-444455556666".into(),
-                item_name: "Kutu".into(),
+                item_name: "Box".into(),
                 class_str: "Part".into(),
                 parent_ref: None,
             },
         ];
-        assert!(find_node(&node_list, "Kutu").is_some());
-        assert!(find_node(&node_list, "kutu").is_some());
+        assert!(find_node(&node_list, "Box").is_some());
+        assert!(find_node(&node_list, "box").is_some());
         assert!(find_node(&node_list, "aabbccdd").is_some());
-        assert!(find_node(&node_list, "yok").is_none());
+        assert!(find_node(&node_list, "missing").is_none());
     }
 }
 
@@ -1733,8 +1733,8 @@ mod header_tests {
         assert_eq!(h.get("x-syncix-skipped-enums").unwrap(), "3");
     }
 
-    /// Durum satiri title degildir; yanlislikla haritaya girerse
-    /// "http/1.1 200 ok" gibi anlamsiz bir key_name olusurdu.
+    /// The status line is not a header; if it got into the map by mistake
+    /// a meaningless key like "http/1.1 200 ok" would appear.
     #[test]
     fn status_line_is_not_a_header() {
         let h = parse_headers("HTTP/1.1 404 Not Found\r\nX-A: 1");

@@ -1,11 +1,11 @@
 -- Approval
--- İlk bağlantıda kullanıcı onayı (trust on first use).
+-- User approval on first connection (trust on first use).
 --
--- Neden var: core, 127.0.0.1 üzerinde identity doğrulaması olmadan Studio'yu sürebiliyordu.
--- Makinedeki herhangi bir program 8080'e bir sunucu açıp Studio'daki objeleri
--- değiştirebilirdi. Şifre/token girmek yerine daha basit ve daha anlaşılır bir yol
--- seçildi: Studio, hangi PROJE KLASÖRÜNÜN bağlanmak istediğini gösterip bir kez permission ister.
--- Onaylanan klasörler saklanır, bir daha sorulmaz.
+-- Why it exists: the core could drive Studio over 127.0.0.1 without any identity check.
+-- Any program on the machine could open a server on 8080 and change objects
+-- in Studio. Instead of a password or token, a simpler and clearer way was
+-- chosen: Studio shows which PROJECT FOLDER wants to connect and asks for permission once.
+-- Approved folders are stored and not asked again.
 
 local HttpService = game:GetService("HttpService")
 
@@ -13,19 +13,19 @@ local Approval = {}
 
 local SETTING_PREFIX = "syncix_approval_"
 
--- İKİ KATMANLI KALICILIK
+-- TWO-LAYER PERSISTENCE
 --
--- 1. plugin:SetSetting — Creator Store'dan kurulmuş plugin'lerde çalışır.
---    Ama .rbxm dosyası doğrudan Plugins klasörüne bırakıldığında (bizim dağıtım
---    biçimimiz) plugin'in kayıtlı bir kimliği olmadığı için AYARLAR DİSKE YAZILMIYOR.
---    Ölçüldü: Studio yeniden başlatıldığında permission sıfırlanıyor, InstalledPlugins
---    klasörü hiç oluşmuyor.
+-- 1. plugin:SetSetting — works for plugins installed from the Creator Store.
+--    But when the .rbxm file is dropped straight into the Plugins folder (our
+--    distribution form), the plugin has no registered identity, so SETTINGS ARE NOT WRITTEN TO DISK.
+--    Measured: after restarting Studio the permission was reset and the InstalledPlugins
+--    folder was never created.
 --
--- 2. game niteliği — yedek olarak decision place'in kendisine yazılır. `game` nesnesi
---    gözlemcinin izlediği servislerin dışında olduğu için senkrona sızmaz ve
---    dosyalarda görünmez. Place kaydedildiğinde kalıcı olur.
+-- 2. A game attribute — as a fallback the decision is written into the place itself. The `game`
+--    object is outside the services the observer watches, so it does not leak into sync and
+--    does not appear in files. It persists when the place is saved.
 --
--- Okuma ikisini de dener, yazma ikisine de yazar.
+-- Reading tries both, writing writes to both.
 local GAME_ATTR = "__syncix_approved_roots"
 
 local function keyName(root: string): string
@@ -54,7 +54,7 @@ local function writePlaceRecords(entries)
 	end)
 end
 
--- Daha önce verilmiş decision: true (permission), false (red), nil (hiç sorulmadı)
+-- A decision given earlier: true (allowed), false (denied), nil (never asked)
 function Approval.GetStoredDecision(pluginRef, root: string)
 	if not root or root == "" then
 		return nil
@@ -95,8 +95,8 @@ function Approval.Store(pluginRef, root: string, permission: boolean)
 	entries[k] = permission
 	writePlaceRecords(entries)
 
-	-- Geri okuma denetimi: hiçbir katman kalıcı olmadıysa kullanıcı bunu bilmeli,
-	-- yoksa her Studio açılışında tekrar sorulmasını failure sanır.
+	-- Read-back check: if no layer persisted, the user must know,
+	-- or they will take being asked on every Studio start for a bug.
 	if Approval.GetStoredDecision(pluginRef, root) == nil then
 		warn(
 			"[Syncix] The decision could not be stored permanently; you will be asked on every Studio start.\n" ..
@@ -105,17 +105,17 @@ function Approval.Store(pluginRef, root: string, permission: boolean)
 	end
 end
 
--- Pencere kimliği her çağrıda benzersiz olmalı: aynı kimlikle ikinci kez
--- CreateDockWidgetPluginGui çağırmak failure verir.
+-- The window id must be unique on every call: calling
+-- CreateDockWidgetPluginGui a second time with the same id throws an error.
 local windowCounter = 0
 
--- Onay penceresini gösterir ve kullanıcı decision verene kadar bekler.
+-- Shows the approval window and waits until the user decides.
 --
--- Dönüş üç durumludur ve bu ÖNEMLİ:
---   "allow"  kullanıcı onayladı
---   "deny"   kullanıcı reddetti (kalıcı olarak saklanır)
---   "error"  pencere açılamadı  -> KARAR DEĞİLDİR, saklanmaz, sonra tekrar denenir
--- Aksi halde arayüzdeki tek bir aksaklık senkronu kalıcı olarak kilitlerdi.
+-- The return value has three states, and that MATTERS:
+--   "allow"  the user approved
+--   "deny"   the user denied (stored permanently)
+--   "error"  the window could not open -> NOT A DECISION; not stored, retried later
+-- Otherwise a single UI glitch would lock sync permanently.
 function Approval.Ask(pluginRef, info): string
 	local projectInfo = tostring(info.project or "Unknown project")
 	local root = tostring(info.root or "")
@@ -126,8 +126,8 @@ function Approval.Ask(pluginRef, info): string
 	local ok, result = pcall(function()
 		local widgetInfo = DockWidgetPluginGuiInfo.new(
 			Enum.InitialDockState.Float,
-			true,  -- başlangıçta açık
-			true,  -- kullanıcı geçmişini ezme
+			true,  -- open initially
+			true,  -- override the restored window state
 			460, 210,
 			460, 210
 		)
@@ -190,7 +190,7 @@ function Approval.Ask(pluginRef, info): string
 		local permissionButton = button("Allow", 12, Color3.fromRGB(46, 160, 87))
 		local denyButton = button("Deny", 236, Color3.fromRGB(180, 60, 60))
 
-		-- Pencere Studio tarafından kapalı durumda geri yüklenmiş olabilir; açık olduğundan emin ol.
+		-- The window may have been restored closed by Studio; make sure it is open.
 		gui.Enabled = true
 
 		local decision = nil
@@ -200,21 +200,21 @@ function Approval.Ask(pluginRef, info): string
 		permissionButton.Activated:Connect(function() decision = true end)
 		denyButton.Activated:Connect(function() decision = false end)
 
-		-- Pencerenin kapatılması REDDETME SAYILMAZ.
+		-- Closing the window DOES NOT COUNT AS A DENIAL.
 		--
-		-- Eskiden sayılıyordu ve şu hataya yol açtı: DockWidgetPluginGui oluşturulurken
-		-- Enabled bir an false oluyor, bu da kullanıcı hiçbir şeye basmadan "reddedildi"
-		-- olarak yorumlanıp bağlantıyı kalıcı olarak engelliyordu.
-		-- Artık kapatma "kararsız" demektir: saklanmaz, bir sonraki denemede tekrar sorulur.
+		-- It used to, and that caused this bug: while the DockWidgetPluginGui was being created,
+		-- Enabled was false for a moment, which was read as "denied" before the user pressed
+		-- anything and blocked the connection permanently.
+		-- Now closing means "undecided": not stored, asked again on the next attempt.
 		gui:GetPropertyChangedSignal("Enabled"):Connect(function()
-			-- İlk saniye Studio'nun kendi pencere durumu geri yüklemesine ayrılmıştır.
+			-- The first second is left for Studio restoring its own window state.
 			if not gui.Enabled and decision == nil and (os.clock() - openedAt) > 1 then
 				wasClosed = true
 			end
 		end)
 
-		-- En fazla 2 dakika bekle; kullanıcı orada değilse bağlantı denemesi
-		-- sonsuza kadar askıda kalmasın.
+		-- Wait at most 2 minutes; if the user is not there, the connection attempt
+		-- must not hang forever.
 		while decision == nil and not wasClosed and (os.clock() - openedAt) < 120 do
 			task.wait(0.1)
 		end
@@ -229,8 +229,8 @@ function Approval.Ask(pluginRef, info): string
 	end)
 
 	if not ok then
-		-- Pencere açılamadı. Bu bir RED DEĞİLDİR: kalıcı olarak saklanmaz,
-		-- bağlantı bir sonraki denemede yeniden sorulur.
+		-- The window could not open. This is NOT A DENIAL: it is not stored permanently,
+		-- and the connection asks again on the next attempt.
 		warn(
 			"[Syncix] Could not open the approval window: " .. tostring(result) ..
 			"\n  Not connected; will retry shortly."
@@ -245,8 +245,8 @@ function Approval.Ask(pluginRef, info): string
 		return "deny"
 	end
 
-	-- nil: pencere kapatıldı ya da timestamp aşımına uğradı. Karar verilmedi,
-	-- saklanmaz ve kara listeye alınmaz; bir sonraki denemede tekrar sorulur.
+	-- nil: the window was closed or timed out. No decision was made;
+	-- it is not stored or blacklisted, and it is asked again on the next attempt.
 	print("[Syncix] Permission not granted (window closed). You will be asked again later.")
 	return "error"
 end

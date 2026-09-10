@@ -5,28 +5,28 @@ use tracing::{error, info};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
-/// Kurumsal Loglama Başlatıcı (Enterprise Logging)
-/// Logları hem terminale hem de JSON formatında non-blocking olarak dosyaya yazar.
+/// Enterprise logging initialiser
+/// Writes logs both to the terminal and, non-blocking, to a file in JSON format.
 pub fn init_enterprise_logging(log_dir: &str) -> Result<WorkerGuard, String> {
-    // Log dizinini oluştur
+    // Create the log directory
     fs::create_dir_all(log_dir).map_err(|e| e.to_string())?;
 
-    // Dosyaya yazan appender (Günlük olarak döner)
+    // Appender writing to a file (rotated daily)
     let file_appender = tracing_appender::rolling::daily(log_dir, "syncix.log");
 
-    // Non-blocking writer (Disk IO'nun Event Bus'ı tıkamasını önler)
+    // Non-blocking writer (keeps disk IO from blocking the event bus)
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
-    // Terminal Çıktısı (Okunabilir)
+    // Terminal output (human-readable)
     let stdout_log = fmt::layer().pretty().with_target(false);
 
-    // Dosya Çıktısı (JSON formatında - Log analizi için)
+    // File output (JSON, for log analysis)
     let file_log = fmt::layer().json().with_writer(non_blocking);
 
-    // Çevresel değişken filtresi (RUST_LOG=info)
+    // Environment variable filter (RUST_LOG=info)
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
-    // Subscriber oluştur ve persist
+    // Build the subscriber and install it
     tracing_subscriber::registry()
         .with(filter)
         .with(stdout_log)
@@ -37,11 +37,11 @@ pub fn init_enterprise_logging(log_dir: &str) -> Result<WorkerGuard, String> {
 
     info!("Logging system initialised.");
 
-    // Guard döndürülmeli ki main thread bitene kadar flush işlemi iptal olmasın
+    // The guard must be returned so flushing is not cancelled before the main thread ends
     Ok(guard)
 }
 
-/// Çökme Raporlayıcı (Crash Report Generator)
+/// Crash report generator
 fn setup_panic_hook(log_dir: &str) {
     let log_dir = PathBuf::from(log_dir);
 
@@ -56,20 +56,20 @@ fn setup_panic_hook(log_dir: &str) {
         } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
             report.push_str(&format!("Error message: {}\n", s));
         } else {
-            report.push_str("Hata Mesajı: Bilinmiyor\n");
+            report.push_str("Error message: unknown\n");
         }
 
         if let Some(location) = panic_info.location() {
-            report.push_str(&format!("Konum: {}:{}\n", location.file(), location.line()));
+            report.push_str(&format!("Location: {}:{}\n", location.file(), location.line()));
         }
 
-        // TODO: Backtrace eklenebilir (RUST_BACKTRACE=1)
+        // TODO: Backtrace can be added (RUST_BACKTRACE=1)
 
         let crash_file = log_dir.join("crash_report.txt");
         if let Err(e) = fs::write(&crash_file, report) {
-            eprintln!("Crash raporu diske yazılamadı: {}", e);
+            eprintln!("Could not write the crash report to disk: {}", e);
         } else {
-            eprintln!("Çökme raporu oluşturuldu: {:?}", crash_file);
+            eprintln!("Crash report created: {:?}", crash_file);
         }
     }));
 }
@@ -80,9 +80,9 @@ mod tests {
 
     #[test]
     fn test_logging_init_does_not_panic() {
-        // Temp bir directory ile başlatmayı dene
+        // Try starting with a temporary directory
         let temp_dir = std::env::temp_dir().join("syncix_test_logs");
         let _guard = init_enterprise_logging(temp_dir.to_str().unwrap());
-        // Init bir kere yapılabilir, eğer report_error almazsak başarılıdır.
+        // Init can only run once; if no error comes back it succeeded.
     }
 }

@@ -1,8 +1,8 @@
-# Pakete GIRMEYECEKLER.
-# node_modules BILEREK listede yok: 'ws' calisma zamani bagimliligi ve
-# paketten duserse eklenti "Cannot find module 'ws'" ile hic acilmiyor.
-# Bu hata bir kez yasandi; kendi makinede node_modules yerinde oldugu icin
-# gorunmuyor, yalnizca temiz kurulumda ortaya cikiyor.
+# What does NOT go into the package.
+# Dependencies are bundled into out/extension.js by build.js, so node_modules
+# is excluded further below. Before bundling, 'ws' once dropped out of the package
+# and the extension never opened ("Cannot find module 'ws'"); that only showed up
+# on a clean install, never on the developer's machine.
 .vscode/**
 src/**
 out/**/*.map
@@ -14,16 +14,15 @@ node_modules/.bin/**
 node_modules/**/test/**
 node_modules/**/*.md
 
-# SVG'ler pakete GIRMIYOR.
-# Marketplace kullanici SVG'lerini kabul etmiyor ("Due to security concerns,
-# vsce will not publish extensions that contain user-provided SVG images") ve
-# yukleme bu yuzden "suspicious content" diye reddedildi. Depoda kaynak olarak
-# duruyorlar; pakete PNG surumleri gidiyor.
+# SVGs do NOT go into the package.
+# vsce refuses to publish extensions containing user-provided SVG images
+# ("Due to security concerns, vsce will not publish extensions that contain
+# user-provided SVG images"). They stay in the repository as sources; the PNG
+# versions go into the package.
 resources/*.svg
 
-# node_modules pakete GIRMIYOR.
-# Marketplace tarayicisi ham node_modules'u "suspicious content" sayip
-# yuklemeyi reddediyor. Bagimliliklar build.js ile out/extension.js icine
-# gomuluyor, yani pakette ayrica durmalarina gerek yok.
+# node_modules does NOT go into the package.
+# Dependencies are bundled into out/extension.js by build.js,
+# so they do not need to ship separately.
 node_modules/**
 build.js

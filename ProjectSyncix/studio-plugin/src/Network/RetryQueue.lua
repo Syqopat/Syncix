@@ -1,7 +1,7 @@
 --!strict
 -- RetryQueue
--- Ağa gönderilemeyen HTTP paketlerini bellek kuyruğuna alır.
--- Sunucu yeniden bağlandığında sırayla tekrar gönderir. Hatalı paketlerin kaybolmasını önler.
+-- Keeps HTTP packets that could not be sent in an in-memory queue.
+-- Resends them in order when the server reconnects, so failed packets are not lost.
 
 local RetryQueue = {}
 RetryQueue.__index = RetryQueue
@@ -16,7 +16,7 @@ function RetryQueue:OnStart(container)
     self.metrics = container:Get("Metrics")
 end
 
--- Gönderilemeyen bir paketi kuyruğa atar.
+-- Queues a packet that could not be sent.
 function RetryQueue:EnqueueFailed(payload: any)
     table.insert(self.queue, payload)
     
@@ -25,12 +25,12 @@ function RetryQueue:EnqueueFailed(payload: any)
     end
 end
 
--- Kuyrukta paket olup olmadığını kontrol eder.
+-- Checks whether there are packets in the queue.
 function RetryQueue:HasPending(): boolean
     return #self.queue > 0
 end
 
--- Kuyruktaki tüm paketleri döndürür ve kuyruğu temizler.
+-- Returns every packet in the queue and clears it.
 function RetryQueue:Flush(): {any}
     local oldQueue = self.queue
     self.queue = {}

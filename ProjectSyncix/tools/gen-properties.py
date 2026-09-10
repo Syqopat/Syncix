@@ -1,55 +1,54 @@
-# Roblox API dokumunden Syncix icin property tablosu uretir.
+# Generates the property table Syncix embeds in the Studio plugin, from Roblox's API dump.
 #
-# Neden: property listeleri elle yaziliyordu ve yalnizca 12 sinifi kapsiyordu.
-# Model, Humanoid, ParticleEmitter gibi her sey yalnizca yapisal olarak senkron
-# oluyordu. Bu betik dokumu suzup eklentiye gomulecek tabloyu uretir.
+# Why: property lists used to be written by hand and covered only 12 classes.
+# Model, Humanoid, ParticleEmitter and everything else synced only structurally.
+# This script filters the dump and produces the table embedded in the plugin.
 #
-# Kullanim:
+# Usage:
 #   V=$(curl -s https://setup.rbxcdn.com/versionQTStudio)
 #   curl -s -o dump.json "https://setup.rbxcdn.com/$V-API-Dump.json"
 #   python tools/gen-properties.py dump.json
 
 import json, io, os, sys
 
-KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DUMP = sys.argv[1] if len(sys.argv) > 1 else os.path.join(KOK, "dump.json")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DUMP = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "dump.json")
 
-d = json.load(io.open(DUMP, encoding="utf-8"))
+dump = json.load(io.open(DUMP, encoding="utf-8"))
 
-# Syncix'in tasiyabildigi tipler.
-PRIMITIF = {"string", "bool", "int", "int64", "float", "double"}
-# Kapsami modelin gercekten tasiyabildigi tiplerle sinirli tutmak,
-# "gonderildi ama karsi tarafta kayboldu" durumunu onluyor. Buraya bir tip
-# eklemeden once model.rs, PatchBuilder ve PatchExecutor'in onu tasiyabildigini
-# dogrula.
-VERI_TIPI = {
+# Types Syncix can carry.
+PRIMITIVES = {"string", "bool", "int", "int64", "float", "double"}
+# Keeping the scope to types the model can really carry prevents
+# "sent, but lost on the other side". Before adding a type here, check that
+# model.rs, PatchBuilder and PatchExecutor can all carry it.
+DATA_TYPES = {
     "Vector3", "Vector2", "Color3", "UDim", "UDim2", "CFrame",
     "NumberRange", "BrickColor",
-    # Asset referanslari: MeshId, TextureID, SoundId, AnimationId, Image,
-    # Decal.Texture, ShirtTemplate. Bunlar disarida kaldigi surece Toolbox'tan
-    # surukledigin bir model editorde neye benzedigi bilinmeden duruyordu.
+    # Asset references: MeshId, TextureID, SoundId, AnimationId, Image,
+    # Decal.Texture, ShirtTemplate. While these were left out, a model dragged in
+    # from the Toolbox showed up in the editor without anything saying what it looked like.
     "Content",
-    # Parcacik/gradyan renk ve seffaflik egrileri: ParticleEmitter.Color,
-    # Beam.Transparency, UIGradient.Color. Bunlar olmadan gorsel efektler
-    # editorden kurulamiyordu.
+    # Particle/gradient colour and transparency curves: ParticleEmitter.Color,
+    # Beam.Transparency, UIGradient.Color. Without them visual effects could not
+    # be set up from the editor.
     "ColorSequence", "NumberSequence",
-    # 9-slice UI (ImageLabel.SliceCenter) ve yazi tipi.
+    # 9-slice UI (ImageLabel.SliceCenter) and fonts.
     "Rect", "Font",
-    # Ozel yogunluk/surtunme/esneklik.
+    # Custom density/friction/elasticity.
     "PhysicalProperties",
 }
 
-# Oyun icerigi olmayan siniflar: Studio ayarlari, motor ic yapilari.
-# Studio sinifinin property adlarinda tirnak bile var ("TODO" Color gibi).
-SINIF_KARA_LISTE = {
+# Classes that are not game content: Studio settings, engine internals.
+# The Studio class even has quotes in its property names ("TODO" Color, for one).
+CLASS_BLOCKLIST = {
     "Studio", "StudioService", "DebuggerManager", "LuaSettings",
     "NetworkSettings", "PhysicsSettings", "RenderSettings", "Stats",
     "GlobalSettings", "UserSettings", "AnalysticsSettings",
     "Terrain",
 }
 
-# Senkron edilmeyen property'ler: turetilmis, gurultulu ya da ayri kanaldan giden.
-KARA_LISTE = {
+# Properties that are not synced: derived, noisy, or carried on a separate channel.
+PROPERTY_BLOCKLIST = {
     "Parent", "Name", "ClassName",
     "Archivable", "RobloxLocked",
     "AssemblyLinearVelocity", "AssemblyAngularVelocity",
@@ -61,96 +60,96 @@ KARA_LISTE = {
 }
 
 
-def uygun_mu(m):
-    if m.get("MemberType") != "Property":
+def type_code(member):
+    if member.get("MemberType") != "Property":
         return None
-    etiketler = set(m.get("Tags") or [])
-    if etiketler & {"Deprecated", "ReadOnly", "NotScriptable", "Hidden"}:
+    tags = set(member.get("Tags") or [])
+    if tags & {"Deprecated", "ReadOnly", "NotScriptable", "Hidden"}:
         return None
 
-    guv = m.get("Security")
-    if isinstance(guv, dict):
-        if guv.get("Read") != "None" or guv.get("Write") != "None":
+    security = member.get("Security")
+    if isinstance(security, dict):
+        if security.get("Read") != "None" or security.get("Write") != "None":
             return None
-    elif guv not in (None, "None"):
+    elif security not in (None, "None"):
         return None
 
-    ad = m["Name"]
-    if ad in KARA_LISTE:
+    name = member["Name"]
+    if name in PROPERTY_BLOCKLIST:
         return None
-    # Savunma: adinda tirnak ya da ters bolu olan property yok sayilir.
-    if chr(34) in ad or chr(92) in ad:
+    # Defensive: properties with a quote or backslash in their name are ignored.
+    if chr(34) in name or chr(92) in name:
         return None
 
-    vt = m.get("ValueType") or {}
-    kat, tip = vt.get("Category"), vt.get("Name")
+    value_type = member.get("ValueType") or {}
+    category, type_name = value_type.get("Category"), value_type.get("Name")
 
-    if kat == "Primitive" and tip in PRIMITIF:
+    if category == "Primitive" and type_name in PRIMITIVES:
         return "p"
-    if kat == "DataType" and tip in VERI_TIPI:
+    if category == "DataType" and type_name in DATA_TYPES:
         return "d"
-    if kat == "Enum":
+    if category == "Enum":
         return "e"
-    if kat == "Class":
+    if category == "Class":
         return "r"
     return None
 
 
-siniflar = {}
-for c in d["Classes"]:
-    if c["Name"] in SINIF_KARA_LISTE:
+classes = {}
+for cls in dump["Classes"]:
+    if cls["Name"] in CLASS_BLOCKLIST:
         continue
-    # NotCreatable siniflar ELENMEZ: BasePart, GuiObject, PVInstance gibi soyut
-    # ust siniflar olusturulamaz ama alt siniflarin property'lerini onlar tasir.
-    # Elenirse Part, BasePart'tan gelen Anchored/Size/Color'i kaybeder.
-    etiketler = set(c.get("Tags") or [])
-    if "Deprecated" in etiketler:
+    # NotCreatable classes are NOT dropped: abstract superclasses such as BasePart,
+    # GuiObject and PVInstance cannot be created, but they carry their subclasses'
+    # properties. Dropping them would cost Part the Anchored/Size/Color it gets from BasePart.
+    tags = set(cls.get("Tags") or [])
+    if "Deprecated" in tags:
         continue
 
     props = {}
-    for m in c.get("Members", []):
-        t = uygun_mu(m)
-        if t:
-            props[m["Name"]] = t
+    for member in cls.get("Members", []):
+        code = type_code(member)
+        if code:
+            props[member["Name"]] = code
 
-    # Property'si olmayan siniflar da yaziliyor. Sebep: kalitim zinciri onlarin
-    # uzerinden geciyor. Part'in ust sinifi FormFactorPart, onun kendine ait
-    # uygun property'si yok; atlanirsa zincir orada kirilir ve Part, BasePart'tan
-    # gelen Anchored/Size/Color/Material'in hepsini kaybeder.
-    siniflar[c["Name"]] = (c.get("Superclass"), props)
+    # Classes without properties are written too, because the inheritance chain
+    # passes through them. Part's superclass is FormFactorPart, which has no
+    # eligible property of its own; skipping it breaks the chain there, and Part
+    # loses every Anchored/Size/Color/Material it gets from BasePart.
+    classes[cls["Name"]] = (cls.get("Superclass"), props)
 
-# Kalitim: her sinif yalnizca KENDI property'lerini tutar; ust siniftakiler
-# calisma aninda birlestirilir. Tabloyu kucuk tutan sey bu.
-satirlar = []
-for ad in sorted(siniflar):
-    ust, props = siniflar[ad]
-    icerik = ",".join('["%s"]="%s"' % (p, t) for p, t in sorted(props.items()))
-    ustu = ('"%s"' % ust) if ust and ust != "<<<ROOT>>>" else "nil"
-    satirlar.append('\t["%s"]={u=%s,p={%s}},' % (ad, ustu, icerik))
+# Inheritance: each class keeps only its OWN properties; superclass properties are
+# merged at runtime. That is what keeps the table small.
+rows = []
+for name in sorted(classes):
+    superclass, props = classes[name]
+    body = ",".join('["%s"]="%s"' % (p, t) for p, t in sorted(props.items()))
+    parent = ('"%s"' % superclass) if superclass and superclass != "<<<ROOT>>>" else "nil"
+    rows.append('\t["%s"]={u=%s,p={%s}},' % (name, parent, body))
 
-cikti = """-- OTOMATIK URETILDI - ELLE DUZENLEMEYIN
+output = """-- AUTO-GENERATED - DO NOT EDIT BY HAND
 --
--- Kaynak : Roblox Studio API dokumu (%s)
--- Ureten : tools/gen-properties.py
+-- Source    : Roblox Studio API dump (%s)
+-- Generator : tools/gen-properties.py
 --
--- Neden var: property listeleri elle yaziliyordu ve yalnizca 12 sinifi
--- kapsiyordu. Model, Humanoid, ParticleEmitter gibi her sey yalnizca yapisal
--- olarak senkron oluyor, tek bir ayari bile gitmiyordu.
+-- Why it exists: property lists used to be written by hand and covered only 12
+-- classes. Model, Humanoid, ParticleEmitter and everything else synced only
+-- structurally; not a single setting went across.
 --
--- Bicim: ["Sinif"] = { u = ustSinif, p = { ["Property"] = tipKodu } }
---   p = ilkel (string/bool/sayi)   d = veri tipi (Vector3, CFrame, ...)
---   e = enum (metin olarak)        r = baska bir instance'a referans
+-- Format: ["Class"] = { u = superclass, p = { ["Property"] = typeCode } }
+--   p = primitive (string/bool/number)   d = data type (Vector3, CFrame, ...)
+--   e = enum (as text)                   r = reference to another instance
 --
--- Ust siniftaki property'ler calisma aninda birlestirilir (bkz. PatchBuilder).
+-- Properties of superclasses are merged at runtime (see PatchBuilder).
 
 return {
 %s
 }
-""" % (d.get("Version", "?"), "\n".join(satirlar))
+""" % (dump.get("Version", "?"), "\n".join(rows))
 
-hedef = os.path.join(KOK, "studio-plugin", "src", "Observer", "PropertyTable.lua")
-io.open(hedef, "w", encoding="utf-8").write(cikti)
+target = os.path.join(ROOT, "studio-plugin", "src", "Observer", "PropertyTable.lua")
+io.open(target, "w", encoding="utf-8").write(output)
 
-print("sinif: %d" % len(siniflar))
-print("property: %d" % sum(len(p) for _, p in siniflar.values()))
-print("dosya: %.0f KB" % (os.path.getsize(hedef) / 1024.0))
+print("classes: %d" % len(classes))
+print("properties: %d" % sum(len(p) for _, p in classes.values()))
+print("file: %.0f KB" % (os.path.getsize(target) / 1024.0))

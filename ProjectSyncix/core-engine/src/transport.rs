@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-/// Sistemdeki tüm iletişim paketlerinin standart şeması.
-/// Production-Ready: Sürümlendirme eklendi (ileride v2 geldiğinde eskiler bozulmaz).
+/// Standard schema of every message in the system.
+/// Versioned, so older clients keep working when a v2 arrives.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Payload {
-    pub version: String, // Örn: "v1"
+    pub version: String, // e.g. "v1"
     pub event_type: EventType,
     pub data: serde_json::Value,
 }
@@ -13,14 +13,14 @@ pub struct Payload {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum EventType {
-    /// Sunucu ile istemci arasındaki bağlantı testi
+    /// Connection test between server and client
     Ping,
     Pong,
-    /// VS Code'da bir file_path değiştiğinde Studio'ya itilen message
+    /// Message pushed to Studio when a file changes in VS Code
     PushUpdate,
-    /// Studio'da nesne değiştiğinde VS Code'a (çekirdeğe) gönderilen message
+    /// Message sent to VS Code (the core) when an object changes in Studio
     ClientUpdate,
-    /// Yeni file_path yaratıldığında
+    /// When a new file is created
     PushCreate,
     
     CompositeUpdate,
@@ -30,38 +30,38 @@ pub enum EventType {
     FullSync,
     GetTree,
 
-    /// Core'un Studio'dan ağacın tamamını YENİDEN göndermesini istediği message.
+    /// Message in which the core asks Studio to send the whole tree AGAIN.
     ///
-    /// Neden gerekli: doğrulama yaparken "core'un modeli" ile "Studio'nun gerçek
-    /// durumu" birbirine karıştırılabiliyordu. Model, komutu gönderirken zaten
-    /// güncelleniyor; dolayısıyla modeli okumak komutun Studio'ya ULAŞTIĞINI
-    /// kanıtlamaz. Bu message Studio'yu konuşturur, cevabı single doğruluk kaynağıdır.
+    /// Why it is needed: during verification "the core's model" and "Studio's real
+    /// state" could be confused. The model is already updated when the command is
+    /// sent, so reading the model does not prove that the command REACHED Studio.
+    /// This message makes Studio speak; its reply is the single source of truth.
     FullSyncRequest,
 
-    /// Studio eklentisinin own sayaçlarını bildirdiği message
-    /// (BatchQueue birleştirmesinin ölçülebilir olması için).
+    /// Message in which the Studio plugin reports its own counters
+    /// (so BatchQueue merging can be measured).
     PluginMetrics,
 
-    /// VS Code Explorer'dan received komutlar (VS Code -> Rust -> Studio yönü)
+    /// Commands from the VS Code Explorer (VS Code -> Rust -> Studio direction)
     CreateInstance,
     RenameInstance,
     DeleteInstance,
-    /// CollectionService etiketlerinin tamami. Tek single add_instance/sil yerine liste
-    /// butun halinde gonderiliyor; iki tarafta ayri status_info tutmayi onluyor.
+    /// The complete set of CollectionService tags. Sent as a whole list rather than
+    /// single add/remove operations; it avoids keeping separate state on both sides.
     SetTags,
-    /// Hangi objelerin secili oldugu. Model'e ve diske YAZILMAZ: secim scratch_dir
-    /// bir status_info, projenin icerigi degil. Diske yazilsaydi her tiklama file_path
-    /// degistirir, surum kontrolunde gurultu olurdu.
+    /// Which objects are selected. NOT written to the model or to disk: selection is momentary
+    /// state, not project content. Written to disk, every click would change a file
+    /// and version control would fill with noise.
     Selection,
     ReparentInstance,
     SetProperty,
     SetAttribute,
 }
 
-/// Studio'ya gidecek mesajların kayıpsız teslimat kuyruğu.
-/// Teknik Gerekçe: broadcast kanalı yalnızca o anda pending_item aboneye teslim eder;
-/// Studio iki poll arasındayken gönderilen mesajlar kaybolur. Bu kuyruk mesajı
-/// bir sonraki poll'e kadar bellekte tutar.
+/// Lossless delivery queue for messages going to Studio.
+/// Why: a broadcast channel only delivers to subscribers waiting at that moment;
+/// messages sent while Studio is between two polls would be lost. This queue keeps
+/// a message in memory until the next poll.
 pub struct StudioOutbox {
     queue: std::sync::Mutex<std::collections::VecDeque<Payload>>,
     notify: tokio::sync::Notify,
@@ -75,7 +75,7 @@ impl StudioOutbox {
         }
     }
 
-    /// Senkron push: hem async hem blocking (file watcher thread'i) bağlamdan çağrılabilir.
+    /// Synchronous push: callable from both async and blocking (file watcher thread) contexts.
     pub fn push(&self, payload: Payload) {
         self.queue.lock().unwrap().push_back(payload);
         self.notify.notify_one();
@@ -85,7 +85,7 @@ impl StudioOutbox {
         self.queue.lock().unwrap().pop_front()
     }
 
-    /// Kuyrukta message varsa hemen döner; yoksa timeout süresince bekler.
+    /// Returns at once if the queue has a message; otherwise waits for the timeout.
     pub async fn pop_or_wait(&self, timeout: std::time::Duration) -> Option<Payload> {
         if let Some(p) = self.pop() {
             return Some(p);
@@ -95,18 +95,18 @@ impl StudioOutbox {
     }
 }
 
-/// Transport Layer'ın arayüzü (Trait).
-/// Teknik Gerekçe: İş mantığını (Core Engine) iletişim yönteminden (WebSocket/HTTP) ayırmak
-/// için bu arayüz kullanılır. Çekirdek sadece bu fonksiyonları çağırır, altta ne çalıştığını bilmez.
+/// Interface (trait) of the transport layer.
+/// Why: this interface separates business logic (the core engine) from the transport
+/// (WebSocket/HTTP). The core only calls these functions and does not know what runs underneath.
 #[async_trait]
 pub trait Transport {
-    /// İletişim kanalını başlatır (örn. WebSocket sunucusunu dinlemeye başlar).
+    /// Starts the communication channel (e.g. starts listening on the WebSocket server).
     async fn start(&self) -> Result<(), String>;
 
-    /// Bir mesajı bağlı olan tüm istemcilere (Studio'lara) gönderir (Broadcast).
+    /// Sends a message to every connected client (Studio instance) (broadcast).
     async fn broadcast(&self, payload: &Payload) -> Result<(), String>;
 
-    // İstemcilerden received mesajları dinlemek için bir kanal (receiver) sağlar.
-    // (Gerçek uygulamada tokio::sync::mpsc::Receiver kullanılacak)
+    // Provides a channel (receiver) for listening to messages from clients.
+    // (A real implementation would use tokio::sync::mpsc::Receiver.)
     // async fn receive(&self) -> Receiver<Payload>;
 }

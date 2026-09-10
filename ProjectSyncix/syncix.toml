@@ -1,9 +1,9 @@
-# Syncix proje ayarlari
+# Syncix project settings
 sync_dir = "example"
 port = 8080
 
-# Senkron disi birakilacak yollar (glob).
-# Bu yollar ne okunur ne de silinir. Not: Syncix zaten yalnizca kendi
-# uretebilecegi bicimdeki dosyalara dokunur (.json .lua .luau .txt .meta.json),
-# yani README gibi dosyalar bu liste olmadan da guvendedir.
-ignore = ["notlar/**"]
+# Paths left out of sync (glob).
+# These paths are neither read nor deleted. Note that Syncix only touches files
+# in formats it could have produced itself (.json .lua .luau .txt .meta.json),
+# so files such as a README are safe even without this list.
+ignore = ["notes/**"]

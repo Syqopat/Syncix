@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-/// Syncix Projesi Manifest Yapısı (syncix.toml)
+/// Syncix project manifest structure (syncix.toml)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProjectManifest {
     pub project: ProjectInfo,
@@ -99,10 +99,10 @@ impl ConfigManager {
         }
     }
 
-    /// syncix.toml dosyasını diskten okur ve valide eder
+    /// Reads syncix.toml from disk and validates it
     pub fn load_from_file(path: &Path) -> Result<Self, String> {
         if !path.exists() {
-            return Err("syncix.toml bulunamadı.".to_string());
+            return Err("syncix.toml not found.".to_string());
         }
 
         let content = fs::read_to_string(path).map_err(|e| e.to_string())?;

@@ -16,13 +16,13 @@ impl CommandHistoryManager {
         }
     }
 
-    /// Yeni bir transaction tamamlandığında history'e ekler
+    /// Adds a completed transaction to the history
     pub fn push_transaction(&mut self, tx: Transaction) {
         if !tx.is_committed {
-            return; // Sadece başarılı işlemler stack'e girer
+            return; // only successful operations go onto the stack
         }
 
-        // Yeni bir işlem yapıldığında redo stack temizlenir (Standart IDE davranışı)
+        // A new operation clears the redo stack (standard IDE behaviour)
         self.redo_stack.clear();
 
         self.undo_stack.push(tx);
@@ -38,7 +38,7 @@ impl CommandHistoryManager {
             self.redo_stack.push(tx);
             Ok(())
         } else {
-            Err("Geri alınacak işlem yok (Undo stack boş).".to_string())
+            Err("Nothing to undo (the undo stack is empty).".to_string())
         }
     }
 
@@ -48,7 +48,7 @@ impl CommandHistoryManager {
             self.undo_stack.push(tx);
             Ok(())
         } else {
-            Err("Yinelenecak işlem yok (Redo stack boş).".to_string())
+            Err("Nothing to redo (the redo stack is empty).".to_string())
         }
     }
 }
