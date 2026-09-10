@@ -84,10 +84,36 @@ fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
             let number_value: i64 = text_value.parse().ok()?;
             PropertyValue::String(token_to_enum(&item_name, number_value)?)
         }
-        "Vector3" => PropertyValue::Vector3 {
-            x: sub_text(p, "X")? as f32,
-            y: sub_text(p, "Y")? as f32,
-            z: sub_text(p, "Z")? as f32,
+        "Vector3" => {
+            let x = sub_text(p, "X")? as f32;
+            let y = sub_text(p, "Y")? as f32;
+            let z = sub_text(p, "Z")? as f32;
+            if item_name == "CFrame" {
+                PropertyValue::CFrame {
+                    pos: [x, y, z],
+                    rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+                }
+            } else {
+                PropertyValue::Vector3 { x, y, z }
+            }
+        }
+        "CoordinateFrame" | "CFrame" => PropertyValue::CFrame {
+            pos: [
+                sub_text(p, "X").unwrap_or(0.0) as f32,
+                sub_text(p, "Y").unwrap_or(0.0) as f32,
+                sub_text(p, "Z").unwrap_or(0.0) as f32,
+            ],
+            rot: [
+                sub_text(p, "R00").unwrap_or(1.0) as f32,
+                sub_text(p, "R01").unwrap_or(0.0) as f32,
+                sub_text(p, "R02").unwrap_or(0.0) as f32,
+                sub_text(p, "R10").unwrap_or(0.0) as f32,
+                sub_text(p, "R11").unwrap_or(1.0) as f32,
+                sub_text(p, "R12").unwrap_or(0.0) as f32,
+                sub_text(p, "R20").unwrap_or(0.0) as f32,
+                sub_text(p, "R21").unwrap_or(0.0) as f32,
+                sub_text(p, "R22").unwrap_or(1.0) as f32,
+            ],
         },
         "Color3" => PropertyValue::Color3 {
             r: sub_text(p, "R")? as f32,
@@ -95,7 +121,6 @@ fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
             b: sub_text(p, "B")? as f32,
         },
         "Color3uint8" => {
-            // ARGB packed into a single number.
             let package: u32 = text_value.parse().ok()?;
             PropertyValue::Color3 {
                 r: ((package >> 16) & 0xFF) as f32 / 255.0,
@@ -109,6 +134,28 @@ fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
             ys: sub_text(p, "YS")? as f32,
             yo: sub_text(p, "YO")? as f32,
         },
+        "Vector2" => PropertyValue::Vector2 {
+            x: sub_text(p, "X")? as f32,
+            y: sub_text(p, "Y")? as f32,
+        },
+        "UDim" => PropertyValue::UDim {
+            scale: sub_text(p, "S")? as f32,
+            offset: sub_text(p, "O")? as f32,
+        },
+        "NumberRange" => {
+            let parts: Vec<&str> = text_value.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let min = parts[0].parse().ok()?;
+                let max = parts[1].parse().ok()?;
+                PropertyValue::NumberRange { min, max }
+            } else {
+                return None;
+            }
+        }
+        "Content" => {
+            let url = p.children().find(|c| c.has_tag_name("url")).and_then(|c| c.text()).unwrap_or("").trim().to_string();
+            PropertyValue::Content(url)
+        }
         _ => return None,
     };
     Some((item_name, raw_value))
@@ -288,10 +335,55 @@ mod tests {
         let boxed = &ws_node.children[0];
         assert_eq!(boxed.name, "Box");
         let al = |item_name: &str| boxed.properties.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
-        assert_eq!(
-            al("Position"),
-            Some(PropertyValue::Vector3 { x: 5.0, y: 6.0, z: 7.0 })
-        );
+        assert_eq!(al("Position"), Some(PropertyValue::Vector3 { x: 5.0, y: 6.0, z: 7.0 }));
         assert_eq!(al("Anchored"), Some(PropertyValue::Boolean(true)));
+    }
+
+    #[test]
+    fn cframe_and_coordinate_frame_parsed() {
+        let xml = r#"<roblox version="4"><Item class="Part"><Properties>
+            <string name="Name">TestPart</string>
+            <CoordinateFrame name="CFrame">
+                <X>10</X><Y>20</Y><Z>30</Z>
+                <R00>1</R00><R01>0</R01><R02>0</R02>
+                <R10>0</R10><R11>1</R11><R12>0</R12>
+                <R20>0</R20><R21>0</R21><R22>1</R22>
+            </CoordinateFrame>
+            <Vector3 name="OtherVec"><X>1</X><Y>2</Y><Z>3</Z></Vector3>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        assert_eq!(skipped, 0);
+        let p = &root_list[0].properties;
+        let al = |item_name: &str| p.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
+        assert_eq!(
+            al("CFrame"),
+            Some(PropertyValue::CFrame {
+                pos: [10.0, 20.0, 30.0],
+                rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+            })
+        );
+        assert_eq!(
+            al("OtherVec"),
+            Some(PropertyValue::Vector3 { x: 1.0, y: 2.0, z: 3.0 })
+        );
+    }
+
+    #[test]
+    fn vector3_named_cframe_converts_to_cframe() {
+        let xml = r#"<roblox version="4"><Item class="Part"><Properties>
+            <string name="Name">TestPart</string>
+            <Vector3 name="CFrame"><X>5</X><Y>15</Y><Z>25</Z></Vector3>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        assert_eq!(skipped, 0);
+        let p = &root_list[0].properties;
+        let al = |item_name: &str| p.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
+        assert_eq!(
+            al("CFrame"),
+            Some(PropertyValue::CFrame {
+                pos: [5.0, 15.0, 25.0],
+                rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+            })
+        );
     }
 }

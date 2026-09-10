@@ -254,14 +254,23 @@ local function decodeFont(f: any): Font?
 end
 
 local function decodeEnum(propValue: any): any
+    if typeof(propValue) == "EnumItem" then
+        return propValue
+    end
     if type(propValue) == "string" and string.sub(propValue, 1, 5) == "Enum." then
         local parts = string.split(propValue, ".")
         if #parts == 3 then
             local ok, ev = pcall(function()
                 return (Enum :: any)[parts[2]][parts[3]]
             end)
-            if ok then return ev end
+            if ok and ev ~= nil then return ev end
+        elseif #parts > 3 then
+            local ok, ev = pcall(function()
+                return (Enum :: any)[parts[2]][parts[#parts]]
+            end)
+            if ok and ev ~= nil then return ev end
         end
+        return string.gsub(propValue, "^Enum%..+%.", "")
     end
     return nil
 end
@@ -324,6 +333,10 @@ function PatchExecutor:DecodeValue(propValue: any): any
             -- guards against a version mismatch.
             return propValue.Number
         elseif propValue.String ~= nil then
+            local ev = decodeEnum(propValue.String)
+            if ev ~= nil and typeof(ev) == "EnumItem" then
+                return ev
+            end
             return propValue.String
         elseif propValue.Boolean ~= nil then
             return propValue.Boolean
@@ -409,7 +422,11 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             local ok, resolved = pcall(function()
                 return self:DecodeValue(propValue)
             end)
-            self.echoGuard:Expect(uuid, propName, ok and resolved or propValue)
+            local expectedVal = ok and resolved or propValue
+            if propName == "CFrame" and typeof(expectedVal) == "Vector3" then
+                expectedVal = CFrame.new(expectedVal)
+            end
+            self.echoGuard:Expect(uuid, propName, expectedVal)
         end
     end
 
@@ -443,7 +460,11 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             -- "Size"/"Position" used to be taken for UDim2 every time, so a Part's
             -- Vector3 position could not be resolved and was silently never applied (objects stayed at 0,0,0).
             if propValue.Vector3 then
-                instance[propName] = Vector3.new(propValue.Vector3.x, propValue.Vector3.y, propValue.Vector3.z)
+                if propName == "CFrame" then
+                    instance.CFrame = CFrame.new(propValue.Vector3.x, propValue.Vector3.y, propValue.Vector3.z)
+                else
+                    instance[propName] = Vector3.new(propValue.Vector3.x, propValue.Vector3.y, propValue.Vector3.z)
+                end
             elseif propValue.Color3 then
                 instance[propName] = Color3.new(propValue.Color3.r, propValue.Color3.g, propValue.Color3.b)
             elseif propValue.UDim2 then
@@ -465,7 +486,24 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             elseif propValue.Number ~= nil then
                 instance[propName] = propValue.Number
             elseif propValue.String ~= nil then
-                instance[propName] = propValue.String
+                local str = propValue.String
+                local enumVal = decodeEnum(str)
+                if enumVal ~= nil then
+                    local ok2 = pcall(function()
+                        instance[propName] = enumVal
+                    end)
+                    if not ok2 then
+                        local shortName = string.gsub(str, "^Enum%..+%.", "")
+                        local ok3 = pcall(function()
+                            instance[propName] = shortName
+                        end)
+                        if not ok3 then
+                            instance[propName] = str
+                        end
+                    end
+                else
+                    instance[propName] = str
+                end
             elseif propValue.Boolean ~= nil then
                 instance[propName] = propValue.Boolean
             elseif propValue.BrickColor then
@@ -508,7 +546,24 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
         else
             local enumVal = decodeEnum(propValue)
             if enumVal ~= nil then
-                instance[propName] = enumVal
+                local ok2 = pcall(function()
+                    instance[propName] = enumVal
+                end)
+                if not ok2 then
+                    if type(propValue) == "string" then
+                        local shortName = string.gsub(propValue, "^Enum%..+%.", "")
+                        local ok3 = pcall(function()
+                            instance[propName] = shortName
+                        end)
+                        if not ok3 then
+                            instance[propName] = propValue
+                        end
+                    else
+                        instance[propName] = propValue
+                    end
+                end
+            elseif propName == "CFrame" and typeof(propValue) == "Vector3" then
+                instance.CFrame = CFrame.new(propValue)
             else
                 instance[propName] = propValue
             end
