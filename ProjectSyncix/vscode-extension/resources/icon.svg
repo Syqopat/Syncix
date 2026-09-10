@@ -1,18 +1,1 @@
-<!--
-  Kenar cubugu ikonu.
-
-  VS Code bu ikonu TEK RENGE boyayip temaya uyduruyor, o yuzden renk
-  kullanilmiyor: currentColor ile ciziliyor ve yalnizca silueti onemli.
-  24x24 kutuda, 16 piksele kuculdugunde de okunmasi icin cizgiler kalin
-  ve detay az.
-
-  Isaret: ust ok saga, alt ok sola. Syncix'in tek cumlesi bu — iki yon.
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
-     fill="none" stroke="currentColor" stroke-width="2"
-     stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4 9h13" />
-  <path d="M14 6l3 3-3 3" />
-  <path d="M20 15H7" />
-  <path d="M10 12l-3 3 3 3" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#C5C5C5"><rect x="3" y="7.6" width="10" height="2.8" rx="1.4"/><path d="M12.2 4.8 L18.6 9 L12.2 13.2 Z"/><rect x="11" y="13.6" width="10" height="2.8" rx="1.4"/><path d="M11.8 10.8 L5.4 15 L11.8 19.2 Z"/></g></svg>
