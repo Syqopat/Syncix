@@ -4,7 +4,7 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [0.1.4] - 2026-09-11
+## [0.1.3] - 2026-09-11
 
 ### Added
 
@@ -31,8 +31,6 @@ versions follow [Semantic Versioning](https://semver.org/).
   seen yet sends a CFrame rather than a Vector3 Studio refuses. (With a known
   CFrame the rotation was, and is, kept.)
 - Five log lines and comments left in Turkish are now in English.
-
-## [0.1.3] - 2026-09-11
 
 ### Changed
 
