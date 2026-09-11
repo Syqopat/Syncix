@@ -26,3 +26,8 @@ resources/*.svg
 # so they do not need to ship separately.
 node_modules/**
 build.js
+
+# A stray copy of the core in bin/ went into the package as a second 5 MB exe.
+# The extension runs resources/bin/<platform>-<arch>/, and the terminal command
+# lives in the extension's global storage, so nothing reads bin/.
+bin/**
