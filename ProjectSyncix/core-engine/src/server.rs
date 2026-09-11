@@ -130,6 +130,7 @@ pub async fn start_server(state: Arc<AppState>, listener: std::net::TcpListener)
         .route("/shutdown", post(shutdown_handler))
         .route("/sourcemap", get(sourcemap_handler))
         .route("/build", get(build_handler))
+        .layer(axum::extract::DefaultBodyLimit::max(1024 * 1024 * 250)) // 250MB limit
         .with_state(state.clone());
 
     info!(

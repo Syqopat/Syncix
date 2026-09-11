@@ -378,7 +378,7 @@ function ConnectionManager:PingServer(): (boolean, number)
 		return false, 0
 	end
 	local start = os.clock()
-	local success, _ = pcall(function()
+	local success, err = pcall(function()
 		return HttpService:RequestAsync({
 			Url = self.serverUrl .. "/health",
 			Method = "GET"
@@ -424,14 +424,14 @@ function ConnectionManager:Send(payload: any)
 	local url = self.serverUrl .. "/sync/push"
 
 	task.spawn(function()
-		local success, _ = pcall(function()
+		local success, err = pcall(function()
 			HttpService:PostAsync(url, json, Enum.HttpContentType.ApplicationJson)
 		end)
 
 		if success then
 			if self.metrics then self.metrics:IncrementSuccessfulRequests() end
 		else
-			warn("[Syncix] Could not send packet, queued for retry.")
+			warn("[Syncix] Could not send packet, queued for retry. Error: " .. tostring(err))
 			if self.metrics then self.metrics:IncrementFailedRequests() end
 			if self.retryQueue then self.retryQueue:EnqueueFailed(payload) end
 
