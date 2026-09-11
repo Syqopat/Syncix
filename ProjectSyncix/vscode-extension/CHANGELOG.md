@@ -14,6 +14,8 @@ versions follow [Semantic Versioning](https://semver.org/).
   `--in <path>`, `--class <class>` and `--since <30m|2h|1d>`; `--dry-run` shows
   what would come back. `syncix trash --files` lists single files. A script's
   `.meta.json` comes back with it, and an existing file is never overwritten.
+  When one name belongs to several instances, restore lists them and asks for
+  `--in <path>` (or `--all`) instead of bringing every copy back.
 
 ### Fixed
 
@@ -27,10 +29,22 @@ versions follow [Semantic Versioning](https://semver.org/).
   parent it could not find into Workspace, where the engine never knew about it.
   Such an instance now waits for its parent, and an instance already in Studio is
   no longer moved when its parent is unknown.
+- **No phantoms for what Studio cannot create.** When Studio refuses to create
+  an instance, the plugin now tells the engine, which drops it (with its
+  subtree) and moves its files to the trash; before, the engine kept a copy
+  Studio never had. If Studio already has the one instance of such a class
+  without an identity, the plugin adopts it instead. TextChatService's four
+  configurations (BubbleChatConfiguration and the like) are treated as
+  singletons on import.
+- A folder restored from the trash could list children that were never
+  restored, and `syncix verify` reported them as missing. The engine now keeps
+  only children that exist, and a moved instance leaves its old parent's list.
+- `syncix new Lighting` (or any class that exists once per place) fails with a
+  message instead of printing "Created" for nothing.
 - `syncix set <target> CFrame x,y,z` on a part whose CFrame the engine has not
   seen yet sends a CFrame rather than a Vector3 Studio refuses. (With a known
   CFrame the rotation was, and is, kept.)
-- Five log lines and comments left in Turkish are now in English.
+- The last Turkish log lines, comments and test messages are now in English.
 
 ### Changed
 

@@ -265,8 +265,10 @@ impl DataModel {
     }
 
     /// Adds a new instance. Performs a conflict check.
-    pub fn upsert_instance(&mut self, incoming: InstanceNode) -> Result<(), ModelError> {
-        if let Some(existing) = self.instances.get(&incoming.syncix_id) {
+    pub fn upsert_instance(&mut self, mut incoming: InstanceNode) -> Result<(), ModelError> {
+        let id = incoming.syncix_id;
+        let mut previous_parent = None;
+        if let Some(existing) = self.instances.get(&id) {
             // Conflict resolution: reject incoming data that is older
             if incoming.last_updated < existing.last_updated {
                 return Err(ModelError::VersionConflict {
@@ -274,20 +276,42 @@ impl DataModel {
                     incoming: incoming.last_updated,
                 });
             }
-        }
-
-        // If it has a parent, add it to the parent's children list
-        if let Some(parent_id) = incoming.parent {
-            if let Some(parent) = self.instances.get_mut(&parent_id) {
-                if !parent.children.contains(&incoming.syncix_id) {
-                    parent.children.push(incoming.syncix_id);
+            previous_parent = existing.parent;
+            // The model keeps children lists current as children come and go; a stored
+            // copy of the list may be older, so the children known here are kept.
+            for c in &existing.children {
+                if !incoming.children.contains(c) {
+                    incoming.children.push(*c);
                 }
-            } else {
+            }
+        }
+        if let Some(parent_id) = incoming.parent {
+            if !self.instances.contains_key(&parent_id) {
                 return Err(ModelError::InvalidParent(parent_id));
             }
         }
 
-        self.instances.insert(incoming.syncix_id, incoming);
+        // Only children that exist and point back here are kept. A folder restored from
+        // the trash listed children that were never restored, and verify then reported
+        // children that do not exist. A child arriving later adds itself below.
+        incoming
+            .children
+            .retain(|c| self.instances.get(c).is_some_and(|n| n.parent == Some(id)));
+
+        // Moved: leave the old parent's list.
+        if previous_parent != incoming.parent {
+            if let Some(old) = previous_parent.and_then(|p| self.instances.get_mut(&p)) {
+                old.children.retain(|c| *c != id);
+            }
+        }
+        // If it has a parent, add it to the parent's children list
+        if let Some(parent) = incoming.parent.and_then(|p| self.instances.get_mut(&p)) {
+            if !parent.children.contains(&id) {
+                parent.children.push(id);
+            }
+        }
+
+        self.instances.insert(id, incoming);
         Ok(())
     }
 
@@ -617,18 +641,56 @@ mod tests {
         let ws = add(&mut m, "Workspace", "Workspace", None);
         let folder = add(&mut m, "Folder", "Container", Some(ws));
         let part = add(&mut m, "Part", "Box", Some(folder));
-        let decal = add(&mut m, "Decal", "Doku", Some(part));
+        let decal = add(&mut m, "Decal", "Texture", Some(part));
 
         assert!(m.remove_instance(&folder).is_some());
 
         assert!(m.get_instance(&folder).is_none(), "the folder must be deleted");
         assert!(m.get_instance(&part).is_none(), "the child must be deleted too");
         assert!(m.get_instance(&decal).is_none(), "the grandchild must be deleted too");
-        assert!(m.get_instance(&ws).is_some(), "ebeveyn durmali");
+        assert!(m.get_instance(&ws).is_some(), "the parent must stay");
         assert!(
             !m.get_instance(&ws).unwrap().children.contains(&folder),
-            "ebeveynin children listesi temizlenmeli"
+            "the parent's children list must be cleaned"
         );
+    }
+
+    /// A stored children list can be stale (a folder restored from the trash): only
+    /// children that exist and point back are kept, and a child arriving later joins.
+    #[test]
+    fn upsert_drops_children_that_do_not_exist() {
+        let mut m = DataModel::new();
+        let ws = add(&mut m, "Workspace", "Workspace", None);
+        let mut folder = InstanceNode::new("Folder", "Obby");
+        folder.parent = Some(ws);
+        folder.children = vec![Uuid::new_v4(), Uuid::new_v4()];
+        let folder_id = folder.syncix_id;
+        m.upsert_instance(folder).unwrap();
+        assert!(m.get_instance(&folder_id).unwrap().children.is_empty());
+
+        let part = add(&mut m, "Part", "Part1", Some(folder_id));
+        assert_eq!(m.get_instance(&folder_id).unwrap().children, vec![part]);
+    }
+
+    /// Writing a node again keeps the children the model knows of, and a new parent
+    /// takes it out of the old parent's list.
+    #[test]
+    fn upsert_keeps_children_and_leaves_old_parent() {
+        let mut m = DataModel::new();
+        let ws = add(&mut m, "Workspace", "Workspace", None);
+        let rs = add(&mut m, "ReplicatedStorage", "ReplicatedStorage", None);
+        let folder = add(&mut m, "Folder", "Obby", Some(ws));
+        let part = add(&mut m, "Part", "Part1", Some(folder));
+
+        let mut again = m.get_instance(&folder).unwrap().clone();
+        again.children.clear();
+        again.parent = Some(rs);
+        again.last_updated += 1;
+        m.upsert_instance(again).unwrap();
+
+        assert_eq!(m.get_instance(&folder).unwrap().children, vec![part]);
+        assert!(!m.get_instance(&ws).unwrap().children.contains(&folder));
+        assert!(m.get_instance(&rs).unwrap().children.contains(&folder));
     }
 
     /// Move: it must leave the old parent, join the new one, and the model must stay consistent.
@@ -646,7 +708,7 @@ mod tests {
         assert_eq!(m.get_instance(&part).unwrap().parent, Some(b));
         assert!(!m.get_instance(&a).unwrap().children.contains(&part));
         assert!(m.get_instance(&b).unwrap().children.contains(&part));
-        assert!(m.verify_consistency().is_ok(), "model tutarli kalmali");
+        assert!(m.verify_consistency().is_ok(), "the model must stay consistent");
     }
 
     /// IDENTITY RULE: a UUID is generated only at CREATE time. A rename,

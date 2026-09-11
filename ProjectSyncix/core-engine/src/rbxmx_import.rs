@@ -254,7 +254,17 @@ const SERVICE_CLASSES: &[&str] = &[
 ];
 
 /// Containers that exist once under their parent and cannot be created either.
-const SINGLETON_CHILD_CLASSES: &[&str] = &["StarterPlayerScripts", "StarterCharacterScripts", "Terrain"];
+/// TextChatService's four configurations were missing here: an import tried to create
+/// copies, Studio refused, and a UIGradient inside one waited for a parent forever.
+const SINGLETON_CHILD_CLASSES: &[&str] = &[
+    "StarterPlayerScripts",
+    "StarterCharacterScripts",
+    "Terrain",
+    "BubbleChatConfiguration",
+    "ChatWindowConfiguration",
+    "ChatInputBarConfiguration",
+    "ChannelTabsConfiguration",
+];
 
 pub fn is_service(class_name: &str) -> bool {
     SERVICE_CLASSES.contains(&class_name)
@@ -414,6 +424,7 @@ mod tests {
         assert!(is_service("ReplicatedStorage"));
         assert!(!is_service("Folder"));
         assert!(is_singleton("StarterPlayerScripts"));
+        assert!(is_singleton("BubbleChatConfiguration"));
         assert!(is_singleton("Workspace"));
         assert!(!is_singleton("Part"));
     }

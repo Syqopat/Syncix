@@ -1759,14 +1759,14 @@ mod property_tests {
     fn vector3_goes_as_table_on_wire() {
         let wire = pv_to_wire(&PropertyValue::Vector3 { x: 1.0, y: 2.0, z: 3.0 });
         assert!(wire.is_object(), "Vector3 must be a table, not a plain value: {}", wire);
-        assert!(wire.get("Vector3").is_some(), "Vector3 anahtari bulunmali: {}", wire);
+        assert!(wire.get("Vector3").is_some(), "the Vector3 key must be present: {}", wire);
         assert_eq!(wire["Vector3"]["y"].as_f64().unwrap(), 2.0);
     }
 
     #[test]
     fn color3_goes_as_table_on_wire() {
         let wire = pv_to_wire(&PropertyValue::Color3 { r: 1.0, g: 0.0, b: 0.5 });
-        assert!(wire.get("Color3").is_some(), "Color3 anahtari bulunmali: {}", wire);
+        assert!(wire.get("Color3").is_some(), "the Color3 key must be present: {}", wire);
     }
 
     /// Text from the CLI and HTTP must be converted to the right type.
@@ -1989,7 +1989,7 @@ mod wire_format_tests {
         let restored_count = parse_wire_value(&pv_to_wire(&pv));
         match restored_count {
             Some(P::NumberSequence(k)) => assert_eq!(k[0].envelope, 0.25),
-            other => panic!("beklenmeyen: {:?}", other),
+            other => panic!("unexpected: {:?}", other),
         }
     }
 

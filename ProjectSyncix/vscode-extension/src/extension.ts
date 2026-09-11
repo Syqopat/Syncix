@@ -250,7 +250,7 @@ function syncFolderName(): string {
             const m = /^\s*sync_dir\s*=\s*"([^"]+)"/m.exec(fs.readFileSync(toml, 'utf8'));
             if (m) return m[1];
         } catch {
-            // okunamiyorsa varsayilana dus
+            // unreadable: fall back to the default
         }
     }
     return 'src';

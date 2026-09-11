@@ -264,9 +264,44 @@ pub fn trash_entries(sync_dir: &str) -> Vec<TrashEntry> {
     out
 }
 
+/// A path component without its extensions: "Box_1a2b3c4d.part.json" -> "Box_1a2b3c4d".
+fn base_of(component: &str) -> &str {
+    component.split('.').next().unwrap_or(component)
+}
+
+/// Is this component exactly the one named? "Workspace/RampA" picks RampA.part.json,
+/// not the duplicate RampA_149b6fa2.part.json.
+fn component_at(component: &str, wanted: &str) -> bool {
+    component.eq_ignore_ascii_case(wanted) || base_of(component).eq_ignore_ascii_case(wanted)
+}
+
+/// Does this component carry the instance name, duplicates included?
+fn component_named(component: &str, name: &str) -> bool {
+    component_at(component, name) || instance_name_of(component).eq_ignore_ascii_case(name)
+}
+
+/// The distinct instances a name picks, as paths `--in` accepts:
+/// ["Workspace/RampA", "Workspace/RampA_149b6fa2"]. More than one means the name alone
+/// is ambiguous.
+pub fn instances_named(entries: &[TrashEntry], name: &str) -> Vec<String> {
+    let mut out: Vec<String> = entries
+        .iter()
+        .filter_map(|e| {
+            let parts: Vec<&str> = e.rel.split('/').collect();
+            let i = parts.iter().position(|p| component_named(p, name))?;
+            let mut key: Vec<&str> = parts[..i].to_vec();
+            key.push(base_of(parts[i]));
+            Some(key.join("/"))
+        })
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// The instance name a path component stands for: "Box_1a2b3c4d.part.json" -> "Box".
 fn instance_name_of(component: &str) -> &str {
-    let base = component.split('.').next().unwrap_or(component);
+    let base = base_of(component);
     match base.rsplit_once('_') {
         Some((name, suffix)) if suffix.len() == 8 && suffix.chars().all(|c| c.is_ascii_hexdigit()) => name,
         _ => base,
@@ -303,9 +338,6 @@ fn class_of_file(file_name: &str) -> Option<String> {
 /// Applies a filter and keeps the newest copy of every path. A .meta.json follows its
 /// instance: it is picked whenever the data file beside it is.
 pub fn select_entries(entries: &[TrashEntry], filter: &TrashFilter) -> Vec<TrashEntry> {
-    let same = |a: &str, b: &str| a.eq_ignore_ascii_case(b);
-    let component_is = |component: &str, wanted: &str| same(component, wanted) || same(instance_name_of(component), wanted);
-
     let matches = |e: &TrashEntry| -> bool {
         let parts: Vec<&str> = e.rel.split('/').collect();
         let file_name = parts.last().copied().unwrap_or("");
@@ -316,12 +348,12 @@ pub fn select_entries(entries: &[TrashEntry], filter: &TrashFilter) -> Vec<Trash
         }
         if let Some(scope) = &filter.scope {
             let wanted: Vec<&str> = scope.split(['/', '\\']).filter(|s| !s.is_empty()).collect();
-            if wanted.len() > parts.len() || !wanted.iter().zip(&parts).all(|(w, p)| component_is(p, w)) {
+            if wanted.len() > parts.len() || !wanted.iter().zip(&parts).all(|(w, p)| component_at(p, w)) {
                 return false;
             }
         }
         if let Some(name) = &filter.name {
-            if !parts.iter().any(|p| component_is(p, name)) {
+            if !parts.iter().any(|p| component_named(p, name)) {
                 return false;
             }
         }
@@ -1337,6 +1369,30 @@ mod trash_tests {
 
         let by_time = TrashFilter { since: Some("20260911-000000".into()), ..Default::default() };
         assert!(select_entries(&trash_sample(), &by_time).iter().all(|e| e.run == "20260911-120000"));
+    }
+
+    #[test]
+    fn same_name_in_two_places_is_ambiguous_until_narrowed() {
+        let e = |rel: &str| TrashEntry { run: "20260911-120000".into(), rel: rel.into() };
+        let entries = vec![
+            e("Workspace/RampA.part.json"),
+            e("Workspace/RampA_149b6fa2.part.json"),
+            e("Workspace/Obby/init.folder.json"),
+            e("Workspace/Obby/Part1.part.json"),
+        ];
+        assert_eq!(instances_named(&entries, "RampA"), vec!["Workspace/RampA", "Workspace/RampA_149b6fa2"]);
+        // A folder with its contents is one instance.
+        assert_eq!(instances_named(&entries, "Obby"), vec!["Workspace/Obby"]);
+
+        // The path instances_named lists picks exactly that one.
+        let narrowed = TrashFilter {
+            name: Some("RampA".into()),
+            scope: Some("Workspace/RampA".into()),
+            ..Default::default()
+        };
+        let picked = select_entries(&entries, &narrowed);
+        assert_eq!(picked.len(), 1);
+        assert_eq!(instances_named(&picked, "RampA"), vec!["Workspace/RampA"]);
     }
 
     #[test]

@@ -216,7 +216,7 @@ fn print_help() {
     syncix verify                 check model/disk consistency
     syncix trash [--files]        what the reconciler removed (runs, or single files)
     syncix restore [run]          put a whole trash run back (newest by default)
-    syncix restore <name> [--in path] [--class c] [--since 2h] [--dry-run]
+    syncix restore <name> [--in path] [--class c] [--since 2h] [--dry-run] [--all]
                                   put single instances back (newest copy of each)
     syncix pull                   ask Studio to resend the tree (source of truth)
     syncix selftest               run an end-to-end scenario against real Studio
@@ -1190,7 +1190,26 @@ fn trash_restore_selected(cli_args: &[String], sync_dir: &str) -> i32 {
         return 0;
     }
 
-    if cli_args.iter().any(|a| a == "--dry-run") {
+    let dry_run = cli_args.iter().any(|a| a == "--dry-run");
+    // One name, several instances (an import had made copies): bringing all of them
+    // back is rarely what was meant, so ask which one.
+    if !dry_run && !cli_args.iter().any(|a| a == "--all") {
+        if let Some(name) = &filter.name {
+            let found = crate::layout::instances_named(&picked, name);
+            if found.len() > 1 {
+                print_info(&format!("{} different instances are called {}:", found.len(), name));
+                for k in &found {
+                    println!("  {}", k);
+                }
+                println!();
+                println!("Pick one with --in, e.g.  syncix restore {} --in {}", name, found[0]);
+                println!("or bring them all back with --all.");
+                return 1;
+            }
+        }
+    }
+
+    if dry_run {
         println!("Would restore {} file(s):", picked.len());
         for e in &picked {
             println!("  {}  {}", e.run, e.rel);
@@ -1752,6 +1771,11 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             }
         },
         "new" | "create" | "mk" => match arg(1) {
+            Some(class_str) if crate::rbxmx_import::is_singleton(class_str) => {
+                // The engine refuses it too; saying so here beats a "Created" that did nothing.
+                report_error(&format!("{} exists once per place and cannot be created.", class_str));
+                1
+            }
             Some(class_str) => {
                 let Some(port) = require_core() else { return Some(1) };
                 let item_name = arg(2).unwrap_or(class_str);

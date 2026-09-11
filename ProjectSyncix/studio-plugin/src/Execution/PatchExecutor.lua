@@ -61,6 +61,52 @@ function PatchExecutor:OnStart(container)
     self.subscriptions = container:Get("SubscriptionManager")
     self.genericObserver = container:Get("GenericObserver")
     self.selectionObserver = container:Get("SelectionObserver")
+    self.batchQueue = container:Get("BatchQueue")
+end
+
+-- A class Studio cannot create (BubbleChatConfiguration, StarterPlayerScripts, ...)
+-- exists once under its parent. If that one has no identity yet, it is the
+-- instance meant, and it is adopted rather than reported missing.
+function PatchExecutor:AdoptExisting(parent: Instance, className: string, uuid: string): Instance?
+    local existing = parent:FindFirstChildOfClass(className)
+    if existing and not self.cache:GetUuid(existing) then
+        pcall(function()
+            existing:SetAttribute("__syncix_id", uuid)
+        end)
+        self.cache:CacheInstance(uuid, existing)
+        return existing
+    end
+    return nil
+end
+
+-- Tells the core an instance could not be created, the way a deletion in Studio
+-- is told. The core drops it with its subtree and moves its files to the trash.
+-- Before this the core kept a phantom Studio never had: an imported
+-- BubbleChatConfiguration copy stayed in the model, and its UIGradient waited
+-- for a parent that would never come.
+function PatchExecutor:ReportNotCreated(uuid: string?, name: any, className: any, reason: string)
+    warn(string.format(
+        "[Syncix] %s (%s) could not be created in Studio: %s. It was removed from the sync (syncix trash).",
+        tostring(name),
+        tostring(className),
+        reason
+    ))
+    if not uuid or uuid == "" then
+        return
+    end
+    -- Its children waited for it; the core removes them together with it.
+    local queue = self.waitingForParent[uuid]
+    if queue then
+        self.waitingForParent[uuid] = nil
+        self.waitingCount -= #queue
+    end
+    if self.batchQueue then
+        self.batchQueue:Enqueue({
+            event_type = "DESTROY",
+            version = "v1",
+            data = { syncix_id = uuid, class_name = className, name = name },
+        })
+    end
 end
 
 function PatchExecutor:ApplyFullNode(nodeData: any)
@@ -91,7 +137,11 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
 
         local success, newInst = pcall(function() return Instance.new(className) end)
         if not success or not newInst then
-            return
+            newInst = self:AdoptExisting(targetParent, className, uuid)
+            if not newInst then
+                self:ReportNotCreated(uuid, name, className, "Studio cannot create this class")
+                return
+            end
         end
         
         instance = newInst
@@ -108,6 +158,8 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
 
         if not parentSuccess then
             pcall(function() instance:Destroy() end)
+            self.cache:Remove(uuid)
+            self:ReportNotCreated(uuid, name, className, "Studio refused its parent")
             return
         end
 
@@ -157,7 +209,11 @@ function PatchExecutor:ApplyPatch(patch: any)
             return Instance.new(patch.data.class_name)
         end)
         if not ok or not newInst then
-            return
+            newInst = uuid and self:AdoptExisting(targetParent, patch.data.class_name, uuid) or nil
+            if not newInst then
+                self:ReportNotCreated(uuid, patch.data.name, patch.data.class_name, "Studio cannot create this class")
+                return
+            end
         end
 
         newInst.Name = patch.data.name or patch.data.class_name
@@ -168,9 +224,17 @@ function PatchExecutor:ApplyPatch(patch: any)
             self.cache:CacheInstance(uuid, newInst)
         end
 
-        pcall(function()
+        local parented = pcall(function()
             newInst.Parent = targetParent
         end)
+        if not parented then
+            pcall(function() newInst:Destroy() end)
+            if uuid then
+                self.cache:Remove(uuid)
+            end
+            self:ReportNotCreated(uuid, patch.data.name, patch.data.class_name, "Studio refused its parent")
+            return
+        end
 
         if self.activityLog then
             self.activityLog:Inbound("create", newInst.Name, nil, newInst.ClassName, uuid)
