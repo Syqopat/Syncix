@@ -4,6 +4,34 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-09-11
+
+### Added
+
+- **Restore single instances.** `syncix restore <name>` brings back the newest
+  copy of one instance (a folder brings its contents) instead of a whole trash
+  run, which also held things removed on purpose. Narrow it down with
+  `--in <path>`, `--class <class>` and `--since <30m|2h|1d>`; `--dry-run` shows
+  what would come back. `syncix trash --files` lists single files. A script's
+  `.meta.json` comes back with it, and an existing file is never overwritten.
+
+### Fixed
+
+- **Importing a whole place.** `syncix import` of a file exported without a
+  target tried to create Lighting, ReplicatedStorage and the other services as
+  new children, failed, and left the parent name ambiguous (409). Services and
+  singleton containers now merge into the ones the place already has; their own
+  settings are left unchanged. The parent is resolved once, before anything is
+  created. The engine refuses to create a service outright.
+- **Nothing lands in Workspace by accident.** The plugin put an instance whose
+  parent it could not find into Workspace, where the engine never knew about it.
+  Such an instance now waits for its parent, and an instance already in Studio is
+  no longer moved when its parent is unknown.
+- `syncix set <target> CFrame x,y,z` on a part whose CFrame the engine has not
+  seen yet sends a CFrame rather than a Vector3 Studio refuses. (With a known
+  CFrame the rotation was, and is, kept.)
+- Five log lines and comments left in Turkish are now in English.
+
 ## [0.1.3] - 2026-09-11
 
 ### Changed

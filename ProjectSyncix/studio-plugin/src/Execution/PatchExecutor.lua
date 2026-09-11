@@ -1,12 +1,57 @@
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
 
+-- Upper bound on instances waiting for a parent, so a parent that never arrives
+-- cannot grow the queue without limit.
+local MAX_WAITING = 2000
+
 local PatchExecutor = {}
 PatchExecutor.__index = PatchExecutor
 
 function PatchExecutor.new()
     local self = setmetatable({}, PatchExecutor)
+    -- parent uuid -> list of functions that finish applying a child once it exists.
+    --
+    -- A child whose parent is not in Studio yet used to be put into Workspace. The
+    -- core never learnt of it, so Studio and the sync folder silently disagreed
+    -- (an imported Atmosphere or Sky ended up in Workspace). Now the child waits
+    -- for its parent instead of landing somewhere it does not belong.
+    self.waitingForParent = {}
+    self.waitingCount = 0
     return self
+end
+
+-- Queues `apply` until the instance `parentId` is created by a later patch.
+function PatchExecutor:WaitForParent(parentId: string, childName: string, apply: () -> ())
+    if self.waitingCount >= MAX_WAITING then
+        warn(string.format("[Syncix] %s was not created: its parent is not in Studio.", tostring(childName)))
+        return
+    end
+    local queue = self.waitingForParent[parentId]
+    if not queue then
+        queue = {}
+        self.waitingForParent[parentId] = queue
+        warn(string.format(
+            "[Syncix] %s is waiting for its parent (%s), which is not in Studio yet.",
+            tostring(childName),
+            string.sub(parentId, 1, 8)
+        ))
+    end
+    table.insert(queue, apply)
+    self.waitingCount += 1
+end
+
+-- Runs everything that waited for `uuid`, now that it exists.
+function PatchExecutor:ReleaseChildren(uuid: string)
+    local queue = self.waitingForParent[uuid]
+    if not queue then
+        return
+    end
+    self.waitingForParent[uuid] = nil
+    self.waitingCount -= #queue
+    for _, apply in ipairs(queue) do
+        apply()
+    end
 end
 
 function PatchExecutor:OnStart(container)
@@ -25,17 +70,25 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
     local props = nodeData.properties
     local parentId = nodeData.parent
     
-    local targetParent = Workspace
-    if parentId and parentId ~= "" then
-        local pInst = self.cache:GetInstance(parentId)
-        if pInst then
-            targetParent = pInst
-        end
-    end
-    
+    local hasParent = parentId ~= nil and parentId ~= ""
+    local targetParent = hasParent and self.cache:GetInstance(parentId) or nil
+
     local instance = self.cache:GetInstance(uuid)
-    
+
     if not instance then
+        if hasParent and not targetParent then
+            self:WaitForParent(parentId, name, function()
+                self:ApplyFullNode(nodeData)
+            end)
+            return
+        end
+        if not targetParent then
+            -- Only services sit at the top, and they exist already; anything else
+            -- without a parent has no place to go.
+            warn(string.format("[Syncix] %s (%s) has no parent and was not created.", tostring(name), tostring(className)))
+            return
+        end
+
         local success, newInst = pcall(function() return Instance.new(className) end)
         if not success or not newInst then
             return
@@ -57,22 +110,26 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
             pcall(function() instance:Destroy() end)
             return
         end
-        
+
         self.genericObserver:HandleInstanceAdded(instance)
     else
         instance.Name = name
-        if instance.Parent ~= targetParent then
+        -- An unknown parent leaves the instance where it is rather than moving it
+        -- somewhere it does not belong.
+        if targetParent and instance.Parent ~= targetParent then
             pcall(function()
                 instance.Parent = targetParent
             end)
         end
     end
-    
+
     if props then
         for propName, propValue in pairs(props) do
             self:ApplyPropertyValue(instance, propName, propValue)
         end
     end
+
+    self:ReleaseChildren(uuid)
 end
 
 function PatchExecutor:ApplyPatch(patch: any)
@@ -80,6 +137,19 @@ function PatchExecutor:ApplyPatch(patch: any)
 
     if patch.event_type == "CREATE" then
         if uuid and self.cache:GetInstance(uuid) then
+            return
+        end
+
+        local parentId = patch.data.parent
+        local targetParent = parentId and self.cache:GetInstance(parentId) or nil
+        if not targetParent then
+            if parentId then
+                self:WaitForParent(parentId, patch.data.name or patch.data.class_name, function()
+                    self:ApplyPatch(patch)
+                end)
+            else
+                warn(string.format("[Syncix] %s has no parent and was not created.", tostring(patch.data.name)))
+            end
             return
         end
 
@@ -98,19 +168,15 @@ function PatchExecutor:ApplyPatch(patch: any)
             self.cache:CacheInstance(uuid, newInst)
         end
 
-        local targetParent = Workspace
-        if patch.data.parent then
-            local pInst = self.cache:GetInstance(patch.data.parent)
-            if pInst then
-                targetParent = pInst
-            end
-        end
         pcall(function()
             newInst.Parent = targetParent
         end)
 
         if self.activityLog then
             self.activityLog:Inbound("create", newInst.Name, nil, newInst.ClassName, uuid)
+        end
+        if uuid then
+            self:ReleaseChildren(uuid)
         end
         return
     end

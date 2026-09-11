@@ -225,6 +225,46 @@ pub fn tally(node_list: &[ImportedNode]) -> usize {
     node_list.iter().map(|d| 1 + tally(&d.children)).sum()
 }
 
+/// Services a place file carries at its top level. There is exactly one of each in a
+/// place and `Instance.new` cannot create them, so an import must merge into the
+/// existing one instead of creating a copy.
+const SERVICE_CLASSES: &[&str] = &[
+    "Workspace",
+    "Players",
+    "Lighting",
+    "MaterialService",
+    "ReplicatedFirst",
+    "ReplicatedStorage",
+    "ServerScriptService",
+    "ServerStorage",
+    "StarterGui",
+    "StarterPack",
+    "StarterPlayer",
+    "Teams",
+    "SoundService",
+    "Chat",
+    "TextChatService",
+    "LocalizationService",
+    "TestService",
+    "VoiceChatService",
+    "ProximityPromptService",
+    "HttpService",
+    "InsertService",
+    "CollectionService",
+];
+
+/// Containers that exist once under their parent and cannot be created either.
+const SINGLETON_CHILD_CLASSES: &[&str] = &["StarterPlayerScripts", "StarterCharacterScripts", "Terrain"];
+
+pub fn is_service(class_name: &str) -> bool {
+    SERVICE_CLASSES.contains(&class_name)
+}
+
+/// True for every class an import must map onto an existing instance rather than create.
+pub fn is_singleton(class_name: &str) -> bool {
+    is_service(class_name) || SINGLETON_CHILD_CLASSES.contains(&class_name)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -366,6 +406,16 @@ mod tests {
             al("OtherVec"),
             Some(PropertyValue::Vector3 { x: 1.0, y: 2.0, z: 3.0 })
         );
+    }
+
+    #[test]
+    fn services_and_singletons_are_recognised() {
+        assert!(is_service("Lighting"));
+        assert!(is_service("ReplicatedStorage"));
+        assert!(!is_service("Folder"));
+        assert!(is_singleton("StarterPlayerScripts"));
+        assert!(is_singleton("Workspace"));
+        assert!(!is_singleton("Part"));
     }
 
     #[test]

@@ -58,7 +58,8 @@ are handled, and how the engine behaves while a game is running.
 A sync tool's first duty is not to lose your work.
 
 - **Nothing is deleted without a copy.** Files the reconciler removes go to a
-  trash folder; `syncix trash` lists them and `syncix restore` puts them back.
+  trash folder; `syncix trash` lists them and `syncix restore` puts them back,
+  all at once or one instance at a time (`syncix restore Ramp`).
 - **A folder belongs to one place.** If a different place connects to the same
   folder, sync stops and asks instead of merging the two trees.
 - **Undo works.** Changes Syncix makes go on Studio's undo stack, so Ctrl+Z
@@ -76,6 +77,7 @@ syncix tree            # show the tree
 syncix props <target>  # every property of an instance
 syncix set <target> <property> <value>
 syncix trash           # what the reconciler removed
+syncix restore <name>  # put one instance back (--since 2h, --class part, --dry-run)
 syncix config          # the settings actually in effect
 ```
 

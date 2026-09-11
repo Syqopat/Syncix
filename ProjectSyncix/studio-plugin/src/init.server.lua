@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 -- The version is semver now: major.minor must match the core (see ConnectionManager).
-local SYNCIX_VERSION = "0.1.3"
+local SYNCIX_VERSION = "0.1.4"
 
 local function startSyncix()
     print("[Syncix] Starting Studio runtime (version " .. SYNCIX_VERSION .. ")...")

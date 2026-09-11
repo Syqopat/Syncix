@@ -218,6 +218,172 @@ pub fn restore_from_trash(sync_dir: &str, run_name: &str) -> (usize, usize) {
     (restored_count, skipped)
 }
 
+/// One file in the trash.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrashEntry {
+    /// Run folder name: a UTC timestamp, "%Y%m%d-%H%M%S".
+    pub run: String,
+    /// Path relative to the sync folder, '/'-separated.
+    pub rel: String,
+}
+
+/// Picks single files out of the trash instead of a whole run, CoreProtect-style:
+/// by name, by place in the tree, by class and by time. Unset fields match everything.
+#[derive(Debug, Default, Clone)]
+pub struct TrashFilter {
+    /// Instance or folder name anywhere on the path, case-insensitive.
+    pub name: Option<String>,
+    /// Only files under this path of the tree, e.g. "Workspace/Zones".
+    pub scope: Option<String>,
+    /// Class as file names carry it: "part", "model", "script", "localscript", ...
+    pub class_name: Option<String>,
+    /// Only runs at or after this run-name timestamp (they sort as text).
+    pub since: Option<String>,
+}
+
+/// Every file in the trash, newest run first.
+pub fn trash_entries(sync_dir: &str) -> Vec<TrashEntry> {
+    let root_dir = trash_root(sync_dir);
+    let mut out = Vec::new();
+    for (run, _) in trash_runs(sync_dir) {
+        let origin = root_dir.join(&run);
+        let mut file_list = Vec::new();
+        collect_files(&origin, &mut file_list);
+        file_list.sort();
+        for f in file_list {
+            if let Ok(rel_path) = f.strip_prefix(&origin) {
+                let rel = rel_path
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().to_string())
+                    .collect::<Vec<_>>()
+                    .join("/");
+                out.push(TrashEntry { run: run.clone(), rel });
+            }
+        }
+    }
+    out
+}
+
+/// The instance name a path component stands for: "Box_1a2b3c4d.part.json" -> "Box".
+fn instance_name_of(component: &str) -> &str {
+    let base = component.split('.').next().unwrap_or(component);
+    match base.rsplit_once('_') {
+        Some((name, suffix)) if suffix.len() == 8 && suffix.chars().all(|c| c.is_ascii_hexdigit()) => name,
+        _ => base,
+    }
+}
+
+/// The class a file name stands for, lower case: "Box.part.json" -> "part",
+/// "Main.server.lua" -> "script". None for a file that names no class of its own
+/// (a .meta.json, or a legacy plain ".json").
+fn class_of_file(file_name: &str) -> Option<String> {
+    let lower = file_name.to_ascii_lowercase();
+    if lower.ends_with(".server.lua") {
+        return Some("script".into());
+    }
+    if lower.ends_with(".client.lua") {
+        return Some("localscript".into());
+    }
+    if lower.ends_with(".lua") || lower.ends_with(".luau") {
+        return Some("modulescript".into());
+    }
+    if lower.ends_with(".txt") {
+        return Some("stringvalue".into());
+    }
+    if lower.ends_with(".csv") {
+        return Some("localizationtable".into());
+    }
+    if lower.ends_with(".meta.json") {
+        return None;
+    }
+    let stem = lower.strip_suffix(".json")?;
+    stem.rsplit_once('.').map(|(_, class)| class.to_string())
+}
+
+/// Applies a filter and keeps the newest copy of every path. A .meta.json follows its
+/// instance: it is picked whenever the data file beside it is.
+pub fn select_entries(entries: &[TrashEntry], filter: &TrashFilter) -> Vec<TrashEntry> {
+    let same = |a: &str, b: &str| a.eq_ignore_ascii_case(b);
+    let component_is = |component: &str, wanted: &str| same(component, wanted) || same(instance_name_of(component), wanted);
+
+    let matches = |e: &TrashEntry| -> bool {
+        let parts: Vec<&str> = e.rel.split('/').collect();
+        let file_name = parts.last().copied().unwrap_or("");
+        if let Some(since) = &filter.since {
+            if e.run.as_str() < since.as_str() {
+                return false;
+            }
+        }
+        if let Some(scope) = &filter.scope {
+            let wanted: Vec<&str> = scope.split(['/', '\\']).filter(|s| !s.is_empty()).collect();
+            if wanted.len() > parts.len() || !wanted.iter().zip(&parts).all(|(w, p)| component_is(p, w)) {
+                return false;
+            }
+        }
+        if let Some(name) = &filter.name {
+            if !parts.iter().any(|p| component_is(p, name)) {
+                return false;
+            }
+        }
+        if let Some(class) = &filter.class_name {
+            if class_of_file(file_name).as_deref() != Some(class.to_ascii_lowercase().as_str()) {
+                return false;
+            }
+        }
+        true
+    };
+
+    let mut seen = std::collections::HashSet::new();
+    let mut picked: Vec<TrashEntry> = Vec::new();
+    for e in entries.iter().filter(|e| !e.rel.ends_with(".meta.json")) {
+        if matches(e) && seen.insert(e.rel.clone()) {
+            picked.push(e.clone());
+        }
+    }
+
+    // Companion metadata: same run, same folder, same instance name.
+    let key = |rel: &str| -> (String, String) {
+        let (dir, file) = rel.rsplit_once('/').unwrap_or(("", rel));
+        (dir.to_string(), instance_name_of(file).to_string())
+    };
+    let wanted_meta: std::collections::HashSet<(String, String, String)> = picked
+        .iter()
+        .map(|e| {
+            let (dir, name) = key(&e.rel);
+            (e.run.clone(), dir, name)
+        })
+        .collect();
+    for e in entries.iter().filter(|e| e.rel.ends_with(".meta.json")) {
+        let (dir, name) = key(&e.rel);
+        if wanted_meta.contains(&(e.run.clone(), dir, name)) && seen.insert(e.rel.clone()) {
+            picked.push(e.clone());
+        }
+    }
+    picked
+}
+
+/// Restores the given files. Like a whole-run restore it never overwrites a file.
+/// Returns: (restored, skipped because a file already exists there).
+pub fn restore_entries(sync_dir: &str, entries: &[TrashEntry]) -> (usize, usize) {
+    let root_dir = trash_root(sync_dir);
+    let (mut restored_count, mut skipped) = (0usize, 0usize);
+    for e in entries {
+        let origin = root_dir.join(&e.run).join(&e.rel);
+        let dest = Path::new(sync_dir).join(&e.rel);
+        if dest.exists() {
+            skipped += 1;
+            continue;
+        }
+        if let Some(upper) = dest.parent() {
+            let _ = fs::create_dir_all(upper);
+        }
+        if fs::copy(&origin, &dest).is_ok() {
+            restored_count += 1;
+        }
+    }
+    (restored_count, skipped)
+}
+
 /// Finds which instance a path on disk belongs to.
 ///
 /// The reverse direction (uuid -> path) is `data_file`; to handle a deletion event we
@@ -1132,6 +1298,54 @@ mod trash_tests {
 
     /// Restoring must not cause data loss of its own: if a file exists at the same path
     /// it is not overwritten but skipped.
+    fn trash_sample() -> Vec<TrashEntry> {
+        let e = |run: &str, rel: &str| TrashEntry { run: run.into(), rel: rel.into() };
+        // Newest run first, as trash_entries returns them.
+        vec![
+            e("20260911-120000", "Workspace/Ramp.part.json"),
+            e("20260911-120000", "Workspace/Zones/init.folder.json"),
+            e("20260911-120000", "Workspace/Zones/Floor.part.json"),
+            e("20260911-120000", "ServerScriptService/Main.server.lua"),
+            e("20260911-120000", "ServerScriptService/Main.meta.json"),
+            e("20260910-080000", "Workspace/Ramp.part.json"),
+            e("20260910-080000", "Lighting/Sky.sky.json"),
+        ]
+    }
+
+    #[test]
+    fn restore_by_name_takes_newest_copy_only() {
+        let f = TrashFilter { name: Some("ramp".into()), ..Default::default() };
+        let picked = select_entries(&trash_sample(), &f);
+        assert_eq!(picked.len(), 1);
+        assert_eq!(picked[0].run, "20260911-120000");
+    }
+
+    #[test]
+    fn restore_by_folder_name_brings_its_contents() {
+        let f = TrashFilter { name: Some("Zones".into()), ..Default::default() };
+        let rels: Vec<String> = select_entries(&trash_sample(), &f).into_iter().map(|e| e.rel).collect();
+        assert_eq!(rels, vec!["Workspace/Zones/init.folder.json", "Workspace/Zones/Floor.part.json"]);
+    }
+
+    #[test]
+    fn restore_filters_by_scope_class_and_time() {
+        let by_scope = TrashFilter { scope: Some("Lighting".into()), ..Default::default() };
+        assert_eq!(select_entries(&trash_sample(), &by_scope).len(), 1);
+
+        let by_class = TrashFilter { class_name: Some("part".into()), ..Default::default() };
+        assert_eq!(select_entries(&trash_sample(), &by_class).len(), 2);
+
+        let by_time = TrashFilter { since: Some("20260911-000000".into()), ..Default::default() };
+        assert!(select_entries(&trash_sample(), &by_time).iter().all(|e| e.run == "20260911-120000"));
+    }
+
+    #[test]
+    fn restore_brings_meta_with_its_script() {
+        let f = TrashFilter { class_name: Some("script".into()), ..Default::default() };
+        let rels: Vec<String> = select_entries(&trash_sample(), &f).into_iter().map(|e| e.rel).collect();
+        assert_eq!(rels, vec!["ServerScriptService/Main.server.lua", "ServerScriptService/Main.meta.json"]);
+    }
+
     #[test]
     fn restore_does_not_overwrite_existing() {
         let root_dir = scratch_root("overwrite");

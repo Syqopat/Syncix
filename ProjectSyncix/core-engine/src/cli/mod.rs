@@ -214,8 +214,10 @@ fn print_help() {
     syncix bind                   show a place/folder mismatch
     syncix bind --studio|--disk   resolve it (which side is right)
     syncix verify                 check model/disk consistency
-    syncix trash                  files the reconciler removed (recoverable)
-    syncix restore [name]         put a trash entry back (newest by default)
+    syncix trash [--files]        what the reconciler removed (runs, or single files)
+    syncix restore [run]          put a whole trash run back (newest by default)
+    syncix restore <name> [--in path] [--class c] [--since 2h] [--dry-run]
+                                  put single instances back (newest copy of each)
     syncix pull                   ask Studio to resend the tree (source of truth)
     syncix selftest               run an end-to-end scenario against real Studio
 
@@ -1039,8 +1041,87 @@ fn show_config() -> i32 {
     0
 }
 
-fn trash_list() -> i32 {
+/// Flags of `trash`/`restore` that take a value.
+const TRASH_VALUE_FLAGS: [&str; 3] = ["--in", "--class", "--since"];
+
+/// The value after a flag: `--class part` -> "part".
+fn flag_arg(cli_args: &[String], flag: &str) -> Option<String> {
+    cli_args.iter().position(|a| a == flag).and_then(|i| cli_args.get(i + 1)).cloned()
+}
+
+/// The first argument that is neither a flag nor a flag's value.
+fn trash_name_arg(cli_args: &[String]) -> Option<String> {
+    let mut to_skip = false;
+    for a in cli_args.iter().skip(1) {
+        if to_skip {
+            to_skip = false;
+        } else if TRASH_VALUE_FLAGS.contains(&a.as_str()) {
+            to_skip = true;
+        } else if !a.starts_with("--") {
+            return Some(a.clone());
+        }
+    }
+    None
+}
+
+/// "30m", "2h", "1d", "45s" -> the run-name timestamp that long ago.
+fn since_timestamp(text: &str) -> Option<String> {
+    let t = text.trim();
+    let (amount, unit) = t.split_at(t.len().checked_sub(1)?);
+    let n: i64 = amount.parse().ok()?;
+    let seconds = match unit {
+        "s" => n,
+        "m" => n * 60,
+        "h" => n * 3600,
+        "d" => n * 86400,
+        _ => return None,
+    };
+    Some((chrono::Utc::now() - chrono::Duration::seconds(seconds)).format("%Y%m%d-%H%M%S").to_string())
+}
+
+fn trash_filter(cli_args: &[String]) -> Result<crate::layout::TrashFilter, String> {
+    let mut filter = crate::layout::TrashFilter {
+        scope: flag_arg(cli_args, "--in"),
+        class_name: flag_arg(cli_args, "--class"),
+        ..Default::default()
+    };
+    if let Some(s) = flag_arg(cli_args, "--since") {
+        let since = since_timestamp(&s).ok_or_else(|| format!("--since expects a duration such as 30m, 2h or 1d, not {}", s))?;
+        filter.since = Some(since);
+    }
+    // A name with a slash is a place in the tree.
+    match trash_name_arg(cli_args) {
+        Some(n) if (n.contains('/') || n.contains('\\')) && filter.scope.is_none() => filter.scope = Some(n),
+        other => filter.name = other,
+    }
+    Ok(filter)
+}
+
+fn trash_list(cli_args: &[String]) -> i32 {
     let settings_data = crate::project::ProjectConfig::load();
+    if cli_args.iter().any(|a| a == "--files") {
+        let filter = match trash_filter(cli_args) {
+            Ok(f) => f,
+            Err(e) => {
+                report_error(&e);
+                return 1;
+            }
+        };
+        let entries = crate::layout::trash_entries(&settings_data.sync_dir);
+        let picked = crate::layout::select_entries(&entries, &filter);
+        if picked.is_empty() {
+            print_info("No removed file matches.");
+            return 0;
+        }
+        println!("Removed files (newest copy of each), newest first:");
+        for e in &picked {
+            println!("  {}  {}", e.run, e.rel);
+        }
+        println!();
+        println!("Restore one with: syncix restore <name>   (--dry-run shows what it would do)");
+        return 0;
+    }
+
     let runs = crate::layout::trash_runs(&settings_data.sync_dir);
     if runs.is_empty() {
         print_info("Trash is empty; no files have been removed by the reconciler.");
@@ -1051,16 +1132,27 @@ fn trash_list() -> i32 {
         println!("  {}  {} file(s)", run_name, amount);
     }
     println!();
-    println!("Restore with: syncix restore <name>");
+    println!("Restore a whole run with: syncix restore <run>");
+    println!("Single files:            syncix trash --files, then syncix restore <name>");
     0
 }
 
-fn trash_restore(run_name: Option<&str>) -> i32 {
+fn trash_restore(cli_args: &[String]) -> i32 {
     let settings_data = crate::project::ProjectConfig::load();
     let runs = crate::layout::trash_runs(&settings_data.sync_dir);
+    let name_arg = trash_name_arg(cli_args);
+    let has_filters = cli_args.iter().any(|a| TRASH_VALUE_FLAGS.contains(&a.as_str()));
+
+    // Selective restore: a name that is not a run, or any filter. A whole run is too
+    // coarse when it also holds things that were removed on purpose.
+    let is_run = |n: &str| runs.iter().any(|(t, _)| t == n);
+    if has_filters || name_arg.as_deref().is_some_and(|n| !is_run(n)) {
+        return trash_restore_selected(cli_args, &settings_data.sync_dir);
+    }
+
     // Without a name, the newest run is restored; that is the most common request.
-    let selected = match run_name {
-        Some(t) => t.to_string(),
+    let selected = match name_arg {
+        Some(t) => t,
         None => match runs.first() {
             Some((t, _)) => t.clone(),
             None => {
@@ -1069,14 +1161,52 @@ fn trash_restore(run_name: Option<&str>) -> i32 {
             }
         },
     };
-    if !runs.iter().any(|(t, _)| t == &selected) {
-        report_error(&format!("No such entry in trash: {}", selected));
-        return 1;
-    }
     let (restored_count, skipped) = crate::layout::restore_from_trash(&settings_data.sync_dir, &selected);
     print_ok(&format!("Restored {} file(s) from {}.", restored_count, selected));
     if skipped > 0 {
         // Overwriting would turn restoring into a data loss of its own.
+        print_info(&format!(
+            "{} file(s) were skipped because a file already exists at that path.",
+            skipped
+        ));
+    }
+    0
+}
+
+/// Puts single instances back: the newest copy of every file the filter picks.
+fn trash_restore_selected(cli_args: &[String], sync_dir: &str) -> i32 {
+    let filter = match trash_filter(cli_args) {
+        Ok(f) => f,
+        Err(e) => {
+            report_error(&e);
+            return 1;
+        }
+    };
+    let entries = crate::layout::trash_entries(sync_dir);
+    let picked = crate::layout::select_entries(&entries, &filter);
+    if picked.is_empty() {
+        print_info("Nothing in the trash matches.");
+        print_dim("  See what is there: syncix trash --files");
+        return 0;
+    }
+
+    if cli_args.iter().any(|a| a == "--dry-run") {
+        println!("Would restore {} file(s):", picked.len());
+        for e in &picked {
+            println!("  {}  {}", e.run, e.rel);
+        }
+        return 0;
+    }
+
+    let (restored_count, skipped) = crate::layout::restore_entries(sync_dir, &picked);
+    print_ok(&format!("Restored {} file(s).", restored_count));
+    for e in picked.iter().take(20) {
+        print_dim(&format!("  {}", e.rel));
+    }
+    if picked.len() > 20 {
+        print_dim(&format!("  ... and {} more", picked.len() - 20));
+    }
+    if skipped > 0 {
         print_info(&format!(
             "{} file(s) were skipped because a file already exists at that path.",
             skipped
@@ -1151,7 +1281,13 @@ fn run_build(cli_args: &[String]) -> i32 {
         object_total,
         reply.body.len()
     ));
-    print_dim("  In Studio: right click > Insert from File...");
+    if dest_object.is_empty() {
+        // A whole-place export carries the services; say what importing it back does.
+        print_dim("  This is the whole place. syncix import merges its services into the");
+        print_dim("  existing ones; to export one model, name it: syncix build <target>.");
+    } else {
+        print_dim("  In Studio: right click > Insert from File...");
+    }
     0
 }
 
@@ -1352,7 +1488,28 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         return 1;
     }
 
+    // The parent is resolved to an identity ONCE, before anything is created. Looked up by
+    // name for every root, it became ambiguous as soon as the import itself created a
+    // second instance with that name (a place file carrying its own ReplicatedStorage).
+    let parent_id = match fetch_json(port, &format!("/object?target={}", url_encode(&parent_ref))) {
+        Some(o) => match o.get("syncix_id").and_then(|v| v.as_str()) {
+            Some(id) => id.to_string(),
+            None => {
+                let reason = o.get("error").and_then(|e| e.as_str()).unwrap_or("not found");
+                report_error(&format!("Parent {}: {}", parent_ref, reason));
+                return 1;
+            }
+        },
+        None => return 1,
+    };
+    // Snapshot of the tree, used to find the existing services a place file merges into.
+    let tree = fetch_tree(port).unwrap_or_default();
+
     print_info(&format!("Importing {} instance(s) into {}", total_count, parent_ref));
+    if root_list.iter().any(|n| crate::rbxmx_import::is_service(&n.class_name)) {
+        print_dim("  The file holds services (a whole place): their contents merge into the");
+        print_dim("  matching services of this place; the parent applies only to the rest.");
+    }
     if skipped > 0 {
         print_dim(&format!(
             "  {} property value(s) use types Syncix does not model and were skipped.",
@@ -1360,14 +1517,64 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         ));
     }
 
+    #[derive(Default)]
+    struct Outcome {
+        created: usize,
+        failed: usize,
+        merged: usize,
+        settings_kept: usize,
+        out_of_scope: usize,
+    }
+
+    /// The existing instance a singleton maps onto. A service is looked up among the
+    /// top-level services, any other singleton among the children of `parent`.
+    fn existing_singleton<'a>(tree: &'a [TreeRow], class_name: &str, parent: Option<&str>) -> Option<&'a str> {
+        let top_level = |r: &TreeRow| match r.parent_ref.as_deref() {
+            None => true,
+            Some(p) => tree.iter().any(|q| q.id == p && q.class_str == "DataModel"),
+        };
+        tree.iter()
+            .find(|r| {
+                r.class_str == class_name
+                    && match parent {
+                        None => top_level(r),
+                        Some(p) => r.parent_ref.as_deref() == Some(p),
+                    }
+            })
+            .map(|r| r.id.as_str())
+    }
+
     // Recursive creation. Each node is created first, then its properties are written.
     fn generate(
         port: u16,
+        tree: &[TreeRow],
         node_entry: &crate::rbxmx_import::ImportedNode,
         parent_ref: &str,
-        counter: &mut usize,
-        failed: &mut usize,
+        outcome: &mut Outcome,
     ) {
+        // Services and singleton containers are never created: Studio refuses to, and
+        // the core used to keep a phantom copy that made names ambiguous. Their
+        // contents go into the instance that already exists; their own settings are
+        // left as they are, an import must not retune the place's Lighting.
+        if crate::rbxmx_import::is_singleton(&node_entry.class_name) {
+            let lookup_parent = if crate::rbxmx_import::is_service(&node_entry.class_name) {
+                None
+            } else {
+                Some(parent_ref)
+            };
+            match existing_singleton(tree, &node_entry.class_name, lookup_parent) {
+                Some(existing) => {
+                    outcome.merged += 1;
+                    outcome.settings_kept += node_entry.properties.len();
+                    for child_entry in &node_entry.children {
+                        generate(port, tree, child_entry, existing, outcome);
+                    }
+                }
+                None => outcome.out_of_scope += crate::rbxmx_import::tally(std::slice::from_ref(node_entry)),
+            }
+            return;
+        }
+
         // The identity is generated IN ADVANCE, so the created object can be targeted by
         // identity rather than by name. Targeting by name failed with an ambiguity error
         // when the imported tree repeated an existing name.
@@ -1383,10 +1590,10 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
             }),
         );
         if !ok {
-            *failed += 1;
+            outcome.failed += 1;
             return;
         }
-        *counter += 1;
+        outcome.created += 1;
         std::thread::sleep(std::time::Duration::from_millis(120));
 
         for (item_name, raw_value) in &node_entry.properties {
@@ -1412,23 +1619,34 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         }
 
         for child_entry in &node_entry.children {
-            generate(port, child_entry, &identity, counter, failed);
+            generate(port, tree, child_entry, &identity, outcome);
         }
     }
 
-    let mut counter = 0usize;
-    let mut failed = 0usize;
+    let mut outcome = Outcome::default();
     for k in &root_list {
-        generate(port, k, &parent_ref, &mut counter, &mut failed);
+        generate(port, &tree, k, &parent_id, &mut outcome);
     }
 
-    if failed > 0 {
-        report_error(&format!("{} instance(s) could not be created.", failed));
-        print_dim("  A name may be ambiguous; check with syncix tree.");
+    if outcome.merged > 0 {
+        print_dim(&format!(
+            "  {} service/container item(s) merged into the existing ones; their own settings ({} value(s)) were left unchanged.",
+            outcome.merged, outcome.settings_kept
+        ));
+    }
+    if outcome.out_of_scope > 0 {
+        print_info(&format!(
+            "{} instance(s) skipped: their service is not part of this sync (see scope in syncix.toml).",
+            outcome.out_of_scope
+        ));
+    }
+    if outcome.failed > 0 {
+        report_error(&format!("{} instance(s) could not be created.", outcome.failed));
+        print_dim("  Check the result with syncix tree.");
         return 1;
     }
 
-    print_ok(&format!("Imported {} instance(s).", counter));
+    print_ok(&format!("Imported {} instance(s).", outcome.created));
     print_dim("  Run syncix pull to confirm the result from Studio.");
     0
 }
@@ -1671,8 +1889,8 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         },
         "bind" => bind_cmd(cli_args),
         "config" | "settings" => show_config(),
-        "trash" => trash_list(),
-        "restore" => trash_restore(arg(1)),
+        "trash" => trash_list(cli_args),
+        "restore" => trash_restore(cli_args),
         "selftest" => selftest(),
         "init" => init_project(),
         "up" | "start" => launch(arg(1).and_then(|p| p.parse::<u16>().ok())),

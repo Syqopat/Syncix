@@ -906,7 +906,7 @@ async fn main() {
                         instance.name
                     );
                 } else {
-                    tracing::warn!("RENAME_INSTANCE bilinmeyen UUID: {}", id);
+                    tracing::warn!("RENAME_INSTANCE: unknown UUID: {}", id);
                 }
             } else {
                 tracing::warn!("RENAME_INSTANCE target not found: {}", id);
@@ -925,6 +925,10 @@ async fn main() {
                 .unwrap_or(class_name);
             if class_name.is_empty() {
                 tracing::warn!("CREATE_INSTANCE: className was empty, ignored.");
+            } else if rbxmx_import::is_singleton(class_name) {
+                // Studio cannot create a service or a singleton container; a model entry
+                // for one would be a phantom that also makes the real one's name ambiguous.
+                tracing::warn!("CREATE_INSTANCE: {} exists once per place and cannot be created, ignored.", class_name);
             } else {
                 let mut instance = InstanceNode::new(class_name, node_name);
                 // If the client supplied a UUID, use it; that lets an import target the object
@@ -1031,7 +1035,7 @@ async fn main() {
                     let _ = app_state.tx_to_vscode.send(ws_msg.to_string());
                     tracing::info!("DELETE handled: {}", instance.name);
                 } else {
-                    tracing::warn!("DELETE_INSTANCE bilinmeyen UUID: {}", id);
+                    tracing::warn!("DELETE_INSTANCE: unknown UUID: {}", id);
                 }
             } else {
                 tracing::warn!("DELETE_INSTANCE target not found: {}", id);
@@ -1158,6 +1162,16 @@ async fn main() {
                     other => parse_wire_value(other)
                         .unwrap_or_else(|| model::PropertyValue::String(value_str.clone())),
                 };
+                // Without a current value there is no type to fit to, and "x,y,z" parses as a
+                // Vector3, which Studio refuses for a CFrame. A CFrame it is, unrotated.
+                if property == "CFrame" {
+                    if let model::PropertyValue::Vector3 { x, y, z } = pv {
+                        pv = model::PropertyValue::CFrame {
+                            pos: [x, y, z],
+                            rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+                        };
+                    }
+                }
 
                 // The reference target is resolved to a full UUID here. The user may type a short
                 // handle or a name ("syncix set door Part0 hinge"),
@@ -1196,7 +1210,7 @@ async fn main() {
                 }
 
                 if ok {
-                    // Studio'ya uygula
+                    // Apply in Studio
                     let wire_value = if property == "Name" {
                         serde_json::json!(value_str)
                     } else {
@@ -1237,7 +1251,7 @@ async fn main() {
                     }
                     tracing::info!("SET_PROPERTY handled: {} .{} = {}", id, property, value_str);
                 } else {
-                    tracing::warn!("SET_PROPERTY bilinmeyen UUID: {}", id);
+                    tracing::warn!("SET_PROPERTY: unknown UUID: {}", id);
                 }
             } else {
                 tracing::warn!("SET_PROPERTY target not found: {}", id);
@@ -1275,7 +1289,7 @@ async fn main() {
                 });
                 let _ = app_state.tx_to_vscode.send(ws.to_string());
             } else {
-                // Editorden geldi: Studio'ya uygula.
+                // Came from the editor: apply in Studio.
                 let already_resolved: Vec<String> = {
                     let dm = data_model.read().await;
                     identities
