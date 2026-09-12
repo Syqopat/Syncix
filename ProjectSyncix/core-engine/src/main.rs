@@ -939,7 +939,12 @@ async fn main() {
 
     // 4. Message dispatcher (listens to the event bus and routes)
     // The core does not know the transport; it only reads Payloads from the channel.
+    let mut full_sync_parts = transport::FullSyncAssembler::new();
     while let Some(payload) = rx_from_studio.recv().await {
+        // A big place's tree arrives in parts; nothing happens until the last one is in.
+        let Some(payload) = full_sync_parts.accept(payload) else {
+            continue;
+        };
         // With the Studio -> disk direction off, no change coming from Studio
         // is applied to the model. The one exception is FULL_SYNC: even in disk_to_studio mode
         // the core has to know Studio's UUIDs, otherwise it cannot find which object

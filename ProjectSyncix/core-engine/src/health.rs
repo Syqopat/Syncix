@@ -33,6 +33,9 @@ pub struct HealthStatus {
     // --- Kimlik ---
     pub version: String,
     pub protocol: u32,
+    /// What this core can do beyond the protocol, so a newer plugin can check before
+    /// relying on it ("full_sync_parts": a FULL_SYNC may come in parts).
+    pub features: Vec<&'static str>,
     pub project: String,
     pub root: String,
     pub port: u16,
@@ -269,6 +272,7 @@ impl HealthMonitor {
             status: "Healthy".to_string(),
             version: crate::project::VERSION.to_string(),
             protocol: crate::project::PROTOCOL_VERSION,
+            features: vec!["full_sync_parts"],
             project: project.name.clone(),
             root: project.root.to_string_lossy().to_string(),
             port,

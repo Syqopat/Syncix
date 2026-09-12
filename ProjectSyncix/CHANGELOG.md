@@ -16,6 +16,13 @@ versions follow [Semantic Versioning](https://semver.org/).
   holding, and the engine keeps what is on its way: new instances, property changes,
   renames, moves, deletions, attributes and tags. Anything Studio was handed but did
   not apply is sent again.
+- **Big places connect again.** Studio refuses to send more than 1024 KB per
+  request. A place whose tree passed that could never finish connecting: the
+  refusal looked like a lost connection, and every reconnect resent all failed
+  messages at once until Studio's request limit was hit too. The tree now goes in
+  parts the engine puts back together, big batches are split, a refused or
+  rate-limited message no longer triggers a reconnect, and stale messages are not
+  resent after one (the tree that follows already carries them).
 - Changes made in the editor while sync is paused are applied when it resumes,
   instead of being moved to the trash.
 - The plugin fetches up to 64 messages per request instead of one, so a large
