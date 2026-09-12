@@ -299,6 +299,30 @@ pub fn instances_named(entries: &[TrashEntry], name: &str) -> Vec<String> {
     out
 }
 
+/// Every instance name the trash holds, for "Did you mean" when a search finds nothing.
+pub fn trash_names(entries: &[TrashEntry]) -> Vec<String> {
+    let mut out: Vec<String> = entries
+        .iter()
+        .flat_map(|e| e.rel.split('/').map(instance_name_of))
+        .filter(|name| !name.is_empty() && *name != "init")
+        .map(str::to_string)
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// Every class the trash's file names carry ("part", "script", ...).
+pub fn trash_classes(entries: &[TrashEntry]) -> Vec<String> {
+    let mut out: Vec<String> = entries
+        .iter()
+        .filter_map(|e| class_of_file(e.rel.rsplit('/').next().unwrap_or("")))
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// The instance name a path component stands for: "Box_1a2b3c4d.part.json" -> "Box".
 fn instance_name_of(component: &str) -> &str {
     let base = base_of(component);

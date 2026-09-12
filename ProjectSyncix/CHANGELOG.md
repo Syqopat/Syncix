@@ -6,6 +6,30 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [0.1.4] - 2026-09-12
 
+### Added
+
+- **"Did you mean ...?" everywhere a name is typed.** A slip is answered with the
+  closest real spelling instead of a bare "not found" or "invalid":
+  - commands and options: `syncix staus`, `rm Box --yse`. A misspelt option is no
+    longer taken as a plain argument, so `attr Box Hp --delet` no longer sets Hp
+    to "--delet" and `tag Box --nnoe` no longer adds a tag called "--nnoe";
+  - targets and dotted paths in every command (`Workspace.Tycons` ->
+    `Workspace.Tycoons`), and `syncix find`;
+  - property names (`set Box Szie 4,1,2` -> Size), checked against Roblox's class
+    table; a name close to a real one is refused before anything is sent;
+  - class names for `syncix new` (`Prat` -> Part; `part` is created as Part);
+  - values: colours (`oragne`), true/false (`ture`) and enum items (`Neno` ->
+    Neon, `Enum.Materail.Neon`). A value that cannot be what the property holds
+    (a word for a number, two numbers for a Vector3) is refused instead of
+    reaching Studio as text while the terminal printed success;
+  - `syncix restore` names, runs and `--class`, and `syncix import` file names;
+  - syncix.toml: unknown sections and settings, sync modes, service and class
+    names, listed by `syncix config` and in the engine log;
+  - Studio's Output, when a file names a property or enum item that does not exist.
+- More colour names for `syncix set` (magenta, gold, turquoise, skyblue, ...), also
+  written with spaces: `sky blue`.
+- An enum item typed in the wrong case (`neon`) is written the way Roblox spells it.
+
 ### Fixed
 
 - **Large imports no longer lose or duplicate instances.** When Studio resent its

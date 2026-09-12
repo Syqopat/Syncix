@@ -4,6 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 -- The generated class -> property table, used only to correct a property name
 -- given in the wrong case (see correctedName). PatchBuilder loads it anyway.
 local PropertyTable = require(script.Parent.Parent.Observer.PropertyTable)
+local Suggest = require(script.Parent.Parent.Core.Suggest)
 
 -- Upper bound on instances waiting for a parent, so a parent that never arrives
 -- cannot grow the queue without limit.
@@ -756,6 +757,33 @@ local function correctedName(instance: Instance, propName: any): string?
     return realName
 end
 
+-- " Did you mean X?" for a write Studio refused: the closest property when the name is
+-- not a member, the closest item when the property holds an enum. A file edited by hand
+-- or an AI reaches Studio without the terminal's checks, so this is where it hears of a
+-- slip. Empty when nothing is close.
+local function refusalHint(instance: Instance, propName: any, propValue: any): string
+    if type(propName) ~= "string" then
+        return ""
+    end
+    local isMember, current = pcall(function()
+        return (instance :: any)[propName]
+    end)
+    local names = {}
+    local typed = propName
+    if not isMember then
+        for _, realName in pairs(caseIndexFor(instance.ClassName)) do
+            table.insert(names, realName)
+        end
+    elseif typeof(current) == "EnumItem" and type(propValue) == "string" then
+        typed = string.gsub(propValue, "^Enum%..+%.", "")
+        for _, item in ipairs(current.EnumType:GetEnumItems()) do
+            table.insert(names, item.Name)
+        end
+    end
+    local sentence = Suggest.didYouMean(Suggest.closest(typed, names))
+    return if sentence then " " .. sentence else ""
+end
+
 function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, propValue: any)
     -- Turned into a Color3 before the echo note below, so the note holds the value
     -- Studio will actually report back.
@@ -950,10 +978,11 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             return
         end
         warn(string.format(
-            "[Syncix] Could not apply property: %s.%s -> %s",
+            "[Syncix] Could not apply property: %s.%s -> %s%s",
             instance:GetFullName(),
             tostring(propName),
-            tostring(err)
+            tostring(err),
+            refusalHint(instance, propName, propValue)
         ))
     end
 end

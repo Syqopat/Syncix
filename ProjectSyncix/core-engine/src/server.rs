@@ -163,6 +163,17 @@ async fn shutdown_handler(State(state): State<Arc<AppState>>) -> axum::response:
     (axum::http::StatusCode::OK, "OK").into_response()
 }
 
+/// "<label> not found: <target>", with the closest targets that do exist, for every place
+/// that resolves one. A bare "not found" left whoever typed it guessing again.
+fn not_found(dm: &crate::model::DataModel, label: &str, target: &str) -> String {
+    let mut message = format!("{} not found: {}", label, target);
+    if let Some(hint) = crate::suggest::did_you_mean(&dm.target_suggestions(target)) {
+        message.push('\n');
+        message.push_str(&hint);
+    }
+    message
+}
+
 /// Returns the contents of sourcemap.json (luau-lsp compatible).
 async fn sourcemap_handler(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let dm = state.data_model.read().await;
@@ -186,7 +197,7 @@ async fn build_handler(
             ResolveResult::NotFound => {
                 return (
                     axum::http::StatusCode::NOT_FOUND,
-                    format!("Target not found: {}", t),
+                    not_found(&dm, "Target", t),
                 )
                     .into_response()
             }
@@ -493,7 +504,7 @@ async fn command_handler(
                 ResolveResult::NotFound => {
                     return (
                         axum::http::StatusCode::NOT_FOUND,
-                        format!("Target not found: {}", target),
+                        not_found(&dm, "Target", &target),
                     )
                         .into_response();
                 }
@@ -533,7 +544,7 @@ async fn command_handler(
                     ResolveResult::NotFound => {
                         return (
                             axum::http::StatusCode::NOT_FOUND,
-                            format!("Parent not found: {}", parent),
+                            not_found(&dm, "Parent", &parent),
                         )
                             .into_response();
                     }
@@ -582,7 +593,7 @@ async fn command_handler(
                     ResolveResult::NotFound => {
                         return (
                             axum::http::StatusCode::NOT_FOUND,
-                            format!("{} not found: {}", label, target),
+                            not_found(&dm, label, &target),
                         )
                             .into_response();
                     }
@@ -649,7 +660,7 @@ async fn object_handler(
                 Json(serde_json::json!({ "error": "not found" }))
             }
         }
-        ResolveResult::NotFound => Json(serde_json::json!({ "error": format!("Target not found: {}", target) })),
+        ResolveResult::NotFound => Json(serde_json::json!({ "error": not_found(&dm, "Target", &target) })),
         ResolveResult::Ambiguous(c) => Json(serde_json::json!({
             "error": format!("'{}' is ambiguous: {} matches", target, c.len()),
             "candidates": c.iter().map(|(n, cl, id)| serde_json::json!({

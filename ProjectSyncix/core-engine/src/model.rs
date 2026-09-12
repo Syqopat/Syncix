@@ -657,6 +657,63 @@ impl DataModel {
         }
     }
 
+    /// Targets close to one that resolved to nothing, spelt the way the CLI takes them.
+    /// For a dotted path the failing segment is compared with the children really there
+    /// ("Workspace.Tycons" -> "Workspace.Tycoons"); otherwise with every instance name.
+    pub fn target_suggestions(&self, target: &str) -> Vec<String> {
+        if !target.contains('.') {
+            let mut names: Vec<&str> = self
+                .instances
+                .values()
+                .filter(|n| n.class_name != "DataModel")
+                .map(|n| n.name.as_str())
+                .collect();
+            names.sort_unstable();
+            names.dedup();
+            return crate::suggest::closest(target, names).into_iter().map(str::to_string).collect();
+        }
+
+        let mut segments: Vec<&str> = target.split('.').filter(|s| !s.is_empty()).collect();
+        if segments.first().is_some_and(|s| s.eq_ignore_ascii_case("game")) {
+            segments.remove(0);
+        }
+        let mut found_path: Vec<&str> = Vec::new();
+        let mut parent: Option<Uuid> = None;
+        for segment in segments {
+            let children: Vec<(Uuid, &InstanceNode)> = match parent {
+                None => self
+                    .instances
+                    .iter()
+                    .filter(|(_, n)| n.parent.is_none() && n.class_name != "DataModel")
+                    .map(|(id, n)| (*id, n))
+                    .collect(),
+                Some(p) => self
+                    .instances
+                    .get(&p)
+                    .map(|n| n.children.iter().filter_map(|c| self.instances.get(c).map(|x| (*c, x))).collect())
+                    .unwrap_or_default(),
+            };
+            let exact: Vec<&(Uuid, &InstanceNode)> =
+                children.iter().filter(|(_, n)| n.name.eq_ignore_ascii_case(segment)).collect();
+            match exact.as_slice() {
+                [(id, node)] => {
+                    found_path.push(node.name.as_str());
+                    parent = Some(*id);
+                }
+                // Several with that name: ambiguous, not misspelt.
+                [_, _, ..] => return Vec::new(),
+                [] => {
+                    let names: Vec<&str> = children.iter().map(|(_, n)| n.name.as_str()).collect();
+                    return crate::suggest::closest(segment, names)
+                        .into_iter()
+                        .map(|name| found_path.iter().copied().chain([name]).collect::<Vec<_>>().join("."))
+                        .collect();
+                }
+            }
+        }
+        Vec::new()
+    }
+
     pub fn find_by_short_uuid(&self, short_uuid: &str) -> Option<Uuid> {
         for id in self.instances.keys() {
             if id.to_string().starts_with(short_uuid) {

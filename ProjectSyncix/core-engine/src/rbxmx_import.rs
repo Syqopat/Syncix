@@ -373,6 +373,10 @@ pub fn is_service(class_name: &str) -> bool {
     SERVICE_CLASSES.contains(&class_name)
 }
 
+pub fn service_names() -> impl Iterator<Item = &'static str> {
+    SERVICE_CLASSES.iter().copied()
+}
+
 /// True for every class an import must map onto an existing instance rather than create.
 pub fn is_singleton(class_name: &str) -> bool {
     is_service(class_name) || SINGLETON_CHILD_CLASSES.contains(&class_name)

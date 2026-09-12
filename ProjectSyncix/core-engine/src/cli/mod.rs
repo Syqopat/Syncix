@@ -182,6 +182,166 @@ fn fetch_json(port: u16, fs_path: &str) -> Option<serde_json::Value> {
     }
 }
 
+/// A "Did you mean ...?" line under an error.
+fn print_hint(text: &str) {
+    println!("{}  {}{}", YELLOW, text, RESET);
+}
+
+/// Every command name and alias, for "Did you mean" after an unknown one.
+const COMMAND_NAMES: &[&str] = &[
+    "help", "version", "status", "st", "tree", "ls", "list", "find", "search", "props", "show",
+    "cat", "set", "attr", "new", "create", "mk", "rename", "rn", "rm", "del", "delete", "mv",
+    "move", "upload", "sourcemap", "build", "import", "pull", "resync", "verify", "check", "tag",
+    "tags", "bind", "config", "settings", "trash", "restore", "selftest", "init", "up", "start",
+    "down", "stop", "serve",
+];
+
+/// The options each command takes; None for commands whose values are free text.
+/// A misspelt option used to be read as a plain argument: `rm Box --yse` asked for
+/// confirmation, `attr Box Hp --delet` set Hp to "--delet", `tag Box --nnoe` added a tag
+/// called "--nnoe".
+fn known_flags(command: &str) -> Option<&'static [&'static str]> {
+    Some(match command {
+        "rm" | "del" | "delete" => &["--yes"],
+        "trash" => &["--files", "--in", "--class", "--since"],
+        "restore" => &["--in", "--class", "--since", "--dry-run", "--all"],
+        "bind" => &["--studio", "--disk"],
+        "upload" => &["--confirm"],
+        "build" | "sourcemap" => &["--output"],
+        "attr" => &["--delete"],
+        "tag" | "tags" => &["--none"],
+        "set" | "rename" | "rn" => return None,
+        _ => &[],
+    })
+}
+
+/// False, after saying so, when an argument looks like an option the command does not take.
+fn flags_ok(cli_args: &[String]) -> bool {
+    let command = cli_args[0].as_str();
+    let Some(known) = known_flags(command) else { return true };
+    for a in cli_args.iter().skip(1).filter(|a| a.starts_with("--")) {
+        if known.contains(&a.as_str()) {
+            continue;
+        }
+        let hint = crate::suggest::hint(a, known.iter().copied());
+        // An attribute value may start with dashes; only a slip of --delete is refused.
+        if command == "attr" && hint.is_none() {
+            continue;
+        }
+        report_error(&format!("Unknown option {} for syncix {}.", a, command));
+        match hint {
+            Some(hint) => print_hint(&hint),
+            None if known.is_empty() => print_dim(&format!("  syncix {} takes no options.", command)),
+            None => print_dim(&format!("  Options: {}", known.join(", "))),
+        }
+        return false;
+    }
+    true
+}
+
+/// "Not found", in the core's words when it can say more: it offers the closest targets.
+fn report_not_found(port: u16, dest: &str) {
+    let reason = fetch_json(port, &format!("/object?target={}", url_encode(dest)))
+        .and_then(|o| o.get("error")?.as_str().map(str::to_string))
+        .unwrap_or_else(|| format!("Not found: {}", dest));
+    report_error(&reason);
+}
+
+/// The class `syncix new` creates. A wrong case is corrected (Instance.new is
+/// case-sensitive, so "part" failed in Studio after "Created" was printed); a slip close to
+/// a known class is refused with it; a name the table does not know at all is passed on,
+/// since the table may be older than Studio.
+fn class_for_new(typed: &str) -> Result<String, String> {
+    if crate::catalog::is_class(typed) {
+        return Ok(typed.to_string());
+    }
+    if let Some(real) = crate::catalog::class_named(typed) {
+        print_dim(&format!("  Using {} (class names are case-sensitive).", real));
+        return Ok(real.to_string());
+    }
+    match crate::suggest::hint(typed, crate::catalog::class_names()) {
+        Some(hint) => Err(format!("Unknown class: {}. {}", typed, hint)),
+        None => Ok(typed.to_string()),
+    }
+}
+
+enum PropertyCheck {
+    Known,
+    /// Close to a known property: refused.
+    Misspelt(String),
+    /// Unknown, and nothing is close: sent anyway, with a warning.
+    Unlisted(String),
+}
+
+/// Whether the instance has the property. `set Box Szie 4,1,2` reached Studio, which
+/// refused it, while the core had already stored a property "Szie" beside Size. A name
+/// close to a known one is refused; one nothing is close to is let through, because the
+/// table behind the check lists only what Syncix carries and may be older than Studio.
+fn property_check(object: &serde_json::Value, property: &str) -> PropertyCheck {
+    let class = object.get("class_name").and_then(|c| c.as_str()).unwrap_or("");
+    let listed = crate::catalog::properties_of(class);
+    let mut known: Vec<&str> = object
+        .get("properties")
+        .and_then(|p| p.as_object())
+        .map(|m| m.keys().map(String::as_str).collect())
+        .unwrap_or_default();
+    known.extend(listed.iter().flatten().copied());
+    // Members the table leaves out on purpose (see UNLISTED_MEMBERS in PatchExecutor).
+    known.extend(["Name", "Parent", "Archivable", "Source"]);
+    if known.iter().any(|k| k.eq_ignore_ascii_case(property)) {
+        return PropertyCheck::Known;
+    }
+    if let Some(hint) = crate::suggest::hint(property, known.iter().copied()) {
+        return PropertyCheck::Misspelt(format!("{} has no property '{}'. {}", class, property, hint));
+    }
+    match listed {
+        Some(_) => PropertyCheck::Unlisted(format!(
+            "{} has no property '{}' that Syncix knows; sending it anyway. Studio will refuse it if it does not exist.",
+            class, property
+        )),
+        None => PropertyCheck::Known,
+    }
+}
+
+/// Files beside a path that does not exist, spelt closest to it.
+fn file_hint(path: &str) -> Option<String> {
+    let path = std::path::Path::new(path);
+    let typed = path.file_name()?.to_str()?;
+    let dir = path.parent().filter(|d| !d.as_os_str().is_empty());
+    let names: Vec<String> = std::fs::read_dir(dir.unwrap_or(std::path::Path::new(".")))
+        .ok()?
+        .filter_map(|e| e.ok()?.file_name().into_string().ok())
+        .collect();
+    let options: Vec<String> = crate::suggest::closest(typed, names.iter().map(String::as_str))
+        .into_iter()
+        .map(|name| match dir {
+            Some(d) => d.join(name).display().to_string(),
+            None => name.to_string(),
+        })
+        .collect();
+    crate::suggest::did_you_mean(&options)
+}
+
+/// Near spellings for a trash search that found nothing: names, runs and classes the
+/// trash really holds.
+fn print_trash_hint(entries: &[crate::layout::TrashEntry], filter: &crate::layout::TrashFilter) {
+    if let Some(name) = &filter.name {
+        let mut known = crate::layout::trash_names(entries);
+        known.extend(entries.iter().map(|e| e.run.clone()));
+        known.sort();
+        known.dedup();
+        if let Some(hint) = crate::suggest::hint(name, known.iter().map(String::as_str)) {
+            print_hint(&hint);
+        }
+    }
+    if let Some(class) = &filter.class_name {
+        let known = crate::layout::trash_classes(entries);
+        if let Some(hint) = crate::suggest::hint(class, known.iter().map(String::as_str)) {
+            print_hint(&format!("--class: {}", hint));
+        }
+    }
+}
+
 /// Sends a command to the core; on error, shows the server's message as is
 /// (ambiguous-target warnings come from here).
 fn send_command(port: u16, event_type: &str, data: serde_json::Value) -> bool {
@@ -393,7 +553,7 @@ fn tree(dest: Option<&str>) -> i32 {
         None => print_tree(&node_list, None, "", 0),
         Some(h) => {
             let Some(d) = resolve_row(port, &node_list, h) else {
-                report_error(&format!("Not found: {}", h));
+                report_not_found(port, h);
                 return 1;
             };
             println!("{}  {}{}{}", d.item_name, DIM, d.class_str, RESET);
@@ -433,7 +593,7 @@ fn list_instances(dest: Option<&str>) -> i32 {
         Some(h) => match resolve_row(port, &node_list, h) {
             Some(d) => Some(d.id.clone()),
             None => {
-                report_error(&format!("Not found: {}", h));
+                report_not_found(port, h);
                 return 1;
             }
         },
@@ -475,6 +635,15 @@ fn search(word: &str) -> i32 {
 
     if found_item.is_empty() {
         println!("{}No match: {}{}", YELLOW, word, RESET);
+        let mut known: Vec<&str> = node_list
+            .iter()
+            .flat_map(|d| [d.item_name.as_str(), d.class_str.as_str()])
+            .collect();
+        known.sort_unstable();
+        known.dedup();
+        if let Some(hint) = crate::suggest::hint(word, known) {
+            print_hint(&hint);
+        }
         return 1;
     }
     for d in found_item {
@@ -992,6 +1161,13 @@ fn show_config() -> i32 {
     println!("Root:    {}", c.root.display());
     println!("Config:  {}", c.root.join("syncix.toml").display());
     println!();
+    let warnings = crate::project::ProjectConfig::warnings();
+    for warning in &warnings {
+        println!("{}  {}{}", YELLOW, warning, RESET);
+    }
+    if !warnings.is_empty() {
+        println!();
+    }
 
     println!("[sync]");
     println!("  mode           {}", c.mode_value.name_of());
@@ -1122,6 +1298,7 @@ fn trash_list(cli_args: &[String]) -> i32 {
         let picked = crate::layout::select_entries(&entries, &filter);
         if picked.is_empty() {
             print_info("No removed file matches.");
+            print_trash_hint(&entries, &filter);
             return 0;
         }
         println!("Removed files (newest copy of each), newest first:");
@@ -1197,6 +1374,7 @@ fn trash_restore_selected(cli_args: &[String], sync_dir: &str) -> i32 {
     let picked = crate::layout::select_entries(&entries, &filter);
     if picked.is_empty() {
         print_info("Nothing in the trash matches.");
+        print_trash_hint(&entries, &filter);
         print_dim("  See what is there: syncix trash --files");
         return 0;
     }
@@ -1500,6 +1678,11 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         Ok(x) => x,
         Err(e) => {
             report_error(&format!("Could not read {}: {}", file_path, e));
+            if e.kind() == std::io::ErrorKind::NotFound {
+                if let Some(hint) = file_hint(file_path) {
+                    print_hint(&hint);
+                }
+            }
             return 1;
         }
     };
@@ -1700,6 +1883,9 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
     // Values may contain spaces (e.g. `set Box Position 0, 5, -60`); all remaining
     // arguments are joined.
     let remaining = |i: usize| cli_args[i.min(cli_args.len())..].join(" ");
+    if COMMAND_NAMES.contains(&command_name) && !flags_ok(cli_args) {
+        return Some(1);
+    }
 
     let outcome = match command_name {
         "help" | "--help" | "-h" => {
@@ -1736,7 +1922,24 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
                 // judged like a Part's Color3). The core accepts the command and only logs
                 // a refused colour, so without this `set Part Color "Really red"` printed
                 // success here and nothing changed.
-                let current = fetch_json(port, &format!("/object?target={}", url_encode(h)))
+                // A missing target is left to the core's reply, which offers close ones.
+                let object = fetch_json(port, &format!("/object?target={}", url_encode(h)))
+                    .filter(|o| o.get("error").is_none());
+                let class_name = object
+                    .as_ref()
+                    .and_then(|o| o.get("class_name")?.as_str().map(str::to_string));
+                if let Some(o) = &object {
+                    match property_check(o, p) {
+                        PropertyCheck::Known => {}
+                        PropertyCheck::Misspelt(message) => {
+                            report_error(&format!("{}.{} was not changed: {}", h, p, message));
+                            return Some(1);
+                        }
+                        PropertyCheck::Unlisted(message) => print_hint(&message),
+                    }
+                }
+                let current = object
+                    .as_ref()
                     .and_then(|o| {
                         o.get("properties")?
                             .as_object()?
@@ -1745,13 +1948,15 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
                             .map(|(_, v)| v.clone())
                     })
                     .and_then(|v| serde_json::from_value::<crate::model::PropertyValue>(v).ok());
-                if let Err(reason) = crate::value_from_text(p, current.as_ref(), &raw_value) {
-                    report_error(&format!("{}; {}.{} was not changed.", reason, h, p));
-                    for line in crate::color_forms_help() {
-                        print_dim(&format!("  {}", line));
-                    }
-                    if p.eq_ignore_ascii_case("Color") {
-                        print_dim("  A BrickColor name such as \"Really red\" belongs to the BrickColor property.");
+                if let Err(reason) = crate::value_for_class(class_name.as_deref(), p, current.as_ref(), &raw_value) {
+                    report_error(&format!("{}.{} was not changed: {}", h, p, reason));
+                    if crate::color_target(p, current.as_ref()).is_some() {
+                        for line in crate::color_forms_help() {
+                            print_dim(&format!("  {}", line));
+                        }
+                        if p.eq_ignore_ascii_case("Color") {
+                            print_dim("  A BrickColor name such as \"Really red\" belongs to the BrickColor property.");
+                        }
                     }
                     return Some(1);
                 }
@@ -1806,14 +2011,21 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             }
         },
         "new" | "create" | "mk" => match arg(1) {
-            Some(class_str) if crate::rbxmx_import::is_singleton(class_str) => {
-                // The engine refuses it too; saying so here beats a "Created" that did nothing.
-                report_error(&format!("{} exists once per place and cannot be created.", class_str));
-                1
-            }
-            Some(class_str) => {
+            Some(typed_class) => {
+                let class_str = match class_for_new(typed_class) {
+                    Ok(c) => c,
+                    Err(message) => {
+                        report_error(&message);
+                        return Some(1);
+                    }
+                };
+                if crate::rbxmx_import::is_singleton(&class_str) {
+                    // The engine refuses it too; saying so here beats a "Created" that did nothing.
+                    report_error(&format!("{} exists once per place and cannot be created.", class_str));
+                    return Some(1);
+                }
                 let Some(port) = require_core() else { return Some(1) };
-                let item_name = arg(2).unwrap_or(class_str);
+                let item_name = arg(2).unwrap_or(&class_str);
                 let parent_ref = arg(3).unwrap_or("Workspace");
                 if send_command(
                     port,
@@ -1956,6 +2168,9 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         "down" | "stop" => stop_core(),
         unknown => {
             report_error(&format!("Unknown command: {}", unknown));
+            if let Some(hint) = crate::suggest::hint(unknown, COMMAND_NAMES.iter().copied()) {
+                print_hint(&hint);
+            }
             print_dim("  Run syncix help to see the command list.");
             1
         }

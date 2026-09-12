@@ -4,6 +4,7 @@ mod assets;
 mod auth;
 #[allow(dead_code)]
 mod bus;
+mod catalog;
 mod cli;
 #[allow(dead_code)]
 mod command;
@@ -35,6 +36,7 @@ mod serializers;
 mod server;
 #[allow(dead_code)]
 mod snapshot;
+mod suggest;
 #[allow(dead_code)]
 mod transport;
 #[allow(dead_code)]
@@ -244,7 +246,47 @@ const COLOR_NAMES: &[(&str, [u8; 3])] = &[
     ("lime", [0, 255, 0]),
     ("navy", [0, 0, 128]),
     ("teal", [0, 128, 128]),
+    ("magenta", [255, 0, 255]),
+    ("maroon", [128, 0, 0]),
+    ("olive", [128, 128, 0]),
+    ("silver", [192, 192, 192]),
+    ("gold", [255, 215, 0]),
+    ("violet", [238, 130, 238]),
+    ("indigo", [75, 0, 130]),
+    ("beige", [245, 245, 220]),
+    ("turquoise", [64, 224, 208]),
+    ("coral", [255, 127, 80]),
+    ("crimson", [220, 20, 60]),
+    ("salmon", [250, 128, 114]),
+    ("lavender", [230, 230, 250]),
+    ("khaki", [240, 230, 140]),
+    ("chocolate", [210, 105, 30]),
+    ("skyblue", [135, 206, 235]),
+    ("lightblue", [173, 216, 230]),
+    ("darkblue", [0, 0, 139]),
+    ("darkgreen", [0, 100, 0]),
+    ("lightgreen", [144, 238, 144]),
+    ("darkred", [139, 0, 0]),
+    ("lightgray", [211, 211, 211]),
+    ("lightgrey", [211, 211, 211]),
 ];
+
+/// "Sky Blue", "sky_blue" and "sky-blue" are all "skyblue", the key COLOR_NAMES uses.
+fn compact_colour_name(text: &str) -> String {
+    text.trim()
+        .to_ascii_lowercase()
+        .chars()
+        .filter(|c| !matches!(c, ' ' | '_' | '-'))
+        .collect()
+}
+
+/// "'oragne' is not a colour. Did you mean orange?"
+fn not_a_colour(typed: &str) -> String {
+    match suggest::hint(&compact_colour_name(typed), COLOR_NAMES.iter().map(|(name, _)| *name)) {
+        Some(hint) => format!("'{}' is not a colour. {}", typed, hint),
+        None => format!("'{}' is not a colour", typed),
+    }
+}
 
 /// Reads a colour typed in the terminal into Color3 components (0-1); None if the text
 /// is no colour.
@@ -264,7 +306,8 @@ fn parse_color3(text: &str) -> Option<[f32; 3]> {
         return parse_hex_color(hex);
     }
     let lower = t.to_ascii_lowercase();
-    if let Some(&(_, rgb)) = COLOR_NAMES.iter().find(|(name, _)| *name == lower) {
+    let compact = compact_colour_name(t);
+    if let Some(&(_, rgb)) = COLOR_NAMES.iter().find(|(name, _)| *name == compact) {
         return Some(rgb.map(|c| c as f32 / 255.0));
     }
     if let Some(args) = call_arguments(&lower, "color3.fromrgb") {
@@ -460,14 +503,18 @@ fn canonical_property_name(
 /// alone: forwarding it anyway is how `set Part Color red` reached Studio as a string, was
 /// refused there ("Color3 expected, got string"), and the terminal still printed success.
 /// Only colour targets can fail today; other types keep the general parser's best guess.
-fn value_from_text(
+///
+/// `class_name` is the instance's class when known: it tells an enum an import left as its
+/// bare number from a real number, so a name may still be typed for it.
+fn value_for_class(
+    class_name: Option<&str>,
     property: &str,
     current_value: Option<&model::PropertyValue>,
     text_value: &str,
 ) -> Result<model::PropertyValue, String> {
+    let typed = text_value.trim();
     if let Some(target) = color_target(property, current_value) {
-        let colors = parse_color_list(text_value)
-            .ok_or_else(|| format!("'{}' is not a colour", text_value.trim()))?;
+        let colors = parse_color_list(text_value).ok_or_else(|| not_a_colour(typed))?;
         return match (target, colors.as_slice()) {
             (ColorTarget::Sequence, _) => Ok(color_sequence(&colors)),
             (_, [[r, g, b]]) => Ok(model::PropertyValue::Color3 { r: *r, g: *g, b: *b }),
@@ -479,9 +526,109 @@ fn value_from_text(
             (ColorTarget::Either, _) => Ok(color_sequence(&colors)),
         };
     }
-    Ok(current_value
+    if let Some(value) = enum_from_text(current_value, typed)? {
+        return Ok(value);
+    }
+    let parsed = current_value
         .and_then(|current| coerce_to_existing_type(current, text_value))
-        .unwrap_or_else(|| parse_property_value(text_value)))
+        .unwrap_or_else(|| parse_property_value(text_value));
+
+    // A value that cannot be what the property holds went to Studio as text and was
+    // refused there, after the terminal had printed success: `set Box Anchored ture`.
+    let enum_property = class_name.is_some_and(|c| catalog::is_enum_property(c, property));
+    let enum_text = matches!(&parsed, model::PropertyValue::String(s) if s.starts_with("Enum."));
+    if let Some(current) = current_value.filter(|_| !enum_property && !enum_text) {
+        if let Some(expected) = expected_form(current) {
+            if std::mem::discriminant(current) != std::mem::discriminant(&parsed) {
+                let mut reason = format!("'{}' is not {}", typed, expected);
+                if matches!(current, model::PropertyValue::Boolean(_)) {
+                    if let Some(hint) = suggest::hint(typed, ["true", "false"]) {
+                        reason = format!("{}. {}", reason, hint);
+                    }
+                }
+                return Err(reason);
+            }
+        }
+    }
+    Ok(parsed)
+}
+
+#[cfg(test)]
+fn value_from_text(
+    property: &str,
+    current_value: Option<&model::PropertyValue>,
+    text_value: &str,
+) -> Result<model::PropertyValue, String> {
+    value_for_class(None, property, current_value, text_value)
+}
+
+/// How a value of this type is typed, for the types whose text the general parser can
+/// only turn into a string Studio refuses. None for types that take any text.
+fn expected_form(current: &model::PropertyValue) -> Option<&'static str> {
+    use model::PropertyValue as P;
+    Some(match current {
+        P::Boolean(_) => "true or false",
+        P::Number(_) => "a number",
+        P::Vector3 { .. } => "x,y,z (three numbers)",
+        P::Vector2 { .. } => "x,y (two numbers)",
+        P::UDim { .. } => "scale,offset",
+        P::UDim2 { .. } => "xScale,xOffset,yScale,yOffset",
+        P::CFrame { .. } => "x,y,z (or twelve numbers: position and rotation)",
+        P::NumberRange { .. } => "min,max or a single number",
+        P::Rect { .. } => "four numbers (min x, min y, max x, max y)",
+        P::PhysicalProperties { .. } => "density,friction,elasticity (three or five numbers)",
+        P::NumberSequence(_) => "numbers separated by commas",
+        _ => return None,
+    })
+}
+
+/// An enum value typed in the terminal, checked against the enum the property holds now
+/// (a model value "Enum.Material.Plastic" says it takes a Material). A slip in the enum's
+/// name, or in an item of an enum Syncix lists, is refused with the closest spelling; a
+/// listed item in the wrong case is written the way Roblox spells it, since
+/// `Enum.Material.neon` fails in Studio. Ok(None): not an enum value, or not one to judge.
+fn enum_from_text(
+    current_value: Option<&model::PropertyValue>,
+    typed: &str,
+) -> Result<Option<model::PropertyValue>, String> {
+    let Some(model::PropertyValue::String(current)) = current_value else {
+        return Ok(None);
+    };
+    let Some(enum_name) = current.strip_prefix("Enum.").and_then(|rest| rest.split('.').next()) else {
+        return Ok(None);
+    };
+    let item = match typed.strip_prefix("Enum.") {
+        Some(rest) => {
+            let (typed_enum, item) = rest.split_once('.').unwrap_or((rest, ""));
+            if !typed_enum.eq_ignore_ascii_case(enum_name) {
+                let hint = if item.is_empty() {
+                    String::new()
+                } else {
+                    format!(" Did you mean Enum.{}.{}?", enum_name, item)
+                };
+                return Err(format!("'{}' is not an Enum.{} value.{}", typed, enum_name, hint));
+            }
+            item
+        }
+        // A bare word ("Neon") names an item; anything else goes on as typed.
+        None if typed.starts_with(|c: char| c.is_ascii_alphabetic())
+            && typed.chars().all(|c| c.is_ascii_alphanumeric()) =>
+        {
+            typed
+        }
+        None => return Ok(None),
+    };
+    let Some(items) = catalog::enum_items(enum_name) else {
+        return Ok(None);
+    };
+    if let Some(real) = items.iter().find(|i| i.eq_ignore_ascii_case(item)) {
+        return Ok(Some(model::PropertyValue::String(format!("Enum.{}.{}", enum_name, real))));
+    }
+    match suggest::hint(item, items.iter().copied()) {
+        Some(hint) => Err(format!("{} is not an Enum.{} item. {}", item, enum_name, hint)),
+        // Possibly newer than the list; Studio has the last word.
+        None => Ok(None),
+    }
 }
 
 /// After a FULL_SYNC: the messages that bring Studio up to what the core kept for it.
@@ -1516,15 +1663,15 @@ async fn main() {
                 // The type decision is still made from a value — the value compared
                 // is simply the one already in the model. The name is fitted too, to the
                 // instance's own spelling (see canonical_property_name).
-                let (canonical, current_value) = {
+                let (canonical, current_value, class_name) = {
                     let dm = data_model.read().await;
                     match dm.get_instance(&uuid) {
                         Some(inst) => {
                             let canonical = canonical_property_name(&inst.properties, &property);
                             let current_value = inst.properties.get(&canonical).cloned();
-                            (canonical, current_value)
+                            (canonical, current_value, Some(inst.class_name.clone()))
                         }
-                        None => (property.clone(), None),
+                        None => (property.clone(), None, None),
                     }
                 };
                 if canonical != property {
@@ -1536,7 +1683,9 @@ async fn main() {
                 }
                 let property = canonical;
                 let parsed = match &value_json {
-                    serde_json::Value::String(s) => value_from_text(&property, current_value.as_ref(), s),
+                    serde_json::Value::String(s) => {
+                        value_for_class(class_name.as_deref(), &property, current_value.as_ref(), s)
+                    }
                     other => match parse_wire_value(other) {
                         Some(pv) => Ok(pv),
                         // The fallback below forwards text, which a colour property refuses.
@@ -1549,13 +1698,17 @@ async fn main() {
                 let mut pv = match parsed {
                     Ok(pv) => pv,
                     Err(reason) => {
-                        let help: Vec<String> = color_forms_help().iter().map(|l| l.trim().to_string()).collect();
+                        let help = if color_target(&property, current_value.as_ref()).is_some() {
+                            color_forms_help().iter().map(|l| l.trim().to_string()).collect::<Vec<_>>().join(" ")
+                        } else {
+                            String::new()
+                        };
                         tracing::warn!(
-                            "SET_PROPERTY: {}; {}.{} was left unchanged. {}",
-                            reason,
+                            "SET_PROPERTY: {}.{} was left unchanged: {} {}",
                             id,
                             property,
-                            help.join(" ")
+                            reason,
+                            help
                         );
                         continue;
                     }
@@ -2581,6 +2734,35 @@ mod set_value_tests {
             Ok(P::BrickColor("Really red".into()))
         );
         assert_eq!(value_from_text("Material", None, "red"), Ok(P::String("red".into())));
+
+        // Slips are refused with the closest spelling, before anything reaches Studio.
+        let black = P::Color3 { r: 0.0, g: 0.0, b: 0.0 };
+        let err = value_from_text("Color", Some(&black), "oragne").unwrap_err();
+        assert!(err.contains("Did you mean orange?"), "{}", err);
+        assert_eq!(
+            value_from_text("Color", Some(&black), "Sky Blue"),
+            Ok(P::Color3 { r: 135.0 / 255.0, g: 206.0 / 255.0, b: 235.0 / 255.0 })
+        );
+        let err = value_from_text("Anchored", Some(&P::Boolean(false)), "ture").unwrap_err();
+        assert!(err.contains("Did you mean true?"), "{}", err);
+        assert!(value_from_text("Transparency", Some(&P::Number(0.0)), "half").is_err());
+        assert!(value_from_text("Size", Some(&P::Vector3 { x: 1.0, y: 1.0, z: 1.0 }), "4,1").is_err());
+
+        let plastic = P::String("Enum.Material.Plastic".into());
+        assert_eq!(value_from_text("Material", Some(&plastic), "neon"), Ok(P::String("Enum.Material.Neon".into())));
+        assert_eq!(
+            value_from_text("Material", Some(&plastic), "Enum.Material.Glass"),
+            Ok(P::String("Enum.Material.Glass".into()))
+        );
+        let err = value_from_text("Material", Some(&plastic), "Neno").unwrap_err();
+        assert!(err.contains("Did you mean Neon?"), "{}", err);
+        let err = value_from_text("Material", Some(&plastic), "Enum.Materail.Neon").unwrap_err();
+        assert!(err.contains("Did you mean Enum.Material.Neon?"), "{}", err);
+        // An enum an import left as its bare number still takes a name.
+        assert_eq!(
+            value_for_class(Some("TextLabel"), "TextXAlignment", Some(&P::Number(0.0)), "Left"),
+            Ok(P::String("Left".into()))
+        );
         assert_eq!(value_from_text("Transparency", None, "0.5"), Ok(P::Number(0.5)));
         assert_eq!(
             value_from_text("Position", None, "0,5,-60"),
