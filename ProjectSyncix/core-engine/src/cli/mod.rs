@@ -392,7 +392,7 @@ fn tree(dest: Option<&str>) -> i32 {
     match dest {
         None => print_tree(&node_list, None, "", 0),
         Some(h) => {
-            let Some(d) = find_node(&node_list, h) else {
+            let Some(d) = resolve_row(port, &node_list, h) else {
                 report_error(&format!("Not found: {}", h));
                 return 1;
             };
@@ -401,6 +401,18 @@ fn tree(dest: Option<&str>) -> i32 {
         }
     }
     0
+}
+
+/// Finds a row by id, short id or name, and otherwise asks the core, which also
+/// understands dotted paths ("Workspace.Tycoons"). Matching names locally never could,
+/// so `syncix ls Workspace.Tycoons` said "Not found" while `syncix set` found it.
+fn resolve_row<'a>(port: u16, node_list: &'a [TreeRow], dest: &str) -> Option<&'a TreeRow> {
+    if let Some(row) = find_node(node_list, dest) {
+        return Some(row);
+    }
+    let object = fetch_json(port, &format!("/object?target={}", url_encode(dest)))?;
+    let id = object.get("syncix_id")?.as_str()?;
+    node_list.iter().find(|row| row.id == id)
 }
 
 fn find_node<'a>(node_list: &'a [TreeRow], dest: &str) -> Option<&'a TreeRow> {
@@ -418,7 +430,7 @@ fn list_instances(dest: Option<&str>) -> i32 {
 
     let root_dir: Option<String> = match dest {
         None => None,
-        Some(h) => match find_node(&node_list, h) {
+        Some(h) => match resolve_row(port, &node_list, h) {
             Some(d) => Some(d.id.clone()),
             None => {
                 report_error(&format!("Not found: {}", h));
@@ -983,7 +995,6 @@ fn show_config() -> i32 {
 
     println!("[sync]");
     println!("  mode           {}", c.mode_value.name_of());
-    println!("  play_mode      {}", c.play.name_of());
     println!("  debounce_ms    {}", c.debounce_ms);
     println!("  ask_permission {}", c.prompt_permission);
     println!("  undo           {}", c.restore_cmd);
@@ -1718,8 +1729,32 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         },
         "set" => match (arg(1), arg(2)) {
             (Some(h), Some(p)) if cli_args.len() > 3 => {
-                let Some(port) = require_core() else { return Some(1) };
                 let raw_value = remaining(3);
+                let Some(port) = require_core() else { return Some(1) };
+                // Checked before sending, with the parser the core uses and the property's
+                // current value from the core (so a Beam's ColorSequence "Color" is not
+                // judged like a Part's Color3). The core accepts the command and only logs
+                // a refused colour, so without this `set Part Color "Really red"` printed
+                // success here and nothing changed.
+                let current = fetch_json(port, &format!("/object?target={}", url_encode(h)))
+                    .and_then(|o| {
+                        o.get("properties")?
+                            .as_object()?
+                            .iter()
+                            .find(|(k, _)| k.eq_ignore_ascii_case(p))
+                            .map(|(_, v)| v.clone())
+                    })
+                    .and_then(|v| serde_json::from_value::<crate::model::PropertyValue>(v).ok());
+                if let Err(reason) = crate::value_from_text(p, current.as_ref(), &raw_value) {
+                    report_error(&format!("{}; {}.{} was not changed.", reason, h, p));
+                    for line in crate::color_forms_help() {
+                        print_dim(&format!("  {}", line));
+                    }
+                    if p.eq_ignore_ascii_case("Color") {
+                        print_dim("  A BrickColor name such as \"Really red\" belongs to the BrickColor property.");
+                    }
+                    return Some(1);
+                }
                 if send_command(
                     port,
                     "SET_PROPERTY",

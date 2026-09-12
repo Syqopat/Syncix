@@ -1,5 +1,9 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashSet, VecDeque};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
+use uuid::Uuid;
 
 /// Standard schema of every message in the system.
 /// Versioned, so older clients keep working when a v2 arrives.
@@ -22,7 +26,7 @@ pub enum EventType {
     ClientUpdate,
     /// When a new file is created
     PushCreate,
-    
+
     CompositeUpdate,
     PropertyUpdate,
     Create,
@@ -58,40 +62,211 @@ pub enum EventType {
     SetAttribute,
 }
 
+/// What payloads ask Studio to create or change: the part of the core's model Studio
+/// may not have yet.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct InFlight {
+    pub creates: HashSet<Uuid>,
+    /// Property changes; a rename is recorded as "Name", a script edit as "Source".
+    pub properties: HashSet<(Uuid, String)>,
+    pub reparents: HashSet<Uuid>,
+    pub destroys: HashSet<Uuid>,
+    pub attributes: HashSet<(Uuid, String)>,
+    pub tags: HashSet<Uuid>,
+}
+
+impl InFlight {
+    fn is_empty(&self) -> bool {
+        self.creates.is_empty()
+            && self.properties.is_empty()
+            && self.reparents.is_empty()
+            && self.destroys.is_empty()
+            && self.attributes.is_empty()
+            && self.tags.is_empty()
+    }
+
+    fn extend(&mut self, other: &InFlight) {
+        self.creates.extend(other.creates.iter().copied());
+        self.properties.extend(other.properties.iter().cloned());
+        self.reparents.extend(other.reparents.iter().copied());
+        self.destroys.extend(other.destroys.iter().copied());
+        self.attributes.extend(other.attributes.iter().cloned());
+        self.tags.extend(other.tags.iter().copied());
+    }
+}
+
+/// Records what one payload creates or changes in Studio. Every kind of change the core
+/// applies to its model before Studio does is recorded: tracking only creates and
+/// property changes let a FULL_SYNC quietly undo renames, moves, deletions, attributes
+/// and tags that were still on their way.
+fn record_touched(payload: &Payload, into: &mut InFlight) {
+    let id_of = |v: &serde_json::Value| {
+        v.get("syncix_id")
+            .or_else(|| v.get("id"))
+            .and_then(|x| x.as_str())
+            .and_then(|s| Uuid::parse_str(s).ok())
+    };
+    match payload.event_type {
+        EventType::CompositeUpdate => {
+            let Some(patches) = payload.data.get("patches").and_then(|x| x.as_array()) else {
+                return;
+            };
+            for patch in patches {
+                let Some(data) = patch.get("data") else { continue };
+                let Some(id) = id_of(data) else { continue };
+                match patch.get("event_type").and_then(|x| x.as_str()) {
+                    Some("CREATE") => {
+                        into.creates.insert(id);
+                    }
+                    Some("PROPERTY_UPDATE") => {
+                        if let Some(property) = data.get("property").and_then(|x| x.as_str()) {
+                            into.properties.insert((id, property.to_string()));
+                        }
+                    }
+                    Some("RENAME_INSTANCE") | Some("RENAME") => {
+                        into.properties.insert((id, "Name".to_string()));
+                    }
+                    Some("REPARENT") => {
+                        into.reparents.insert(id);
+                    }
+                    Some("DESTROY") => {
+                        into.destroys.insert(id);
+                    }
+                    Some("ATTRIBUTE_UPDATE") => {
+                        if let Some(name) = data.get("name").and_then(|x| x.as_str()) {
+                            into.attributes.insert((id, name.to_string()));
+                        }
+                    }
+                    Some("TAGS_UPDATE") => {
+                        into.tags.insert(id);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        // A whole node sent from disk: Studio creates it if it does not have it yet.
+        EventType::PushUpdate => {
+            if let Some(id) = id_of(&payload.data) {
+                into.creates.insert(id);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// How many delivered payloads are remembered while Studio has not confirmed them.
+const SENT_LOG_LIMIT: usize = 20_000;
+
 /// Lossless delivery queue for messages going to Studio.
 /// Why: a broadcast channel only delivers to subscribers waiting at that moment;
 /// messages sent while Studio is between two polls would be lost. This queue keeps
 /// a message in memory until the next poll.
+///
+/// It also numbers every message. The core's model runs ahead of Studio: an instance
+/// is in the model as soon as its CREATE is queued. When Studio's tree arrives
+/// (FULL_SYNC) the model is rebuilt from it, and whatever Studio had not applied yet
+/// used to be dropped, its files trashed, only to come back later as a duplicate.
+/// With the numbers the plugin can say how far it got, and the core keeps the rest.
 pub struct StudioOutbox {
-    queue: std::sync::Mutex<std::collections::VecDeque<Payload>>,
+    queue: Mutex<VecDeque<Payload>>,
     notify: tokio::sync::Notify,
+    /// The number of the last queued message; each message carries its own as data._seq.
+    seq: AtomicU64,
+    /// Identifies this core process (data._epoch). Numbers from an earlier core, which
+    /// the plugin may still hold after a restart, mean nothing to this one.
+    epoch: String,
+    /// Messages Studio has been handed but has not confirmed, with what they touch.
+    sent: Mutex<VecDeque<(u64, InFlight)>>,
 }
 
 impl StudioOutbox {
     pub fn new() -> Self {
         Self {
-            queue: std::sync::Mutex::new(std::collections::VecDeque::new()),
+            queue: Mutex::new(VecDeque::new()),
             notify: tokio::sync::Notify::new(),
+            seq: AtomicU64::new(0),
+            epoch: Uuid::new_v4().to_string(),
+            sent: Mutex::new(VecDeque::new()),
         }
     }
 
+    pub fn epoch(&self) -> &str {
+        &self.epoch
+    }
+
     /// Synchronous push: callable from both async and blocking (file watcher thread) contexts.
-    pub fn push(&self, payload: Payload) {
+    pub fn push(&self, mut payload: Payload) {
+        let seq = self.seq.fetch_add(1, Ordering::SeqCst) + 1;
+        if let Some(data) = payload.data.as_object_mut() {
+            data.insert("_seq".into(), serde_json::json!(seq));
+            data.insert("_epoch".into(), serde_json::json!(self.epoch));
+        }
         self.queue.lock().unwrap().push_back(payload);
         self.notify.notify_one();
     }
 
-    fn pop(&self) -> Option<Payload> {
-        self.queue.lock().unwrap().pop_front()
+    /// Takes the next message without waiting, remembering what it touches until
+    /// Studio confirms it.
+    pub fn try_pop(&self) -> Option<Payload> {
+        let payload = self.queue.lock().unwrap().pop_front()?;
+        let mut touched = InFlight::default();
+        record_touched(&payload, &mut touched);
+        if !touched.is_empty() {
+            let seq = payload.data.get("_seq").and_then(|v| v.as_u64()).unwrap_or(0);
+            let mut sent = self.sent.lock().unwrap();
+            sent.push_back((seq, touched));
+            while sent.len() > SENT_LOG_LIMIT {
+                sent.pop_front();
+            }
+        }
+        Some(payload)
     }
 
     /// Returns at once if the queue has a message; otherwise waits for the timeout.
     pub async fn pop_or_wait(&self, timeout: std::time::Duration) -> Option<Payload> {
-        if let Some(p) = self.pop() {
+        if let Some(p) = self.try_pop() {
             return Some(p);
         }
         let _ = tokio::time::timeout(timeout, self.notify.notified()).await;
-        self.pop()
+        self.try_pop()
+    }
+
+    /// What Studio may not have applied yet: everything still queued, plus what was
+    /// delivered after `applied`, the last number the plugin confirmed for this core.
+    /// Without a confirmation (an older plugin, or one still counting for an earlier
+    /// core) only the queue counts: whether a delivered message was applied is unknown.
+    pub fn in_flight(&self, applied: Option<u64>) -> InFlight {
+        let mut out = InFlight::default();
+        for payload in self.queue.lock().unwrap().iter() {
+            record_touched(payload, &mut out);
+        }
+        if let Some(applied) = applied {
+            out.extend(&self.delivered_since(applied));
+        }
+        out
+    }
+
+    /// What Studio was handed after `applied` but has not confirmed: a lost poll reply,
+    /// or messages dropped while sync was paused. Unlike what is still queued, nothing
+    /// will deliver these again on its own.
+    pub fn delivered_since(&self, applied: u64) -> InFlight {
+        let mut out = InFlight::default();
+        for (seq, touched) in self.sent.lock().unwrap().iter() {
+            if *seq > applied {
+                out.extend(touched);
+            }
+        }
+        out
+    }
+
+    /// After a FULL_SYNC: messages up to `applied` are settled, Studio's tree shows what
+    /// became of them. Without a confirmation every delivered one is.
+    pub fn settle(&self, applied: Option<u64>) {
+        let mut sent = self.sent.lock().unwrap();
+        match applied {
+            Some(applied) => sent.retain(|(seq, _)| *seq > applied),
+            None => sent.clear(),
+        }
     }
 }
 
@@ -109,4 +284,121 @@ pub trait Transport {
     // Provides a channel (receiver) for listening to messages from clients.
     // (A real implementation would use tokio::sync::mpsc::Receiver.)
     // async fn receive(&self) -> Receiver<Payload>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create(id: Uuid) -> Payload {
+        Payload {
+            version: "v1".into(),
+            event_type: EventType::CompositeUpdate,
+            data: serde_json::json!({ "patches": [{ "event_type": "CREATE", "data": { "syncix_id": id } }] }),
+        }
+    }
+
+    fn set_property(id: Uuid, property: &str) -> Payload {
+        Payload {
+            version: "v1".into(),
+            event_type: EventType::CompositeUpdate,
+            data: serde_json::json!({ "patches": [{
+                "event_type": "PROPERTY_UPDATE",
+                "data": { "syncix_id": id, "property": property, "value": 1 }
+            }] }),
+        }
+    }
+
+    #[test]
+    fn push_numbers_every_message() {
+        let outbox = StudioOutbox::new();
+        outbox.push(create(Uuid::new_v4()));
+        outbox.push(create(Uuid::new_v4()));
+        let first = outbox.try_pop().unwrap();
+        let second = outbox.try_pop().unwrap();
+        assert_eq!(first.data["_seq"], 1);
+        assert_eq!(second.data["_seq"], 2);
+        assert_eq!(first.data["_epoch"].as_str(), Some(outbox.epoch()));
+    }
+
+    #[test]
+    fn queued_and_unconfirmed_creates_are_in_flight() {
+        let outbox = StudioOutbox::new();
+        let (a, b, c) = (Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4());
+        outbox.push(create(a));
+        outbox.push(create(b));
+        outbox.push(create(c));
+        outbox.try_pop(); // a, number 1
+        outbox.try_pop(); // b, number 2; c is still queued
+
+        // The plugin confirmed number 1: a is settled, b was delivered but not applied.
+        let in_flight = outbox.in_flight(Some(1));
+        assert!(!in_flight.creates.contains(&a));
+        assert!(in_flight.creates.contains(&b));
+        assert!(in_flight.creates.contains(&c));
+
+        outbox.settle(Some(2));
+        assert!(!outbox.in_flight(Some(2)).creates.contains(&b));
+    }
+
+    #[test]
+    fn without_a_confirmation_only_the_queue_counts() {
+        let outbox = StudioOutbox::new();
+        let (delivered, queued) = (Uuid::new_v4(), Uuid::new_v4());
+        outbox.push(create(delivered));
+        outbox.push(create(queued));
+        outbox.try_pop();
+        assert_eq!(outbox.in_flight(None).creates, [queued].into_iter().collect());
+        outbox.settle(None);
+        assert!(!outbox.in_flight(Some(0)).creates.contains(&delivered));
+    }
+
+    fn patch(kind: &str, data: serde_json::Value) -> Payload {
+        Payload {
+            version: "v1".into(),
+            event_type: EventType::CompositeUpdate,
+            data: serde_json::json!({ "patches": [{ "event_type": kind, "data": data }] }),
+        }
+    }
+
+    #[test]
+    fn every_kind_of_change_is_tracked() {
+        let outbox = StudioOutbox::new();
+        let id = Uuid::new_v4();
+        outbox.push(patch("RENAME_INSTANCE", serde_json::json!({ "id": id, "newName": "New" })));
+        outbox.push(patch("REPARENT", serde_json::json!({ "syncix_id": id, "parent": Uuid::new_v4() })));
+        outbox.push(patch("DESTROY", serde_json::json!({ "syncix_id": id })));
+        outbox.push(patch("ATTRIBUTE_UPDATE", serde_json::json!({ "syncix_id": id, "name": "Level", "value": 3 })));
+        outbox.push(patch("TAGS_UPDATE", serde_json::json!({ "syncix_id": id, "tags": ["A"] })));
+        let in_flight = outbox.in_flight(None);
+        assert!(in_flight.properties.contains(&(id, "Name".to_string())));
+        assert!(in_flight.reparents.contains(&id));
+        assert!(in_flight.destroys.contains(&id));
+        assert!(in_flight.attributes.contains(&(id, "Level".to_string())));
+        assert!(in_flight.tags.contains(&id));
+    }
+
+    #[test]
+    fn delivered_since_leaves_out_what_is_still_queued() {
+        let outbox = StudioOutbox::new();
+        let (delivered, queued) = (Uuid::new_v4(), Uuid::new_v4());
+        outbox.push(create(delivered));
+        outbox.push(create(queued));
+        outbox.try_pop();
+        let since = outbox.delivered_since(0);
+        assert!(since.creates.contains(&delivered));
+        assert!(!since.creates.contains(&queued));
+        assert!(outbox.delivered_since(1).creates.is_empty());
+    }
+
+    #[test]
+    fn property_changes_are_tracked() {
+        let outbox = StudioOutbox::new();
+        let id = Uuid::new_v4();
+        outbox.push(set_property(id, "Transparency"));
+        outbox.try_pop();
+        let in_flight = outbox.in_flight(Some(0));
+        assert!(in_flight.properties.contains(&(id, "Transparency".to_string())));
+        assert!(in_flight.creates.is_empty());
+    }
 }

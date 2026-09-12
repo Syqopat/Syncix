@@ -4,6 +4,46 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-09-12
+
+### Fixed
+
+- **Large imports no longer lose or duplicate instances.** When Studio resent its
+  tree (FULL_SYNC) while an import was running, the engine rebuilt its model from
+  that tree and dropped everything Studio had not applied yet; the files went to
+  the trash and the instances came back minutes later as duplicates. Every message
+  to Studio is now numbered, the plugin reports how far it got and what it is still
+  holding, and the engine keeps what is on its way: new instances, property changes,
+  renames, moves, deletions, attributes and tags. Anything Studio was handed but did
+  not apply is sent again.
+- Changes made in the editor while sync is paused are applied when it resumes,
+  instead of being moved to the trash.
+- The plugin fetches up to 64 messages per request instead of one, so a large
+  import no longer runs into Studio's HTTP limit and a reconnect storm. A reconnect
+  can no longer leave two polling loops running, and one failing message no longer
+  stops the loop or leaves Studio's change reporting switched off.
+- `syncix ls` and `syncix tree` accept dotted paths (`Workspace.Tycoons`).
+- Import: properties Studio writes under serialized names (`size`, `shape`,
+  `Color3uint8`) land on the right member; enum values the engine has no name for
+  are kept instead of skipped; `FontFace` is imported.
+- `syncix set` with a reference to a missing target no longer stops the engine.
+
+### Changed
+
+- `syncix set` understands what was meant: property names in any case (`size` is
+  `Size`), and colours as `#FF8800`, `#F80`, `255,136,0`, `rgb(255, 136, 0)` or a
+  name such as `orange`. A value that is not a colour is refused before anything is
+  sent, with the accepted forms.
+- Parts Syncix creates come out with smooth top and bottom surfaces.
+- The plugin corrects a wrong-case property name in a file and accepts colour text
+  for Color3 properties.
+
+### Removed
+
+- The `play_mode` setting. It never took effect: changes always reach the edit
+  session, even during a playtest, which picks them up after a restart. A
+  `syncix.toml` that still sets it gets a warning.
+
 ## [0.1.3] - 2026-09-11
 
 ### Added

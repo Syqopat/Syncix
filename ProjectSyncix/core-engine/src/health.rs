@@ -14,8 +14,6 @@ use tokio::time::Instant;
 pub struct PluginConfig {
     /// "two_way" | "studio_to_disk" | "disk_to_studio" | "manual"
     pub mode: String,
-    /// "queue" | "ignore" | "apply"
-    pub play_mode: String,
     /// Whether Studio asks for permission on the first connection.
     pub ask_permission: bool,
     /// Whether Syncix's changes go onto Studio's undo stack.
@@ -289,7 +287,6 @@ impl HealthMonitor {
             sync_suspended: false,
             config: PluginConfig {
                 mode: project.mode_value.name_of().to_string(),
-                play_mode: project.play.name_of().to_string(),
                 ask_permission: project.prompt_permission,
                 undo: project.restore_cmd,
                 services: project.scope_settings.service_list.clone(),

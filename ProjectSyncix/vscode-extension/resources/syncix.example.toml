@@ -26,14 +26,9 @@
 #                   carefully in a scene you do not want touched.
 mode = "two_way"
 
-# What happens to editor changes while the game is running (Play mode).
-#
-#   queue    Held back and applied when Play ends. The default.
-#   ignore   Discarded.
-#   apply    Applied to the running session. Studio throws that session away
-#            when Play stops, so the change is usually lost. Only turn this on
-#            if you specifically want it.
-play_mode = "queue"
+# Play mode: changes from the editor always go to the edit session, even while
+# a playtest runs (Studio runs the test in a separate copy of the place). They
+# stay when you press Stop; restart the test to see them in it.
 
 # How long the writer waits for things to settle before writing to disk, in
 # milliseconds. Lower is more responsive but writes more often.

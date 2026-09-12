@@ -93,37 +93,6 @@ impl SyncMode {
     }
 }
 
-/// What happens to changes from the editor while the game is running (Play).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PlayBehavior {
-    /// Queued and applied once Play ends. Default.
-    Queue,
-    /// Dropped. For people who want nothing to happen during Play.
-    Ignore,
-    /// Applied directly. Studio discards the session when Play ends, so the
-    /// change is lost; turn this on only if you mean it.
-    Apply,
-}
-
-impl PlayBehavior {
-    fn resolve_arg(s: &str) -> Option<Self> {
-        match s.trim().to_ascii_lowercase().as_str() {
-            "queue" => Some(Self::Queue),
-            "ignore" | "drop" => Some(Self::Ignore),
-            "apply" => Some(Self::Apply),
-            _ => None,
-        }
-    }
-
-    pub fn name_of(&self) -> &'static str {
-        match self {
-            Self::Queue => "queue",
-            Self::Ignore => "ignore",
-            Self::Apply => "apply",
-        }
-    }
-}
-
 /// Safety settings regarding deletion.
 #[derive(Clone, Debug)]
 pub struct SafetySettings {
@@ -178,8 +147,6 @@ pub struct ProjectConfig {
     /// Wait time of the disk writer. A small value reflects changes faster but
     /// increases the number of writes.
     pub debounce_ms: u64,
-    /// What happens to changes that arrive during Play.
-    pub play: PlayBehavior,
     /// Whether Studio asks for permission on the first connection.
     pub prompt_permission: bool,
     /// Whether Syncix's changes go onto Studio's undo stack.
@@ -296,19 +263,15 @@ impl ProjectConfig {
             })
             .unwrap_or(SyncMode::TwoWay);
 
-        let play = al(sync, "play_mode")
-            .and_then(|x| x.as_str().map(|s| s.to_string()))
-            .and_then(|s| {
-                let p = PlayBehavior::resolve_arg(&s);
-                if p.is_none() {
-                    tracing::warn!(
-                        "Unknown play_mode '{}'; falling back to queue.                          Valid values: queue, ignore, apply.",
-                        s
-                    );
-                }
-                p
-            })
-            .unwrap_or(PlayBehavior::Queue);
+        // play_mode is gone. Changes always reach the edit session, even while a
+        // playtest runs (Studio runs the test in a separate copy); measured, the queue
+        // it chose never took effect. A setting someone wrote is not ignored silently.
+        if al(sync, "play_mode").is_some() {
+            tracing::warn!(
+                "play_mode in syncix.toml is no longer used and can be removed: changes go to the \
+                 edit session even during a playtest, and a running test sees them after a restart."
+            );
+        }
 
         let root = clean_path(fs::canonicalize(base).unwrap_or_else(|_| PathBuf::from(base)));
 
@@ -327,7 +290,6 @@ impl ProjectConfig {
 
             mode_value,
             debounce_ms: read_number(sync, "debounce_ms", 120).clamp(10, 10_000),
-            play,
             prompt_permission: read_bool(sync, "ask_permission", false),
             restore_cmd: read_bool(sync, "undo", true),
             meta_files: read_bool(files, "meta_files", true),
@@ -466,7 +428,6 @@ mod config_tests {
     fn empty_file_gives_defaults() {
         let c = resolve_arg("");
         assert_eq!(c.mode_value, SyncMode::TwoWay);
-        assert_eq!(c.play, PlayBehavior::Queue);
         assert_eq!(c.wanted_port, DEFAULT_PORT);
         assert!(c.safety_settings.trash_enabled);
         assert!(c.safety_settings.confirm_delete);

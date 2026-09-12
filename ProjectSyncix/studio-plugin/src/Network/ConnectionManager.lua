@@ -19,7 +19,7 @@ local Approval = require(script.Parent.Parent.Core.Approval)
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
 --   PORT_START  <-> project.rs  DEFAULT_PORT
 --   PORT_RANGE     <-> project.rs  PORT_SCAN_SPAN
-local PLUGIN_VERSION = "0.1.3"
+local PLUGIN_VERSION = "0.1.4"
 local PLUGIN_PROTOCOL = 1
 local PORT_START = 8080
 local PORT_RANGE = 10
@@ -338,9 +338,8 @@ function ConnectionManager:Connect()
 		SyncConfig.Apply(info.config)
 		if info.config then
 			print(string.format(
-				"[Syncix] Settings from syncix.toml — mode: %s, play: %s, undo: %s",
+				"[Syncix] Settings from syncix.toml — mode: %s, undo: %s",
 				tostring(info.config.mode),
-				tostring(info.config.play_mode),
 				tostring(info.config.undo)
 			))
 		end
@@ -444,21 +443,61 @@ end
 
 -- Long-polling loop
 function ConnectionManager:StartPolling()
+	-- Each poll fetches up to this many messages at once. One message per request made a
+	-- large import cost one request per command, enough to hit Studio's HTTP limit; every
+	-- failed request forces a reconnect and a full resend of the tree.
+	local POLL_BATCH = 64
+	-- A reconnect can start a new loop while an old one still waits on its request. Two
+	-- loops dispatch out of order, and the applied count sent with a FULL_SYNC would then
+	-- cover messages Studio has not applied. Only the newest loop may run and dispatch;
+	-- whatever an old loop drops is sent again after the next FULL_SYNC.
+	self.pollGeneration = (self.pollGeneration or 0) + 1
+	local generation = self.pollGeneration
+	local function isCurrent(): boolean
+		return self.state == "Connected" and self.pollGeneration == generation
+	end
 	task.spawn(function()
-		while self.state == "Connected" do
+		while isCurrent() do
 			local success, response = pcall(function()
 				return HttpService:RequestAsync({
-					Url = self.serverUrl .. "/sync/poll",
+					Url = self.serverUrl .. "/sync/poll?batch=" .. POLL_BATCH,
 					Method = "GET"
 				})
 			end)
+			if self.pollGeneration ~= generation then
+				break
+			end
 
 			if success and response.Success then
 				local body = response.Body
 				if body and body ~= "null" then
-					local payload = HttpService:JSONDecode(body)
-					if payload and self.commandDispatcher then
-						self.commandDispatcher:Dispatch(payload)
+					local decoded
+					local okDecode = pcall(function()
+						decoded = HttpService:JSONDecode(body)
+					end)
+					if not okDecode or type(decoded) ~= "table" then
+						-- Uncaught, this error ended the polling loop while the state still
+						-- said Connected: nothing more arrived and nothing said why. The reply
+						-- may have held messages, so it is handled like a failed request:
+						-- reconnect, and the FULL_SYNC that follows settles them.
+						warn("[Syncix] Could not read the core's reply; reconnecting.")
+						self:HandleDisconnect()
+						break
+					end
+					if self.commandDispatcher then
+						-- A batching core answers with a list, an older one with one message.
+						if decoded.event_type ~= nil then
+							self.commandDispatcher:Dispatch(decoded)
+						else
+							for _, payload in ipairs(decoded) do
+								-- Disconnected or superseded mid-reply: the rest is left
+								-- undispatched and counts as not applied.
+								if not isCurrent() then
+									break
+								end
+								self.commandDispatcher:Dispatch(payload)
+							end
+						end
 					end
 				end
 			else

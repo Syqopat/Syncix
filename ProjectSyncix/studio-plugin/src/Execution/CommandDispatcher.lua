@@ -4,7 +4,6 @@
 -- This structure is the foundation for a future undo/redo (command pattern) system.
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
-local RunService = game:GetService("RunService")
 local SyncConfig = require(script.Parent.Parent.Core.SyncConfig)
 
 local CommandDispatcher = {}
@@ -79,89 +78,77 @@ function CommandDispatcher:IsUndoable(actionName: string, applyChanges: () -> ()
     end
 end
 
---- Holds changes that arrive while the game runs and applies them when Play ends.
----
---- IMPORTANT: this backlog NEVER KICKS IN on current Studio versions, and that was
---- measured with a real test.
----
---- When Play is pressed, Studio restarts plugins in the game's server and client
---- sessions; those copies stop at the IsEdit gate in init.server.lua.
---- The only instance still connected to the core is the one in the EDIT
---- session. Its tree is not running, so RunService:IsRunning() is always false for it,
---- and the branch below is never taken.
----
---- So why keep it: during Play Studio uses a separate copy of the session,
---- so a change from the editor is written to the edit tree and stays as it is
---- when Stop is pressed. The intended behaviour is already
---- there — this code is its fallback. If Studio ever changes that isolation,
---- it kicks in.
----
---- Measured: Transparency 0.7 was sent during Play. In Studio's tree the
---- value showed 0.7 (it was not queued), no "Play mode ended" line appeared
---- in Output, and the user saw the part opaque during Play and transparent
---- after Stop.
-function CommandDispatcher:_OnPlayEnded()
-    if self._playListener then return end
-    self._playListener = true
+-- Play mode: when a playtest starts, Studio runs it in a separate copy of the place and
+-- restarts plugins there; those copies stop at the IsEdit gate in init.server.lua. The
+-- copy connected to the core stays in the edit session, so changes from the editor land
+-- in the edit session and survive Stop; the running test sees them after a restart.
+-- A play-mode queue used to sit here. Measured, it never took effect (the edit session
+-- never reports RunService:IsRunning()), and it was removed together with play_mode.
 
-    -- Edge detection via Heartbeat. There is no reliable property signal for RunService's
-    -- running state; Heartbeat, however, runs in edit mode too,
-    -- so this learns the moment Play ends.
-    local wasRunning = true
-    RunService.Heartbeat:Connect(function()
-        local isRunning = RunService:IsRunning()
-        local nowStopped = wasRunning and not isRunning
-        wasRunning = isRunning
-        if not nowStopped then return end
-
-        local backlog = self._playQueue
-        if not backlog or #backlog == 0 then return end
-        self._playQueue = {}
-
-        print(string.format(
-            "[Syncix] Play mode ended; applying %d change(s) that were held back.",
-            #backlog
-        ))
-        for _, pendingItem in ipairs(backlog) do
-            self:Dispatch(pendingItem)
-        end
+--- Handles one message from the core and remembers how far it got.
+---
+--- appliedSeq is the number of the last message handled here: applied, dropped because
+--- sync is paused, or parked until its parent exists (those are listed separately, see
+--- PatchExecutor:WaitingIds). It goes out with every FULL_SYNC, so the core can tell a
+--- create Studio has not received yet (keep it) from one Studio refused or deleted (let
+--- it go). Before, a FULL_SYNC in the middle of a large import dropped everything still
+--- on its way, which then came back later as duplicates.
+function CommandDispatcher:Dispatch(payload: any)
+    if type(payload) ~= "table" or not payload.event_type then return end
+    local handled = true
+    local ok, failure = pcall(function()
+        handled = self:_Apply(payload) ~= false
     end)
+    if not ok then
+        -- A poll reply carries up to 64 messages. Uncaught, one error ended the polling
+        -- loop for good, dropped the rest of the reply and left the lock on, so the
+        -- observer went quiet too. The message still counts as handled: Studio's tree
+        -- shows whatever part of it landed.
+        self:Unlock()
+        warn(string.format(
+            "[Syncix] Could not handle %s from the core: %s",
+            tostring(payload.event_type),
+            tostring(failure)
+        ))
+    end
+
+    local data = payload.data
+    if type(data) == "table" and type(data._seq) == "number" then
+        if data._epoch ~= self.appliedEpoch then
+            -- Another core process: its numbering starts over.
+            self.appliedEpoch = data._epoch
+            self.appliedSeq = 0
+            self.seqFrozen = false
+        end
+        if not handled then
+            -- Dropped because sync is paused. The applied count is a high-water mark and
+            -- cannot leave gaps, so it stops here until the next FULL_SYNC goes out; the
+            -- core then keeps what was dropped and sends it again. Counting it as applied
+            -- sent the editor's work made during a pause to the trash on resume.
+            self.seqFrozen = true
+        elseif not self.seqFrozen then
+            self.appliedSeq = math.max(self.appliedSeq or 0, data._seq)
+        end
+    end
 end
 
-function CommandDispatcher:Dispatch(payload: any)
-    if not payload or not payload.event_type then return end
-
-    -- No changes are applied while the game runs; they are processed in order when Play ends.
-    -- FULL_SYNC_REQUEST is the exception: reading the tree does not change Studio, and there is
-    -- no reason to shut down the core's verification path for the whole of Play.
-    if RunService:IsRunning() and payload.event_type ~= "FULL_SYNC_REQUEST" then
-        local behavior = SyncConfig.PlayBehavior()
-        if behavior == "ignore" then
-            return
-        elseif behavior ~= "apply" then
-            -- Varsayilan: kuyruga al, Play bitince applyFn.
-            self._playQueue = self._playQueue or {}
-            table.insert(self._playQueue, payload)
-            self:_OnPlayEnded()
-            return
-        end
-        -- "apply": the user asked for it knowingly; since Studio discards the session
-        -- when Play ends, the change may be lost.
-    end
+function CommandDispatcher:_Apply(payload: any)
 
     -- When sync is paused, incoming changes are NOT APPLIED.
     -- Stopping only the sending would not be enough: patches from the editor would keep
     -- changing Studio, and a user who had paused would still see
     -- their place change.
     if self.connectionManager and self.connectionManager:IsPaused() then
-        return
+        return false
     end
 
     -- In studio_to_disk mode Studio is only the source; no change from the core
     -- is applied. FULL_SYNC_REQUEST is the exception: reading the tree does not
     -- change Studio, and it is the only workflow in that mode anyway.
     if not SyncConfig.ApplyToStudio() and payload.event_type ~= "FULL_SYNC_REQUEST" then
-        return
+        -- Deliberately never applied in this mode: counted as handled, or the core would
+        -- keep sending it again.
+        return true
     end
     
     self:Lock()
@@ -186,6 +173,7 @@ function CommandDispatcher:Dispatch(payload: any)
     end
     
     self:Unlock()
+    return true
 end
 
 -- Applying patches.

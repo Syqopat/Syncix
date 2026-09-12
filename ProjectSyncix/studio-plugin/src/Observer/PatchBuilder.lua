@@ -17,6 +17,7 @@ end
 
 function PatchBuilder:OnStart(container)
     self.cache = container:Get("RuntimeCache")
+    self.container = container
 end
 
 -- Turns a single property change into a patch.
@@ -409,18 +410,70 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
         end
     end
     
+    local data: { [string]: any } = {
+        instances = instances,
+        place_key = PlaceIdentity.Resolve(),
+        place_id = tostring(game.PlaceId),
+        place_name = game.Name,
+    }
+
+    -- How far Studio got with the core's messages when this tree was read. From the tree
+    -- alone the core cannot tell a create still on its way to Studio (queued, in a poll
+    -- reply, or parked until its parent exists) from one Studio refused or deleted. It
+    -- dropped them all: their files went to the trash and they came back later as
+    -- duplicates. A missing piece only costs the core that distinction; the tree still
+    -- goes out, so nothing here may fail.
+    local dispatcher = self:_Optional("CommandDispatcher")
+    if dispatcher then
+        if type(dispatcher.appliedSeq) == "number" then
+            data.applied_seq = dispatcher.appliedSeq
+        end
+        if dispatcher.appliedEpoch ~= nil then
+            data.applied_epoch = dispatcher.appliedEpoch
+        end
+        -- This snapshot tells the core where counting stopped (see
+        -- CommandDispatcher:Dispatch), so counting may go on. Not while paused: a paused
+        -- plugin sends nothing, so the core would never hear it.
+        local connection = self:_Optional("ConnectionManager")
+        if not (connection and connection:IsPaused()) then
+            dispatcher.seqFrozen = false
+        end
+    end
+    local executor = self:_Optional("PatchExecutor")
+    if executor and type(executor.WaitingIds) == "function" then
+        local ok, ids = pcall(function()
+            return executor:WaitingIds()
+        end)
+        if ok and type(ids) == "table" and #ids > 0 then
+            data.waiting_ids = ids
+        end
+    end
+
     local snapshotPatch = {
         event_type = "FULL_SYNC",
         version = "v1",
-        data = {
-            instances = instances,
-            place_key = PlaceIdentity.Resolve(),
-            place_id = tostring(game.PlaceId),
-            place_name = game.Name,
-        }
+        data = data,
     }
-    
+
     return snapshotPatch
+end
+
+-- Another service, or nil when there is none. container:Get raises for a missing one,
+-- and a FULL_SYNC_REQUEST builds the snapshot while CommandDispatcher holds its lock:
+-- an error here would leave the lock on and the observer would stop reporting Studio's
+-- changes.
+function PatchBuilder:_Optional(name: string): any
+    local container = self.container
+    if not container then
+        return nil
+    end
+    local ok, service = pcall(function()
+        return container:Get(name)
+    end)
+    if ok then
+        return service
+    end
+    return nil
 end
 
 return PatchBuilder

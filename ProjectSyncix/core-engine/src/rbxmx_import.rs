@@ -4,8 +4,11 @@
 //! had and Syncix lacked: bringing a ready-made model file into the tree.
 //!
 //! Scope, honestly: the types our model holds are read (String, Number, Boolean,
-//! Vector3, Color3, UDim2, ProtectedString/Source, token). Unknown property
-//! types are SKIPPED and their count is reported — never silently swallowed.
+//! Vector3, Vector2, Color3/Color3uint8, UDim, UDim2, CFrame, NumberRange, Content,
+//! ProtectedString/Source, Font, token — Material/Shape as "Enum.X.Y", any other
+//! token as its integer). Unknown property types (BinaryString AttributesSerialize,
+//! SharedString, Ref, ...) are SKIPPED and their count is reported — never
+//! silently swallowed.
 
 use crate::model::PropertyValue;
 
@@ -20,7 +23,8 @@ pub struct ImportedNode {
 }
 
 /// Turns an Enum token number back into text.
-/// Only the values export knows; the rest are skipped.
+/// Only the values export knows; any other token is imported as its integer
+/// (see the "token" branch of read_property).
 fn token_to_enum(prop: &str, token: i64) -> Option<String> {
     let item_name = match (prop, token) {
         ("Material", 256) => "Plastic",
@@ -69,10 +73,90 @@ fn sub_text(node_entry: roxmltree::Node, tag_text: &str) -> Option<f64> {
         .and_then(|t| t.trim().parse::<f64>().ok())
 }
 
+/// Enum.FontWeight's items by the number Roblox XML stores in <Weight>.
+const FONT_WEIGHTS: &[(u32, &str)] = &[
+    (100, "Thin"),
+    (200, "ExtraLight"),
+    (300, "Light"),
+    (400, "Regular"),
+    (500, "Medium"),
+    (600, "SemiBold"),
+    (700, "Bold"),
+    (800, "ExtraBold"),
+    (900, "Heavy"),
+];
+
+/// FontFace. Studio writes it as
+/// `<Font><Family><url>..</url></Family><Weight>400</Weight><Style>Normal</Style></Font>`
+/// (plus a CachedFaceId, which Roblox recomputes and we ignore).
+///
+/// Weight and style become the exact text PatchBuilder produces with tostring()
+/// ("Enum.FontWeight.Bold", "Enum.FontStyle.Italic"): PatchExecutor's decodeFont finds
+/// the enum by comparing that text, and anything else quietly turned into
+/// Regular/Normal on the Studio side. A missing <Weight>/<Style> takes Roblox's own
+/// default; a value we cannot name, or a missing family (Font.new refuses it), makes
+/// the property count as skipped instead of arriving as a different font.
+fn read_font(p: roxmltree::Node) -> Option<PropertyValue> {
+    let element_text = |tag: &str| {
+        p.children()
+            .find(|c| c.has_tag_name(tag))
+            .and_then(|c| c.text())
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+    };
+
+    let family_node = p.children().find(|c| c.has_tag_name("Family"))?;
+    let family = family_node
+        .children()
+        .find(|c| c.has_tag_name("url"))
+        .and_then(|c| c.text())
+        .or_else(|| family_node.text())
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    if family.is_empty() {
+        return None;
+    }
+
+    let weight = match element_text("Weight") {
+        None => "Regular",
+        Some(t) => match t.parse::<u32>() {
+            Ok(n) => FONT_WEIGHTS.iter().find(|(v, _)| *v == n)?.1,
+            // Hand-written or generated files sometimes name the weight instead.
+            Err(_) => FONT_WEIGHTS.iter().find(|(_, name)| *name == t)?.1,
+        },
+    };
+    let style = match element_text("Style") {
+        None | Some("Normal") | Some("0") => "Normal",
+        Some("Italic") | Some("1") => "Italic",
+        Some(_) => return None,
+    };
+
+    Some(PropertyValue::Font {
+        family,
+        weight: format!("Enum.FontWeight.{}", weight),
+        style: format!("Enum.FontStyle.{}", style),
+    })
+}
+
 /// Turns a single <Properties> child element into a PropertyValue.
 /// None means the type is not supported.
+/// The member a property is written under in Roblox XML. Some properties carry their
+/// serialized name instead (a Part's Size is written "size", its Color "Color3uint8",
+/// its Shape "shape"); stored under those names the plugin could not apply them.
+/// None: a name that exists only for serialization and has no member (formFactorRaw).
+fn member_name(xml_name: &str) -> Option<&str> {
+    match xml_name {
+        "size" => Some("Size"),
+        "shape" => Some("Shape"),
+        "Color3uint8" => Some("Color"),
+        "formFactorRaw" | "formFactor" => None,
+        other => Some(other),
+    }
+}
+
 fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
-    let item_name = p.attribute("name")?.to_string();
+    let item_name = member_name(p.attribute("name")?)?.to_string();
     let type_name = p.tag_name().name();
     let text_value = p.text().unwrap_or("").trim().to_string();
 
@@ -82,8 +166,27 @@ fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
         "float" | "double" | "int" | "int64" => PropertyValue::Number(text_value.parse().ok()?),
         "token" => {
             let number_value: i64 = text_value.parse().ok()?;
-            PropertyValue::String(token_to_enum(&item_name, number_value)?)
+            match token_to_enum(&item_name, number_value) {
+                Some(enum_text) => PropertyValue::String(enum_text),
+                // Skipping every token the table above does not name threw away most
+                // enum settings of a Studio export (TextXAlignment, SurfaceType,
+                // SizeConstraint, any Material added after the table was written).
+                // The integer alone is enough: pv_to_wire sends a Number as a plain
+                // JSON number, PatchExecutor's decodeEnum ignores anything that is not
+                // text, so the value lands in `instance[propName] = value`, and Roblox's
+                // enum setter accepts an item's integer Value just like the EnumItem or
+                // its Name. The echo guard expects the number, not the EnumItem, so
+                // Studio then reports the property back as "Enum.X.Y" (PatchBuilder's
+                // form) and that replaces the number in the model.
+                // Only for real members (PascalCase); an unknown serialization-only token
+                // would otherwise land in the files as a property nothing can apply.
+                None if item_name.starts_with(|c: char| c.is_ascii_uppercase()) => {
+                    PropertyValue::Number(number_value as f64)
+                }
+                None => return None,
+            }
         }
+        "Font" => read_font(p)?,
         "Vector3" => {
             let x = sub_text(p, "X")? as f32;
             let y = sub_text(p, "Y")? as f32;
@@ -419,6 +522,25 @@ mod tests {
     }
 
     #[test]
+    fn serialized_names_become_member_names() {
+        let xml = r#"<roblox version="4"><Item class="Part"><Properties>
+            <string name="Name">Box</string>
+            <Vector3 name="size"><X>4</X><Y>1</Y><Z>2</Z></Vector3>
+            <token name="shape">2</token>
+            <Color3uint8 name="Color3uint8">4294901760</Color3uint8>
+            <token name="formFactorRaw">1</token>
+        </Properties></Item></roblox>"#;
+        let (roots, skipped) = parse_text(xml).unwrap();
+        let props = &roots[0].properties;
+        let get = |n: &str| props.iter().find(|(k, _)| k == n).map(|(_, v)| v.clone());
+        assert_eq!(get("Size"), Some(PropertyValue::Vector3 { x: 4.0, y: 1.0, z: 2.0 }));
+        assert_eq!(get("Shape"), Some(PropertyValue::String("Enum.PartType.Cylinder".into())));
+        assert!(matches!(get("Color"), Some(PropertyValue::Color3 { .. })));
+        assert!(get("size").is_none() && get("formFactorRaw").is_none());
+        assert_eq!(skipped, 1);
+    }
+
+    #[test]
     fn services_and_singletons_are_recognised() {
         assert!(is_service("Lighting"));
         assert!(is_service("ReplicatedStorage"));
@@ -427,6 +549,120 @@ mod tests {
         assert!(is_singleton("BubbleChatConfiguration"));
         assert!(is_singleton("Workspace"));
         assert!(!is_singleton("Part"));
+    }
+
+    /// A token the name table does not know used to be skipped; it must arrive as its
+    /// integer, sent as a plain number the plugin assigns straight to the enum property.
+    #[test]
+    fn unmapped_token_is_kept_as_its_integer() {
+        let xml = r#"<roblox version="4"><Item class="Part"><Properties>
+            <string name="Name">P</string>
+            <token name="Shape">1</token>
+            <token name="Material">1712</token>
+            <token name="TopSurface">0</token>
+        </Properties></Item><Item class="TextLabel"><Properties>
+            <token name="TextXAlignment">2</token>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        assert_eq!(skipped, 0);
+        let al = |i: usize, item_name: &str| {
+            root_list[i].properties.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone())
+        };
+
+        // The mapping is kept for the values it names.
+        assert_eq!(al(0, "Shape"), Some(PropertyValue::String("Enum.PartType.Block".into())));
+        // 1712 (Rubber) is newer than the table: kept as a number, not dropped.
+        assert_eq!(al(0, "Material"), Some(PropertyValue::Number(1712.0)));
+        assert_eq!(al(0, "TopSurface"), Some(PropertyValue::Number(0.0)));
+        assert_eq!(al(1, "TextXAlignment"), Some(PropertyValue::Number(2.0)));
+        assert_eq!(
+            crate::pv_to_wire(&PropertyValue::Number(2.0)),
+            serde_json::json!(2.0)
+        );
+    }
+
+    /// FontFace as Studio exports it; the result must be the shape PatchBuilder sends
+    /// and PatchExecutor's decodeFont matches, or the font silently becomes Regular/Normal.
+    #[test]
+    fn font_face_is_read_in_the_plugin_format() {
+        let xml = r#"<roblox version="4"><Item class="TextLabel"><Properties>
+            <string name="Name">Title</string>
+            <Font name="FontFace">
+                <Family><url>rbxasset://fonts/families/GothamSSm.json</url></Family>
+                <Weight>700</Weight>
+                <Style>Italic</Style>
+                <CachedFaceId><url>rbxasset://fonts/GothamSSm-BoldItalic.otf</url></CachedFaceId>
+            </Font>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        assert_eq!(skipped, 0);
+        let font = root_list[0]
+            .properties
+            .iter()
+            .find(|(k, _)| k == "FontFace")
+            .map(|(_, v)| v.clone());
+        assert_eq!(
+            font,
+            Some(PropertyValue::Font {
+                family: "rbxasset://fonts/families/GothamSSm.json".into(),
+                weight: "Enum.FontWeight.Bold".into(),
+                style: "Enum.FontStyle.Italic".into(),
+            })
+        );
+        assert_eq!(
+            crate::pv_to_wire(font.as_ref().unwrap()),
+            serde_json::json!({ "Font": {
+                "family": "rbxasset://fonts/families/GothamSSm.json",
+                "weight": "Enum.FontWeight.Bold",
+                "style": "Enum.FontStyle.Italic"
+            }})
+        );
+    }
+
+    #[test]
+    fn font_defaults_named_weights_and_rejects() {
+        let xml = r#"<roblox version="4"><Item class="TextLabel"><Properties>
+            <Font name="Bare"><Family><url>rbxasset://fonts/families/Arial.json</url></Family></Font>
+            <Font name="Named"><Family><url>rbxasset://fonts/families/Arial.json</url></Family><Weight>SemiBold</Weight><Style>Normal</Style></Font>
+            <Font name="OddWeight"><Family><url>rbxasset://fonts/families/Arial.json</url></Family><Weight>450</Weight></Font>
+            <Font name="OddStyle"><Family><url>rbxasset://fonts/families/Arial.json</url></Family><Style>Oblique</Style></Font>
+            <Font name="NoFamily"><Weight>400</Weight><Style>Normal</Style></Font>
+            <Font name="EmptyFamily"><Family><url></url></Family></Font>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        let p = &root_list[0].properties;
+        let al = |item_name: &str| p.iter().find(|(k, _)| k == item_name).map(|(_, v)| v.clone());
+        let arial = |weight: &str, style: &str| {
+            Some(PropertyValue::Font {
+                family: "rbxasset://fonts/families/Arial.json".into(),
+                weight: weight.into(),
+                style: style.into(),
+            })
+        };
+
+        // Missing weight and style take Roblox's defaults.
+        assert_eq!(al("Bare"), arial("Enum.FontWeight.Regular", "Enum.FontStyle.Normal"));
+        assert_eq!(al("Named"), arial("Enum.FontWeight.SemiBold", "Enum.FontStyle.Normal"));
+        // A value we cannot name, or no family, is counted rather than guessed.
+        assert_eq!(al("OddWeight"), None);
+        assert_eq!(al("OddStyle"), None);
+        assert_eq!(al("NoFamily"), None);
+        assert_eq!(al("EmptyFamily"), None);
+        assert_eq!(skipped, 4);
+    }
+
+    /// The new types must not make genuinely unsupported ones disappear from the count.
+    #[test]
+    fn unsupported_types_are_still_counted() {
+        let xml = r#"<roblox version="4"><Item class="Part"><Properties>
+            <string name="Name">P</string>
+            <BinaryString name="AttributesSerialize"></BinaryString>
+            <Ref name="PrimaryPart">null</Ref>
+            <token name="Material">notanumber</token>
+        </Properties></Item></roblox>"#;
+        let (root_list, skipped) = parse_text(xml).unwrap();
+        assert!(root_list[0].properties.is_empty());
+        assert_eq!(skipped, 3);
     }
 
     #[test]

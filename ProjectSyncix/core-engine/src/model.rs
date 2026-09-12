@@ -359,6 +359,107 @@ impl DataModel {
         }
     }
 
+    /// Puts back what the core created but Studio had not applied when its tree arrived
+    /// (FULL_SYNC); `previous` is the model before the rebuild. An instance comes back only
+    /// under a parent the new model has, parents before children, so a whole subtree on
+    /// its way survives. For a property change on its way the core's value wins over the
+    /// tree's older one. Returns the instances put back.
+    pub fn carry_over(&mut self, previous: &DataModel, in_flight: &crate::transport::InFlight) -> Vec<Uuid> {
+        let mut kept = Vec::new();
+        let mut pending: Vec<Uuid> = in_flight
+            .creates
+            .iter()
+            .copied()
+            .filter(|id| !self.instances.contains_key(id))
+            .collect();
+        loop {
+            let mut progressed = false;
+            let mut waiting = Vec::new();
+            for id in pending {
+                let Some(node) = previous.instances.get(&id) else { continue };
+                if node.parent.is_some_and(|p| !self.instances.contains_key(&p)) {
+                    waiting.push(id);
+                    continue;
+                }
+                let mut copy = node.clone();
+                copy.children.clear();
+                if self.upsert_instance(copy).is_ok() {
+                    kept.push(id);
+                    progressed = true;
+                }
+            }
+            pending = waiting;
+            if !progressed || pending.is_empty() {
+                break;
+            }
+        }
+
+        // A move on its way: the core's parent wins over the tree's older one.
+        for id in &in_flight.reparents {
+            let Some(parent) = previous.instances.get(id).map(|n| n.parent) else { continue };
+            let Some(current) = self.instances.get(id).map(|n| n.parent) else { continue };
+            let parent_exists = match parent {
+                Some(p) => self.instances.contains_key(&p),
+                None => true,
+            };
+            if current != parent && parent_exists {
+                let _ = self.reparent(id, parent);
+            }
+        }
+
+        for (id, property) in &in_flight.properties {
+            let (Some(old), Some(node)) = (previous.instances.get(id), self.instances.get_mut(id)) else {
+                continue;
+            };
+            match property.as_str() {
+                // Name and a script's source live outside the property map; carrying only
+                // the map let a rename or an edit on its way be undone.
+                "Name" => node.name = old.name.clone(),
+                "Source" => {
+                    node.source = old.source.clone();
+                    if let Some(value) = old.properties.get(property) {
+                        node.properties.insert(property.clone(), value.clone());
+                    }
+                }
+                _ => {
+                    if let Some(value) = old.properties.get(property) {
+                        node.properties.insert(property.clone(), value.clone());
+                    }
+                }
+            }
+        }
+
+        for (id, name) in &in_flight.attributes {
+            let (Some(old), Some(node)) = (previous.instances.get(id), self.instances.get_mut(id)) else {
+                continue;
+            };
+            match old.attributes.get(name) {
+                Some(value) => {
+                    node.attributes.insert(name.clone(), value.clone());
+                }
+                // Deleting the attribute is what is on its way.
+                None => {
+                    node.attributes.remove(name);
+                }
+            }
+        }
+
+        for id in &in_flight.tags {
+            if let (Some(old), Some(node)) = (previous.instances.get(id), self.instances.get_mut(id)) {
+                node.tags = old.tags.clone();
+            }
+        }
+
+        // A deletion on its way: the core already removed the instance, the tree still
+        // has it. Kept, it would come back into the model and onto disk.
+        for id in &in_flight.destroys {
+            if !previous.instances.contains_key(id) && self.instances.contains_key(id) {
+                self.remove_instance(id);
+            }
+        }
+        kept
+    }
+
     /// Moves an object to a new parent. Removes it from the old parent's children list,
     /// adds it to the new parent's list and updates the node's parent field.
     /// Returns: (old_parent, new_parent) — for the VS Code notification.
@@ -653,6 +754,118 @@ mod tests {
             !m.get_instance(&ws).unwrap().children.contains(&folder),
             "the parent's children list must be cleaned"
         );
+    }
+
+    /// Studio's tree holds the workspace only; the folder and the model inside it are
+    /// still on their way, so they are put back, parent first, even when listed child first.
+    #[test]
+    fn carry_over_keeps_what_studio_has_not_applied() {
+        let mut old = DataModel::new();
+        let ws = add(&mut old, "Workspace", "Workspace", None);
+        let folder = add(&mut old, "Folder", "Decor", Some(ws));
+        let tree = add(&mut old, "Model", "Tree", Some(folder));
+        let refused = add(&mut old, "Part", "Refused", Some(ws));
+
+        let mut fresh = DataModel::new();
+        let mut workspace = old.get_instance(&ws).unwrap().clone();
+        workspace.children.clear();
+        fresh.upsert_instance(workspace).unwrap();
+
+        let in_flight = crate::transport::InFlight {
+            creates: [tree, folder].into_iter().collect(),
+            ..Default::default()
+        };
+        let kept = fresh.carry_over(&old, &in_flight);
+
+        assert_eq!(kept.len(), 2);
+        assert_eq!(fresh.get_instance(&folder).unwrap().children, vec![tree]);
+        assert!(fresh.get_instance(&ws).unwrap().children.contains(&folder));
+        assert!(fresh.get_instance(&refused).is_none(), "not on its way: Studio removed it");
+    }
+
+    #[test]
+    fn carry_over_needs_a_parent() {
+        let mut old = DataModel::new();
+        let ws = add(&mut old, "Workspace", "Workspace", None);
+        let folder = add(&mut old, "Folder", "Gone", Some(ws));
+        let child = add(&mut old, "Part", "Child", Some(folder));
+        let mut fresh = DataModel::new();
+        let in_flight = crate::transport::InFlight {
+            creates: [child].into_iter().collect(),
+            ..Default::default()
+        };
+        assert!(fresh.carry_over(&old, &in_flight).is_empty());
+        assert!(fresh.get_instance(&child).is_none());
+    }
+
+    #[test]
+    fn carry_over_keeps_a_property_change_on_its_way() {
+        let mut old = DataModel::new();
+        let ws = add(&mut old, "Workspace", "Workspace", None);
+        let part = add(&mut old, "Part", "Box", Some(ws));
+        old.get_mut_instance(&part)
+            .unwrap()
+            .properties
+            .insert("Transparency".into(), PropertyValue::Number(0.5));
+
+        let mut fresh = DataModel::new();
+        let mut workspace = old.get_instance(&ws).unwrap().clone();
+        workspace.children.clear();
+        fresh.upsert_instance(workspace).unwrap();
+        let mut stale = old.get_instance(&part).unwrap().clone();
+        stale.properties.insert("Transparency".into(), PropertyValue::Number(0.0));
+        fresh.upsert_instance(stale).unwrap();
+
+        let in_flight = crate::transport::InFlight {
+            properties: [(part, "Transparency".to_string())].into_iter().collect(),
+            ..Default::default()
+        };
+        fresh.carry_over(&old, &in_flight);
+        assert_eq!(
+            fresh.get_instance(&part).unwrap().properties.get("Transparency"),
+            Some(&PropertyValue::Number(0.5))
+        );
+    }
+
+    /// Studio's tree still has the old name, the old parent and a part the core has
+    /// already deleted; all three changes are still on their way and must survive.
+    #[test]
+    fn carry_over_keeps_renames_moves_and_deletions_on_their_way() {
+        let mut old = DataModel::new();
+        let ws = add(&mut old, "Workspace", "Workspace", None);
+        let rs = add(&mut old, "ReplicatedStorage", "ReplicatedStorage", None);
+        let part = add(&mut old, "Part", "NewName", Some(rs));
+        let gone = Uuid::new_v4();
+
+        let mut fresh = DataModel::new();
+        for id in [ws, rs] {
+            let mut service = old.get_instance(&id).unwrap().clone();
+            service.children.clear();
+            fresh.upsert_instance(service).unwrap();
+        }
+        let mut stale = old.get_instance(&part).unwrap().clone();
+        stale.name = "OldName".into();
+        stale.parent = Some(ws);
+        fresh.upsert_instance(stale).unwrap();
+        let mut deleted = InstanceNode::new("Part", "Deleted");
+        deleted.syncix_id = gone;
+        deleted.parent = Some(ws);
+        fresh.upsert_instance(deleted).unwrap();
+
+        let in_flight = crate::transport::InFlight {
+            properties: [(part, "Name".to_string())].into_iter().collect(),
+            reparents: [part].into_iter().collect(),
+            destroys: [gone].into_iter().collect(),
+            ..Default::default()
+        };
+        fresh.carry_over(&old, &in_flight);
+
+        let node = fresh.get_instance(&part).unwrap();
+        assert_eq!(node.name, "NewName");
+        assert_eq!(node.parent, Some(rs));
+        assert!(fresh.get_instance(&rs).unwrap().children.contains(&part));
+        assert!(!fresh.get_instance(&ws).unwrap().children.contains(&part));
+        assert!(fresh.get_instance(&gone).is_none());
     }
 
     /// A stored children list can be stale (a folder restored from the trash): only

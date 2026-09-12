@@ -16,7 +16,6 @@ local SyncConfig = {}
 -- Apply() overwrites them.
 local current = {
 	mode = "two_way",
-	play_mode = "queue",
 	ask_permission = false,
 	undo = true,
 	services = {},
@@ -64,10 +63,6 @@ end
 --- Should a change from the core be applied in Studio?
 function SyncConfig.ApplyToStudio(): boolean
 	return current.mode == "two_way" or current.mode == "disk_to_studio"
-end
-
-function SyncConfig.PlayBehavior(): string
-	return current.play_mode
 end
 
 function SyncConfig.UndoEnabled(): boolean

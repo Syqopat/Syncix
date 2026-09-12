@@ -82,20 +82,13 @@ fn parse_property_value(s: &str) -> model::PropertyValue {
         return PropertyValue::Boolean(false);
     }
 
-    // Hex colour: "#ff8800" or "ff8800" -> Color3
+    // Hex colour: "#ff8800" -> Color3
     // (It used to reach Studio as plain text and be rejected.)
-    let hex = t.strip_prefix('#').unwrap_or(t);
-    if hex.len() == 6 && hex.chars().all(|c| c.is_ascii_hexdigit()) && t.starts_with('#') {
-        if let (Ok(r), Ok(g), Ok(b)) = (
-            u8::from_str_radix(&hex[0..2], 16),
-            u8::from_str_radix(&hex[2..4], 16),
-            u8::from_str_radix(&hex[4..6], 16),
-        ) {
-            return PropertyValue::Color3 {
-                r: r as f32 / 255.0,
-                g: g as f32 / 255.0,
-                b: b as f32 / 255.0,
-            };
+    // Only the six-digit form here: with no colour target to judge by, a short "#abc" is
+    // as likely a tag in a text as a colour. parse_color3 takes "#f80" for colour targets.
+    if let Some(hex) = t.strip_prefix('#').filter(|h| h.len() == 6) {
+        if let Some([r, g, b]) = parse_hex_color(hex) {
+            return PropertyValue::Color3 { r, g, b };
         }
     }
     let parts: Vec<&str> = t.split(',').collect();
@@ -171,16 +164,8 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                 _ => None,
             }
         }
-        // For Color3 both "#ff8800" and "1,0.5,0" are valid.
-        P::Color3 { .. } => {
-            if let P::Color3 { r, g, b } = parse_property_value(t) {
-                return Some(P::Color3 { r, g, b });
-            }
-            match numbers(t)?[..] {
-                [r, g, b] => Some(P::Color3 { r, g, b }),
-                _ => None,
-            }
-        }
+        // Every form parse_color3 knows: hex, 0-1 or 0-255 triplets, rgb(), names.
+        P::Color3 { .. } => parse_color3(t).map(|[r, g, b]| P::Color3 { r, g, b }),
         P::Rect { .. } => match numbers(t)?[..] {
             [x0, y0, x1, y1] => Some(P::Rect {
                 min: [x0, y0],
@@ -225,26 +210,10 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
                     .collect(),
             ))
         }
-        // Like "#ff0000,#0000ff": colours are spread at equal intervals.
-        P::ColorSequence(_) => {
-            let mut points = Vec::new();
-            let pieces: Vec<&str> = t.split(',').map(|x| x.trim()).collect();
-            let last_item = (pieces.len().saturating_sub(1)).max(1) as f32;
-            for (i, piece) in pieces.iter().enumerate() {
-                match parse_property_value(piece) {
-                    P::Color3 { r, g, b } => points.push(model::ColorKeypoint {
-                        t: i as f32 / last_item,
-                        r,
-                        g,
-                        b,
-                    }),
-                    // If even one is not a colour the whole value is rejected: a curve applied
-                    // halfway is more confusing than one not applied at all.
-                    _ => return None,
-                }
-            }
-            (!points.is_empty()).then_some(P::ColorSequence(points))
-        }
+        // Like "#ff0000,#0000ff": colours are spread at equal intervals. If even one piece
+        // is not a colour the whole value is rejected: a curve applied halfway is more
+        // confusing than one not applied at all.
+        P::ColorSequence(_) => parse_color_list(t).map(|colors| color_sequence(&colors)),
         // Only the family changes; weight and style keep their current values.
         P::Font { weight, style, .. } => Some(P::Font {
             family: t.to_string(),
@@ -254,6 +223,345 @@ fn coerce_to_existing_type(current_value: &model::PropertyValue, text_value: &st
         // The rest (Vector3, Number, Boolean) already come out right in the general parser.
         _ => None,
     }
+}
+
+/// Colour names `syncix set` understands for a colour property, as 0-255 values. They are
+/// the CSS values, so "green" is the darker web green and "lime" the bright one.
+const COLOR_NAMES: &[(&str, [u8; 3])] = &[
+    ("red", [255, 0, 0]),
+    ("green", [0, 128, 0]),
+    ("blue", [0, 0, 255]),
+    ("white", [255, 255, 255]),
+    ("black", [0, 0, 0]),
+    ("yellow", [255, 255, 0]),
+    ("orange", [255, 165, 0]),
+    ("purple", [128, 0, 128]),
+    ("pink", [255, 192, 203]),
+    ("gray", [128, 128, 128]),
+    ("grey", [128, 128, 128]),
+    ("cyan", [0, 255, 255]),
+    ("brown", [165, 42, 42]),
+    ("lime", [0, 255, 0]),
+    ("navy", [0, 0, 128]),
+    ("teal", [0, 128, 128]),
+];
+
+/// Reads a colour typed in the terminal into Color3 components (0-1); None if the text
+/// is no colour.
+///
+/// Why it is this forgiving: `syncix set Part Color red` reached Studio as a string and was
+/// refused ("Color3 expected, got string"), and `... Color 255,136,0` was stored as a
+/// Color3 of 255 rather than 1. The accepted forms are the ones people copy from colour
+/// pickers, CSS and Luau. Anything else is None, so the caller refuses loudly instead of
+/// guessing.
+///
+/// Three bare numbers are 0-1 when all of them are at most 1, otherwise 0-255
+/// ("1,0.5,0" and "255,128,0" are the same orange); rgb(...) follows the same rule.
+/// Color3.new and Color3.fromRGB state their scale themselves.
+fn parse_color3(text: &str) -> Option<[f32; 3]> {
+    let t = text.trim();
+    if let Some(hex) = t.strip_prefix('#') {
+        return parse_hex_color(hex);
+    }
+    let lower = t.to_ascii_lowercase();
+    if let Some(&(_, rgb)) = COLOR_NAMES.iter().find(|(name, _)| *name == lower) {
+        return Some(rgb.map(|c| c as f32 / 255.0));
+    }
+    if let Some(args) = call_arguments(&lower, "color3.fromrgb") {
+        let v = three_color_numbers(args)?;
+        if v.iter().any(|c| *c > 255.0) {
+            return None;
+        }
+        return Some(v.map(|c| c / 255.0));
+    }
+    if let Some(args) = call_arguments(&lower, "color3.new") {
+        let v = three_color_numbers(args)?;
+        return v.iter().all(|c| *c <= 1.0).then_some(v);
+    }
+    let v = three_color_numbers(call_arguments(&lower, "rgb").unwrap_or(&lower))?;
+    if v.iter().any(|c| *c > 255.0) {
+        None
+    } else if v.iter().all(|c| *c <= 1.0) {
+        Some(v)
+    } else {
+        Some(v.map(|c| c / 255.0))
+    }
+}
+
+/// "ff8800" or "f80" (without the '#') -> Color3 components.
+fn parse_hex_color(hex: &str) -> Option<[f32; 3]> {
+    // Checked first: the slicing below counts bytes, which is only safe on ASCII.
+    if !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    let channel = |digits: &str| u8::from_str_radix(digits, 16).ok().map(|v| v as f32 / 255.0);
+    match hex.len() {
+        6 => Some([channel(&hex[0..2])?, channel(&hex[2..4])?, channel(&hex[4..6])?]),
+        // "#f80" is short for "#ff8800": every digit is doubled.
+        3 => Some([
+            channel(&hex[0..1].repeat(2))?,
+            channel(&hex[1..2].repeat(2))?,
+            channel(&hex[2..3].repeat(2))?,
+        ]),
+        _ => None,
+    }
+}
+
+/// The inside of a call such as "rgb(1, 2, 3)"; `name` must be lowercase, like `text`.
+fn call_arguments<'a>(text: &'a str, name: &str) -> Option<&'a str> {
+    text.strip_prefix(name)?.trim_start().strip_prefix('(')?.strip_suffix(')')
+}
+
+/// "1, 0.5, 0" -> [1.0, 0.5, 0.0]; None unless there are exactly three finite,
+/// non-negative numbers ("nan" and "inf" parse as f32, and are no colour).
+fn three_color_numbers(text: &str) -> Option<[f32; 3]> {
+    let parts: Vec<&str> = text.split(',').collect();
+    let [r, g, b] = parts[..] else {
+        return None;
+    };
+    let number = |s: &str| s.trim().parse::<f32>().ok().filter(|v| v.is_finite() && *v >= 0.0);
+    Some([number(r)?, number(g)?, number(b)?])
+}
+
+/// Splits at commas that are not inside parentheses, so "rgb(1, 0, 0), #00f" is two pieces.
+fn split_outside_parentheses(text: &str) -> Vec<&str> {
+    let mut pieces = Vec::new();
+    let mut depth = 0usize;
+    let mut start = 0;
+    for (i, ch) in text.char_indices() {
+        match ch {
+            '(' => depth += 1,
+            ')' => depth = depth.saturating_sub(1),
+            ',' if depth == 0 => {
+                pieces.push(text[start..i].trim());
+                start = i + 1;
+            }
+            _ => {}
+        }
+    }
+    pieces.push(text[start..].trim());
+    pieces
+}
+
+/// One colour, or several separated by commas ("#f00, #00f", "red, rgb(0, 0, 255)").
+/// The whole text is tried as one colour first, so "1,0,0" is red and not three pieces.
+fn parse_color_list(text: &str) -> Option<Vec<[f32; 3]>> {
+    if let Some(color) = parse_color3(text) {
+        return Some(vec![color]);
+    }
+    let pieces = split_outside_parentheses(text);
+    if pieces.len() < 2 {
+        return None;
+    }
+    pieces.into_iter().map(parse_color3).collect()
+}
+
+/// Colours spread at equal intervals along a ColorSequence. A single colour becomes a
+/// constant sequence: Roblox refuses a sequence without a point at time 1, so the lone
+/// keypoint at 0 that `set Fire Color #f00` used to produce could not be applied.
+fn color_sequence(colors: &[[f32; 3]]) -> model::PropertyValue {
+    let points: Vec<[f32; 3]> = match colors {
+        [only] => vec![*only, *only],
+        _ => colors.to_vec(),
+    };
+    let last_item = points.len().saturating_sub(1).max(1) as f32;
+    model::PropertyValue::ColorSequence(
+        points
+            .iter()
+            .enumerate()
+            .map(|(i, [r, g, b])| model::ColorKeypoint {
+                t: i as f32 / last_item,
+                r: *r,
+                g: *g,
+                b: *b,
+            })
+            .collect(),
+    )
+}
+
+/// Whether a property's name promises a colour (Part.Color, BackgroundColor3, TextColor3).
+/// Used when the model holds no value to judge the type by, and by the CLI, which never does.
+fn is_color_property_name(property: &str) -> bool {
+    let lower = property.trim().to_ascii_lowercase();
+    lower == "color" || lower.ends_with("color3")
+}
+
+/// What kind of colour a property takes.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ColorTarget {
+    /// A Color3.
+    One,
+    /// A ColorSequence (ParticleEmitter, Beam, Trail).
+    Sequence,
+    /// Known only by the name "Color", which is a Color3 on a Part and a ColorSequence on a
+    /// ParticleEmitter: one colour is taken as a Color3, several as a sequence.
+    Either,
+}
+
+/// The colour a property takes, judged by its current value when the model has one and by
+/// its name when it does not. None when it takes no colour.
+fn color_target(property: &str, current_value: Option<&model::PropertyValue>) -> Option<ColorTarget> {
+    use model::PropertyValue as P;
+    match current_value {
+        Some(P::Color3 { .. }) => Some(ColorTarget::One),
+        Some(P::ColorSequence(_)) => Some(ColorTarget::Sequence),
+        // A String under a colour name is not type information: it is what the old parser
+        // stored after `set Part Color red`, and trusting it would forward text again.
+        None | Some(P::String(_)) if is_color_property_name(property) => {
+            if property.trim().eq_ignore_ascii_case("color") {
+                Some(ColorTarget::Either)
+            } else {
+                Some(ColorTarget::One)
+            }
+        }
+        _ => None,
+    }
+}
+
+/// The colour forms parse_color3 accepts, one line each, for the core's warning and the
+/// CLI's error. Kept next to the parser so the two cannot drift apart.
+fn color_forms_help() -> Vec<String> {
+    let names: Vec<&str> = COLOR_NAMES.iter().map(|(name, _)| *name).collect();
+    vec![
+        "Colours: #ff8800 | #f80 | 1,0.5,0 (0-1) | 255,136,0 (0-255) | rgb(255, 136, 0)".to_string(),
+        "         Color3.fromRGB(255, 136, 0) | Color3.new(1, 0.5, 0)".to_string(),
+        format!("Names:   {}", names.join(", ")),
+        "Several colours separated by commas (#f00, #00f) make a ColorSequence.".to_string(),
+    ]
+}
+
+/// The instance's own spelling of a property typed in another case ("size" -> "Size").
+///
+/// Studio's property names are case-sensitive: `set Box size 4,1,2` sent "size", Studio
+/// refused it, and the core had already stored a second property "size" beside "Size".
+/// A name that matches no property, or more than one, is returned as typed: guessing
+/// between two would be worse than Studio's error.
+fn canonical_property_name(
+    properties: &std::collections::BTreeMap<String, model::PropertyValue>,
+    typed: &str,
+) -> String {
+    if properties.contains_key(typed) {
+        return typed.to_string();
+    }
+    // Name lives on the instance, not in the property map.
+    if typed.eq_ignore_ascii_case("Name") {
+        return "Name".to_string();
+    }
+    let mut matches = properties.keys().filter(|k| k.eq_ignore_ascii_case(typed));
+    match (matches.next(), matches.next()) {
+        (Some(only), None) => only.clone(),
+        _ => typed.to_string(),
+    }
+}
+
+/// Turns text typed in the terminal into the value the property needs.
+///
+/// Err means the text cannot be what the property takes and the property must be left
+/// alone: forwarding it anyway is how `set Part Color red` reached Studio as a string, was
+/// refused there ("Color3 expected, got string"), and the terminal still printed success.
+/// Only colour targets can fail today; other types keep the general parser's best guess.
+fn value_from_text(
+    property: &str,
+    current_value: Option<&model::PropertyValue>,
+    text_value: &str,
+) -> Result<model::PropertyValue, String> {
+    if let Some(target) = color_target(property, current_value) {
+        let colors = parse_color_list(text_value)
+            .ok_or_else(|| format!("'{}' is not a colour", text_value.trim()))?;
+        return match (target, colors.as_slice()) {
+            (ColorTarget::Sequence, _) => Ok(color_sequence(&colors)),
+            (_, [[r, g, b]]) => Ok(model::PropertyValue::Color3 { r: *r, g: *g, b: *b }),
+            (ColorTarget::One, _) => Err(format!(
+                "'{}' is several colours, and {} takes one",
+                text_value.trim(),
+                property
+            )),
+            (ColorTarget::Either, _) => Ok(color_sequence(&colors)),
+        };
+    }
+    Ok(current_value
+        .and_then(|current| coerce_to_existing_type(current, text_value))
+        .unwrap_or_else(|| parse_property_value(text_value)))
+}
+
+/// After a FULL_SYNC: the messages that bring Studio up to what the core kept for it.
+/// `kept` lists instances carried over into the model (parents first); `delivered` is
+/// what Studio was handed but did not apply. Only those are sent: what is still queued
+/// will be delivered anyway.
+fn resend_payloads(
+    dm: &model::DataModel,
+    kept: &[uuid::Uuid],
+    delivered: &transport::InFlight,
+) -> Vec<Payload> {
+    let mut out = Vec::new();
+    for id in kept.iter().filter(|id| delivered.creates.contains(id)) {
+        if let Some(node) = dm.get_instance(id) {
+            if let Ok(data) = serde_json::to_value(node) {
+                out.push(Payload {
+                    version: "v1".to_string(),
+                    event_type: EventType::PushUpdate,
+                    data,
+                });
+            }
+        }
+    }
+
+    let mut patches = Vec::new();
+    for (id, property) in &delivered.properties {
+        let Some(node) = dm.get_instance(id) else { continue };
+        let value = match property.as_str() {
+            "Name" => serde_json::json!(node.name),
+            "Source" => match &node.source {
+                Some(source) => serde_json::json!(source),
+                None => continue,
+            },
+            _ => match node.properties.get(property) {
+                Some(pv) => pv_to_wire(pv),
+                None => continue,
+            },
+        };
+        patches.push(serde_json::json!({
+            "event_type": "PROPERTY_UPDATE",
+            "data": { "syncix_id": id, "property": property, "value": value }
+        }));
+    }
+    for id in &delivered.reparents {
+        if let Some(parent) = dm.get_instance(id).and_then(|n| n.parent) {
+            patches.push(serde_json::json!({
+                "event_type": "REPARENT",
+                "data": { "syncix_id": id, "parent": parent.to_string() }
+            }));
+        }
+    }
+    for (id, name) in &delivered.attributes {
+        let Some(node) = dm.get_instance(id) else { continue };
+        let value = node.attributes.get(name).map(pv_to_wire).unwrap_or(serde_json::Value::Null);
+        patches.push(serde_json::json!({
+            "event_type": "ATTRIBUTE_UPDATE",
+            "data": { "syncix_id": id, "name": name, "value": value }
+        }));
+    }
+    for id in &delivered.tags {
+        if let Some(node) = dm.get_instance(id) {
+            patches.push(serde_json::json!({
+                "event_type": "TAGS_UPDATE",
+                "data": { "syncix_id": id, "tags": node.tags }
+            }));
+        }
+    }
+    for id in &delivered.destroys {
+        if dm.get_instance(id).is_none() {
+            patches.push(serde_json::json!({ "event_type": "DESTROY", "data": { "syncix_id": id } }));
+        }
+    }
+    if !patches.is_empty() {
+        out.push(Payload {
+            version: "v1".to_string(),
+            event_type: EventType::CompositeUpdate,
+            data: serde_json::json!({ "patches": patches }),
+        });
+    }
+    out
 }
 
 /// Turns a JSON value in wire format into a PropertyValue.
@@ -619,9 +927,8 @@ async fn main() {
     // Show the settings actually applied at startup; the cheapest way to settle
     // "I set it but it did nothing".
     tracing::info!(
-        "Sync mode: {} | play: {} | debounce: {} ms | trash: {} (keep {}) | undo: {}",
+        "Sync mode: {} | debounce: {} ms | trash: {} (keep {}) | undo: {}",
         cfg.mode_value.name_of(),
-        cfg.play.name_of(),
         cfg.debounce_ms,
         cfg.safety_settings.trash_enabled,
         cfg.safety_settings.trash_keep_runs,
@@ -721,7 +1028,7 @@ async fn main() {
                     let mut dm = data_model.write().await;
                     // Recovery: when a FULL_SYNC arrives the old state is discarded completely.
                     // That way objects deleted on the Studio side do not linger in memory.
-                    *dm = crate::model::DataModel::new();
+                    let previous = std::mem::replace(&mut *dm, crate::model::DataModel::new());
                     for node_data in instances {
                         if let (Some(class_name), Some(name), Some(syncix_id)) = (
                             node_data.get("class_name").and_then(|v| v.as_str()),
@@ -800,8 +1107,62 @@ async fn main() {
                             }
                         }
                     }
+
+                    // Studio's tree holds only what Studio has applied. What the core created
+                    // that is still on its way (queued, in a poll reply, or parked in the
+                    // plugin until its parent exists) was dropped by the rebuild above; its
+                    // files went to the trash and it came back later as a duplicate. It is
+                    // put back. What Studio did receive and still lacks, it deleted or
+                    // refused, and that stays gone.
+                    let applied = if payload.data.get("applied_epoch").and_then(|v| v.as_str())
+                        == Some(studio_outbox.epoch())
+                    {
+                        // Read leniently: Studio's JSON encoder writes every number as a double.
+                        payload.data.get("applied_seq").and_then(|v| {
+                            v.as_u64()
+                                .or_else(|| v.as_f64().filter(|f| *f >= 0.0).map(|f| f as u64))
+                        })
+                    } else {
+                        None
+                    };
+                    let mut in_flight = studio_outbox.in_flight(applied);
+                    if let Some(waiting) = payload.data.get("waiting_ids").and_then(|v| v.as_array()) {
+                        in_flight.creates.extend(
+                            waiting
+                                .iter()
+                                .filter_map(|v| v.as_str())
+                                .filter_map(|s| uuid::Uuid::parse_str(s).ok()),
+                        );
+                    }
+                    let kept = dm.carry_over(&previous, &in_flight);
+                    // Delivered but never applied (a lost poll reply, or dropped while sync
+                    // was paused): nothing would deliver it again, so the model would keep
+                    // what Studio never gets. It is sent once more; the plugin applies a
+                    // create or change it already has without harm.
+                    if let Some(applied) = applied {
+                        let delivered = studio_outbox.delivered_since(applied);
+                        for resend in resend_payloads(&dm, &kept, &delivered) {
+                            studio_outbox.push(resend);
+                        }
+                    }
+                    studio_outbox.settle(applied);
+                    for id in &kept {
+                        if let Some(instance) = dm.get_instance(id) {
+                            ws_nodes.push(serde_json::json!({
+                                "id": instance.syncix_id,
+                                "name": instance.name,
+                                "className": instance.class_name,
+                                "parentId": instance.parent.map(|u| u.to_string()),
+                                "childrenIds": [],
+                                "isExpanded": false
+                            }));
+                        }
+                    }
+                    if !kept.is_empty() {
+                        tracing::info!("FULL_SYNC: kept {} instance(s) Studio has not applied yet.", kept.len());
+                    }
                 }
-                
+
                 tracing::info!("FULL_SYNC complete. {} instances added or updated.", added_count);
                 // The model is now Studio's tree: the reconciler may delete extras.
                 model_authoritative.store(true, std::sync::atomic::Ordering::SeqCst);
@@ -1148,19 +1509,51 @@ async fn main() {
                 // value: `set X BrickColor "Really red"` becomes a BrickColor, not text,
                 // `set X CFrame 0,10,0` becomes a CFrame, not text.
                 // The type decision is still made from a value — the value compared
-                // is simply the one already in the model.
-                let current_value = {
+                // is simply the one already in the model. The name is fitted too, to the
+                // instance's own spelling (see canonical_property_name).
+                let (canonical, current_value) = {
                     let dm = data_model.read().await;
-                    dm.get_instance(&uuid)
-                        .and_then(|i| i.properties.get(&property).cloned())
+                    match dm.get_instance(&uuid) {
+                        Some(inst) => {
+                            let canonical = canonical_property_name(&inst.properties, &property);
+                            let current_value = inst.properties.get(&canonical).cloned();
+                            (canonical, current_value)
+                        }
+                        None => (property.clone(), None),
+                    }
                 };
-                let mut pv = match &value_json {
-                    serde_json::Value::String(s) => current_value
-                        .as_ref()
-                        .and_then(|m| coerce_to_existing_type(m, s))
-                        .unwrap_or_else(|| parse_property_value(s)),
-                    other => parse_wire_value(other)
-                        .unwrap_or_else(|| model::PropertyValue::String(value_str.clone())),
+                if canonical != property {
+                    tracing::info!(
+                        "SET_PROPERTY: '{}' was read as '{}' (Studio's property names are case-sensitive).",
+                        property,
+                        canonical
+                    );
+                }
+                let property = canonical;
+                let parsed = match &value_json {
+                    serde_json::Value::String(s) => value_from_text(&property, current_value.as_ref(), s),
+                    other => match parse_wire_value(other) {
+                        Some(pv) => Ok(pv),
+                        // The fallback below forwards text, which a colour property refuses.
+                        None if color_target(&property, current_value.as_ref()).is_some() => {
+                            Err(format!("{} is not a colour", value_str))
+                        }
+                        None => Ok(model::PropertyValue::String(value_str.clone())),
+                    },
+                };
+                let mut pv = match parsed {
+                    Ok(pv) => pv,
+                    Err(reason) => {
+                        let help: Vec<String> = color_forms_help().iter().map(|l| l.trim().to_string()).collect();
+                        tracing::warn!(
+                            "SET_PROPERTY: {}; {}.{} was left unchanged. {}",
+                            reason,
+                            id,
+                            property,
+                            help.join(" ")
+                        );
+                        continue;
+                    }
                 };
                 // Without a current value there is no type to fit to, and "x,y,z" parses as a
                 // Vector3, which Studio refuses for a CFrame. A CFrame it is, unrotated.
@@ -1190,7 +1583,9 @@ async fn main() {
                                     "SET_PROPERTY: reference target '{}' was not found; the property was left unchanged.",
                                     dest
                                 );
-                                return;
+                                // continue, not return: this is main's dispatcher loop, and
+                                // returning from it shut the whole core down over one typo.
+                                continue;
                             }
                         }
                     }
@@ -1772,6 +2167,33 @@ mod property_tests {
     /// Text from the CLI and HTTP must be converted to the right type.
     /// If "0,0.5,-60" stays a String the position is not applied; this is the input side of the bug.
     #[test]
+    fn resend_covers_what_was_delivered_and_kept() {
+        let mut dm = model::DataModel::new();
+        let ws = InstanceNode::new("Workspace", "Workspace");
+        let ws_id = ws.syncix_id;
+        dm.upsert_instance(ws).unwrap();
+        let mut part = InstanceNode::new("Part", "Box");
+        part.parent = Some(ws_id);
+        part.properties.insert("Transparency".into(), model::PropertyValue::Number(0.5));
+        let part_id = part.syncix_id;
+        dm.upsert_instance(part).unwrap();
+
+        let delivered = transport::InFlight {
+            creates: [part_id].into_iter().collect(),
+            properties: [(part_id, "Transparency".to_string())].into_iter().collect(),
+            ..Default::default()
+        };
+        let payloads = resend_payloads(&dm, &[part_id], &delivered);
+        assert!(payloads
+            .iter()
+            .any(|p| p.event_type == EventType::PushUpdate && p.data["syncix_id"] == part_id.to_string()));
+        assert!(payloads.iter().any(|p| p.event_type == EventType::CompositeUpdate));
+
+        // A create that was only queued (not delivered) is not sent again.
+        assert!(resend_payloads(&dm, &[part_id], &transport::InFlight::default()).is_empty());
+    }
+
+    #[test]
     fn text_parses_as_vector3() {
         assert_eq!(
             parse_property_value("0,0.5,-60"),
@@ -1948,6 +2370,216 @@ mod type_coercion_tests {
                 g: 0.5,
                 b: 1.0
             })
+        );
+    }
+}
+
+#[cfg(test)]
+mod set_value_tests {
+    use super::*;
+    use model::PropertyValue as P;
+    use std::collections::BTreeMap;
+
+    fn rgb(r: u8, g: u8, b: u8) -> [f32; 3] {
+        [r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0]
+    }
+
+    fn color3([r, g, b]: [f32; 3]) -> P {
+        P::Color3 { r, g, b }
+    }
+
+    fn keypoint(t: f32, [r, g, b]: [f32; 3]) -> model::ColorKeypoint {
+        model::ColorKeypoint { t, r, g, b }
+    }
+
+    #[test]
+    fn hex_long_and_short() {
+        assert_eq!(parse_color3("#ff8800"), Some(rgb(255, 136, 0)));
+        assert_eq!(parse_color3("#FF8800"), Some(rgb(255, 136, 0)));
+        assert_eq!(parse_color3("#f80"), Some(rgb(255, 136, 0)));
+        assert_eq!(parse_color3("  #0a0  "), Some(rgb(0, 170, 0)));
+    }
+
+    /// Non-ASCII input is in the list on purpose: the hex slicing counts bytes and would
+    /// panic on it if the digits were not checked first.
+    #[test]
+    fn broken_hex_is_refused() {
+        for bad in ["#", "#ff88", "#ff880", "#ff88000", "#gg8800", "#ffé", "ff8800"] {
+            assert_eq!(parse_color3(bad), None, "{bad}");
+        }
+    }
+
+    /// All values at most 1 read as 0-1, otherwise 0-255: "255,136,0" used to be stored
+    /// as a Color3 of 255.
+    #[test]
+    fn triplets_pick_their_scale() {
+        assert_eq!(parse_color3("1,0.5,0"), Some([1.0, 0.5, 0.0]));
+        assert_eq!(parse_color3("255, 136, 0"), Some(rgb(255, 136, 0)));
+        assert_eq!(parse_color3("1,1,1"), Some([1.0, 1.0, 1.0]));
+        assert_eq!(parse_color3("0,0,255"), Some(rgb(0, 0, 255)));
+        // One value above 1 switches the whole triplet to 0-255.
+        assert_eq!(parse_color3("1,0,128"), Some(rgb(1, 0, 128)));
+    }
+
+    #[test]
+    fn triplets_out_of_range_are_refused() {
+        for bad in ["256,0,0", "-1,0,0", "1,2", "1,2,3,4", "a,b,c", "inf,0,0", "NaN,0,0", ""] {
+            assert_eq!(parse_color3(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn rgb_and_luau_forms() {
+        assert_eq!(parse_color3("rgb(255, 136, 0)"), Some(rgb(255, 136, 0)));
+        assert_eq!(parse_color3("RGB( 0 , 128 , 0 )"), Some(rgb(0, 128, 0)));
+        assert_eq!(parse_color3("rgb(1, 0.5, 0)"), Some([1.0, 0.5, 0.0]));
+        assert_eq!(parse_color3("Color3.fromRGB(255, 136, 0)"), Some(rgb(255, 136, 0)));
+        // fromRGB states its scale: 1 is nearly black, not full intensity.
+        assert_eq!(parse_color3("Color3.fromRGB(1, 1, 1)"), Some(rgb(1, 1, 1)));
+        assert_eq!(parse_color3("Color3.new(1, 0.5, 0)"), Some([1.0, 0.5, 0.0]));
+        assert_eq!(parse_color3("Color3.new(255, 0, 0)"), None);
+        assert_eq!(parse_color3("rgb(255, 0)"), None);
+        assert_eq!(parse_color3("rgba(255, 0, 0, 1)"), None);
+    }
+
+    #[test]
+    fn colour_names() {
+        assert_eq!(parse_color3("red"), Some(rgb(255, 0, 0)));
+        assert_eq!(parse_color3("Grey"), Some(rgb(128, 128, 128)));
+        assert_eq!(parse_color3("GRAY"), Some(rgb(128, 128, 128)));
+        assert_eq!(parse_color3("lime"), Some(rgb(0, 255, 0)));
+        assert_eq!(parse_color3("navy"), Some(rgb(0, 0, 128)));
+        for name in [
+            "red", "green", "blue", "white", "black", "yellow", "orange", "purple", "pink", "gray", "grey",
+            "cyan", "brown", "lime", "navy", "teal",
+        ] {
+            assert!(parse_color3(name).is_some(), "{name}");
+        }
+        // BrickColor names are not Color3 names.
+        assert_eq!(parse_color3("Really red"), None);
+    }
+
+    #[test]
+    fn colour_lists() {
+        assert_eq!(parse_color_list("1,0,0"), Some(vec![[1.0, 0.0, 0.0]]));
+        assert_eq!(parse_color_list("#f00, #00f"), Some(vec![rgb(255, 0, 0), rgb(0, 0, 255)]));
+        assert_eq!(
+            parse_color_list("red, rgb(0, 0, 255)"),
+            Some(vec![rgb(255, 0, 0), rgb(0, 0, 255)])
+        );
+        assert_eq!(parse_color_list("1,0"), None);
+        assert_eq!(parse_color_list("red, nope"), None);
+    }
+
+    #[test]
+    fn colour_property_names() {
+        for name in ["Color", "color", "BackgroundColor3", "TextColor3", "Color3", "ImageColor3"] {
+            assert!(is_color_property_name(name), "{name}");
+        }
+        for name in ["BrickColor", "TeamColor", "Name", "Size", "Colorful"] {
+            assert!(!is_color_property_name(name), "{name}");
+        }
+        // The current value's type wins over the name.
+        assert_eq!(color_target("Color", Some(&P::BrickColor("White".into()))), None);
+        assert_eq!(color_target("Color", None), Some(ColorTarget::Either));
+        assert_eq!(color_target("TextColor3", None), Some(ColorTarget::One));
+        assert_eq!(color_target("Ambient", Some(&color3([0.0; 3]))), Some(ColorTarget::One));
+    }
+
+    #[test]
+    fn property_name_case_is_forgiven() {
+        let mut props = BTreeMap::new();
+        props.insert("Size".to_string(), P::Vector3 { x: 1.0, y: 1.0, z: 1.0 });
+        props.insert("Color".to_string(), color3([0.0; 3]));
+        assert_eq!(canonical_property_name(&props, "size"), "Size");
+        assert_eq!(canonical_property_name(&props, "COLOR"), "Color");
+        assert_eq!(canonical_property_name(&props, "Size"), "Size");
+        assert_eq!(canonical_property_name(&props, "name"), "Name");
+        // Unknown: passed on as typed, so Studio's error names what was typed.
+        assert_eq!(canonical_property_name(&props, "Anchored"), "Anchored");
+    }
+
+    #[test]
+    fn two_case_matches_are_not_guessed() {
+        let mut props = BTreeMap::new();
+        props.insert("Value".to_string(), P::Number(1.0));
+        props.insert("VALUE".to_string(), P::Number(2.0));
+        assert_eq!(canonical_property_name(&props, "value"), "value");
+    }
+
+    #[test]
+    fn colour_target_takes_any_colour_form() {
+        let current = color3([0.0; 3]);
+        assert_eq!(value_from_text("Color", Some(&current), "red"), Ok(color3(rgb(255, 0, 0))));
+        assert_eq!(value_from_text("Color", Some(&current), "#f80"), Ok(color3(rgb(255, 136, 0))));
+        assert_eq!(
+            value_from_text("Color", Some(&current), "255, 136, 0"),
+            Ok(color3(rgb(255, 136, 0)))
+        );
+        assert_eq!(
+            coerce_to_existing_type(&current, "rgb(255, 136, 0)"),
+            Some(color3(rgb(255, 136, 0)))
+        );
+    }
+
+    /// The incident: Studio answered "Color3 expected, got string". Text that is no colour
+    /// must be refused here, not forwarded for Studio to refuse.
+    #[test]
+    fn colour_target_refuses_other_text() {
+        let current = color3([0.0; 3]);
+        assert!(value_from_text("Color", Some(&current), "Really red").is_err());
+        assert!(value_from_text("Color", Some(&current), "#f00, #00f").is_err());
+        // Judged by name when the model has no value yet.
+        assert!(value_from_text("BackgroundColor3", None, "hello").is_err());
+        assert!(value_from_text("BackgroundColor3", None, "#f00, #00f").is_err());
+        assert_eq!(value_from_text("BackgroundColor3", None, "#fff"), Ok(color3([1.0, 1.0, 1.0])));
+    }
+
+    /// A String stored under a colour name is a leftover of the old parser, not a type.
+    #[test]
+    fn leftover_string_does_not_make_a_colour_text() {
+        let leftover = P::String("red".into());
+        assert_eq!(value_from_text("Color", Some(&leftover), "blue"), Ok(color3(rgb(0, 0, 255))));
+        assert!(value_from_text("Color", Some(&leftover), "Really red").is_err());
+    }
+
+    #[test]
+    fn colour_sequence_target() {
+        let current = P::ColorSequence(vec![]);
+        let red = rgb(255, 0, 0);
+        let blue = rgb(0, 0, 255);
+        let red_to_blue = P::ColorSequence(vec![keypoint(0.0, red), keypoint(1.0, blue)]);
+        // One colour is a constant sequence, with the point at time 1 Roblox requires.
+        assert_eq!(
+            value_from_text("Color", Some(&current), "red"),
+            Ok(P::ColorSequence(vec![keypoint(0.0, red), keypoint(1.0, red)]))
+        );
+        assert_eq!(
+            coerce_to_existing_type(&current, "#ff0000"),
+            Some(P::ColorSequence(vec![keypoint(0.0, red), keypoint(1.0, red)]))
+        );
+        assert_eq!(value_from_text("Color", Some(&current), "#f00, #00f"), Ok(red_to_blue.clone()));
+        assert!(value_from_text("Color", Some(&current), "fire").is_err());
+        // No current value: several colours can only be a sequence.
+        assert_eq!(value_from_text("Color", None, "#f00, #00f"), Ok(red_to_blue));
+    }
+
+    /// Colour names must not leak into other properties: "red" for a text stays "red".
+    #[test]
+    fn other_targets_are_unchanged() {
+        assert_eq!(
+            value_from_text("Text", Some(&P::String("x".into())), "red"),
+            Ok(P::String("red".into()))
+        );
+        assert_eq!(
+            value_from_text("BrickColor", Some(&P::BrickColor("White".into())), "Really red"),
+            Ok(P::BrickColor("Really red".into()))
+        );
+        assert_eq!(value_from_text("Material", None, "red"), Ok(P::String("red".into())));
+        assert_eq!(value_from_text("Transparency", None, "0.5"), Ok(P::Number(0.5)));
+        assert_eq!(
+            value_from_text("Position", None, "0,5,-60"),
+            Ok(P::Vector3 { x: 0.0, y: 5.0, z: -60.0 })
         );
     }
 }

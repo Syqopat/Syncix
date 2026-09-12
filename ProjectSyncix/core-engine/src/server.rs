@@ -219,7 +219,13 @@ async fn build_handler(
     reply
 }
 
-async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload>> {
+/// The most messages one poll reply carries.
+const MAX_POLL_BATCH: usize = 64;
+
+async fn poll_handler(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,
+) -> Json<serde_json::Value> {
     state.health_monitor.inc_messages();
     // A poll is the only proof that Studio is up; the connection state comes from here.
     state.health_monitor.touch_studio();
@@ -240,14 +246,39 @@ async fn poll_handler(State(state): State<Arc<AppState>>) -> Json<Option<Payload
     // The 10-second limit matters: Studio's HTTP client times out at 30 seconds, and a
     // connection thought to be lost causes a needless reconnect + FULL_SYNC loop.
     // Thanks to the outbox, messages sent between two polls are not lost.
-    let message = state
+    let Some(first) = state
         .studio_outbox
         .pop_or_wait(std::time::Duration::from_secs(10))
-        .await;
-    if message.is_some() {
+        .await
+    else {
+        return Json(serde_json::Value::Null);
+    };
+
+    // A plugin that asks for a batch gets what is queued, up to `batch`, in one reply.
+    // One message per request made a large import cost one HTTP request per command,
+    // enough to reach Studio's request limit; a failed request makes the plugin
+    // reconnect and resend its whole tree. An older plugin asks for no batch and
+    // still gets a single message.
+    let batch = params
+        .get("batch")
+        .and_then(|b| b.parse::<usize>().ok())
+        .unwrap_or(0)
+        .min(MAX_POLL_BATCH);
+    if batch == 0 {
+        state.health_monitor.inc_outbound();
+        return Json(serde_json::to_value(first).unwrap_or(serde_json::Value::Null));
+    }
+    let mut messages = vec![first];
+    while messages.len() < batch {
+        match state.studio_outbox.try_pop() {
+            Some(p) => messages.push(p),
+            None => break,
+        }
+    }
+    for _ in &messages {
         state.health_monitor.inc_outbound();
     }
-    Json(message)
+    Json(serde_json::to_value(messages).unwrap_or(serde_json::Value::Null))
 }
 
 async fn push_handler(

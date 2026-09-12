@@ -1,6 +1,10 @@
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
 
+-- The generated class -> property table, used only to correct a property name
+-- given in the wrong case (see correctedName). PatchBuilder loads it anyway.
+local PropertyTable = require(script.Parent.Parent.Observer.PropertyTable)
+
 -- Upper bound on instances waiting for a parent, so a parent that never arrives
 -- cannot grow the queue without limit.
 local MAX_WAITING = 2000
@@ -18,13 +22,16 @@ function PatchExecutor.new()
     -- for its parent instead of landing somewhere it does not belong.
     self.waitingForParent = {}
     self.waitingCount = 0
+    -- uuid -> true for every instance parked above. They go out with a FULL_SYNC so the
+    -- core keeps them: Studio has received them but not built them yet.
+    self.waitingIds = {}
     return self
 end
 
 -- Queues `apply` until the instance `parentId` is created by a later patch.
-function PatchExecutor:WaitForParent(parentId: string, childName: string, apply: () -> ())
+function PatchExecutor:WaitForParent(parentId: string, childName: string, childId: string?, apply: () -> ())
     if self.waitingCount >= MAX_WAITING then
-        warn(string.format("[Syncix] %s was not created: its parent is not in Studio.", tostring(childName)))
+        self:ReportNotCreated(childId, childName, nil, "its parent is not in Studio")
         return
     end
     local queue = self.waitingForParent[parentId]
@@ -37,8 +44,20 @@ function PatchExecutor:WaitForParent(parentId: string, childName: string, apply:
             string.sub(parentId, 1, 8)
         ))
     end
-    table.insert(queue, apply)
+    table.insert(queue, { id = childId, apply = apply })
     self.waitingCount += 1
+    if childId then
+        self.waitingIds[childId] = true
+    end
+end
+
+-- The instances parked until their parent exists.
+function PatchExecutor:WaitingIds(): { string }
+    local ids = {}
+    for id in pairs(self.waitingIds) do
+        table.insert(ids, id)
+    end
+    return ids
 end
 
 -- Runs everything that waited for `uuid`, now that it exists.
@@ -49,8 +68,41 @@ function PatchExecutor:ReleaseChildren(uuid: string)
     end
     self.waitingForParent[uuid] = nil
     self.waitingCount -= #queue
-    for _, apply in ipairs(queue) do
-        apply()
+    for _, entry in ipairs(queue) do
+        if entry.id then
+            self.waitingIds[entry.id] = nil
+        end
+        -- The whole queue is already off the books. An error from one child used to skip
+        -- its siblings: never built, yet listed in waitingIds, so every FULL_SYNC asked the
+        -- core to keep them.
+        local ok, failure = pcall(entry.apply)
+        if not ok then
+            warn(string.format(
+                "[Syncix] A child of %s could not be built: %s",
+                string.sub(uuid, 1, 8),
+                tostring(failure)
+            ))
+        end
+    end
+end
+
+-- Forgets everything parked under `uuid`, and what was parked under those in turn: none
+-- of it can be built now. The core drops the whole subtree when told about `uuid`; with
+-- only one level forgotten, grandchildren stayed in waitingIds and in waitingCount for
+-- good.
+function PatchExecutor:_DropWaiting(uuid: string)
+    local queue = self.waitingForParent[uuid]
+    if not queue then
+        return
+    end
+    -- Cleared before recursing, so a cycle in bad data still ends.
+    self.waitingForParent[uuid] = nil
+    self.waitingCount -= #queue
+    for _, entry in ipairs(queue) do
+        if entry.id then
+            self.waitingIds[entry.id] = nil
+            self:_DropWaiting(entry.id)
+        end
     end
 end
 
@@ -95,17 +147,29 @@ function PatchExecutor:ReportNotCreated(uuid: string?, name: any, className: any
         return
     end
     -- Its children waited for it; the core removes them together with it.
-    local queue = self.waitingForParent[uuid]
-    if queue then
-        self.waitingForParent[uuid] = nil
-        self.waitingCount -= #queue
-    end
+    self.waitingIds[uuid] = nil
+    self:_DropWaiting(uuid)
     if self.batchQueue then
         self.batchQueue:Enqueue({
             event_type = "DESTROY",
             version = "v1",
             data = { syncix_id = uuid, class_name = className, name = name },
         })
+    end
+end
+
+-- Instance.new("Part") still gives Roblox's legacy surfaces (Studs on top, Inlet
+-- underneath), unlike a part inserted by hand in Studio, so every part Syncix
+-- created from a file or a command came out studded. Called right after
+-- Instance.new, before any property is applied, so a file or the core that names
+-- a surface still has the last word.
+local function smoothNewPart(instance: Instance)
+    if instance:IsA("BasePart") then
+        pcall(function()
+            local part = instance :: any
+            part.TopSurface = Enum.SurfaceType.Smooth
+            part.BottomSurface = Enum.SurfaceType.Smooth
+        end)
     end
 end
 
@@ -123,7 +187,7 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
 
     if not instance then
         if hasParent and not targetParent then
-            self:WaitForParent(parentId, name, function()
+            self:WaitForParent(parentId, name, uuid, function()
                 self:ApplyFullNode(nodeData)
             end)
             return
@@ -142,6 +206,8 @@ function PatchExecutor:ApplyFullNode(nodeData: any)
                 self:ReportNotCreated(uuid, name, className, "Studio cannot create this class")
                 return
             end
+        else
+            smoothNewPart(newInst)
         end
         
         instance = newInst
@@ -196,7 +262,7 @@ function PatchExecutor:ApplyPatch(patch: any)
         local targetParent = parentId and self.cache:GetInstance(parentId) or nil
         if not targetParent then
             if parentId then
-                self:WaitForParent(parentId, patch.data.name or patch.data.class_name, function()
+                self:WaitForParent(parentId, patch.data.name or patch.data.class_name, uuid, function()
                     self:ApplyPatch(patch)
                 end)
             else
@@ -214,6 +280,8 @@ function PatchExecutor:ApplyPatch(patch: any)
                 self:ReportNotCreated(uuid, patch.data.name, patch.data.class_name, "Studio cannot create this class")
                 return
             end
+        else
+            smoothNewPart(newInst)
         end
 
         newInst.Name = patch.data.name or patch.data.class_name
@@ -542,7 +610,162 @@ function PatchExecutor:_AwaitReferences(instance: Instance, propName: string)
     end
 end
 
+-- Colour given as text.
+--
+-- A file or command may write a colour the way people type it ("#ff8800",
+-- "255, 136, 0", "rgb(255, 136, 0)"), and Roblox only takes a Color3, so the
+-- assignment was rejected. Three numbers are 0-1 unless one is above 1, which means
+-- the 0-255 scale; "1, 1, 1" is white either way.
+local function colorFromTriple(text: string): Color3?
+    local a, b, c = string.match(text, "^([^,]+),([^,]+),([^,]+)$")
+    if not a then
+        return nil
+    end
+    local r = tonumber(string.match(a, "^%s*(.-)%s*$"))
+    local g = tonumber(string.match(b, "^%s*(.-)%s*$"))
+    local bl = tonumber(string.match(c, "^%s*(.-)%s*$"))
+    if not (r and g and bl) or r < 0 or g < 0 or bl < 0 then
+        return nil
+    end
+    if r > 1 or g > 1 or bl > 1 then
+        if r > 255 or g > 255 or bl > 255 then
+            return nil
+        end
+        return Color3.fromRGB(r, g, bl)
+    end
+    return Color3.new(r, g, bl)
+end
+
+local function colorFromText(text: string): Color3?
+    local hex = string.match(text, "^%s*#(%x+)%s*$")
+    if hex then
+        if #hex == 6 then
+            return Color3.fromRGB(
+                tonumber(string.sub(hex, 1, 2), 16) :: number,
+                tonumber(string.sub(hex, 3, 4), 16) :: number,
+                tonumber(string.sub(hex, 5, 6), 16) :: number
+            )
+        elseif #hex == 3 then
+            -- "#f80" is shorthand for "#ff8800": each digit is doubled.
+            return Color3.fromRGB(
+                (tonumber(string.sub(hex, 1, 1), 16) :: number) * 17,
+                (tonumber(string.sub(hex, 2, 2), 16) :: number) * 17,
+                (tonumber(string.sub(hex, 3, 3), 16) :: number) * 17
+            )
+        end
+        return nil
+    end
+    local inner = string.match(text, "^%s*[Rr][Gg][Bb]%s*%((.*)%)%s*$")
+    return colorFromTriple(inner or text)
+end
+
+-- True when the property currently holds a Color3. Only asked once the text parsed as a
+-- colour, so ordinary strings never pay for the extra property read; it also keeps
+-- "1, 2, 3" meant for a Vector3 away from the colour path.
+local function isColor3Property(instance: Instance, propName: string): boolean
+    local ok, current = pcall(function()
+        return (instance :: any)[propName]
+    end)
+    return ok and typeof(current) == "Color3"
+end
+
+-- Property names in the wrong case.
+--
+-- Roblox member names are case-sensitive: a file or command that said "size" failed
+-- with "size is not a valid member of Part". The name Roblox knows is looked up
+-- case-insensitively in the generated table, walking up the superclasses.
+
+-- Members tools/gen-properties.py leaves out of the table on purpose, which a file or
+-- command can still misspell the same way.
+local UNLISTED_MEMBERS = {
+    Instance = { "Name", "Parent", "Archivable" },
+    LuaSourceContainer = { "Source" },
+}
+
+-- className -> { lowercased name -> name Roblox knows }. Built the first time a write
+-- to that class fails, so correctly spelt writes never pay for it.
+local caseIndex = {}
+-- "Class.wrongName" -> true once the correction has been reported.
+local caseWarned = {}
+
+local function caseIndexFor(className: string): { [string]: string }
+    local index = caseIndex[className]
+    if index then
+        return index
+    end
+    index = {}
+    local function add(realName: string)
+        local key = string.lower(realName)
+        -- A subclass is walked first, so its spelling wins.
+        if index[key] == nil then
+            index[key] = realName
+        end
+    end
+    local current = className
+    local guard = 0
+    while current and guard < 64 do
+        local extras = UNLISTED_MEMBERS[current]
+        if extras then
+            for _, realName in ipairs(extras) do
+                add(realName)
+            end
+        end
+        local entry = PropertyTable[current]
+        if not entry then
+            break
+        end
+        for realName in pairs(entry.p) do
+            add(realName)
+        end
+        current = entry.u
+        guard += 1
+    end
+    caseIndex[className] = index
+    return index
+end
+
+-- The correctly spelt name for a write that failed, or nil when the name was not the
+-- problem. Warns once per class and wrong name.
+local function correctedName(instance: Instance, propName: any): string?
+    if type(propName) ~= "string" then
+        return nil
+    end
+    local className = instance.ClassName
+    local realName = caseIndexFor(className)[string.lower(propName)]
+    if not realName or realName == propName then
+        return nil
+    end
+    -- Only a name that is not a member at all is corrected; a real member that
+    -- merely differs in case from another keeps its own error.
+    local isMember = pcall(function()
+        return (instance :: any)[propName]
+    end)
+    if isMember then
+        return nil
+    end
+    local key = className .. "." .. propName
+    if not caseWarned[key] then
+        caseWarned[key] = true
+        warn(string.format(
+            "[Syncix] %s has no property \"%s\"; applied it as \"%s\". Fix the name in the file or command.",
+            className,
+            propName,
+            realName
+        ))
+    end
+    return realName
+end
+
 function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, propValue: any)
+    -- Turned into a Color3 before the echo note below, so the note holds the value
+    -- Studio will actually report back.
+    if type(propValue) == "string" then
+        local color = colorFromText(propValue)
+        if color and isColor3Property(instance, propName) then
+            propValue = color
+        end
+    end
+
     -- Echo protection: BEFORE applying, an "I am writing this value" note is made.
     -- Roblox's property signals are deferred, so a timing-based lock
     -- was not enough; the observer compares the incoming value with this note and filters our own write.
@@ -719,6 +942,13 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             )
         end
     else
+        -- Retried once under the right name; the retry cannot correct again because
+        -- the right name is its own spelling.
+        local realName = correctedName(instance, propName)
+        if realName then
+            self:ApplyPropertyValue(instance, realName, propValue)
+            return
+        end
         warn(string.format(
             "[Syncix] Could not apply property: %s.%s -> %s",
             instance:GetFullName(),
