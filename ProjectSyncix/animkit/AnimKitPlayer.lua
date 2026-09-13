@@ -72,17 +72,25 @@ function Player.new(rig: Instance, data)
 	self.Time = 0
 	self.Speed = 1
 	self.Playing = false
+	self.FadeTime = 0
+	self.FadeElapsed = 0
+	self.FadeFrom = {} :: { [string]: CFrame }
 	self.MarkerReached = nil :: ((string, string) -> ())?
 	self.Stopped = nil :: (() -> ())?
 	return self
 end
 
+-- Poses every joint of the rig: from this animation, or back to rest for a joint it does
+-- not use (so a knee bent by the last animation does not stay bent). While fading in,
+-- each joint is blended from the pose it had when Play was called.
 function Player:_apply()
-	for joint, track in pairs(self.Data.Tracks) do
-		local motor = self.Motors[joint]
-		if motor then
-			motor.Transform = sample(track, self.Time)
-		end
+	local fading = self.FadeTime > 0 and self.FadeElapsed < self.FadeTime
+	local alpha = if fading then ease("Cubic", "InOut", self.FadeElapsed / self.FadeTime) else 1
+	for name, motor in pairs(self.Motors) do
+		local track = self.Data.Tracks[name]
+		local target = if track then sample(track, self.Time) else CFrame.identity
+		local from = self.FadeFrom[name]
+		motor.Transform = if fading and from then from:Lerp(target, alpha) else target
 	end
 end
 
@@ -97,14 +105,25 @@ function Player:_markers(from: number, to: number)
 	end
 end
 
-function Player:Play(speed: number?)
+-- fadeTime: blend in from the joints' current pose over that many seconds (the previous
+-- animation's last pose when switching), instead of snapping to the first frame.
+function Player:Play(speed: number?, fadeTime: number?)
 	self.Speed = speed or 1
 	if self.Playing then
 		return
 	end
+	self.FadeTime = fadeTime or 0
+	self.FadeElapsed = 0
+	self.FadeFrom = {}
+	if self.FadeTime > 0 then
+		for name, motor in pairs(self.Motors) do
+			self.FadeFrom[name] = motor.Transform
+		end
+	end
 	self.Playing = true
 	self:_markers(-1, 0)
 	self.Connection = RunService.Stepped:Connect(function(_, dt)
+		self.FadeElapsed += dt
 		local length = self.Data.Length
 		local before = self.Time
 		self.Time += dt * self.Speed
