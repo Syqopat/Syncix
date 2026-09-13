@@ -259,20 +259,45 @@ def _get(port, path):
 
 
 def _build(name, nodes):
-    """nodes: [(id, name, class, properties)] of everything inside the rig model."""
-    names = {i: n for i, n, _, _ in nodes}
-    parts, joints = [], []
-    for i, n, cls, props in nodes:
+    """nodes: [(id, name, class, properties, parent id)] of everything inside the rig model.
+
+    Two kinds of joint are read:
+      Motor6D              Part0/Part1 and C0/C1, the classic rig.
+      AnimationConstraint  Rig Builder's newer R15: no Motor6D at all. The joint is the
+                           two Attachments it links; Attachment0's CFrame on its part is
+                           the C0, Attachment1's on its part the C1, and its Transform
+                           plays the same role, so the rest of animkit does not change.
+    A part driven by a Motor6D ignores any AnimationConstraint on it, so no joint counts twice.
+    """
+    by_id = {i: (n, cls, props, parent) for i, n, cls, props, parent in nodes}
+
+    def resolve(ref):
+        if not ref:
+            return None
+        if ref in by_id:
+            return ref
+        return next((k for k in by_id if k.startswith(ref)), None)
+
+    parts, motors, constraints = [], [], []
+    for i, n, cls, props, parent in nodes:
         if cls in ("Motor6D", "Motor"):
-            p0, p1 = _value(props.get("Part0")), _value(props.get("Part1"))
-            p0 = names.get(p0) or next((v for k, v in names.items() if p0 and k.startswith(p0)), None)
-            p1 = names.get(p1) or next((v for k, v in names.items() if p1 and k.startswith(p1)), None)
+            p0, p1 = resolve(_value(props.get("Part0"))), resolve(_value(props.get("Part1")))
             if p0 and p1 and "C0" in props and "C1" in props:
-                joints.append(Joint(n, p0, p1, _value(props["C0"]), _value(props["C1"])))
+                motors.append(Joint(n, by_id[p0][0], by_id[p1][0], _value(props["C0"]), _value(props["C1"])))
+        elif cls == "AnimationConstraint":
+            a0, a1 = resolve(_value(props.get("Attachment0"))), resolve(_value(props.get("Attachment1")))
+            if not (a0 and a1):
+                continue
+            (_, _, p0props, p0parent), (_, _, p1props, p1parent) = by_id[a0], by_id[a1]
+            if p0parent in by_id and p1parent in by_id and "CFrame" in p0props and "CFrame" in p1props:
+                constraints.append(Joint(n, by_id[p0parent][0], by_id[p1parent][0],
+                                         _value(p0props["CFrame"]), _value(p1props["CFrame"])))
         elif "Size" in props and "CFrame" in props:
             parts.append(Part(n, _value(props["Size"]), _value(props["CFrame"])))
+    driven = {j.part1 for j in motors}
+    joints = motors + [j for j in constraints if j.part1 not in driven]
     if not joints:
-        raise ValueError(f"{name}: no Motor6D with Part0, Part1, C0 and C1 was found")
+        raise ValueError(f"{name}: no Motor6D or AnimationConstraint joint was found")
     return Rig(name, parts, joints)
 
 
@@ -291,7 +316,7 @@ def from_syncix(target, port=8080):
         for n in kids.get(stack.pop(), []):
             stack.append(n["id"])
             obj = _get(port, "/object?target=" + n["id"])
-            nodes.append((n["id"], n["name"], n["className"], obj.get("properties", {})))
+            nodes.append((n["id"], n["name"], n["className"], obj.get("properties", {}), n.get("parentId")))
     return _build(root.get("name", target), nodes)
 
 
@@ -304,5 +329,5 @@ def from_folder(folder):
                 with open(os.path.join(dirpath, f), encoding="utf-8") as fh:
                     d = json.load(fh)
                 if "syncix_id" in d:
-                    nodes.append((d["syncix_id"], d["name"], d["class_name"], d.get("properties", {})))
+                    nodes.append((d["syncix_id"], d["name"], d["class_name"], d.get("properties", {}), d.get("parent")))
     return _build(os.path.basename(os.path.normpath(folder)), nodes)

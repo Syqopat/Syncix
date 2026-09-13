@@ -56,9 +56,11 @@ end
 function Player.new(rig: Instance, data)
 	local self = setmetatable({}, Player)
 	self.Data = data
-	self.Motors = {} :: { [string]: Motor6D }
+	-- Motor6D joints, or AnimationConstraints on Rig Builder's newer R15 (it has no
+	-- Motor6D); both are posed through their Transform. A Motor6D wins if a rig has both.
+	self.Motors = {} :: { [string]: any }
 	for _, d in ipairs(rig:GetDescendants()) do
-		if d:IsA("Motor6D") then
+		if d:IsA("Motor6D") or (d:IsA("AnimationConstraint") and not self.Motors[d.Name]) then
 			self.Motors[d.Name] = d
 		end
 	end
