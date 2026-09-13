@@ -21,6 +21,11 @@ versions follow [Semantic Versioning](https://semver.org/).
   nothing was deleted). Paths are now compared in one spelling, the fallback is
   gone, a folder's owner is found by its path, and a move is only assumed when
   exactly one deleted script fits.
+- **An excluded class kept syncing if it was already tracked.** `ignore_classes` was
+  checked only when the plugin first saw an instance, so one tracked before the
+  setting arrived kept sending property changes. A debug adornment that recolours
+  itself every frame filled Studio's HTTP limit that way and the plugin lost its
+  connection. Property changes now check the class too.
 
 ## [0.1.4] - 2026-09-12
 

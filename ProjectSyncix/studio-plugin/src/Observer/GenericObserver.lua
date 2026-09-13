@@ -162,6 +162,10 @@ function GenericObserver:HandlePropertyChanged(instance: Instance, uuid: string,
     if self.commandDispatcher and self.commandDispatcher:IsLocked() then return end
     
     if not SyncConfig.SendFromStudio() then return end
+    -- Checked here too, not only when an instance is first tracked: an instance tracked
+    -- before its class was excluded (syncix.toml read at connect) kept sending. A
+    -- debug adornment recolouring itself every frame flooded Studio's HTTP limit that way.
+    if not SyncConfig.ClassAllowed(instance.ClassName) then return end
     if not SyncConfig.PropertyAllowed(propertyName) then return end
 
     if propertyName == "Name" or self.patchBuilder:IsWatchedProperty(instance, propertyName) then
