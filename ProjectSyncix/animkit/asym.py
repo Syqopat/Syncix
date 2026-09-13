@@ -41,18 +41,18 @@ def idle(rig):
     m = Motion("Idle", rig, 3.2, loop=True, priority="Idle")
     # Breath: in over 35% of the cycle, a short hold, out, then a moment of rest.
     breath = keys([(0, 0), (0.35, 1), (0.5, 1), (0.85, 0), (1, 0)])
-    # A slow look: facing ahead, then turning a little to one side, holding, coming back.
-    look = keys([(0, 0, "hold"), (0.3, 0, "inout"), (0.45, 1, "hold"), (0.7, 1, "inout"), (0.85, 0, "hold")])
     m.set("root", rot=(0, -18, 0))                           # the body stays put: no sway
     m.pair("hip", (-3, -16, 0), offset=0.0)                  # the legs turn back so the feet face ahead
-    m.set("neck", (add(-6, scale_(breath, -1.5)), add(15, scale_(look, 9)), add(-5, scale_(look, -3))),
+    # The head never turns (a turn read as looking at something off to the side). It only
+    # drifts with the breath: up a few degrees and a touch to the left, then back.
+    m.set("neck", (add(-6, scale_(breath, 2.5)), 15, add(-5, scale_(breath, 1.5))),
           move=(0, scale_(breath, 0.03), 0))
     # The arms follow the chest: out a touch and bending a little on the in-breath.
     m.set("shoulder.R", (4, -12, add(3, scale_(breath, 2))), move=(0, scale_(breath, 0.1), 0))
     m.set("shoulder.L", (-6, 14, add(4, scale_(breath, 2))), move=(0, scale_(breath, 0.1), 0))
     m.pair("elbow", (add(10, scale_(breath, 5)), 0, 0), offset=0.0)
     if rig.has("waist"):
-        m.set("waist", (scale_(breath, 2.5), scale_(look, 2), 0), move=(0, scale_(breath, 0.03), 0))
+        m.set("waist", (scale_(breath, 2.5), 0, 0), move=(0, scale_(breath, 0.03), 0))
     return m.bake(step=FPS_IDLE, blend=BLEND)
 
 
