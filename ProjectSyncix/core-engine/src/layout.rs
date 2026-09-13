@@ -33,15 +33,47 @@ fn content_hash(file_content: &str) -> u64 {
     h.finish()
 }
 
+/// One spelling per file, so the write and delete logs match the watcher's events.
+///
+/// The writer records paths under the sync folder as configured ("./src/X") while the
+/// watcher reports them absolute ("C:\...\Game\./src\X"). Compared as they were, no write
+/// was ever recognised as ours. Harmless while the files already matched the model; a
+/// first write into an empty folder was taken for the user creating, renaming and
+/// deleting scripts, and all of it was sent to Studio (a Team Create place's PlayerModule
+/// was scrambled that way).
+pub fn normalize(path: &Path) -> PathBuf {
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir().map(|d| d.join(path)).unwrap_or_else(|_| path.to_path_buf())
+    };
+    let mut out = PathBuf::new();
+    for component in absolute.components() {
+        match component {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                out.pop();
+            }
+            other => out.push(other.as_os_str()),
+        }
+    }
+    // Windows paths ignore case; the watcher may spell a folder as the disk has it.
+    if cfg!(windows) {
+        PathBuf::from(out.to_string_lossy().to_lowercase())
+    } else {
+        out
+    }
+}
+
 fn record_write(path: &Path, file_content: &str) {
     if let Ok(mut record) = write_log().lock() {
-        record.insert(path.to_path_buf(), content_hash(file_content));
+        record.insert(normalize(path), content_hash(file_content));
     }
 }
 
 fn forget_write(path: &Path) {
     if let Ok(mut record) = write_log().lock() {
-        record.remove(path);
+        record.remove(&normalize(path));
     }
 }
 
@@ -49,8 +81,22 @@ fn forget_write(path: &Path) {
 pub fn is_own_write(path: &Path, file_content: &str) -> bool {
     write_log()
         .lock()
-        .map(|k| k.get(path) == Some(&content_hash(file_content)))
+        .map(|k| k.get(&normalize(path)) == Some(&content_hash(file_content)))
         .unwrap_or(false)
+}
+
+/// The instance whose folder `dir` is: its data file is `dir/init.*` (a script with
+/// children, a folder, a service). None when no instance keeps its data file there.
+///
+/// Looking the folder up by name picked whichever instance of that name came first, and a
+/// place with two PlayerModules got scripts created and renamed under the wrong one.
+pub fn uuid_for_dir(dm: &DataModel, sync_dir: &str, dir: &Path) -> Option<Uuid> {
+    let wanted = normalize(dir);
+    dm.get_all_instances().iter().find_map(|(uuid, _)| {
+        let file = data_file(dm, sync_dir, uuid)?;
+        let is_init = file.file_name()?.to_str()?.starts_with("init.");
+        (is_init && normalize(file.parent()?) == wanted).then_some(*uuid)
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +120,7 @@ fn delete_log() -> &'static Mutex<std::collections::HashSet<PathBuf>> {
 
 fn record_delete(path: &Path) {
     if let Ok(mut k) = delete_log().lock() {
-        k.insert(path.to_path_buf());
+        k.insert(normalize(path));
     }
 }
 
@@ -84,7 +130,7 @@ fn record_delete(path: &Path) {
 pub fn is_own_delete(path: &Path) -> bool {
     delete_log()
         .lock()
-        .map(|mut k| k.remove(path))
+        .map(|mut k| k.remove(&normalize(path)))
         .unwrap_or(false)
 }
 
@@ -901,6 +947,30 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], allow_
         );
     }
 }
+#[cfg(test)]
+mod own_write_tests {
+    use super::*;
+
+    #[test]
+    fn a_write_is_recognised_however_the_watcher_spells_its_path() {
+        let relative = Path::new("./src_own_write_test/Workspace/Box.part.json");
+        record_write(relative, "{}");
+        let absolute = std::env::current_dir()
+            .unwrap()
+            .join(".")
+            .join("src_own_write_test")
+            .join("Workspace")
+            .join("Box.part.json");
+        assert!(is_own_write(&absolute, "{}"));
+        assert!(!is_own_write(&absolute, "{\"changed\":1}"));
+        assert!(is_own_write(Path::new("src_own_write_test/Workspace/../Workspace/Box.part.json"), "{}"));
+
+        record_delete(relative);
+        assert!(is_own_delete(&absolute));
+        assert!(!is_own_delete(&absolute), "the record is single-use");
+    }
+}
+
 #[cfg(test)]
 mod meta_tests {
     use super::*;

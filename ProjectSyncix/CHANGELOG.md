@@ -4,6 +4,24 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Binding an empty folder to a place could rewrite scripts in Studio.** The
+  engine never recognised the files it wrote itself: it recorded them as
+  `./src/...` while the file watcher reported `C:\...\./src\...`. While the
+  files already matched the model this did no harm, but the first write of a
+  place into an empty folder was taken for the user creating and renaming
+  scripts. A fallback then matched each file to any sibling script whose file
+  did not exist yet, and a folder's owner was looked up by name anywhere in the
+  place. The result was sent to Studio: in a place with two PlayerModules,
+  scripts were renamed, nested copies were created and meta properties such as
+  Disabled were applied (26 renames and 54 new scripts in the reported case;
+  nothing was deleted). Paths are now compared in one spelling, the fallback is
+  gone, a folder's owner is found by its path, and a move is only assumed when
+  exactly one deleted script fits.
+
 ## [0.1.4] - 2026-09-12
 
 ### Added

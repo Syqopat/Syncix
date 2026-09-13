@@ -789,23 +789,28 @@ fn handle_event(
                 if let Some((clean_name, lua_uuid_opt, lua_ext)) = parsed {
                     let dm = data_model.blocking_read();
                     
-                    let parent_uuid_opt = if let Some(parent_dir) = path.parent().and_then(|p| p.file_name()).and_then(|s| s.to_str()) {
-                        let (parent_name, parent_short) = if let Some((pn, ps)) = parent_dir.rsplit_once('_') {
-                            (pn, ps)
-                        } else {
-                            (parent_dir, "")
-                        };
-
-                        dm.get_all_instances().iter().find_map(|(u, n)| {
-                            if n.name == parent_name && (parent_short.is_empty() || u.to_string().starts_with(parent_short)) {
-                                Some(*u)
-                            } else {
-                                None
+                    // The parent is the instance whose folder this is, found by path. By name,
+                    // the first instance of that name anywhere in the place was taken: with two
+                    // PlayerModules, scripts went under the wrong one.
+                    let parent_uuid_opt = path.parent().and_then(|dir| {
+                        crate::layout::uuid_for_dir(&dm, sync_dir, dir).or_else(|| {
+                            // A folder without a data file of its own: its name, but only when
+                            // exactly one instance carries it (and its uuid suffix, if written).
+                            let folder = dir.file_name()?.to_str()?;
+                            let (name, short) = match folder.rsplit_once('_') {
+                                Some((n, s)) if s.len() == 8 && s.chars().all(|c| c.is_ascii_hexdigit()) => (n, s),
+                                _ => (folder, ""),
+                            };
+                            let mut named = dm
+                                .get_all_instances()
+                                .iter()
+                                .filter(|(u, n)| n.name == name && u.to_string().starts_with(short));
+                            match (named.next(), named.next()) {
+                                (Some((u, _)), None) => Some(*u),
+                                _ => None,
                             }
                         })
-                    } else {
-                        None
-                    };
+                    });
 
                     // Search by UUID suffix; if not found (e.g. the user removed the suffix) fall back to
                     // name matching, so the file is never left without an owner.
@@ -830,33 +835,16 @@ fn handle_event(
                             None
                         }
                     } else if let Some(parent_uuid) = parent_uuid_opt {
-                        let exact_match = dm.get_all_instances().iter().find_map(|(u, n)| {
+                        // Only the script of that name. A fallback used to take any sibling
+                        // script whose file did not exist yet and rename it to this file's name:
+                        // while a tree was first written into an empty folder, most files did not
+                        // exist yet, and unrelated scripts in Studio were renamed.
+                        dm.get_all_instances().iter().find_map(|(u, n)| {
                             if n.parent == Some(parent_uuid) && n.name == clean_name {
                                 Some(*u)
                             } else {
                                 None
                             }
-                        });
-
-                        exact_match.or_else(|| {
-                            dm.get_all_instances().iter().find_map(|(u, n)| {
-                                if n.parent == Some(parent_uuid) && (n.class_name == "Script" || n.class_name == "LocalScript" || n.class_name == "ModuleScript") {
-                                    let parent_dir_path = path.parent()?;
-                                    let clean = n.name.clone();
-                                    let f1 = parent_dir_path.join(format!("{}.server.lua", clean));
-                                    let f2 = parent_dir_path.join(format!("{}.client.lua", clean));
-                                    let f3 = parent_dir_path.join(format!("{}.lua", clean));
-
-                                    let file_exists = f1.exists() || f2.exists() || f3.exists();
-                                    if !file_exists {
-                                        Some(*u)
-                                    } else {
-                                        None
-                                    }
-                                } else {
-                                    None
-                                }
-                            })
                         })
                     } else {
                         None
@@ -868,12 +856,18 @@ fn handle_event(
                     // had no owner and a second instance was created.
                     // If a pending deletion has a script with the same name and class,
                     // this is not a new object but the moved one.
+                    // Only when exactly one pending deletion fits: with two of that name, a
+                    // guess moves the wrong one.
                     let target_uuid = target_uuid.or_else(|| {
-                        pending_deletes.keys().copied().find(|u| {
+                        let mut moved = pending_deletes.keys().copied().filter(|u| {
                             dm.get_instance(u)
                                 .map(|n| n.name == clean_name && is_script_class(&n.class_name))
                                 .unwrap_or(false)
-                        })
+                        });
+                        match (moved.next(), moved.next()) {
+                            (Some(u), None) => Some(u),
+                            _ => None,
+                        }
                     });
 
                     if let Some(uuid) = target_uuid {
