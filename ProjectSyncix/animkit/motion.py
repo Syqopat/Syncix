@@ -131,7 +131,11 @@ class Motion:
         later (0.5 for alternating legs and arms, 0 for both at once)."""
         self.set(f"{role}.R", rot, move)
         lx, ly, lz = mirror_fn(rot)
-        self.set(f"{role}.L", (lag(lx, offset), lag(ly, offset), lag(lz, offset)), move)
+        # The move is shifted by the same offset as the rotation: a leg lifted as it swings
+        # forward must lift when IT swings forward, not when the other one does.
+        mx, my, mz = (_fn(a) for a in move)
+        self.set(f"{role}.L", (lag(lx, offset), lag(ly, offset), lag(lz, offset)),
+                 (lag(lambda p: -mx(p), offset), lag(my, offset), lag(mz, offset)))
         return self
 
     def plant(self, airborne=(), mode="plant"):

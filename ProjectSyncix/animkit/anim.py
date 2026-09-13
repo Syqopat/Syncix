@@ -177,6 +177,9 @@ class Animation:
                 deg = pose["deg"] if side != "L" else mirror(pose["deg"])
                 for axis, value in zip("xyz", deg):
                     lo, hi = limits[axis]
+                    if base == "hip" and axis == "x" and not self.rig.has("knee.R"):
+                        # A leg without a knee (R6) swings back as a whole to lift the heel.
+                        lo = min(lo, -90)
                     over = max(lo - value, value - hi)
                     if over > 0.5 and over > worst.get((role, axis), (0,))[0]:
                         worst[(role, axis)] = (over, k.time, value, lo, hi)
