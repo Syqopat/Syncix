@@ -4,7 +4,7 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.5] - Unreleased (in local use; published once more fixes are in)
 
 ### Fixed
 
