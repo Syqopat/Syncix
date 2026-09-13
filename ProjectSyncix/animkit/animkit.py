@@ -7,7 +7,8 @@
         The same, from the synced files.
     python animkit.py presets
         Lists the ready-made animations.
-    python animkit.py make <rig.json> <what>... [--out tools/out/anims] [--no-preview] [--in-betweens N]
+    python animkit.py make <rig> <what>... [--out tools/out/anims] [--no-preview] [--in-betweens N]
+        <rig> is R15 or R6 (built in, no Studio needed) or a captured rig.json.
         <what> is a preset name ("walk"), "all" (every preset), or a .py file defining
         build(rig) -> Animation (or a list of them). For each animation it prints the
         problems validate() finds and writes:

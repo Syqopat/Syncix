@@ -117,6 +117,20 @@ for rig in (r15(), r6()):
         anim.export_lua(os.path.join(OUT, f"{rig.name}_{anim.name}.lua"))
         render(anim, os.path.join(OUT, f"{rig.name}_{anim.name}.png"), extra_per_gap=0)
 
+# Built-in rigs: animations without capturing anything from Studio.
+from rig import builtin  # noqa: E402
+
+for kind in ("R15", "R6"):
+    rig = Rig.load(kind)
+    check(rig.kind == kind and rig.rest_error() < 1e-6, f"built-in {kind}: loads, rest pose consistent")
+    if kind == "R6":
+        # Roblox's R6 layout: arms beside the torso, legs under it, head on top.
+        p = {n: tuple(round(v, 4) for v in part.cframe.p) for n, part in rig.parts.items()}
+        check(p["Right Arm"] == (1.5, 3, 0) and p["Left Leg"] == (-0.5, 1, 0) and p["Head"] == (0, 4.5, 0),
+              f"built-in R6 parts where Roblox puts them: {p['Right Arm']}, {p['Left Leg']}, {p['Head']}")
+    w = wave(rig)
+    check(not w.validate(), f"built-in {kind}: wave validates")
+
 # Posing sanity on the real maths: a raised right arm ends up above the shoulder on both rigs.
 for rig in (r15(), r6()):
     a = Animation("Raise", rig, 1)

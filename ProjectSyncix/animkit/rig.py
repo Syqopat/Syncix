@@ -164,12 +164,78 @@ class Rig:
 
     @staticmethod
     def load(path):
+        """A saved snapshot, or "R15" / "R6" for the built-in rigs."""
+        if not os.path.exists(path) and path.upper() in ("R15", "R6"):
+            return builtin(path)
         with open(path, encoding="utf-8") as fh:
             d = json.load(fh)
         parts = [Part(p["name"], p["size"], CFrame.from_components(p["cframe"])) for p in d["parts"]]
         joints = [Joint(j["name"], j["part0"], j["part1"], CFrame.from_components(j["c0"]),
                         CFrame.from_components(j["c1"])) for j in d["joints"]]
         return Rig(d["name"], parts, joints, d.get("roles"))
+
+
+# ---------------------------------------------------------------------- built-in rigs
+# Animations can be written without capturing a rig from Studio:
+#  - R6 joints are the same in every place (Roblox builds each R6 character with these
+#    C0/C1 values), so the R6 rig below is exact.
+#  - R15 joint frames are not turned (C0/C1 are pure offsets), so an exported R15
+#    animation depends only on the rotations you write; the proportions below are those
+#    of a block rig and only change how the preview is drawn. Capture the real rig when
+#    the preview must match a custom body exactly.
+_TURN_ROOT = (-1, 0, 0, 0, 0, 1, 0, 1, 0)
+_TURN_R = (0, 0, 1, 0, 1, 0, -1, 0, 0)
+_TURN_L = (0, 0, -1, 0, 1, 0, 1, 0, 0)
+_R6_JOINTS = [
+    ("RootJoint", "HumanoidRootPart", "Torso", (0, 0, 0) + _TURN_ROOT, (0, 0, 0) + _TURN_ROOT),
+    ("Neck", "Torso", "Head", (0, 1, 0) + _TURN_ROOT, (0, -0.5, 0) + _TURN_ROOT),
+    ("Right Shoulder", "Torso", "Right Arm", (1, 0.5, 0) + _TURN_R, (-0.5, 0.5, 0) + _TURN_R),
+    ("Left Shoulder", "Torso", "Left Arm", (-1, 0.5, 0) + _TURN_L, (0.5, 0.5, 0) + _TURN_L),
+    ("Right Hip", "Torso", "Right Leg", (1, -1, 0) + _TURN_R, (0.5, 1, 0) + _TURN_R),
+    ("Left Hip", "Torso", "Left Leg", (-1, -1, 0) + _TURN_L, (-0.5, 1, 0) + _TURN_L),
+]
+_R6_SIZES = {"HumanoidRootPart": (2, 2, 1), "Torso": (2, 2, 1), "Head": (2, 1, 1), "Right Arm": (1, 2, 1),
+             "Left Arm": (1, 2, 1), "Right Leg": (1, 2, 1), "Left Leg": (1, 2, 1)}
+
+
+def _r15_layout():
+    """(parts {name: (size, centre)}, joints [(name, part0, part1, pivot)]) of a block R15."""
+    parts = {"HumanoidRootPart": ((2, 2, 1), (0, 3.1, 0)), "LowerTorso": ((2, 0.4, 1), (0, 2.9, 0)),
+             "UpperTorso": ((2, 1.6, 1), (0, 3.9, 0)), "Head": ((1.2, 1.2, 1.2), (0, 5.3, 0))}
+    joints = [("Root", "HumanoidRootPart", "LowerTorso", (0, 2.9, 0)),
+              ("Waist", "LowerTorso", "UpperTorso", (0, 3.1, 0)),
+              ("Neck", "UpperTorso", "Head", (0, 4.7, 0))]
+    for side, s in (("Right", 1), ("Left", -1)):
+        parts.update({f"{side}UpperArm": ((1, 1.2, 1), (1.5 * s, 4.1, 0)), f"{side}LowerArm": ((1, 1.2, 1), (1.5 * s, 2.9, 0)),
+                      f"{side}Hand": ((1, 0.3, 1), (1.5 * s, 2.15, 0)), f"{side}UpperLeg": ((1, 1.2, 1), (0.5 * s, 2.1, 0)),
+                      f"{side}LowerLeg": ((1, 1.2, 1), (0.5 * s, 0.9, 0)), f"{side}Foot": ((1, 0.3, 1), (0.5 * s, 0.15, 0))})
+        joints += [(f"{side}Shoulder", "UpperTorso", f"{side}UpperArm", (1.5 * s, 4.6, 0)),
+                   (f"{side}Elbow", f"{side}UpperArm", f"{side}LowerArm", (1.5 * s, 3.5, 0)),
+                   (f"{side}Wrist", f"{side}LowerArm", f"{side}Hand", (1.5 * s, 2.3, 0)),
+                   (f"{side}Hip", "LowerTorso", f"{side}UpperLeg", (0.5 * s, 2.7, 0)),
+                   (f"{side}Knee", f"{side}UpperLeg", f"{side}LowerLeg", (0.5 * s, 1.5, 0)),
+                   (f"{side}Ankle", f"{side}LowerLeg", f"{side}Foot", (0.5 * s, 0.3, 0))]
+    return parts, joints
+
+
+def builtin(kind):
+    """The built-in "R15" or "R6" rig (see the note above)."""
+    kind = kind.upper()
+    if kind == "R6":
+        world = {"HumanoidRootPart": CFrame.new(0, 3, 0)}
+        joints = []
+        for name, p0, p1, c0, c1 in _R6_JOINTS:
+            j = Joint(name, p0, p1, CFrame.from_components(c0), CFrame.from_components(c1))
+            world[p1] = world[p0] * j.c0 * j.c1.inverse()
+            joints.append(j)
+        return Rig("R6", [Part(n, _R6_SIZES[n], world[n]) for n in _R6_SIZES], joints)
+    if kind == "R15":
+        parts, layout = _r15_layout()
+        cfs = {n: CFrame(c) for n, (_, c) in parts.items()}
+        joints = [Joint(name, p0, p1, cfs[p0].inverse() * CFrame(pivot), cfs[p1].inverse() * CFrame(pivot))
+                  for name, p0, p1, pivot in layout]
+        return Rig("R15", [Part(n, s, cfs[n]) for n, (s, _) in parts.items()], joints)
+    raise KeyError(f"No built-in rig '{kind}'. Built-in: R15, R6")
 
 
 # ---------------------------------------------------------------------- reading from Syncix
