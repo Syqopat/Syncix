@@ -26,8 +26,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from anim import Animation, write_rbxmx  # noqa: E402
+from horror import HORROR  # noqa: E402
 from preview import render  # noqa: E402
 from presets import PRESETS  # noqa: E402
+
+# Every named animation: the basic presets and the horror set ("survivor_sprint", ...).
+ALL_NAMED = {**PRESETS, **HORROR}
 from rig import Rig, from_folder, from_syncix  # noqa: E402
 
 
@@ -58,13 +62,15 @@ def cmd_make(args):
     for what in args.what:
         if what == "all":
             animations += [f(rig) for f in PRESETS.values()]
-        elif what in PRESETS:
-            animations.append(PRESETS[what](rig))
+        elif what == "horror":
+            animations += [f(rig) for f in HORROR.values()]
+        elif what in ALL_NAMED:
+            animations.append(ALL_NAMED[what](rig))
         elif what.endswith(".py"):
             animations += _load_script(what, rig)
         else:
             from difflib import get_close_matches
-            near = get_close_matches(what, list(PRESETS) + ["all"], n=3)
+            near = get_close_matches(what, list(ALL_NAMED) + ["all", "horror"], n=3)
             raise SystemExit(f"Unknown animation '{what}'." + (f" Did you mean {', '.join(near)}?" if near else ""))
     os.makedirs(os.path.join(args.out, "lua"), exist_ok=True)
     os.makedirs(os.path.join(args.out, "preview"), exist_ok=True)
@@ -107,11 +113,17 @@ def main(argv=None):
     m.add_argument("--out", default=os.path.join("tools", "out", "anims"))
     m.add_argument("--no-preview", action="store_true")
     m.add_argument("--in-betweens", type=int, default=0)
+    m.add_argument("--fps", type=int, default=None,
+                   help="poses per second for curve-built (horror) animations: 8-12 gives the choppy "
+                        "old-Roblox look, 0 bakes smooth 30 fps (default 12)")
     args = p.parse_args(argv)
+    if getattr(args, "fps", None) is not None:
+        import motion
+        motion.STEP_FPS = args.fps or None
     if args.cmd in ("capture", "capture-folder"):
         cmd_capture(args)
     elif args.cmd == "presets":
-        for name, f in PRESETS.items():
+        for name, f in ALL_NAMED.items():
             print(f"{name:<10} {(f.__doc__ or '').strip().splitlines()[0]}")
     else:
         cmd_make(args)

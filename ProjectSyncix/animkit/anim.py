@@ -160,6 +160,9 @@ class Animation:
         problems = []
         if not self.keys:
             return ["no keyframes"]
+        # One line per (role, axis) with the worst value: baked animations have a key every
+        # frame, and a line per frame would bury the message.
+        worst = {}
         for k in self.keys:
             if k.time < -1e-6 or k.time > self.length + 1e-6:
                 problems.append(f"key at {k.time:.2f}s is outside 0..{self.length:.2f}s")
@@ -174,8 +177,11 @@ class Animation:
                 deg = pose["deg"] if side != "L" else mirror(pose["deg"])
                 for axis, value in zip("xyz", deg):
                     lo, hi = limits[axis]
-                    if not lo <= value <= hi:
-                        problems.append(f"{k.time:.2f}s {role} {axis}={value:g} is outside {lo}..{hi} degrees")
+                    over = max(lo - value, value - hi)
+                    if over > 0.5 and over > worst.get((role, axis), (0,))[0]:
+                        worst[(role, axis)] = (over, k.time, value, lo, hi)
+        for (role, axis), (_, t, value, lo, hi) in sorted(worst.items()):
+            problems.append(f"{t:.2f}s {role} {axis}={value:.0f} is outside {lo}..{hi} degrees")
         if self.loop:
             first, last = self.sample(0.0), self.sample(self.length)
             for joint in first:

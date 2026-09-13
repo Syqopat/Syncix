@@ -57,9 +57,16 @@ def render(animation, path, extra_per_gap=0, cell=220, label=True):
     rig = animation.rig
     times = []
     keys = [k.time for k in animation.keys] or [0.0]
+    if len(keys) > 12:
+        # A baked animation has a key every frame; a sheet of all of them is unreadable.
+        # Eight evenly spaced moments (more with extra_per_gap) show the motion instead.
+        n = 8 + extra_per_gap * 4
+        times = [animation.length * i / (n - 1) for i in range(n)]
+        keys = []
     for t0, t1 in zip(keys, keys[1:]):
         times += [t0 + (t1 - t0) * i / (extra_per_gap + 1) for i in range(extra_per_gap + 1)]
-    times.append(keys[-1])
+    if keys:
+        times.append(keys[-1])
 
     rest = rig.solve({})
     ground = min(p.cframe.p[1] - p.size[1] / 2 for p in rig.parts.values())
