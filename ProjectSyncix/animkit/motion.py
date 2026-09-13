@@ -181,15 +181,19 @@ class Motion:
             poses[root_name] = {"rot": tuple(a + b * 0.8 for a, b in zip(cur["rot"], waist_extra)), "move": cur["move"]}
         return poses, root_name
 
-    def bake(self, step=None):
+    def bake(self, step=None, blend=None):
         """The sampled Animation. Smooth: a linear key every 1/fps s (the curves carry the
-        easing). Stepped (step = poses per second, default STEP_FPS): a key every 1/step s
-        with Constant easing, so each pose is held and the next one snaps in."""
+        easing). Stepped (step = poses per second, default STEP_FPS): a key every 1/step s.
+
+        blend is how one pose leads to the next: "constant" holds each pose and snaps to the
+        next (the choppy look, where a fast arm seems to teleport), "linear" glides between
+        the same poses, "cubic" eases in and out of every pose. Default: constant when
+        stepped, linear otherwise."""
         step = STEP_FPS if step is None else step
         a = Animation(self.name, self.rig, self.length, self.loop, self.priority)
         rest_low = self._lowest(self.rig.solve({}))
         rate = step if step else self.fps
-        easing = "constant" if step else "linear"
+        easing = blend or ("constant" if step else "linear")
         frames = max(2, round(self.length * rate))
         for i in range(frames + 1):
             p = i / frames

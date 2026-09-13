@@ -24,6 +24,11 @@ FPS = 15
 # (the reference changes pose twice a second), the walk steps at 12, the run at 20.
 FPS_IDLE, FPS_WALK, FPS_RUN, FPS_JUMP, FPS_FALL = 5, 12, 20, 20, 12
 
+# How one pose leads to the next. "constant" is the classic choppy look, but with few
+# poses a fast arm jumps across the screen; "linear" keeps the same poses and rhythm and
+# glides between them. Set back to "constant" for the fully stepped style.
+BLEND = "linear"
+
 
 def _no_knees(rig):
     return not rig.has("knee.R")
@@ -43,7 +48,7 @@ def idle(rig):
     m.pair("elbow", (10, 0, 0), offset=0.0)
     if rig.has("waist"):
         m.set("waist", (scale_(breath, 1.5), 0, 0), move=(0, scale_(breath, 0.02), 0))
-    return m.bake(step=FPS_IDLE)
+    return m.bake(step=FPS_IDLE, blend=BLEND)
 
 
 def walk(rig):
@@ -65,7 +70,7 @@ def walk(rig):
         m.set("waist", (0, wave(-3), 0))
     m.plant()
     m.marker(0.0, "Step", "R").marker(0.5, "Step", "L")
-    return m.bake(step=FPS_WALK)
+    return m.bake(step=FPS_WALK, blend=BLEND)
 
 
 def run(rig):
@@ -93,7 +98,7 @@ def run(rig):
         m.set("waist", (0, wave(-4), 0))
     m.plant(airborne=[(0.2, 0.42), (0.7, 0.92)])
     m.marker(0.0, "Step", "R").marker(0.5, "Step", "L")
-    return m.bake(step=FPS_RUN)
+    return m.bake(step=FPS_RUN, blend=BLEND)
 
 
 def jump(rig):
@@ -110,7 +115,7 @@ def jump(rig):
     m.set("waist", (keys([(0, -4), (0.3, 6), (1, -8)], loop=False), 0, 0))
     m.set("neck", (keys([(0, 0), (0.3, 10), (1, -4)], loop=False), 0, 0))
     m.plant(mode="push")
-    return m.bake(step=FPS_JUMP)
+    return m.bake(step=FPS_JUMP, blend=BLEND)
 
 
 def fall(rig):
@@ -123,7 +128,7 @@ def fall(rig):
     m.set("waist", (6, noise(4, seed=25), 0))
     m.set("neck", (-6, noise(5, seed=26), 0))
     m.plant(mode="push")
-    return m.bake(step=FPS_FALL)
+    return m.bake(step=FPS_FALL, blend=BLEND)
 
 
 ASYM = {"idle": idle, "walk": walk, "run": run, "jump": jump, "fall": fall}
