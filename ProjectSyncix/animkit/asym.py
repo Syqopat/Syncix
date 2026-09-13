@@ -22,7 +22,7 @@ FPS = 15
 # motion needs more or the limbs jump too far between poses.
 # Rates measured from a reference asym movement set: the idle is almost a held pose
 # (the reference changes pose twice a second), the walk steps at 12, the run at 20.
-FPS_IDLE, FPS_WALK, FPS_RUN, FPS_JUMP, FPS_FALL = 5, 12, 20, 20, 12
+FPS_IDLE, FPS_WALK, FPS_RUN, FPS_JUMP, FPS_FALL = 8, 12, 20, 20, 12
 
 # How one pose leads to the next. "constant" is the classic choppy look, but with few
 # poses a fast arm jumps across the screen; "linear" keeps the same poses and rhythm and
@@ -38,16 +38,21 @@ def idle(rig):
     """A held, turned stance: the body angled away, the feet and the head back to the front,
     arms loose. Only the breath moves it: on the in-breath the shoulders rise (a lift, not a
     rotation). No sway, no swinging arms."""
-    m = Motion("Idle", rig, 2.0, loop=True, priority="Idle")
-    breath = keys([(0, 0), (0.4, 1), (0.55, 1), (1, 0)])
-    m.set("root", rot=(0, -18, 0))
-    m.pair("hip", (-3, -16, 0), offset=0.0)                 # the legs turn back so the feet face ahead
-    m.set("neck", (add(-6, scale_(breath, -1.0)), 15, -5), move=(0, scale_(breath, 0.02), 0))  # slight head tilt
-    m.set("shoulder.R", (4, -12, 3), move=(0, scale_(breath, 0.07), 0))
-    m.set("shoulder.L", (-6, 14, 4), move=(0, scale_(breath, 0.07), 0))
-    m.pair("elbow", (10, 0, 0), offset=0.0)
+    m = Motion("Idle", rig, 3.2, loop=True, priority="Idle")
+    # Breath: in over 35% of the cycle, a short hold, out, then a moment of rest.
+    breath = keys([(0, 0), (0.35, 1), (0.5, 1), (0.85, 0), (1, 0)])
+    # A slow look: facing ahead, then turning a little to one side, holding, coming back.
+    look = keys([(0, 0, "hold"), (0.3, 0, "inout"), (0.45, 1, "hold"), (0.7, 1, "inout"), (0.85, 0, "hold")])
+    m.set("root", rot=(0, -18, 0))                           # the body stays put: no sway
+    m.pair("hip", (-3, -16, 0), offset=0.0)                  # the legs turn back so the feet face ahead
+    m.set("neck", (add(-6, scale_(breath, -1.5)), add(15, scale_(look, 9)), add(-5, scale_(look, -3))),
+          move=(0, scale_(breath, 0.03), 0))
+    # The arms follow the chest: out a touch and bending a little on the in-breath.
+    m.set("shoulder.R", (4, -12, add(3, scale_(breath, 2))), move=(0, scale_(breath, 0.1), 0))
+    m.set("shoulder.L", (-6, 14, add(4, scale_(breath, 2))), move=(0, scale_(breath, 0.1), 0))
+    m.pair("elbow", (add(10, scale_(breath, 5)), 0, 0), offset=0.0)
     if rig.has("waist"):
-        m.set("waist", (scale_(breath, 1.5), 0, 0), move=(0, scale_(breath, 0.02), 0))
+        m.set("waist", (scale_(breath, 2.5), scale_(look, 2), 0), move=(0, scale_(breath, 0.03), 0))
     return m.bake(step=FPS_IDLE, blend=BLEND)
 
 
