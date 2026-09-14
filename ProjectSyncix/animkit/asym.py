@@ -9,6 +9,8 @@ than a smooth animation would need, because each one stays on screen longer.
 Built with Motion (curves, overlap, planted feet) and baked at FPS poses a second. Works
 on R15 and R6 (R6: the waist goes to the root, no knees or elbows, feet kept down).
 """
+import math
+
 from motion import Motion, add, keys, lag, noise, scale as scale_, wave
 
 # 15 poses a second: "on twos" at 30 fps. Still visibly stepped, but less jerky than 10.
@@ -32,6 +34,78 @@ BLEND = "linear"
 
 def _no_knees(rig):
     return not rig.has("knee.R")
+
+
+def _leg(rig):
+    """(thigh, shin) in studs; for a leg without a knee (R6), (hip pivot to sole, 0)."""
+    if _no_knees(rig):
+        j = rig.joint("hip.R")
+        leg = rig.parts[j.part1]
+        return rig.joint_frame_rest(j).p[1] - (leg.cframe.p[1] - leg.size[1] / 2), 0.0
+    from presets import leg_lengths
+    return leg_lengths(rig)
+
+
+def foot_path(stride, lift, stance, heel=1.0):
+    """Where the foot is, relative to its hip, over one step cycle: (forward, up) in studs.
+
+    The wheel of a walk: while the foot is on the ground (the first `stance` of the cycle)
+    it stays planted, so relative to the hip it slides straight back from +stride in front
+    to -stride behind while the body passes over it. Then it leaves the ground, comes up
+    toward the body and swings forward along an arc to land in front again. heel < 1
+    lifts it sooner after it leaves the ground (the heel coming up behind in a run)."""
+    def f(p):
+        p %= 1.0
+        if p < stance:
+            return stride * (1 - 2 * p / stance), 0.0
+        t = (p - stance) / (1 - stance)
+        s = t * t * (3 - 2 * t)
+        return -stride + 2 * stride * s, lift * math.sin(math.pi * t ** heel)
+    return f
+
+
+def leg_cycle(m, rig, stride, lift, stance, heel=1.0, lean=0.0, inward=0.0):
+    """Drives both legs from foot_path (left half a cycle after right) by solving the leg
+    for the foot position every frame, instead of writing hip angles by hand. stride and
+    lift are fractions of the leg's length, so every rig gets the same shape.
+
+    With a knee (R15): two-bone IK, the knee bends forward, the ankle keeps the foot level.
+    Without (R6): the leg turns toward the foot and slides up at the hip while it is in the
+    air, which reads as a bent knee.
+
+    lean: how far the root leans forward (degrees); the legs turn back by as much, so the
+    path stays level with the ground and not with the tilted body. inward: degrees the leg
+    turns toward the body's centre line, a little while planted and more while lifted, so
+    the feet step close to one line instead of apart."""
+    thigh, shin = _leg(rig)
+    reach = thigh + shin
+    path = foot_path(stride * reach, lift * reach, stance, heel)
+    cache = {}
+
+    def solve(p):
+        key = round(p % 1.0, 5)
+        if key not in cache:
+            fwd, up = path(p)
+            tuck = -inward * (0.5 + 0.5 * up / (lift * reach)) if lift else -inward
+            if not shin:
+                hip = math.degrees(math.asin(max(-0.95, min(0.95, fwd / thigh))))
+                cache[key] = (hip + lean, 0.0, 0.0, up, tuck)
+            else:
+                ty = -reach * 0.97 + up                      # a straight leg would lock the knee
+                d = min(math.hypot(fwd, ty), reach - 1e-3)
+                alpha = math.atan2(fwd, -ty)                  # from straight down toward the foot
+                beta = math.acos(max(-1.0, min(1.0, (thigh * thigh + d * d - shin * shin) / (2 * thigh * d))))
+                inner = math.acos(max(-1.0, min(1.0, (thigh * thigh + shin * shin - d * d) / (2 * thigh * shin))))
+                hip = math.degrees(alpha + beta) + lean
+                knee = -math.degrees(math.pi - inner)
+                cache[key] = (hip, knee, max(-40.0, min(40.0, lean - hip - knee)), 0.0, tuck)
+        return cache[key]
+
+    m.pair("hip", (lambda p: solve(p)[0], 0, lambda p: solve(p)[4]),
+           move=(0, lambda p: solve(p)[3], 0), offset=0.5)
+    if shin:
+        m.pair("knee", (lambda p: solve(p)[1], 0, 0), offset=0.5)
+        m.pair("ankle", (lambda p: solve(p)[2], 0, 0), offset=0.5)
 
 
 def idle(rig):
@@ -59,13 +133,9 @@ def idle(rig):
 def walk(rig):
     """A relaxed walk: hips rolling, shoulders swinging against them, head level."""
     m = Motion("Walk", rig, 1.1, loop=True, priority="Movement")
-    # Legs swing forward ~26 and back ~34. Without knees (R6) the leg is also slid at the
-    # hip, forward and up while it swings through, which reads as a bent knee.
-    m.pair("hip", (wave(30, bias=-4), wave(4, phase=0.25), 0),
-           move=(0, keys([(0, 0.26), (0.25, 0.06), (0.5, 0), (0.75, 0.06)]) if _no_knees(rig) else 0,
-                 wave(-0.4) if _no_knees(rig) else 0), offset=0.5)
-    m.pair("knee", (keys([(0, -30), (0.25, -8), (0.5, -6), (0.75, -20)]), 0, 0), offset=0.5)
-    m.pair("ankle", (keys([(0, 5), (0.25, -8), (0.5, 10), (0.75, 4)]), 0, 0), offset=0.5)
+    # The feet follow a wheel: planted for 55% of the cycle (both down for a moment at each
+    # step), then lifted toward the body and swung forward along an arc.
+    leg_cycle(m, rig, stride=0.45, lift=0.18, stance=0.55, lean=3, inward=3)
     # Arms: a relaxed swing, turning inward as they come forward.
     m.pair("shoulder", (lag(wave(-20, bias=2), 0.05), lag(wave(-10), 0.05), 4), offset=0.5)
     m.pair("elbow", (add(15, lag(wave(6), 0.08)), 0, 0), offset=0.5)
@@ -81,17 +151,9 @@ def walk(rig):
 def run(rig):
     """The sprint: leaning in, big strides, arms swinging wide and bent, feet leaving the ground."""
     m = Motion("Run", rig, 0.56, loop=True, priority="Movement")
-    # A cartoon sprint: the leg reaches ~38 forward and kicks up to ~75 behind. Without
-    # knees (R6) it is slid at the hip, forward and a little up in front, up behind, so the
-    # kick reads as a heel coming up. (A bigger lift in front read as a kick.)
-    no_knees = _no_knees(rig)
-    # With knees (R15) the heel comes up from the knee, so the thigh only goes ~35 back.
-    kick = -75 if no_knees else -35
-    m.pair("hip", (keys([(0, 38), (0.2, 5), (0.5, kick), (0.75, -8)]), wave(4, phase=0.25), 0),
-           move=(0, keys([(0, 0.55), (0.2, 0.12), (0.5, 0.45), (0.75, 0.15)]) if no_knees else 0,
-                 keys([(0, -0.65), (0.5, 0.7)]) if no_knees else 0), offset=0.5)
-    m.pair("knee", (keys([(0, -20), (0.25, -40), (0.5, -115), (0.75, -70)]), 0, 0), offset=0.5)
-    m.pair("ankle", (keys([(0, -15), (0.25, 15), (0.5, 20), (0.75, -20)]), 0, 0), offset=0.5)
+    # A bigger, faster wheel: each foot is down for only 35% of the cycle (so both are in
+    # the air twice per cycle), and it comes up high behind right after it leaves the ground.
+    leg_cycle(m, rig, stride=0.6, lift=0.45, stance=0.35, heel=0.7, lean=14, inward=4)
     # Arms: pumped up in front, back behind, turning as they go.
     m.pair("shoulder", (keys([(0, -30), (0.5, 95)]), lag(wave(22), 0.05), lag(wave(4, bias=6), 0.05)), offset=0.5)
     m.pair("elbow", (add(70, lag(wave(20), 0.08)), 0, 0), offset=0.5)
@@ -101,7 +163,9 @@ def run(rig):
     m.set("neck", (8, wave(10), 0))                           # chin up, looking ahead
     if rig.has("waist"):
         m.set("waist", (0, wave(-4), 0))
-    m.plant(airborne=[(0.2, 0.42), (0.7, 0.92)])
+    # Both feet are up between one foot leaving (0.35) and the other landing (0.5), and again
+    # between 0.85 and 1.0.
+    m.plant(airborne=[(0.35, 0.5), (0.85, 1.0)])
     m.marker(0.0, "Step", "R").marker(0.5, "Step", "L")
     return m.bake(step=FPS_RUN, blend=BLEND)
 
