@@ -26,6 +26,25 @@ versions follow [Semantic Versioning](https://semver.org/).
   setting arrived kept sending property changes. A debug adornment that recolours
   itself every frame filled Studio's HTTP limit that way and the plugin lost its
   connection. Property changes now check the class too.
+- **`syncix import` was very slow.** Every instance and every property was its own
+  command, each followed by a pause: 1076 instances took about 6.5 minutes. The
+  properties and a script's source now travel with the create, as one command and
+  one message to Studio per instance, with no pauses. The same import against the
+  core now takes under a second, and the folder is written once instead of
+  hundreds of times.
+- **The core's log was written beside the project.** A core started in the
+  project root wrote `../syncix-core.log`, so every project in a folder shared
+  one log. It is now `.syncix/syncix-core.log` in the project itself.
+- **A property changing every frame could fill Studio's HTTP limit.** The plugin
+  sent a packet on every frame something changed. It now sends at most ten
+  packets a second, and a property sent less than half a second ago waits with
+  only its last value kept, so a spinning part or a recolouring debug drawing
+  costs two updates a second instead of sixty. A single edit still goes out at
+  once.
+- **Pressing reconnect repeatedly started parallel connection loops.** An attempt
+  still discovering, or waiting to retry, kept running next to the new one. Each
+  attempt is now numbered and a replaced one stops; a lost connection reported by
+  both a send and a poll starts one retry loop, not two.
 
 ## [0.1.4] - 2026-09-12
 

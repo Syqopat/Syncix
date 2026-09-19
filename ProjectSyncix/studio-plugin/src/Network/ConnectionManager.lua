@@ -307,10 +307,20 @@ function ConnectionManager:Connect()
 	if self.wasPaused then return end
 	if self.state == "Connected" then return end
 
+	-- Every attempt gets a number; an attempt (or a retry wait) that finds a newer number
+	-- has been replaced and stops. Pressing reconnect during a discovery or a retry wait
+	-- used to leave the old one running too, and parallel loops with interleaved backoff
+	-- sequences piled up in Output.
+	self.connectGeneration = (self.connectGeneration or 0) + 1
+	local generation = self.connectGeneration
+
 	self:SetState("Discovering")
 
 	task.spawn(function()
 		local info = self:Discover()
+		if self.connectGeneration ~= generation then
+			return
+		end
 		if not info then
 			self:HandleDisconnect()
 			return
@@ -401,10 +411,20 @@ function ConnectionManager:HandleDisconnect()
 	if self.wasPaused then
 		return
 	end
+	-- A failed send and a failed poll can both report the same loss; one retry loop is enough.
+	if self.state == "Reconnecting" then
+		return
+	end
 	self:SetState("Reconnecting")
+	local generation = self.connectGeneration
 
 	warn(string.format("[Syncix] No connection. Retrying in %d second(s).", self.currentRetryWait))
 	task.wait(self.currentRetryWait)
+
+	-- Reconnected by hand (or paused) while waiting: that attempt carries on, not this one.
+	if self.connectGeneration ~= generation or self.wasPaused then
+		return
+	end
 
 	self.currentRetryWait = math.min(self.currentRetryWait * 2, self.maxRetryWait)
 

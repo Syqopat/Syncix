@@ -823,7 +823,7 @@ fn launch(port: Option<u16>) -> i32 {
                     return 0;
                 }
             }
-            report_error("The core started but did not respond. Check syncix-core.log.");
+            report_error("The core started but did not respond. Check .syncix/syncix-core.log.");
             1
         }
         Err(e) => {
@@ -1792,44 +1792,30 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
         // identity rather than by name. Targeting by name failed with an ambiguity error
         // when the imported tree repeated an existing name.
         let identity = uuid::Uuid::new_v4().to_string();
-        let ok = send_command(
-            port,
-            "CREATE_INSTANCE",
-            serde_json::json!({
-                "id": identity,
-                "className": node_entry.class_name,
-                "name": node_entry.name,
-                "parentId": parent_ref
-            }),
-        );
-        if !ok {
+        // The properties travel with the create: one command per instance. (One command
+        // per property, each followed by a pause, took ~6.5 minutes for 1076 instances.)
+        // Values are not turned into text: text loses the type, and types like CFrame,
+        // UDim and NumberRange were dropped entirely on import. The wire format carries it.
+        let properties: serde_json::Map<String, serde_json::Value> = node_entry
+            .properties
+            .iter()
+            .map(|(name, value)| (name.clone(), crate::pv_to_wire(value)))
+            .collect();
+        let mut data = serde_json::json!({
+            "id": identity,
+            "className": node_entry.class_name,
+            "name": node_entry.name,
+            "parentId": parent_ref,
+            "properties": properties
+        });
+        if let Some(source) = &node_entry.source {
+            data["source"] = serde_json::json!(source);
+        }
+        if !send_command(port, "CREATE_INSTANCE", data) {
             outcome.failed += 1;
             return;
         }
         outcome.created += 1;
-        std::thread::sleep(std::time::Duration::from_millis(120));
-
-        for (item_name, raw_value) in &node_entry.properties {
-            // The value is not turned into text: text loses the type, and types like CFrame,
-            // UDim and NumberRange were dropped entirely on import.
-            // The wire format already carries the type, so it is sent directly.
-            let value_as_json = crate::pv_to_wire(raw_value);
-            send_command(
-                port,
-                "SET_PROPERTY",
-                serde_json::json!({ "id": identity, "property": item_name, "value": value_as_json }),
-            );
-            std::thread::sleep(std::time::Duration::from_millis(60));
-        }
-
-        if let Some(origin) = &node_entry.source {
-            send_command(
-                port,
-                "SET_PROPERTY",
-                serde_json::json!({ "id": identity, "property": "Source", "value": origin }),
-            );
-            std::thread::sleep(std::time::Duration::from_millis(60));
-        }
 
         for child_entry in &node_entry.children {
             generate(port, tree, child_entry, &identity, outcome);

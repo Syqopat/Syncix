@@ -897,10 +897,18 @@ async fn main() {
     // Log filter: silence the DEBUG noise of dependencies like hyper/tower,
     // while Syncix's own events show down to DEBUG level.
     // The RUST_LOG environment variable can override it.
-    // Logs go to both the console and a file (../syncix-core.log), because the core
-    // can be started in the background by VS Code, where its console is not visible.
+    // Logs go to both the console and a file, because the core can be started in the
+    // background by VS Code, where its console is not visible. The file is the project's
+    // own .syncix/syncix-core.log, in the folder holding syncix.toml, found the way
+    // ProjectConfig::load finds it (the core runs from the project root, from its .syncix
+    // folder or from core-engine/). It used to be ../syncix-core.log: right from .syncix,
+    // but a core started in the project root wrote beside the project, and every project
+    // in a folder (GAMES/) shared one log.
     use tracing_subscriber::prelude::*;
-    let file_appender = tracing_appender::rolling::never("../", "syncix-core.log");
+    let project_dir = if std::path::Path::new("../syncix.toml").exists() { ".." } else { "." };
+    let log_dir = std::path::Path::new(project_dir).join(".syncix");
+    let _ = std::fs::create_dir_all(&log_dir);
+    let file_appender = tracing_appender::rolling::never(&log_dir, "syncix-core.log");
     let (file_writer, _log_guard) = tracing_appender::non_blocking(file_appender);
     tracing_subscriber::registry()
         .with(
@@ -1454,12 +1462,55 @@ async fn main() {
                 {
                     instance.syncix_id = given;
                 }
+                // Properties and a script's source may come with the create (syncix import
+                // sends them together): one command and one message to Studio per instance
+                // instead of one per property. Values are typed wire values.
+                let mut property_patches = Vec::new();
                 {
                     // Parent resolution: UUID or name (e.g. "Workspace").
                     // When empty it attaches to the Workspace service by default.
                     let dm = data_model.read().await;
                     let effective_parent = if parent_id.is_empty() { "Workspace" } else { parent_id };
                     instance.parent = resolve_id(&dm, effective_parent);
+
+                    if let Some(props) = payload.data.get("properties").and_then(|v| v.as_object()) {
+                        for (property, raw) in props {
+                            if property == "Name" {
+                                continue;
+                            }
+                            let Some(mut pv) = parse_wire_value(raw) else {
+                                tracing::warn!("CREATE_INSTANCE: {}.{} has a value Syncix cannot read, skipped.", node_name, property);
+                                continue;
+                            };
+                            // A reference is sent as a full UUID, the only form Studio's cache finds.
+                            if let model::PropertyValue::Ref(dest) = &pv {
+                                if !dest.is_empty() {
+                                    match resolve_id(&dm, dest) {
+                                        Some(u) => pv = model::PropertyValue::Ref(u.to_string()),
+                                        None => {
+                                            tracing::warn!(
+                                                "CREATE_INSTANCE: {}.{} refers to '{}', which was not found; skipped.",
+                                                node_name, property, dest
+                                            );
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                            property_patches.push(serde_json::json!({
+                                "event_type": "PROPERTY_UPDATE",
+                                "data": { "syncix_id": instance.syncix_id, "property": property, "value": pv_to_wire(&pv) }
+                            }));
+                            instance.properties.insert(property.clone(), pv);
+                        }
+                    }
+                    if let Some(src) = payload.data.get("source").and_then(|v| v.as_str()) {
+                        instance.source = Some(src.to_string());
+                        property_patches.push(serde_json::json!({
+                            "event_type": "PROPERTY_UPDATE",
+                            "data": { "syncix_id": instance.syncix_id, "property": "Source", "value": src }
+                        }));
+                    }
                 }
                 let uuid = instance.syncix_id;
                 let insert_result = {
@@ -1469,21 +1520,22 @@ async fn main() {
                 match insert_result {
                     Ok(()) => {
                         // Disk writing is done by the central debounced writer (layout).
-                        // Send CREATE to Studio
+                        // Send CREATE to Studio, its properties right behind it in the same
+                        // message (Studio applies a message's patches in order).
+                        let mut patches = vec![serde_json::json!({
+                            "event_type": "CREATE",
+                            "data": {
+                                "syncix_id": uuid,
+                                "class_name": instance.class_name,
+                                "name": instance.name,
+                                "parent": instance.parent.map(|u| u.to_string())
+                            }
+                        })];
+                        patches.extend(property_patches);
                         studio_outbox.push(Payload {
                             version: "v1".to_string(),
                             event_type: EventType::CompositeUpdate,
-                            data: serde_json::json!({
-                                "patches": [{
-                                    "event_type": "CREATE",
-                                    "data": {
-                                        "syncix_id": uuid,
-                                        "class_name": instance.class_name,
-                                        "name": instance.name,
-                                        "parent": instance.parent.map(|u| u.to_string())
-                                    }
-                                }]
-                            }),
+                            data: serde_json::json!({ "patches": patches }),
                         });
                         // Reflect in the VS Code Explorer
                         let ws_msg = serde_json::json!({
