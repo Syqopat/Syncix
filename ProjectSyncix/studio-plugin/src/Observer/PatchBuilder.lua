@@ -366,6 +366,11 @@ function PatchBuilder:BuildFullTreeSnapshot(): any
     local function serializeNode(instance: Instance)
         local uuid = instance:GetAttribute("__syncix_id")
         if not uuid then return end
+        -- The tree sent here is read from the attributes; the cache that routes commands
+        -- is brought in line with it, so a pull repairs both sides and not only the core.
+        if self.cache and self.cache:GetUuid(instance) ~= uuid then
+            self.cache:CacheInstance(uuid, instance)
+        end
 
         local parentUuid = nil
         if instance.Parent and instance.Parent:GetAttribute("__syncix_id") then

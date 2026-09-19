@@ -60,6 +60,16 @@ versions follow [Semantic Versioning](https://semver.org/).
   `ScriptEditorService:UpdateSourceAsync`, which also works for scripts open in
   the editor and under Team Create's Collaborative Editing; the direct write is
   the fallback.
+- **Commands could land on the wrong object after a copy.** The plugin's cache
+  and the objects' own identities could drift apart (a Ctrl+D copy filed under
+  its original's identity by an older plugin): a command meant for one object
+  moved another, while `pull` reported everything consistent. The cache now
+  checks each lookup against the object's identity and repairs itself, and a
+  full sync brings the cache in line with the tree it sends.
+- **An older Syncix could put its old Studio plugin back.** Every editor with
+  Syncix installs its plugin on start whenever the file differs, so an older
+  copy (another editor, an old install) silently replaced a newer plugin. The
+  installed plugin's version is now recorded and a newer one is left alone.
 
 ## [0.1.4] - 2026-09-12
 

@@ -322,6 +322,17 @@ sync_dir = "${syncDir.trim()}"
     );
 }
 
+/** Compares dotted versions numerically: <0 if a is older, 0 if equal, >0 if newer. */
+function compareVersions(a: string, b: string): number {
+    const pa = a.split('.').map((n) => parseInt(n, 10) || 0);
+    const pb = b.split('.').map((n) => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+        if (d !== 0) return d;
+    }
+    return 0;
+}
+
 /**
  * Installs the Studio plugin (the .rbxm bundled with the extension) into the Roblox
  * Plugins folder automatically. It copies only when the content differs, and then says
@@ -340,17 +351,34 @@ function ensurePluginInstalled(context: vscode.ExtensionContext) {
             fs.mkdirSync(pluginsDir, { recursive: true });
         }
         const dest = path.join(pluginsDir, 'SyncixPlugin.rbxm');
+        // Which extension version wrote the installed plugin. Studio only loads .rbxm,
+        // .rbxmx and .lua files, so it ignores this one.
+        const versionFile = path.join(pluginsDir, 'SyncixPlugin.version');
+        const mine: string = context.extension.packageJSON?.version ?? '';
 
         const srcBuf = fs.readFileSync(src);
         let needsCopy = true;
         if (fs.existsSync(dest)) {
             needsCopy = !srcBuf.equals(fs.readFileSync(dest));
         }
+        // An older Syncix in another editor (or an older copy in this one) used to put
+        // its own plugin back over a newer one on every start, so Studio silently ran
+        // old code. A plugin written by a newer version is left alone.
+        if (needsCopy && mine && fs.existsSync(versionFile)) {
+            const installed = fs.readFileSync(versionFile, 'utf8').trim();
+            if (compareVersions(installed, mine) > 0) {
+                console.log(`Syncix: the Studio plugin from ${installed} is newer than this extension (${mine}); left as is.`);
+                return;
+            }
+        }
         if (needsCopy) {
             fs.writeFileSync(dest, srcBuf);
+            if (mine) fs.writeFileSync(versionFile, mine);
             vscode.window.showInformationMessage(
                 'The Syncix Studio plugin was updated. Restart Roblox Studio for it to take effect.'
             );
+        } else if (mine && !fs.existsSync(versionFile)) {
+            fs.writeFileSync(versionFile, mine);
         }
     } catch (err: any) {
         console.error('Syncix plugin install error:', err);
