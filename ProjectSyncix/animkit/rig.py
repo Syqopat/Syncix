@@ -140,9 +140,13 @@ class Rig:
     def rest_error(self):
         """How far the rest pose computed from joints is from the parts' real positions.
         Near 0 means the rig was read correctly."""
+        return self.rest_report()[0]
+
+    def rest_report(self):
+        """(error, part): the rest error and the part where it is largest."""
         solved = self.solve({})
         return max(
-            max(abs(a - b) for a, b in zip(solved[name].p, part.cframe.p))
+            (max(abs(a - b) for a, b in zip(solved[name].p, part.cframe.p)), name)
             for name, part in self.parts.items() if name in solved
         )
 
@@ -278,27 +282,52 @@ def _build(name, nodes):
             return ref
         return next((k for k in by_id if k.startswith(ref)), None)
 
+    # A joint that cannot be read used to be skipped without a word; the capture then
+    # looked fine but half the body hung loose. Every skip is reported with its reason.
+    warnings = []
     parts, motors, constraints = [], [], []
     for i, n, cls, props, parent in nodes:
         if cls in ("Motor6D", "Motor"):
             p0, p1 = resolve(_value(props.get("Part0"))), resolve(_value(props.get("Part1")))
-            if p0 and p1 and "C0" in props and "C1" in props:
-                motors.append(Joint(n, by_id[p0][0], by_id[p1][0], _value(props["C0"]), _value(props["C1"])))
+            missing = [k for k, ok in (("Part0", p0), ("Part1", p1), ("C0", "C0" in props), ("C1", "C1" in props)) if not ok]
+            if missing:
+                warnings.append(f"joint {n} ({cls}) skipped: no {', '.join(missing)}"
+                                + (" inside the model" if {"Part0", "Part1"} & set(missing) else ""))
+                continue
+            motors.append(Joint(n, by_id[p0][0], by_id[p1][0], _value(props["C0"]), _value(props["C1"])))
         elif cls == "AnimationConstraint":
             a0, a1 = resolve(_value(props.get("Attachment0"))), resolve(_value(props.get("Attachment1")))
             if not (a0 and a1):
+                warnings.append(f"joint {n} (AnimationConstraint) skipped: its attachments are not in the model")
                 continue
             (_, _, p0props, p0parent), (_, _, p1props, p1parent) = by_id[a0], by_id[a1]
             if p0parent in by_id and p1parent in by_id and "CFrame" in p0props and "CFrame" in p1props:
                 constraints.append(Joint(n, by_id[p0parent][0], by_id[p1parent][0],
                                          _value(p0props["CFrame"]), _value(p1props["CFrame"])))
+            else:
+                warnings.append(f"joint {n} (AnimationConstraint) skipped: an attachment has no part or CFrame")
         elif "Size" in props and "CFrame" in props:
             parts.append(Part(n, _value(props["Size"]), _value(props["CFrame"])))
+    # Parts are known by name, so two parts with one name overwrite each other: a folder
+    # holding several rigs (a pack of dummies) reads as one broken rig.
+    seen = {}
+    for p in parts:
+        seen[p.name] = seen.get(p.name, 0) + 1
+    twice = sorted(n for n, c in seen.items() if c > 1)
+    if twice:
+        warnings.append(f"several parts are named {', '.join(twice)}: this looks like more than one rig "
+                        "(capture the rig model itself, not the folder holding it)")
     driven = {j.part1 for j in motors}
     joints = motors + [j for j in constraints if j.part1 not in driven]
     if not joints:
-        raise ValueError(f"{name}: no Motor6D or AnimationConstraint joint was found")
-    return Rig(name, parts, joints)
+        raise ValueError(f"{name}: no Motor6D or AnimationConstraint joint was found"
+                         + "".join(f"\n  - {w}" for w in warnings))
+    rig = Rig(name, parts, joints)
+    loose = sorted(p for p in rig.parts if p not in rig.by_part1 and p != rig.root)
+    if loose:
+        warnings.append(f"not joined to the rig (they will not move): {', '.join(loose)}")
+    rig.warnings = warnings
+    return rig
 
 
 def from_syncix(target, port=8080):

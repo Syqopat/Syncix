@@ -49,10 +49,12 @@ def _load_script(path, rig):
 def cmd_capture(args):
     rig = from_syncix(args.target, args.port) if args.cmd == "capture" else from_folder(args.target)
     rig.save(args.out)
-    err = rig.rest_error()
+    err, worst = rig.rest_report()
     print(f"{rig.name}: {rig.kind} rig, {len(rig.parts)} parts, {len(rig.joints)} joints, root {rig.root}")
     print(f"roles: {', '.join(f'{k}={v}' for k, v in sorted(rig.roles.items())) or '(none: custom rig, use joint names)'}")
-    print(f"rest pose check: {'ok' if err < 0.01 else f'OFF BY {err:.3f} studs - the rig was not read correctly'}")
+    print(f"rest pose check: {'ok' if err < 0.01 else f'OFF BY {err:.3f} studs at {worst} - the rig was not read correctly'}")
+    for w in getattr(rig, "warnings", []):
+        print(f"  warning: {w}")
     print(f"saved {args.out}")
 
 
