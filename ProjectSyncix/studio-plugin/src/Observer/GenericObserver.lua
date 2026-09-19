@@ -51,6 +51,11 @@ function GenericObserver.new()
     self.isSyncing = false
     self.tracked = {}
     self.parentOf = {}
+    -- An object's identity can change after it is tracked (see HandleIdentityChanged), so
+    -- handlers read the current one here; subscriptions stay under the first one.
+    self.idOf = {}
+    self.subKey = {}
+    self.idFlips = {}
     return self
 end
 
@@ -95,7 +100,18 @@ function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: bo
     self.tracked[instance] = true
 
     local uuid = instance:GetAttribute("__syncix_id")
-    
+
+    -- A copy (Ctrl+D, copy and paste, a clone) carries the original's identity with its
+    -- attributes. Two live objects with one identity overwrote each other in the cache and
+    -- on disk; the copy gets its own. (An object that comes back after its original was
+    -- deleted, as undo does, keeps the identity.)
+    if uuid then
+        local holder = self.cache:GetInstance(uuid)
+        if holder and holder ~= instance and holder:IsDescendantOf(game) then
+            uuid = nil
+        end
+    end
+
     if not uuid then
         uuid = HttpService:GenerateGUID(false)
         instance:SetAttribute("__syncix_id", uuid)
@@ -110,30 +126,99 @@ function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: bo
     end
     
     self.cache:CacheInstance(uuid, instance)
+    self.idOf[instance] = uuid
+    self.subKey[instance] = uuid
 
     if instance.Parent then
         self.parentOf[instance] = instance.Parent:GetAttribute("__syncix_id")
     end
 
     self.subscriptions:Subscribe(uuid, instance.Changed, function(propertyName)
-        self:HandlePropertyChanged(instance, uuid, propertyName)
+        self:HandlePropertyChanged(instance, self.idOf[instance], propertyName)
     end)
 
     self.subscriptions:Subscribe(uuid, instance.AttributeChanged, function(attrName)
-        self:HandleAttributeChanged(instance, uuid, attrName)
+        if attrName == "__syncix_id" then
+            self:HandleIdentityChanged(instance)
+        else
+            self:HandleAttributeChanged(instance, self.idOf[instance], attrName)
+        end
     end)
-    
+
     self.subscriptions:Subscribe(uuid, instance.Destroying, function()
-        self:HandleInstanceDestroyed(instance, uuid)
+        self:HandleInstanceDestroyed(instance, self.idOf[instance])
     end)
 
     self.subscriptions:Subscribe(uuid, instance.AncestryChanged, function()
+        local current = self.idOf[instance]
+        if not current then return end
         if not instance:IsDescendantOf(game) then
-            self:HandleInstanceDestroyed(instance, uuid)
+            self:HandleInstanceDestroyed(instance, current)
         else
-            self:HandleReparent(instance, uuid)
+            self:HandleReparent(instance, current)
         end
     end)
+end
+
+-- Team Create: a new object reaches the others before the identity its creator's plugin
+-- gives it, so every connected plugin names it, each differently, and the attribute ends
+-- up holding one of them while the other cores know it by another. Children added later
+-- then pointed at a parent their core did not know, and the files were rewritten on the
+-- next connect. The plugins settle on one identity without talking to each other: the
+-- smaller one wins. A larger or removed value is written back; a smaller one is adopted
+-- and the core is told to follow (REKEY).
+local MAX_ID_FLIPS = 8
+
+function GenericObserver:HandleIdentityChanged(instance: Instance)
+    if RunService:IsRunning() then return end
+    local mine = self.idOf[instance]
+    if not mine then return end
+    local theirs = instance:GetAttribute("__syncix_id")
+    if theirs == mine then return end
+
+    local flips = (self.idFlips[instance] or 0) + 1
+    self.idFlips[instance] = flips
+    if flips > MAX_ID_FLIPS then
+        if flips == MAX_ID_FLIPS + 1 then
+            warn(string.format(
+                "[Syncix] The identity of %s keeps being changed by someone else; leaving it as %s.",
+                instance:GetFullName(), tostring(theirs)
+            ))
+        end
+        return
+    end
+
+    local usable = typeof(theirs) == "string" and #theirs > 0
+    if usable then
+        local holder = self.cache:GetInstance(theirs)
+        if holder and holder ~= instance and holder:IsDescendantOf(game) then
+            usable = false -- another live object has it
+        end
+    end
+    if not usable or theirs > mine then
+        instance:SetAttribute("__syncix_id", mine)
+        return
+    end
+    self:Rekey(instance, mine, theirs)
+end
+
+function GenericObserver:Rekey(instance: Instance, old: string, new: string)
+    self.cache:Remove(old)
+    self.cache:CacheInstance(new, instance)
+    self.idOf[instance] = new
+    for _, child in ipairs(instance:GetChildren()) do
+        if self.parentOf[child] == old then
+            self.parentOf[child] = new
+        end
+    end
+    if self.activityLog then
+        self.activityLog:Outbound("identity", instance.Name, nil, new, new)
+    end
+    self.batchQueue:Enqueue({
+        event_type = "REKEY",
+        version = "v1",
+        data = { syncix_id = old, new_id = new },
+    })
 end
 
 function GenericObserver:HandleReparent(instance: Instance, uuid: string)
@@ -214,9 +299,13 @@ function GenericObserver:HandleInstanceDestroyed(instance: Instance, uuid: strin
     if not self.tracked[instance] then return end
     self.tracked[instance] = nil
     self.parentOf[instance] = nil
+    local subKey = self.subKey[instance] or uuid
+    self.idOf[instance] = nil
+    self.subKey[instance] = nil
+    self.idFlips[instance] = nil
 
     if self.commandDispatcher and self.commandDispatcher:IsLocked() then
-        self.subscriptions:UnsubscribeAll(uuid)
+        self.subscriptions:UnsubscribeAll(subKey)
         return
     end
 
@@ -225,7 +314,7 @@ function GenericObserver:HandleInstanceDestroyed(instance: Instance, uuid: strin
         self.activityLog:Outbound("delete", instance.Name, nil, nil, uuid)
     end
     self.batchQueue:Enqueue(destroyPatch)
-    self.subscriptions:UnsubscribeAll(uuid)
+    self.subscriptions:UnsubscribeAll(subKey)
 end
 
 return GenericObserver

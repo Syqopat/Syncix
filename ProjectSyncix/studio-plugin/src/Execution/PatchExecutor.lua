@@ -819,14 +819,25 @@ function PatchExecutor:ApplyPropertyValue(instance: Instance, propName: string, 
             local inputs = HttpService:JSONDecode(propValue)
             ;(instance :: any):SetEntries(inputs)
         elseif propName == "Source" and instance:IsA("LuaSourceContainer") then
-            instance.Source = propValue
-            pcall(function()
-                local ScriptEditorService = game:GetService("ScriptEditorService")
-                local doc = ScriptEditorService:FindScriptDocumentAsync(instance)
-                if doc then
-                    doc:EditTextAsync(propValue, 1, 1, doc:GetLineCount(), doc:GetLineLength(doc:GetLineCount()) + 1)
-                end
+            -- UpdateSourceAsync is the way Roblox asks plugins to change a script: it also
+            -- works for a script open in the editor and under Team Create's Collaborative
+            -- Editing, where setting Source directly may be refused or overwritten by the
+            -- shared document. The direct write stays as the fallback.
+            local ScriptEditorService = game:GetService("ScriptEditorService")
+            local updated = pcall(function()
+                ScriptEditorService:UpdateSourceAsync(instance, function()
+                    return propValue
+                end)
             end)
+            if not updated then
+                instance.Source = propValue
+                pcall(function()
+                    local doc = ScriptEditorService:FindScriptDocumentAsync(instance)
+                    if doc then
+                        doc:EditTextAsync(propValue, 1, 1, doc:GetLineCount(), doc:GetLineLength(doc:GetLineCount()) + 1)
+                    end
+                end)
+            end
         elseif propName == "Parent" then
             if type(propValue) == "string" and propValue ~= "" then
                 local pInst = self.cache:GetInstance(propValue)

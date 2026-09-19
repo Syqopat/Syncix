@@ -2227,6 +2227,50 @@ async fn main() {
                                 }
                             }
                         }
+                    } else if p_type == "REKEY" {
+                        // Team Create: two people's plugins gave one new object different
+                        // identities; the plugins settled on one (the smaller) and the model
+                        // follows, so the object keeps its files and children.
+                        let ids = patch.get("data").and_then(|d| {
+                            let old = d.get("syncix_id").and_then(|v| v.as_str()).and_then(|s| uuid::Uuid::parse_str(s).ok())?;
+                            let new = d.get("new_id").and_then(|v| v.as_str()).and_then(|s| uuid::Uuid::parse_str(s).ok())?;
+                            Some((old, new))
+                        });
+                        if let Some((old, new)) = ids {
+                            let result = {
+                                let mut dm = data_model.write().await;
+                                dm.rekey(&old, &new).map(|_| dm.get_instance(&new).cloned())
+                            };
+                            match result {
+                                Ok(Some(instance)) => {
+                                    let parent_id = instance.parent.map(|u| u.to_string());
+                                    let _ = app_state.tx_to_vscode.send(
+                                        serde_json::json!({
+                                            "event_type": "INSTANCE_REMOVED",
+                                            "data": { "id": old, "parentId": parent_id }
+                                        })
+                                        .to_string(),
+                                    );
+                                    let _ = app_state.tx_to_vscode.send(
+                                        serde_json::json!({
+                                            "event_type": "INSTANCE_CREATED",
+                                            "data": {
+                                                "id": new,
+                                                "name": instance.name,
+                                                "className": instance.class_name,
+                                                "parentId": parent_id,
+                                                "childrenIds": instance.children,
+                                                "isExpanded": false
+                                            }
+                                        })
+                                        .to_string(),
+                                    );
+                                    tracing::info!("Studio REKEY handled: {} {} -> {}", instance.name, old, new);
+                                }
+                                Ok(None) => {}
+                                Err(e) => tracing::warn!("REKEY {} -> {} failed: {}", old, new, e),
+                            }
+                        }
                     } else if p_type == "REPARENT" {
                         // The object was moved to another parent in Studio.
                         let syncix_id = patch

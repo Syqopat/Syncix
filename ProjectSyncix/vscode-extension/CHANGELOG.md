@@ -45,6 +45,21 @@ versions follow [Semantic Versioning](https://semver.org/).
   still discovering, or waiting to retry, kept running next to the new one. Each
   attempt is now numbered and a replaced one stops; a lost connection reported by
   both a send and a poll starts one retry loop, not two.
+- **Team Create: one new object could get two identities.** An object a teammate
+  creates reaches your Studio before the identity their plugin gives it, so your
+  plugin named it too and the two cores knew it by different identities. Children
+  added later pointed at a parent one core did not know, and files were rewritten
+  on the next connect. The plugins now settle on one identity without talking to
+  each other (the smaller one wins) and the core follows (a new REKEY message
+  that keeps the object's files, children and references).
+- **A copy took the original's identity.** Ctrl+D, copy and paste or a clone
+  carries the attributes, identity included, and the copy overwrote the original
+  in the cache and on disk. A copy now gets its own identity; an object brought
+  back by undo keeps its old one.
+- **Scripts are written the way Roblox asks plugins to.** Source changes use
+  `ScriptEditorService:UpdateSourceAsync`, which also works for scripts open in
+  the editor and under Team Create's Collaborative Editing; the direct write is
+  the fallback.
 
 ## [0.1.4] - 2026-09-12
 

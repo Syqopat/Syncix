@@ -14,6 +14,8 @@ pub enum ModelError {
     VersionConflict { current: i64, incoming: i64 },
     #[error("Invalid parent: {0}")]
     InvalidParent(Uuid),
+    #[error("Identity already in use: {0}")]
+    IdentityTaken(Uuid),
 }
 
 /// Syncix's own, self-contained data model.
@@ -503,6 +505,51 @@ impl DataModel {
         Ok((old_parent, new_parent))
     }
 
+    /// Gives an object a new identity. In Team Create two people's plugins can name the
+    /// same new object differently; the plugins settle on one and the core follows. The
+    /// parent's children list, the children's parent and every reference property that
+    /// pointed at the old identity are carried over. Fails if the new identity is taken.
+    pub fn rekey(&mut self, old: &Uuid, new: &Uuid) -> Result<(), ModelError> {
+        if old == new {
+            return Ok(());
+        }
+        if self.instances.contains_key(new) {
+            return Err(ModelError::IdentityTaken(*new));
+        }
+        let mut node = self.instances.remove(old).ok_or(ModelError::InstanceNotFound(*old))?;
+        node.syncix_id = *new;
+        if let Some(parent) = node.parent.and_then(|p| self.instances.get_mut(&p)) {
+            for c in parent.children.iter_mut() {
+                if c == old {
+                    *c = *new;
+                }
+            }
+        }
+        for child in &node.children {
+            if let Some(c) = self.instances.get_mut(child) {
+                c.parent = Some(*new);
+            }
+        }
+        let old_text = old.to_string();
+        for other in self.instances.values_mut() {
+            for value in other.properties.values_mut() {
+                if matches!(value, PropertyValue::Ref(r) if *r == old_text) {
+                    *value = PropertyValue::Ref(new.to_string());
+                }
+            }
+        }
+        for value in node.properties.values_mut() {
+            if matches!(value, PropertyValue::Ref(r) if *r == old_text) {
+                *value = PropertyValue::Ref(new.to_string());
+            }
+        }
+        if self.root_id == *old {
+            self.root_id = *new;
+        }
+        self.instances.insert(*new, node);
+        Ok(())
+    }
+
     pub fn get_instance(&self, id: &Uuid) -> Option<&InstanceNode> {
         self.instances.get(id)
     }
@@ -790,6 +837,35 @@ mod tests {
         let id = node.syncix_id;
         model.upsert_instance(node).expect("upsert failed");
         id
+    }
+
+    /// A new identity (Team Create: two plugins named one object) carries the parent's
+    /// list, the children and references along, and refuses an identity in use.
+    #[test]
+    fn rekey_moves_links_and_references() {
+        let mut m = DataModel::new();
+        let ws = add(&mut m, "Workspace", "Workspace", None);
+        let model = add(&mut m, "Model", "Door", Some(ws));
+        let part = add(&mut m, "Part", "Hinge", Some(model));
+        let value = add(&mut m, "ObjectValue", "Target", Some(ws));
+        m.get_mut_instance(&value)
+            .unwrap()
+            .properties
+            .insert("Value".into(), PropertyValue::Ref(model.to_string()));
+
+        let new = Uuid::new_v4();
+        m.rekey(&model, &new).expect("rekey failed");
+
+        assert!(m.get_instance(&model).is_none());
+        assert_eq!(m.get_instance(&new).unwrap().syncix_id, new);
+        assert!(m.get_instance(&ws).unwrap().children.contains(&new));
+        assert!(!m.get_instance(&ws).unwrap().children.contains(&model));
+        assert_eq!(m.get_instance(&part).unwrap().parent, Some(new));
+        assert!(matches!(
+            m.get_instance(&value).unwrap().properties.get("Value"),
+            Some(PropertyValue::Ref(r)) if *r == new.to_string()
+        ));
+        assert!(matches!(m.rekey(&new, &part), Err(ModelError::IdentityTaken(_))));
     }
 
     /// When a node is deleted its WHOLE subtree must go too (Destroy() behaviour in Studio).
