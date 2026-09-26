@@ -26,6 +26,7 @@ mod project;
 mod rbxmx;
 mod rbxmx_import;
 mod sourcemap;
+mod tree_import;
 mod upload;
 #[allow(dead_code)]
 mod scheduler;
@@ -714,6 +715,41 @@ fn resend_payloads(
 /// Turns a JSON value in wire format into a PropertyValue.
 /// Accepts raw scalars (5, "hi", true), {Vector3:{..}}/{Color3:{..}} tables
 /// and the serde enum form ({"Number":5}).
+/// What a MeshPart has to be CREATED with. Roblox does not let a plugin write MeshId, so
+/// the mesh (and the fidelity it is built at) travels with the create and the plugin
+/// builds the part from it; sent as a property it would only be refused.
+/// Returns (mesh, collision fidelity, render fidelity), all as the text the file held.
+fn mesh_create_fields(
+    class_name: &str,
+    properties: Option<&serde_json::Value>,
+) -> (Option<String>, Option<String>, Option<String>) {
+    if class_name != "MeshPart" {
+        return (None, None, None);
+    }
+    let Some(props) = properties.and_then(|v| v.as_object()) else {
+        return (None, None, None);
+    };
+    let text = |key: &str| -> Option<String> {
+        let raw = props.get(key)?;
+        raw.get("Content")
+            .or_else(|| raw.get("String"))
+            .and_then(|v| v.as_str())
+            .or_else(|| raw.as_str())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string())
+    };
+    (
+        text("MeshId").or_else(|| text("MeshContent")),
+        text("CollisionFidelity"),
+        text("RenderFidelity"),
+    )
+}
+
+/// Is this a value the plugin cannot write, only create the object from?
+fn is_creation_only_property(class_name: &str, property: &str) -> bool {
+    class_name == "MeshPart" && (property == "MeshId" || property == "MeshContent")
+}
+
 fn parse_wire_value(v: &serde_json::Value) -> Option<model::PropertyValue> {
     use model::PropertyValue;
     match v {
@@ -1466,6 +1502,8 @@ async fn main() {
                 // sends them together): one command and one message to Studio per instance
                 // instead of one per property. Values are typed wire values.
                 let mut property_patches = Vec::new();
+                let (mesh_id, collision_fidelity, render_fidelity) =
+                    mesh_create_fields(class_name, payload.data.get("properties"));
                 {
                     // Parent resolution: UUID or name (e.g. "Workspace").
                     // When empty it attaches to the Workspace service by default.
@@ -1476,6 +1514,14 @@ async fn main() {
                     if let Some(props) = payload.data.get("properties").and_then(|v| v.as_object()) {
                         for (property, raw) in props {
                             if property == "Name" {
+                                continue;
+                            }
+                            // The mesh is kept in the model, but never sent as a property:
+                            // the plugin builds the part from it (see mesh_create_fields).
+                            if is_creation_only_property(class_name, property) {
+                                if let Some(pv) = parse_wire_value(raw) {
+                                    instance.properties.insert(property.clone(), pv);
+                                }
                                 continue;
                             }
                             let Some(mut pv) = parse_wire_value(raw) else {
@@ -1511,6 +1557,33 @@ async fn main() {
                             "data": { "syncix_id": instance.syncix_id, "property": "Source", "value": src }
                         }));
                     }
+                    // Attributes and tags travel with the create as well: half of a game's
+                    // logic can run through tags, and an import that dropped them created
+                    // objects the game's own scripts could not find.
+                    if let Some(attributes) = payload.data.get("attributes").and_then(|v| v.as_object()) {
+                        for (name, raw) in attributes {
+                            let Some(pv) = parse_wire_value(raw) else {
+                                tracing::warn!("CREATE_INSTANCE: attribute {}.{} could not be read, skipped.", node_name, name);
+                                continue;
+                            };
+                            property_patches.push(serde_json::json!({
+                                "event_type": "ATTRIBUTE_UPDATE",
+                                "data": { "syncix_id": instance.syncix_id, "name": name, "value": pv_to_wire(&pv) }
+                            }));
+                            instance.attributes.insert(name.clone(), pv);
+                        }
+                    }
+                    if let Some(tags) = payload.data.get("tags").and_then(|v| v.as_array()) {
+                        let list: Vec<String> =
+                            tags.iter().filter_map(|t| t.as_str().map(|s| s.to_string())).collect();
+                        if !list.is_empty() {
+                            property_patches.push(serde_json::json!({
+                                "event_type": "TAGS_UPDATE",
+                                "data": { "syncix_id": instance.syncix_id, "tags": list }
+                            }));
+                            instance.tags = list;
+                        }
+                    }
                 }
                 let uuid = instance.syncix_id;
                 let insert_result = {
@@ -1522,14 +1595,24 @@ async fn main() {
                         // Disk writing is done by the central debounced writer (layout).
                         // Send CREATE to Studio, its properties right behind it in the same
                         // message (Studio applies a message's patches in order).
+                        let mut create_data = serde_json::json!({
+                            "syncix_id": uuid,
+                            "class_name": instance.class_name,
+                            "name": instance.name,
+                            "parent": instance.parent.map(|u| u.to_string())
+                        });
+                        if let Some(mesh) = &mesh_id {
+                            create_data["mesh_id"] = serde_json::json!(mesh);
+                            if let Some(value) = &collision_fidelity {
+                                create_data["collision_fidelity"] = serde_json::json!(value);
+                            }
+                            if let Some(value) = &render_fidelity {
+                                create_data["render_fidelity"] = serde_json::json!(value);
+                            }
+                        }
                         let mut patches = vec![serde_json::json!({
                             "event_type": "CREATE",
-                            "data": {
-                                "syncix_id": uuid,
-                                "class_name": instance.class_name,
-                                "name": instance.name,
-                                "parent": instance.parent.map(|u| u.to_string())
-                            }
+                            "data": create_data
                         })];
                         patches.extend(property_patches);
                         studio_outbox.push(Payload {
@@ -2864,6 +2947,46 @@ mod set_value_tests {
             value_from_text("Position", None, "0,5,-60"),
             Ok(P::Vector3 { x: 0.0, y: 5.0, z: -60.0 })
         );
+    }
+}
+
+#[cfg(test)]
+mod mesh_creation_tests {
+    use super::*;
+
+    /// A MeshPart is created FROM its mesh; the mesh must reach the plugin with the
+    /// create and never as a property, whichever way the file spelled it.
+    #[test]
+    fn a_meshpart_carries_its_mesh_to_the_create() {
+        let props = serde_json::json!({
+            "MeshId": { "Content": "rbxassetid://123" },
+            "CollisionFidelity": { "String": "Enum.CollisionFidelity.Box" },
+            "RenderFidelity": { "String": "Enum.RenderFidelity.Precise" },
+            "Anchored": { "Boolean": true }
+        });
+        let (mesh, collision, render) = mesh_create_fields("MeshPart", Some(&props));
+        assert_eq!(mesh.as_deref(), Some("rbxassetid://123"));
+        assert_eq!(collision.as_deref(), Some("Enum.CollisionFidelity.Box"));
+        assert_eq!(render.as_deref(), Some("Enum.RenderFidelity.Precise"));
+        assert!(is_creation_only_property("MeshPart", "MeshId"));
+        assert!(!is_creation_only_property("MeshPart", "Anchored"));
+        // Only a MeshPart is built this way; a Part named MeshId keeps its property.
+        assert_eq!(mesh_create_fields("Part", Some(&props)), (None, None, None));
+        assert!(!is_creation_only_property("Part", "MeshId"));
+    }
+
+    /// Older files were written before Syncix read MeshId at all, and a mesh that is
+    /// there but empty is no mesh: neither may turn into a create the plugin cannot use.
+    #[test]
+    fn a_meshpart_without_a_mesh_is_created_plainly() {
+        let empty = serde_json::json!({ "MeshId": { "Content": "" }, "Anchored": { "Boolean": true } });
+        assert_eq!(mesh_create_fields("MeshPart", Some(&empty)).0, None);
+        let missing = serde_json::json!({ "Anchored": { "Boolean": true } });
+        assert_eq!(mesh_create_fields("MeshPart", Some(&missing)).0, None);
+        assert_eq!(mesh_create_fields("MeshPart", None), (None, None, None));
+        // The newer Content field is accepted under its own name too.
+        let newer = serde_json::json!({ "MeshContent": "rbxassetid://9" });
+        assert_eq!(mesh_create_fields("MeshPart", Some(&newer)).0.as_deref(), Some("rbxassetid://9"));
     }
 }
 

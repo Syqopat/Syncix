@@ -1666,6 +1666,135 @@ fn publish_place(cli_args: &[String]) -> i32 {
 ///
 /// For every node a CREATE_INSTANCE is sent first, then its properties. Top-down
 /// creation order matters: a child cannot be sent before its parent exists.
+/// `syncix import <file.rbxmx | folder | file.json> [parent]`.
+///
+/// A folder (or a single data file) is read as Syncix's own layout — the shape assetkit
+/// writes models in, and the shape the sync folder itself has. Anything else is read as
+/// Roblox XML.
+fn import_target(cli_args: &[String]) -> i32 {
+    let Some(target) = cli_args.get(1) else {
+        report_error("Usage: syncix import <file.rbxmx | folder | file.json> [parent]");
+        return 1;
+    };
+    let path = PathBuf::from(target);
+    if path.is_dir() || target.to_ascii_lowercase().ends_with(".json") {
+        import_tree(cli_args)
+    } else {
+        import_rbxmx(cli_args)
+    }
+}
+
+/// Creates a tree written in Syncix's layout in the place. Every instance is created with
+/// a NEW identity, so the same folder can be imported twice and gives two copies.
+fn import_tree(cli_args: &[String]) -> i32 {
+    let target = cli_args.get(1).cloned().unwrap_or_default();
+    let Some(port) = require_core() else { return 1 };
+    let parent_ref = cli_args.get(2).cloned().unwrap_or_else(|| "Workspace".to_string());
+
+    let tree = match crate::tree_import::read(&PathBuf::from(&target)) {
+        Ok(tree) => tree,
+        Err(e) => {
+            report_error(&e);
+            return 1;
+        }
+    };
+    let total = tree.count();
+    if total == 0 {
+        report_error(&format!("{} holds no instances Syncix can read.", target));
+        for line in tree.unreadable.iter().take(5) {
+            print_dim(&format!("  {}", line));
+        }
+        return 1;
+    }
+
+    // Resolved ONCE, before anything is created: looked up again for every root it would
+    // become ambiguous as soon as the import created a second object of that name.
+    let parent_id = match fetch_json(port, &format!("/object?target={}", url_encode(&parent_ref))) {
+        Some(o) => match o.get("syncix_id").and_then(|v| v.as_str()) {
+            Some(id) => id.to_string(),
+            None => {
+                let reason = o.get("error").and_then(|e| e.as_str()).unwrap_or("not found");
+                report_error(&format!("Parent {}: {}", parent_ref, reason));
+                return 1;
+            }
+        },
+        None => return 1,
+    };
+
+    print_info(&format!("Importing {} instance(s) into {}", total, parent_ref));
+
+    fn create(port: u16, node: &crate::tree_import::TreeNode, parent: &str, created: &mut usize, failed: &mut usize) {
+        let properties: serde_json::Map<String, serde_json::Value> = node
+            .properties
+            .iter()
+            .map(|(name, value)| (name.clone(), crate::pv_to_wire(value)))
+            .collect();
+        let attributes: serde_json::Map<String, serde_json::Value> = node
+            .attributes
+            .iter()
+            .map(|(name, value)| (name.clone(), crate::pv_to_wire(value)))
+            .collect();
+        let mut data = serde_json::json!({
+            "id": node.id.to_string(),
+            "className": node.class_name,
+            "name": node.name,
+            "parentId": parent,
+            "properties": properties,
+            "attributes": attributes,
+            "tags": node.tags
+        });
+        if let Some(source) = &node.source {
+            data["source"] = serde_json::json!(source);
+        }
+        if !send_command(port, "CREATE_INSTANCE", data) {
+            // Its children have nowhere to go, so they are counted with it.
+            *failed += 1 + node.children.iter().map(count_of).sum::<usize>();
+            return;
+        }
+        *created += 1;
+        let id = node.id.to_string();
+        for child in &node.children {
+            create(port, child, &id, created, failed);
+        }
+    }
+    fn count_of(node: &crate::tree_import::TreeNode) -> usize {
+        1 + node.children.iter().map(count_of).sum::<usize>()
+    }
+
+    let (mut created, mut failed) = (0, 0);
+    for root in &tree.roots {
+        create(port, root, &parent_id, &mut created, &mut failed);
+    }
+
+    if tree.outside_refs > 0 {
+        print_dim(&format!(
+            "  {} reference(s) pointed outside the folder and were left empty.",
+            tree.outside_refs
+        ));
+    }
+    for line in tree.unreadable.iter().take(10) {
+        print_dim(&format!("  {}", line));
+    }
+    if !tree.unions.is_empty() {
+        print_info(&format!(
+            "{} union(s) were not created: {}",
+            tree.unions.len(),
+            tree.unions.join(", ")
+        ));
+        print_dim("  Studio does not let a plugin rebuild a union's shape. Drag the model's");
+        print_dim("  .rbxm into Studio for those, or rebuild them there by hand.");
+    }
+    if failed > 0 {
+        report_error(&format!("{} instance(s) could not be created.", failed));
+        print_dim("  Check the result with syncix tree.");
+        return 1;
+    }
+
+    print_ok(&format!("Imported {} instance(s).", created));
+    print_dim("  Run syncix pull to confirm the result from Studio.");
+    0
+}
+
 fn import_rbxmx(cli_args: &[String]) -> i32 {
     let Some(file_path) = cli_args.get(1) else {
         report_error("Usage: syncix import <file.rbxmx> [parent]");
@@ -2094,7 +2223,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
         "upload" => publish_place(cli_args),
         "sourcemap" => build_sourcemap(cli_args),
         "build" => run_build(cli_args),
-        "import" => import_rbxmx(cli_args),
+        "import" => import_target(cli_args),
         "pull" | "resync" => {
             let Some(port) = require_core() else { return Some(1) };
             if send_command(port, "FULL_SYNC", serde_json::json!({})) {

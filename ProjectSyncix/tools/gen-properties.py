@@ -60,21 +60,35 @@ PROPERTY_BLOCKLIST = {
 }
 
 
-def type_code(member):
+# Properties a plugin may READ but never write. They are carried anyway, because losing
+# them loses the object: a MeshPart without its MeshId is a grey box on disk and in the
+# editor. Whoever applies them has to know they are set when the object is created
+# (PatchExecutor creates a MeshPart with InsertService:CreateMeshPartAsync).
+READ_ONLY_CARRIED = {
+    "MeshPart": {"MeshId"},
+}
+
+
+def type_code(member, class_name=""):
     if member.get("MemberType") != "Property":
         return None
+    name = member["Name"]
+    carried_read_only = name in READ_ONLY_CARRIED.get(class_name, set())
+
     tags = set(member.get("Tags") or [])
-    if tags & {"Deprecated", "ReadOnly", "NotScriptable", "Hidden"}:
+    if tags & {"Deprecated", "NotScriptable", "Hidden"}:
+        return None
+    if "ReadOnly" in tags and not carried_read_only:
         return None
 
     security = member.get("Security")
     if isinstance(security, dict):
-        if security.get("Read") != "None" or security.get("Write") != "None":
+        write_only_block = security.get("Read") == "None" and security.get("Write") != "None"
+        if security.get("Read") != "None" or (write_only_block and not carried_read_only):
             return None
     elif security not in (None, "None"):
         return None
 
-    name = member["Name"]
     if name in PROPERTY_BLOCKLIST:
         return None
     # Defensive: properties with a quote or backslash in their name are ignored.
@@ -108,7 +122,7 @@ for cls in dump["Classes"]:
 
     props = {}
     for member in cls.get("Members", []):
-        code = type_code(member)
+        code = type_code(member, cls["Name"])
         if code:
             props[member["Name"]] = code
 

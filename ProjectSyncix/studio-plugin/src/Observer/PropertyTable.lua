@@ -314,7 +314,7 @@ return {
 	["MemoryStoreSortedMap"]={u="Instance",p={}},
 	["MeshContentProvider"]={u="CacheableContentProvider",p={}},
 	["MeshImportData"]={u="BaseImportData",p={["Anchored"]="p",["CageMeshIntersectedPreview"]="p",["CageNonManifoldPreview"]="p",["CageOverlappingVerticesPreview"]="p",["CageUVMisMatchedPreview"]="p",["DoubleSided"]="p",["IgnoreVertexColors"]="p",["IrrelevantCageModifiedPreview"]="p",["MeshHoleDetectedPreview"]="p",["OuterCageFarExtendedFromMeshPreview"]="p",["UseImportedPivot"]="p"}},
-	["MeshPart"]={u="TriangleMeshPart",p={["TextureID"]="d"}},
+	["MeshPart"]={u="TriangleMeshPart",p={["MeshId"]="d",["TextureID"]="d"}},
 	["MessageBusConnection"]={u="Instance",p={}},
 	["MessageBusService"]={u="Instance",p={}},
 	["MessagingService"]={u="Instance",p={}},

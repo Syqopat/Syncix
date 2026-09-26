@@ -622,6 +622,22 @@ fn seg(dm: &DataModel, node: &InstanceNode) -> String {
     }
 }
 
+/// The class a source file's name stands for: "Spin.server.lua" -> "Script". The other
+/// way round from script_ext, and the one place that mapping is written down, so the
+/// watcher and `syncix import` cannot drift apart.
+pub fn script_class_of_file(file_name: &str) -> Option<&'static str> {
+    let lower = file_name.to_ascii_lowercase();
+    if lower.ends_with(".server.lua") || lower.ends_with(".server.luau") {
+        Some("Script")
+    } else if lower.ends_with(".client.lua") || lower.ends_with(".client.luau") {
+        Some("LocalScript")
+    } else if lower.ends_with(".lua") || lower.ends_with(".luau") {
+        Some("ModuleScript")
+    } else {
+        None
+    }
+}
+
 fn script_ext(class_name: &str) -> Option<&'static str> {
     match class_name {
         "Script" => Some("server.lua"),
@@ -1016,6 +1032,33 @@ mod file_name_tests {
         assert_eq!(class_in_file_name("Box.part.json"), Some("Part"));
         assert_eq!(class_in_file_name("Rock_1a2b3c4d.meshpart.json"), Some("MeshPart"));
         assert_eq!(class_in_file_name("Box.meta.json"), None);
+    }
+}
+
+#[cfg(test)]
+mod repair_write_tests {
+    use super::*;
+
+    /// A repair the core makes itself (an identity put back, a file name corrected) must
+    /// not come back through the watcher as a user's change or a new object.
+    #[test]
+    fn a_repair_is_recognised_as_our_own_work() {
+        let dir = std::env::temp_dir().join(format!("syncix_repair_{}", Uuid::new_v4()));
+        fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("Box.part.json");
+        let content = "{ \"name\": \"Box\" }\n";
+
+        write_own(&file, content).unwrap();
+        assert!(is_own_write(&file, content), "the write must be recognised as ours");
+
+        let renamed = dir.join("Box_1a2b3c4d.part.json");
+        rename_own(&file, &renamed).unwrap();
+        assert!(is_own_write(&renamed, content), "the file that appeared is ours");
+        assert!(is_own_delete(&file), "the file that went is ours, not a user's deletion");
+
+        // Someone else's content at the same path is NOT ours.
+        assert!(!is_own_write(&renamed, "{ \"name\": \"Crate\" }\n"));
+        fs::remove_dir_all(&dir).ok();
     }
 }
 

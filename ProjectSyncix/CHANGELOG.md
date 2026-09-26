@@ -8,6 +8,29 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`syncix import` takes a folder, not only a .rbxmx.** A model kept in Syncix's own
+  layout — what the assetkit tool writes, and what the sync folder itself looks
+  like — is created in the place: `syncix import "Categorys/Models/Game/Tree"
+  [parent]`. The shape comes from the folders, scripts bring their source and
+  their .meta.json settings, a .txt becomes a StringValue and a .csv a
+  LocalizationTable. Every object is created with a NEW identity, so the same
+  folder can be imported twice and gives two copies; references inside it
+  (PrimaryPart, Motor6D.Part0, an ObjectValue's Value) follow to the new
+  identities and ones pointing outside are left empty.
+- **Attributes and tags travel with a create.** A created object used to arrive
+  with its properties and a script's source only; half of a game's logic can run
+  through tags, and objects arrived that the game's own scripts could not find.
+- **MeshParts arrive as their mesh, not as grey boxes.** Studio does not let a
+  plugin write MeshId, so the mesh travels with the create and the part is built
+  from it (`InsertService:CreateMeshPartAsync`, at the fidelity the file names).
+  Syncix also reads MeshId now, so its own files no longer lose the mesh. A mesh
+  that cannot be loaded leaves a plain MeshPart and says which one it was.
+- **Unions are named, not silently turned into boxes.** Their shape is Studio's
+  to build, so an import lists the ones it could not create and points at the
+  model's .rbxm.
+- **Explorer menu: "Syncix: Import into Studio".** Right-click a folder, a .json
+  or a .rbxmx, choose where it should land, and it is created there.
+
 - **Renaming a data file renames the object.** `Box.part.json` -> `Kutu.part.json` in
   the editor renames the object in Studio; the file keeps the name you gave it.
   The object is recognised by the `syncix_id` inside the file, so the name is

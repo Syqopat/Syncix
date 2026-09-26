@@ -94,6 +94,12 @@
       {
         "command": "syncix.openWorkspaceFolder",
         "title": "Syncix: Open Sync Folder"
+      },
+      {
+        "command": "syncix.importIntoStudio",
+        "title": "Import into Studio",
+        "category": "Syncix",
+        "icon": "$(cloud-upload)"
       }
     ],
     "menus": {
@@ -142,6 +148,13 @@
           "command": "syncix.searchExplorer",
           "when": "view == syncixExplorer",
           "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "syncix.importIntoStudio",
+          "when": "explorerResourceIsFolder || resourceExtname == .json || resourceExtname == .rbxmx || resourceExtname == .rbxm",
+          "group": "syncix@1"
         }
       ]
     },
