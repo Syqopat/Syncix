@@ -1,0 +1,30 @@
+{
+  "class_name": "Decal",
+  "name": "Decal",
+  "syncix_id": "ce42d0a9-e5af-4359-96e0-92677af6064f",
+  "schema_version": 1,
+  "last_updated": 1785808904047,
+  "properties": {
+    "Color3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "Face": {
+      "String": "Enum.NormalId.Top"
+    },
+    "Texture": {
+      "String": "rbxasset://textures/SpawnLocation.png"
+    },
+    "Transparency": {
+      "Number": 0.0
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "bfa47fe6-9c70-436c-9669-437f290f8b44"
+}
