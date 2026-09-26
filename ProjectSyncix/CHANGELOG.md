@@ -4,7 +4,24 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [0.1.6] - 2026-09-19
+## [0.1.6] - 2026-09-27
+
+### Added
+
+- **Renaming a data file renames the object.** `Box.part.json` -> `Kutu.part.json` in
+  the editor renames the object in Studio; the file keeps the name you gave it.
+  The object is recognised by the `syncix_id` inside the file, so the name is
+  yours to change.
+- **A data file written by hand becomes an object.** Write
+  `Wall.part.json` with as little as `{ "name": "Wall" }` in a synced folder and
+  Syncix creates it in Studio: the class comes from the file name (or a
+  `class_name` in the file), the parent from the folder it sits in, and a real
+  identity is written back into the file. Such a file used to reach Studio
+  without an identity or a parent and was dropped.
+- **A damaged identity is repaired, not the whole file.** Break the identity in a
+  file name (`RampA_1a2b3c4d` -> `RampA_deadbeef`) or inside the file and Syncix
+  puts that one value back from the tree; nothing is re-created and the rest of
+  the file is left as you wrote it.
 
 ### Fixed
 

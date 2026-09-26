@@ -77,6 +77,56 @@ fn forget_write(path: &Path) {
     }
 }
 
+/// Writes a file the core repaired itself (an identity put back into a data file) and
+/// records it, so the watcher does not read the repair back as a user's change.
+pub fn write_own(path: &Path, file_content: &str) -> std::io::Result<()> {
+    record_write(path, file_content);
+    fs::write(path, file_content)
+}
+
+/// Renames a file the core repaired itself (a damaged identity in a file name). Both the
+/// file that goes and the one that appears are recorded, so neither comes back as a
+/// user's deletion or a new object.
+pub fn rename_own(from: &Path, to: &Path) -> std::io::Result<()> {
+    if let Ok(content) = fs::read_to_string(from) {
+        record_write(to, &content);
+    }
+    record_delete(from);
+    let result = fs::rename(from, to);
+    if result.is_err() {
+        forget_write(to);
+    }
+    result
+}
+
+/// The instance name a data file or folder name stands for: "Box_1a2b3c4d.part.json" -> "Box".
+pub fn instance_name_in(component: &str) -> String {
+    instance_name_of(component).to_string()
+}
+
+/// The identity a data file or folder name carries: "Box_1a2b3c4d.part.json" -> "1a2b3c4d".
+/// None when the name carries none (the usual case: only duplicate names need one).
+pub fn short_id_in(component: &str) -> Option<String> {
+    let base = base_of(component);
+    match base.rsplit_once('_') {
+        Some((_, suffix)) if suffix.len() == 8 && suffix.chars().all(|c| c.is_ascii_hexdigit()) => {
+            Some(suffix.to_string())
+        }
+        _ => None,
+    }
+}
+
+/// The class a data file's name stands for, as Studio spells it: "Box.part.json" -> "Part".
+/// None for a name that carries no class (init.meta.json, a legacy plain .json).
+pub fn class_in_file_name(file_name: &str) -> Option<&'static str> {
+    crate::catalog::class_named(&class_of_file(file_name)?)
+}
+
+/// Where the tree says this instance's data file belongs.
+pub fn data_file_path(dm: &DataModel, sync_dir: &str, uuid: &Uuid) -> Option<PathBuf> {
+    data_file(dm, sync_dir, uuid)
+}
+
 /// Is this the content we last wrote? If so the watcher must not process it.
 pub fn is_own_write(path: &Path, file_content: &str) -> bool {
     write_log()
@@ -947,6 +997,28 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], allow_
         );
     }
 }
+#[cfg(test)]
+mod file_name_tests {
+    use super::*;
+
+    /// What the editor sees in a file name is what the watcher must read out of it: the
+    /// object's name, the identity duplicates carry, and the class.
+    #[test]
+    fn a_data_file_name_gives_name_identity_and_class() {
+        assert_eq!(instance_name_in("Box.part.json"), "Box");
+        assert_eq!(instance_name_in("Box_1a2b3c4d.part.json"), "Box");
+        assert_eq!(instance_name_in("Ore Shop_1a2b3c4d.model.json"), "Ore Shop");
+        assert_eq!(short_id_in("Box.part.json"), None);
+        assert_eq!(short_id_in("Box_1a2b3c4d.part.json"), Some("1a2b3c4d".to_string()));
+        // A name that merely ends in _something is not an identity.
+        assert_eq!(short_id_in("Box_left.part.json"), None);
+        assert_eq!(instance_name_in("Box_left.part.json"), "Box_left");
+        assert_eq!(class_in_file_name("Box.part.json"), Some("Part"));
+        assert_eq!(class_in_file_name("Rock_1a2b3c4d.meshpart.json"), Some("MeshPart"));
+        assert_eq!(class_in_file_name("Box.meta.json"), None);
+    }
+}
+
 #[cfg(test)]
 mod own_write_tests {
     use super::*;
