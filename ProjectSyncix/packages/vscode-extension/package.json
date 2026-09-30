@@ -36,8 +36,8 @@
         "title": "Syncix: Inspect Properties"
       },
       {
-        "command": "syncix.openDiagnostics",
-        "title": "Syncix: Open Diagnostics Dashboard"
+        "command": "syncix.openPanel",
+        "title": "Syncix: Open Panel"
       },
       {
         "command": "syncix.createInstance",
@@ -194,8 +194,9 @@
           "name": "Workspace Explorer"
         },
         {
-          "id": "syncixDiagnostics",
-          "name": "Diagnostics"
+          "type": "webview",
+          "id": "syncixPanel",
+          "name": "Syncix"
         }
       ]
     },

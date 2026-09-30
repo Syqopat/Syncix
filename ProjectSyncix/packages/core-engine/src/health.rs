@@ -30,7 +30,7 @@ pub struct PluginConfig {
 pub struct HealthStatus {
     pub status: String,
 
-    // --- Kimlik ---
+    // --- Identity ---
     pub version: String,
     pub protocol: u32,
     /// What this core can do beyond the protocol, so a newer plugin can check before

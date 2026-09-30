@@ -23,7 +23,7 @@ export function getBaseUrl(): string {
     return baseUrl;
 }
 
-/** Core'un WebSocket RPC adresi. */
+/** WebSocket RPC address of the core. */
 export function getWsUrl(projectRoot?: string): string {
     const token = readTokenFile(projectRoot);
     const query = token ? `?token=${encodeURIComponent(token)}` : '';
