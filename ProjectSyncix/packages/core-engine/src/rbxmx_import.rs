@@ -580,7 +580,7 @@ mod tests {
         assert_eq!(al(0, "TopSurface"), Some(PropertyValue::Number(0.0)));
         assert_eq!(al(1, "TextXAlignment"), Some(PropertyValue::Number(2.0)));
         assert_eq!(
-            crate::pv_to_wire(&PropertyValue::Number(2.0)),
+            crate::values::pv_to_wire(&PropertyValue::Number(2.0)),
             serde_json::json!(2.0)
         );
     }
@@ -614,7 +614,7 @@ mod tests {
             })
         );
         assert_eq!(
-            crate::pv_to_wire(font.as_ref().unwrap()),
+            crate::values::pv_to_wire(font.as_ref().unwrap()),
             serde_json::json!({ "Font": {
                 "family": "rbxasset://fonts/families/GothamSSm.json",
                 "weight": "Enum.FontWeight.Bold",

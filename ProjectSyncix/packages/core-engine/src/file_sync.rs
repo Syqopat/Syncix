@@ -502,7 +502,7 @@ fn handle_meta_file(
                     "data": {
                         "syncix_id": uuid,
                         "property": item_name,
-                        "value": crate::pv_to_wire(raw_value)
+                        "value": crate::values::pv_to_wire(raw_value)
                     }
                 }));
             }
@@ -515,7 +515,7 @@ fn handle_meta_file(
                     "data": {
                         "syncix_id": uuid,
                         "name": item_name,
-                        "value": crate::pv_to_wire(raw_value)
+                        "value": crate::values::pv_to_wire(raw_value)
                     }
                 }));
             }
@@ -716,7 +716,7 @@ fn update_instance_file(
             }
             patches.push(serde_json::json!({
                 "event_type": "PROPERTY_UPDATE",
-                "data": { "syncix_id": uuid, "property": property, "value": crate::pv_to_wire(&value) }
+                "data": { "syncix_id": uuid, "property": property, "value": crate::values::pv_to_wire(&value) }
             }));
         }
     }
