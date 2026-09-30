@@ -6,8 +6,10 @@
 //!  2. The core introduces itself (project name, root directory, version). The Studio plugin
 //!     needs this to show the user which project it connected to.
 
+pub(crate) mod migrate;
 mod mode;
 mod reading;
+pub(crate) mod settings;
 mod warnings;
 
 pub(crate) use mode::*;
@@ -149,6 +151,12 @@ impl ProjectConfig {
     pub fn load() -> Self {
         for (config_path, base) in [("../syncix.toml", ".."), ("syncix.toml", ".")] {
             let path = Path::new(config_path);
+            if !path.exists() {
+                continue;
+            }
+            // An older file is brought up to date once, before it is read, so what the
+            // core applies and what the file says cannot disagree.
+            migrate::apply(path);
             let Ok(text) = fs::read_to_string(path) else {
                 continue;
             };

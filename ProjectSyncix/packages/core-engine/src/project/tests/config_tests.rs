@@ -60,10 +60,19 @@ fn config_typos_are_reported_with_the_closest_spelling() {
     assert!(has("[scoep]", "Did you mean scope?"), "{:?}", warnings);
     assert!(has("ReplicatedStorge", "Did you mean ReplicatedStorage?"), "{:?}", warnings);
 
-    let clean: toml::Value = "[sync]\nmode = \"two_way\"\nplay_mode = \"queue\"\n[scope]\nservices = [\"Workspace\"]\n"
+    let clean: toml::Value = "[sync]\nmode = \"two_way\"\n[scope]\nservices = [\"Workspace\"]\n"
         .parse()
         .unwrap();
     assert!(config_warnings(&clean).is_empty(), "{:?}", config_warnings(&clean));
+
+    // A key that was understood once is named as retired, not guessed at as a typo.
+    let retired: toml::Value = "[sync]\nplay_mode = \"queue\"\n".parse().unwrap();
+    let said = config_warnings(&retired);
+    assert!(
+        said.iter().any(|w| w.contains("play_mode") && w.contains("no longer used")),
+        "{:?}",
+        said
+    );
 }
 
 /// A typo must not break sync; it falls back to the default and warns.

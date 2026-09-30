@@ -3,18 +3,21 @@
 #[allow(unused_imports)]
 use super::*;
 
-/// Every key syncix.toml understands, per section. Anything else is a typo that used to
-/// be skipped without a word, leaving the setting at its default.
-pub(crate) const KNOWN_KEYS: &[(&str, &[&str])] = &[
-    ("sync", &["mode", "debounce_ms", "ask_permission", "undo", "play_mode"]),
-    ("files", &["sync_dir", "ignore", "meta_files"]),
-    ("safety", &["trash", "trash_keep", "delete_grace_ms", "confirm_delete"]),
-    ("scope", &["services", "ignore_classes", "ignore_properties"]),
-    ("server", &["port", "job_workers"]),
-    ("editor", &["sourcemap"]),
-];
+use super::settings::{self, RETIRED, SYNC_MODES};
 
-pub(crate) const SYNC_MODES: [&str; 4] = ["two_way", "studio_to_disk", "disk_to_studio", "manual"];
+/// Is this a key that was understood once and is now ignored? Such a key is removed
+/// from the file by the migration, so it is named, not treated as a typo.
+fn retired(key: &str) -> Option<&'static str> {
+    RETIRED.iter().find(|(name, _)| *name == key).map(|(_, why)| *why)
+}
+
+/// Sections and their keys, from the one table that describes every setting.
+fn known_keys() -> Vec<(&'static str, Vec<&'static str>)> {
+    settings::sections()
+        .into_iter()
+        .map(|section| (section, settings::keys_of(section)))
+        .collect()
+}
 
 pub(crate) fn with_hint<'a>(message: String, typed: &str, candidates: impl IntoIterator<Item = &'a str>) -> String {
     match crate::suggest::hint(typed, candidates) {
@@ -28,13 +31,25 @@ pub(crate) fn with_hint<'a>(message: String, typed: &str, candidates: impl IntoI
 pub fn config_warnings(value: &toml::Value) -> Vec<String> {
     let mut out = Vec::new();
     let Some(table) = value.as_table() else { return out };
-    let sections = KNOWN_KEYS.iter().map(|(section, _)| *section);
-    let flat_keys: Vec<&str> = KNOWN_KEYS.iter().flat_map(|(_, keys)| keys.iter().copied()).collect();
+    let known = known_keys();
+    let sections = known.iter().map(|(section, _)| *section);
+    let flat_keys: Vec<&str> = settings::all_keys();
 
     for (key, entry) in table {
-        match (entry.as_table(), KNOWN_KEYS.iter().find(|(section, _)| section == key)) {
+        if let Some(why) = retired(key) {
+            out.push(format!("{} is no longer used and is removed from syncix.toml: {}.", key, why));
+            continue;
+        }
+        match (entry.as_table(), known.iter().find(|(section, _)| section == key)) {
             (Some(inner), Some((section, keys))) => {
                 for inner_key in inner.keys().filter(|k| !keys.contains(&k.as_str())) {
+                    if let Some(why) = retired(inner_key) {
+                        out.push(format!(
+                            "{} is no longer used and is removed from syncix.toml: {}.",
+                            inner_key, why
+                        ));
+                        continue;
+                    }
                     out.push(with_hint(
                         format!("Unknown setting {} in [{}].", inner_key, section),
                         inner_key,

@@ -2,8 +2,6 @@
 mod api;
 mod catalog;
 mod cli;
-#[allow(dead_code)]
-mod config;
 mod file_sync;
 mod health;
 mod layout;

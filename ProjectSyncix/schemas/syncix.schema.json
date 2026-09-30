@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Syncix project settings",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "description": "Which directions are active.",
+          "default": "two_way",
+          "type": "string",
+          "enum": ["two_way", "studio_to_disk", "disk_to_studio", "manual"]
+        },
+        "debounce_ms": {
+          "description": "How long the writer waits for changes to settle before writing to disk.",
+          "default": 120,
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000
+        },
+        "ask_permission": {
+          "description": "Ask in Studio the first time a project connects.",
+          "default": false,
+          "type": "boolean"
+        },
+        "undo": {
+          "description": "Put Syncix's own changes on Studio's undo stack.",
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sync_dir": {
+          "description": "Folder that mirrors the Roblox tree.",
+          "default": "src",
+          "type": "string"
+        },
+        "ignore": {
+          "description": "Glob patterns that are never read, written or deleted.",
+          "default": [],
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "meta_files": {
+          "description": "Write a .meta.json next to a script for its properties and attributes.",
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trash": {
+          "description": "Move deleted files to .syncix/trash instead of removing them.",
+          "default": true,
+          "type": "boolean"
+        },
+        "trash_keep": {
+          "description": "How many runs of deleted files the trash keeps.",
+          "default": 10,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "delete_grace_ms": {
+          "description": "How long a file deleted on disk waits before it counts as a deletion; a move arrives as delete plus create.",
+          "default": 800,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30000
+        },
+        "confirm_delete": {
+          "description": "Ask before `syncix rm` deletes something.",
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "services": {
+          "description": "Services to observe. Empty means the plugin's own list.",
+          "default": [],
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ignore_classes": {
+          "description": "Classes that are never synced.",
+          "default": [],
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ignore_properties": {
+          "description": "Properties that are never synced.",
+          "default": [],
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "port": {
+          "description": "Port the core asks for. If it is taken, the next one is tried.",
+          "default": 8080,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "job_workers": {
+          "description": "How many background jobs (the full-tree disk write) may run at once.",
+          "default": 2,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      }
+    },
+    "editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourcemap": {
+          "description": "Keep sourcemap.json up to date for luau-lsp.",
+          "default": true,
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

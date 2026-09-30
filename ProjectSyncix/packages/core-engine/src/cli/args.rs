@@ -17,6 +17,7 @@ pub(crate) fn known_flags(command: &str) -> Option<&'static [&'static str]> {
         "build" | "sourcemap" => &["--output"],
         "attr" => &["--delete"],
         "tag" | "tags" => &["--none"],
+        "config" | "settings" => &["--schema"],
         "set" | "rename" | "rn" => return None,
         _ => &[],
     })

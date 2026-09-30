@@ -375,6 +375,7 @@ pub(crate) fn show_config() -> i32 {
 
     println!("[server]");
     println!("  port           {}", c.wanted_port);
+    println!("  job_workers    {}", c.job_workers);
     println!();
     println!("[editor]");
     println!("  sourcemap      {}", c.sourcemap);
@@ -389,5 +390,12 @@ pub(crate) fn show_config() -> i32 {
         }
         print_dim("  Settings are read at startup; restart the core after editing (syncix down && syncix up).");
     }
+    print_dim("  A JSON schema for your editor: syncix config --schema > syncix.schema.json");
+    0
+}
+
+/// The JSON schema of syncix.toml, so an editor can validate the file and offer the keys.
+pub(crate) fn print_settings_schema() -> i32 {
+    print!("{}", crate::project::settings::json_schema());
     0
 }

@@ -8,6 +8,10 @@
 #
 # To see what is actually in effect right now:
 #   syncix config
+#
+# For completion and validation in your editor, write the JSON schema next to
+# the file and point your TOML extension at it:
+#   syncix config --schema > syncix.schema.json
 
 
 [sync]
@@ -25,10 +29,6 @@
 #                   carried out (syncix pull, syncix set, ...). For working
 #                   carefully in a scene you do not want touched.
 mode = "two_way"
-
-# Play mode: changes from the editor always go to the edit session, even while
-# a playtest runs (Studio runs the test in a separate copy of the place). They
-# stay when you press Stop; restart the test to see them in it.
 
 # How long the writer waits for things to settle before writing to disk, in
 # milliseconds. Lower is more responsive but writes more often.
@@ -105,6 +105,10 @@ ignore_properties = []
 # port into the Studio plugin, and a core that quietly moved elsewhere would
 # leave the two sides disagreeing with no visible reason.
 port = 8080
+
+# How many background jobs may run at once. The heavy one is writing the whole
+# tree to disk; raise it only if your disk is fast and your tree is large.
+job_workers = 2
 
 
 [editor]

@@ -399,7 +399,13 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
             }
         },
         "bind" => bind_cmd(cli_args),
-        "config" | "settings" => show_config(),
+        "config" | "settings" => {
+            if arg(1).map(|a| a == "--schema").unwrap_or(false) {
+                print_settings_schema()
+            } else {
+                show_config()
+            }
+        }
         "trash" => trash_list(cli_args),
         "restore" => trash_restore(cli_args),
         "selftest" => selftest(),

@@ -21,6 +21,7 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 tracing-appender = "0.2"
 thiserror = "1.0"
 toml = "0.8"
+toml_edit = "0.22"
 rand = "0.8"
 
 # Async Interfaces & Streams
