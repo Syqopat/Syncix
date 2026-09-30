@@ -10,7 +10,7 @@ pub(crate) const KNOWN_KEYS: &[(&str, &[&str])] = &[
     ("files", &["sync_dir", "ignore", "meta_files"]),
     ("safety", &["trash", "trash_keep", "delete_grace_ms", "confirm_delete"]),
     ("scope", &["services", "ignore_classes", "ignore_properties"]),
-    ("server", &["port"]),
+    ("server", &["port", "job_workers"]),
     ("editor", &["sourcemap"]),
 ];
 

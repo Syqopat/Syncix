@@ -94,6 +94,8 @@ pub struct ProjectConfig {
     pub sourcemap: bool,
     /// Paths excluded from sync (glob). These files are neither read nor deleted.
     pub ignore: Vec<String>,
+    /// How many background jobs may run at once (the full-tree disk write).
+    pub job_workers: usize,
     /// True when the port was requested explicitly on the command line; then there is no fallback.
     /// Reason: the user types the same port into the Studio plugin; if the core silently
     /// moved to another port the two sides would diverge for no visible reason.
@@ -227,6 +229,7 @@ impl ProjectConfig {
             sourcemap: read_bool(editor, "sourcemap", true)
                 && value.get("sourcemap").and_then(|x| x.as_bool()).unwrap_or(true),
             ignore: string_list(al(files, "ignore").as_ref()),
+            job_workers: read_number(server, "job_workers", 2).clamp(1, 16) as usize,
             port_fixed: false,
 
             mode_value,

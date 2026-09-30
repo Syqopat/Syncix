@@ -1,6 +1,5 @@
 //! Bringing a folder, a tree or Roblox XML into the place.
 
-use std::io::Read;
 use std::path::PathBuf;
 
 use super::*;

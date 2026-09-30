@@ -1,6 +1,6 @@
 //! Which messages have to be sent to Studio again after a reconnect.
 
-use crate::model::{self, DataModel};
+use crate::model::{self};
 use crate::transport::{self, EventType, Payload};
 use crate::values::pv_to_wire;
 

@@ -1,7 +1,6 @@
 //! Property values on the wire: JSON in, JSON out, and what only a create can set.
 
-use crate::model::PropertyValue;
-use crate::{catalog, model, suggest};
+use crate::model;
 
 #[allow(unused_imports)]
 use super::*;

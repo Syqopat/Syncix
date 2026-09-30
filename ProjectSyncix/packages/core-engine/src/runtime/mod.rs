@@ -17,9 +17,9 @@ use tokio::sync::{broadcast, mpsc};
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
-use crate::bus::EventBus;
 use crate::server::AppState;
 use crate::transport::{Payload, StudioOutbox};
+use crate::scheduler::{Job, JobScheduler};
 use crate::{api, layout, model, project, server, sourcemap, file_sync};
 
 /// Runs the core until it is stopped.
@@ -88,18 +88,20 @@ pub async fn run(cli_args: Vec<String>) {
     cfg.write_port_file(actual_port);
 
     // 1. Start the central systems
-    let _event_bus = Arc::new(EventBus::new());
     let data_model = model::create_shared_model();
 
     // Transport (HTTP) channels
     // Messages to Studio are queued (Outbox) for lossless delivery.
     let studio_outbox = Arc::new(StudioOutbox::new());
-    let (tx_to_core, mut rx_from_studio) = mpsc::channel::<Payload>(100);
+    let (tx_to_core, rx_from_studio) = mpsc::channel::<Payload>(100);
 
     // VS Code RPC channel
     let (tx_to_vscode, _) = broadcast::channel::<String>(100);
 
     let health_monitor = Arc::new(crate::health::HealthMonitor::new());
+
+    // Heavy blocking work (the full-tree write) runs here instead of on an async worker.
+    let jobs = Arc::new(JobScheduler::new(cfg.job_workers));
 
     let app_state = Arc::new(AppState {
         studio_outbox: studio_outbox.clone(),
@@ -112,6 +114,7 @@ pub async fn run(cli_args: Vec<String>) {
         actual_port,
         access_token: api::auth::ensure_token(&cfg.root.to_string_lossy()),
         place_clash_state: Arc::new(std::sync::Mutex::new(None)),
+        job_stats: jobs.stats(),
     });
 
     // 2. Disk writer (debounced): triggered whenever the model changes; after a short quiet
@@ -128,6 +131,7 @@ pub async fn run(cli_args: Vec<String>) {
         let data_model_for_writer = data_model.clone();
         let notify_for_writer = disk_notify.clone();
         let cfg_for_writer = cfg.clone();
+        let jobs_for_writer = jobs.clone();
         tokio::spawn(async move {
             loop {
                 notify_for_writer.notified().await;
@@ -146,25 +150,36 @@ pub async fn run(cli_args: Vec<String>) {
                 if crate::project::is_sync_suspended() {
                     continue;
                 }
-                let dm = data_model_for_writer.read().await;
+                // The guard is taken as an owned one so the whole write can move onto the
+                // job pool: writing thousands of files used to hold an async worker
+                // thread, and polls from Studio waited behind the disk.
+                let dm = data_model_for_writer.clone().read_owned().await;
                 let allow_removal =
                     model_authoritative_writer.load(std::sync::atomic::Ordering::SeqCst);
-                layout::write_full_tree(&dm, sync_dir, &cfg_for_writer.ignore, allow_removal);
+                let cfg_for_job = cfg_for_writer.clone();
+                let write = Job::new("disk-write", move || {
+                    layout::write_full_tree(&dm, sync_dir, &cfg_for_job.ignore, allow_removal);
 
-                // sourcemap.json: tells luau-lsp which file maps to which place in the DataModel,
-                // so it can offer autocompletion.
-                // Refreshed whenever the tree changes; no separate watcher process is needed.
-                if cfg_for_writer.sourcemap {
-                    let file_content = sourcemap::json(&dm, sync_dir, &cfg_for_writer.root);
-                    let dest = cfg_for_writer.sourcemap_file();
-                    let is_same = std::fs::read_to_string(&dest)
-                        .map(|m| m == file_content)
-                        .unwrap_or(false);
-                    if !is_same {
-                        if let Err(e) = std::fs::write(&dest, file_content) {
-                            tracing::warn!("Could not write sourcemap.json: {}", e);
+                    // sourcemap.json: tells luau-lsp which file maps to which place in the
+                    // DataModel, so it can offer autocompletion. Refreshed whenever the
+                    // tree changes; no separate watcher process is needed.
+                    if cfg_for_job.sourcemap {
+                        let file_content = sourcemap::json(&dm, sync_dir, &cfg_for_job.root);
+                        let dest = cfg_for_job.sourcemap_file();
+                        let is_same = std::fs::read_to_string(&dest)
+                            .map(|m| m == file_content)
+                            .unwrap_or(false);
+                        if !is_same {
+                            if let Err(e) = std::fs::write(&dest, file_content) {
+                                tracing::warn!("Could not write sourcemap.json: {}", e);
+                            }
                         }
                     }
+                });
+                // Waiting keeps the writes in order: the next one cannot start before this
+                // tree is on disk.
+                if let Err(err) = jobs_for_writer.run(write).await {
+                    tracing::warn!("The tree was not written: {}", err);
                 }
             }
         });
@@ -209,7 +224,7 @@ pub async fn run(cli_args: Vec<String>) {
         });
     }
 
-    let cfg_for_loop = cfg.clone();
+    let _cfg_for_loop = cfg.clone();
     // Show the settings actually applied at startup; the cheapest way to settle
     // "I set it but it did nothing".
     tracing::info!(
@@ -228,7 +243,6 @@ pub async fn run(cli_args: Vec<String>) {
         data_model: data_model.clone(),
         studio_outbox: studio_outbox.clone(),
         cfg: cfg.clone(),
-        sync_dir,
         disk_notify: disk_notify.clone(),
         model_authoritative: model_authoritative.clone(),
     }, rx_from_studio)

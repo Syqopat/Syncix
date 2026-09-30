@@ -16,8 +16,6 @@ pub(crate) struct Ctx {
     pub data_model: SharedDataModel,
     pub studio_outbox: Arc<StudioOutbox>,
     pub cfg: Arc<ProjectConfig>,
-    /// The folder the tree is mirrored into.
-    pub sync_dir: &'static str,
     /// Poked after every change so the writer wakes up.
     pub disk_notify: Arc<tokio::sync::Notify>,
     /// False until Studio has completed one full sync in this session. While it is

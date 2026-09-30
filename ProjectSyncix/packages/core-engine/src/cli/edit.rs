@@ -1,6 +1,5 @@
 //! Commands that change the tree and the questions they ask first.
 
-use std::io::Write;
 
 use super::*;
 

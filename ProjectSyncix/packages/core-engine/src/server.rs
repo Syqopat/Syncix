@@ -28,6 +28,9 @@ pub struct AppState {
     /// singleton services such as StarterPlayerScripts, because service UUIDs are the
     /// same in every place. Now sync stops and the user decides.
     pub place_clash_state: Arc<std::sync::Mutex<Option<PlaceConflict>>>,
+    /// Counters of the background job pool, reported through /health. A rising queue
+    /// means the disk cannot keep up with the changes.
+    pub job_stats: Arc<crate::scheduler::JobStats>,
 }
 
 #[derive(Clone, Debug, serde::Serialize)]

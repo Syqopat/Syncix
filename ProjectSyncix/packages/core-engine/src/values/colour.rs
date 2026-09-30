@@ -1,7 +1,6 @@
 //! Reading a colour the user typed: names, hex, Color3.new(...), a sequence.
 
-use crate::model::PropertyValue;
-use crate::{catalog, model, suggest};
+use crate::{model, suggest};
 
 #[allow(unused_imports)]
 use super::*;

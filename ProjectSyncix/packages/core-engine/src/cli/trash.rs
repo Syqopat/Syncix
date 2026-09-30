@@ -1,6 +1,5 @@
 //! The trash: listing what was deleted and putting it back.
 
-use std::io::Read;
 
 use super::*;
 

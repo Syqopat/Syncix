@@ -1,13 +1,10 @@
 //! What the core does with a GetTree message from Studio.
 
-use crate::model::InstanceNode;
-use crate::runtime::{resend_payloads, Ctx};
-use crate::transport::{EventType, Payload};
-use crate::values::*;
-use crate::{layout, model, rbxmx_import, transport, tree_import};
+use crate::runtime::Ctx;
+use crate::transport::Payload;
 
 /// Applies one GetTree message.
-pub(crate) async fn handle(ctx: &Ctx, payload: &Payload) {
+pub(crate) async fn handle(ctx: &Ctx, _payload: &Payload) {
     tracing::info!("GET_TREE requested. Sending state...");
     let mut ws_nodes = Vec::new();
     {

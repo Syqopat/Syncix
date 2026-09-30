@@ -1,6 +1,5 @@
 //! Turning typed text into a property value of the type the property already has.
 
-use crate::model::PropertyValue;
 use crate::{catalog, model, suggest};
 
 #[allow(unused_imports)]

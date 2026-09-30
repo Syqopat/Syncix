@@ -87,6 +87,9 @@ pub struct HealthStatus {
     /// be estimated by counting messages and really did drift over time.
     pub object_count: usize,
 
+    /// Background job pool: queue depth, what ran and what was refused.
+    pub jobs: crate::scheduler::JobReport,
+
     pub activity_total: usize,
     pub activity_in: usize,
     pub activity_out: usize,
@@ -303,6 +306,7 @@ impl HealthMonitor {
                 ignore_classes: project.scope_settings.class_ignore_list.clone(),
                 ignore_properties: project.scope_settings.property_ignore_list.clone(),
             },
+            jobs: Default::default(),
             activity_total: self.activity_total.load(Ordering::SeqCst),
             activity_in: self.activity_in.load(Ordering::SeqCst),
             activity_out: self.activity_out.load(Ordering::SeqCst),
@@ -325,6 +329,7 @@ pub async fn health_handler(
         .health_monitor
         .get_status_with_count(&state.project, state.actual_port, number_value);
     status_info.token = state.access_token.clone();
+    status_info.jobs = state.job_stats.snapshot();
     // Conflict is exposed via /health: so CLI, editor, and Studio plugin
     // all learn it from the same place, avoiding three separate channels.
     status_info.place_conflict = state
