@@ -19,7 +19,7 @@ local Approval = require(script.Parent.Parent.Core.Approval)
 --   PLUGIN_PROTOCOL <-> project.rs  PROTOCOL_VERSION
 --   PORT_START  <-> project.rs  DEFAULT_PORT
 --   PORT_RANGE     <-> project.rs  PORT_SCAN_SPAN
-local PLUGIN_VERSION = "0.1.6"
+local PLUGIN_VERSION = "0.1.7"
 local PLUGIN_PROTOCOL = 1
 local PORT_START = 8080
 local PORT_RANGE = 10
@@ -141,7 +141,7 @@ function ConnectionManager:AuthHeaders(): { [string]: string }
 	return { ["X-Syncix-Token"] = self.accessToken or "" }
 end
 
--- Sets the port by hand (called from SettingsPanel).
+-- Sets the port by hand (called from the settings view).
 function ConnectionManager:SetManualPort(port: number?)
 	self.manualPort = port
 	-- When the port changes, earlier denials lose their meaning.

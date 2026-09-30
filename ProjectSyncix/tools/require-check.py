@@ -31,6 +31,7 @@ ROOT = os.path.join(
 
 def strip_code(raw):
     """Removes comments and string literals; only code is left."""
+    raw = re.sub(r"--\[=*\[.*?\]=*\]", "", raw, flags=re.S)
     lines = [re.sub(r"--.*$", "", x) for x in raw.splitlines()]
     code = "\n".join(lines)
     # Strings are replaced with a PLACEHOLDER, not with blanks.

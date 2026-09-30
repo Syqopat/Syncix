@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 -- The version is semver now: major.minor must match the core (see ConnectionManager).
-local SYNCIX_VERSION = "0.1.6"
+local SYNCIX_VERSION = "0.1.7"
 
 local function startSyncix()
     print("[Syncix] Starting Studio runtime (version " .. SYNCIX_VERSION .. ")...")
@@ -16,8 +16,8 @@ local function startSyncix()
     local RuntimeCache = require(CorePath.RuntimeCache)
     local EchoGuard = require(CorePath.EchoGuard)
     local ActivityLog = require(CorePath.ActivityLog)
-    local SettingsPanel = require(CorePath.SettingsPanel)
     local Metrics = require(CorePath.Metrics)
+    local Panel = require(script.Ui.Panel)
 
     local ConnectionManager = require(NetworkPath.ConnectionManager)
     local BatchQueue = require(NetworkPath.BatchQueue)
@@ -38,6 +38,7 @@ local function startSyncix()
     -- It is wrapped in a table: ServiceContainer checks service.OnInit when registering,
     -- and looking up a member that does not exist on an Instance throws an error.
     container:Register("Plugin", { ref = plugin })
+    container:Register("Version", { value = SYNCIX_VERSION })
 
     container:Register("RuntimeCache", RuntimeCache.new())
     container:Register("EchoGuard", EchoGuard.new())
@@ -49,7 +50,7 @@ local function startSyncix()
     container:Register("CommandDispatcher", CommandDispatcher.new())
     container:Register("ConnectionManager", ConnectionManager.new())
     container:Register("BatchQueue", BatchQueue.new())
-    container:Register("SettingsPanel", SettingsPanel.new())
+    container:Register("Panel", Panel.new())
     container:Register("SubscriptionManager", SubscriptionManager.new())
     container:Register("GenericObserver", GenericObserver.new())
     container:Register("SelectionObserver", SelectionObserver.new())
