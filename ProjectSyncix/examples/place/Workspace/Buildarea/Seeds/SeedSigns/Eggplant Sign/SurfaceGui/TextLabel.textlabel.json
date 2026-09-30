@@ -1,0 +1,187 @@
+{
+  "class_name": "TextLabel",
+  "name": "TextLabel",
+  "syncix_id": "19e3705f-bd19-4227-9fae-0dce79822210",
+  "schema_version": 1,
+  "last_updated": 1790327691187,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 0.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.105882354,
+        "g": 0.16470589,
+        "b": 0.20784314
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/LegacyArial.json",
+        "weight": "Enum.FontWeight.Regular",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "LineHeight": {
+      "Number": 1.0
+    },
+    "MaxVisibleGraphemes": {
+      "Number": -1.0
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "RichText": {
+      "Boolean": false
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "Selectable": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 250.0,
+        "ys": 0.0,
+        "yo": 150.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "Text": {
+      "String": "Eggplant"
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextDirection": {
+      "String": "Enum.TextDirection.Auto"
+    },
+    "TextScaled": {
+      "Boolean": true
+    },
+    "TextSize": {
+      "Number": 8.0
+    },
+    "TextStrokeColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextStrokeTransparency": {
+      "Number": 1.0
+    },
+    "TextTransparency": {
+      "Number": 0.0
+    },
+    "TextTruncate": {
+      "String": "Enum.TextTruncate.None"
+    },
+    "TextWrapped": {
+      "Boolean": true
+    },
+    "TextXAlignment": {
+      "String": "Enum.TextXAlignment.Center"
+    },
+    "TextYAlignment": {
+      "String": "Enum.TextYAlignment.Center"
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "d6cd86d1-69d2-4fa2-b507-c8a8778beaf7",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "4U5V1i5t4U5V"
+    }
+  }
+}

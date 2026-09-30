@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Bridge_North_2",
+  "syncix_id": "556d2f30-ef46-4b51-bac7-be063ee484e3",
+  "schema_version": 1,
+  "last_updated": 1790327691164,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          85.0,
+          124.1,
+          -160.65
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "dd73c4a4-f601-481c-ad3c-72da302248f7",
+    "fda21ce0-12fe-4ff4-a12d-e4ef557607b3",
+    "12fbda71-80de-4b46-a8d2-2b701f074f7b",
+    "0f29c04f-d734-44ae-bd6e-aab81bc2b77e",
+    "a92aca3c-50c8-4c76-a936-edce1df37b32",
+    "661b83e7-bdf5-42e1-958b-bd82e0eacf3c",
+    "3f42cac8-d6dc-4594-bae5-74b709e22a00",
+    "a7236739-77b5-4a63-b502-d5f7142f2c43",
+    "8d8b5b83-ac42-4cef-b9f5-cef067be5112",
+    "8a2a5d75-6587-4936-8498-7f30e2061197",
+    "b8cf39fd-1718-48bd-9bfc-14e1e0eb4315",
+    "3dade563-f716-4810-8f4f-04558e510f8f",
+    "a51936c7-c1a3-4e9d-89a7-0d7b4606492c",
+    "7f15f847-3a49-45a1-b110-85d66f83c99f",
+    "29278692-dd3e-4b2c-81ec-93c31260c163",
+    "cce05a6f-1de2-4b26-bd80-9d9db5133978",
+    "b6d7c0be-f3cd-48f3-bf4a-6a3f19b30d01"
+  ],
+  "parent": "ec69e548-6df2-453b-afe3-80edde7e545f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "tPTwacphtPTw"
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Papaya Seed",
+  "syncix_id": "88d3292e-c4b5-493c-9a70-f44df6437f25",
+  "schema_version": 1,
+  "last_updated": 1790327691188,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Papaya Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1578.0,
+          435.0,
+          -207.46875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "81def458-35ad-43d7-82bb-10f2e62e54f1",
+    "23d23163-e10a-489c-ad71-55f9f3c7a79a"
+  ],
+  "parent": "c7f1542c-9dd3-47fc-bef1-95719d5479fd",
+  "attributes": {
+    "ItemName": {
+      "String": "Papaya"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Papaya"
+    },
+    "_lemonadeUniqueId": {
+      "String": "3wotu9d33wot"
+    }
+  }
+}

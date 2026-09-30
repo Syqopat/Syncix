@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Eggplant Seed",
+  "syncix_id": "773b28e8-0829-42fa-bcfa-f4812c1e27d7",
+  "schema_version": 1,
+  "last_updated": 1790327691326,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Eggplant Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "f237d469-4a42-46fd-a5dd-a2813af76772",
+    "1a044dd6-eab7-4e7a-9717-898229a1e619"
+  ],
+  "parent": "95d7fa16-5410-489e-8c1f-d0ca091e98f9",
+  "attributes": {
+    "ItemName": {
+      "String": "Eggplant"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Eggplant"
+    },
+    "_lemonadeUniqueId": {
+      "String": "U1RiY5zZU1Ri"
+    }
+  }
+}

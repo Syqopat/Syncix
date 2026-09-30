@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Orange Tulip (Fruit)",
+  "syncix_id": "47d83185-3840-49c8-b536-dd09c66d9a23",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.92487,
+          -225.8768
+        ],
+        "rot": [
+          1.0,
+          0.000036194924,
+          -0.00002965331,
+          -0.000030494924,
+          0.9848035,
+          0.17367247,
+          0.000035488745,
+          -0.17367247,
+          0.9848035
+        ]
+      }
+    }
+  },
+  "children": [
+    "060cf978-7306-4db8-b735-570846780a1d",
+    "45ef4f02-72d9-4f98-8d26-7cb76596408e",
+    "d92d678d-54f9-44ce-aa80-5523460243ce",
+    "f733f62f-6342-4d1b-84f9-d62400996b0e",
+    "1bd2c0ea-f813-4ec6-8f9e-cffc195c9a42",
+    "02d7d5e5-9c4c-46ef-9fa0-2f46c635c411",
+    "9eacde0e-d9cc-491e-a04c-e007ac45a2bb",
+    "3fe47fa3-4d57-42b5-851f-ee73b12c71ef",
+    "bb1bf498-ba97-48ff-b553-e90a0e92356f",
+    "a27cb41d-f33f-4985-8327-7cdbb19b5d88",
+    "2601f1fd-2e89-41a3-bb41-8c744a8e2fb1",
+    "5d9f4082-e3e0-443f-b9eb-a88b5ba6ccd4",
+    "4d02786e-f45e-4590-96e5-3ae4367d74bb",
+    "5dc570b9-3abc-4d8f-8e4c-e7694d049f73",
+    "14cd414e-d933-4fb8-93c1-80f0d823e658"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "boSeBuBnboSe"
+    }
+  }
+}

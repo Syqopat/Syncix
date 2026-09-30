@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Passionfruit Seed",
+  "syncix_id": "5d4700cc-3cd1-41ee-a02b-b15c1e2226ca",
+  "schema_version": 1,
+  "last_updated": 1790327691190,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Passionfruit Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1578.0,
+          435.0,
+          -189.03125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "91f0de74-0232-4d6a-987a-2b143343cc96",
+    "b02548b8-3126-4597-9f69-ca0b29dd34fd"
+  ],
+  "parent": "c7f1542c-9dd3-47fc-bef1-95719d5479fd",
+  "attributes": {
+    "ItemName": {
+      "String": "Passionfruit"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Passionfruit"
+    },
+    "_lemonadeUniqueId": {
+      "String": "SeGVbUVnSeGV"
+    }
+  }
+}

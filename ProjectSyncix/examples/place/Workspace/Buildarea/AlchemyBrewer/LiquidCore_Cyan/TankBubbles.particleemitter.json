@@ -1,0 +1,210 @@
+{
+  "class_name": "ParticleEmitter",
+  "name": "TankBubbles",
+  "syncix_id": "2462d805-dcb8-4d51-80d5-4a41022d7ee5",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "Acceleration": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 2.0,
+        "z": 0.0
+      }
+    },
+    "Brightness": {
+      "Number": 1.0
+    },
+    "Color": {
+      "ColorSequence": [
+        {
+          "t": 0.0,
+          "r": 0.8627451,
+          "g": 0.98039216,
+          "b": 1.0
+        },
+        {
+          "t": 0.4,
+          "r": 0.74509805,
+          "g": 0.39215687,
+          "b": 1.0
+        },
+        {
+          "t": 0.8,
+          "r": 0.3137255,
+          "g": 1.0,
+          "b": 0.74509805
+        },
+        {
+          "t": 1.0,
+          "r": 0.23529412,
+          "g": 0.8235294,
+          "b": 1.0
+        }
+      ]
+    },
+    "Drag": {
+      "Number": 0.0
+    },
+    "EmissionDirection": {
+      "String": "Enum.NormalId.Top"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FlipbookFramerate": {
+      "NumberRange": {
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "FlipbookIncompatible": {
+      "String": "Particle texture must be 1024 by 1024 to use flipbooks."
+    },
+    "FlipbookLayout": {
+      "String": "Enum.ParticleFlipbookLayout.None"
+    },
+    "FlipbookMode": {
+      "String": "Enum.ParticleFlipbookMode.Loop"
+    },
+    "FlipbookStartRandom": {
+      "Boolean": false
+    },
+    "Lifetime": {
+      "NumberRange": {
+        "min": 1.4,
+        "max": 2.8
+      }
+    },
+    "LightEmission": {
+      "Number": 0.8999999761581421
+    },
+    "LightInfluence": {
+      "Number": 0.0
+    },
+    "LockedToPart": {
+      "Boolean": false
+    },
+    "Orientation": {
+      "String": "Enum.ParticleOrientation.FacingCamera"
+    },
+    "Rate": {
+      "Number": 45.0
+    },
+    "RotSpeed": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "Rotation": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "Shape": {
+      "String": "Enum.ParticleEmitterShape.Box"
+    },
+    "ShapeInOut": {
+      "String": "Enum.ParticleEmitterShapeInOut.Outward"
+    },
+    "ShapePartial": {
+      "Number": 1.0
+    },
+    "ShapeStyle": {
+      "String": "Enum.ParticleEmitterShapeStyle.Volume"
+    },
+    "Size": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.1,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.5,
+          "v": 0.26,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.08,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Speed": {
+      "NumberRange": {
+        "min": 1.2,
+        "max": 2.6
+      }
+    },
+    "SpreadAngle": {
+      "Vector2": {
+        "x": 360.0,
+        "y": 360.0
+      }
+    },
+    "Squash": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Texture": {
+      "String": "rbxassetid://243098098"
+    },
+    "TimeScale": {
+      "Number": 1.0
+    },
+    "Transparency": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.8,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.2,
+          "v": 0.15,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.8,
+          "v": 0.3,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 1.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "VelocityInheritance": {
+      "Number": 0.0
+    },
+    "WindAffectsDrag": {
+      "Boolean": false
+    },
+    "ZOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "02a049e4-cfbb-43c6-8e04-a21d9dcae78b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "mZ16dcuqmZ16"
+    }
+  }
+}

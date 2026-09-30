@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "LeftHipBallSocket",
+  "syncix_id": "759f7578-c0e4-4ec6-bac3-76238ee2f86f",
+  "schema_version": 1,
+  "last_updated": 1790327691186,
+  "properties": {
+    "Attachment0": {
+      "Ref": "e97bac4c-2766-439e-923a-41a75fe131cd"
+    },
+    "Attachment1": {
+      "Ref": "5f16d2e6-deeb-42de-8704-ff6fc57b0e6e"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 13.224536895751953
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -5.0
+    },
+    "TwistUpperAngle": {
+      "Number": 80.0
+    },
+    "UpperAngle": {
+      "Number": 40.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "6376ff87-d0d4-44dd-a83a-310c80ec06f3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "pmaIlTsYpmaI"
+    }
+  }
+}

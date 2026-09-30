@@ -1,0 +1,146 @@
+{
+  "class_name": "Part",
+  "name": "Fruit_Spawn",
+  "syncix_id": "99498d5d-41b9-41a6-bce7-5da5eb3588f0",
+  "schema_version": 1,
+  "last_updated": 1790327691344,
+  "properties": {
+    "Anchored": {
+      "Boolean": true
+    },
+    "BackSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "BottomSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "BrickColor": {
+      "BrickColor": "Linen"
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.82393265,
+          18.617065,
+          -1.1098785
+        ],
+        "rot": [
+          0.08098444,
+          -0.9967158,
+          0.000037266986,
+          -0.000003889203,
+          0.00003695488,
+          1.0000001,
+          -0.9967157,
+          -0.08098444,
+          -8.865595e-7
+        ]
+      }
+    },
+    "CanCollide": {
+      "Boolean": false
+    },
+    "CanQuery": {
+      "Boolean": true
+    },
+    "CanTouch": {
+      "Boolean": true
+    },
+    "CastShadow": {
+      "Boolean": true
+    },
+    "CollisionGroup": {
+      "String": "Default"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.6784314,
+        "g": 0.58431375,
+        "b": 0.5254902
+      }
+    },
+    "CustomPhysicalProperties": {
+      "Ref": ""
+    },
+    "EnableFluidForces": {
+      "Boolean": true
+    },
+    "FrontSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "LeftSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "Locked": {
+      "Boolean": false
+    },
+    "Massless": {
+      "Boolean": false
+    },
+    "Material": {
+      "String": "Enum.Material.Plastic"
+    },
+    "MaterialVariant": {
+      "String": ""
+    },
+    "PivotOffset": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Reflectance": {
+      "Number": 0.0
+    },
+    "RightSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "RootPriority": {
+      "Number": 0.0
+    },
+    "Rotation": {
+      "Vector3": {
+        "x": -90.0,
+        "y": 0.002,
+        "z": 85.355
+      }
+    },
+    "Shape": {
+      "String": "Enum.PartType.Block"
+    },
+    "Size": {
+      "Vector3": {
+        "x": 1.3698792,
+        "y": 0.32507074,
+        "z": 0.24985352
+      }
+    },
+    "TopSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "Transparency": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "d4e6bc96-503b-468a-9bb6-92930a53e7de",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "MqE98RMOMqE9"
+    }
+  }
+}

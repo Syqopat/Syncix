@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "LeftKnee",
+  "syncix_id": "9d49e8d3-b865-4ce9-b1d0-102568d4ef8e",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Attachment0": {
+      "Ref": "ec056d77-ee0a-4645-8505-4c8c068b8f6f"
+    },
+    "Attachment1": {
+      "Ref": "3fd49b16-9863-4143-96f7-d8eb56ae1c1e"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "cb96394f-154b-49db-a015-30c91fe0af7b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "mq5chKiOmq5c"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "LeftAnkle",
+  "syncix_id": "44640a0b-0906-47c2-b69b-5af068fab619",
+  "schema_version": 1,
+  "last_updated": 1790327691184,
+  "properties": {
+    "Attachment0": {
+      "Ref": "b2f96f8d-cd75-4919-b4da-37935e68180a"
+    },
+    "Attachment1": {
+      "Ref": "f1ea5419-aad8-4fad-b544-fcc50aae68af"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "08778cd7-b579-4de1-88dc-18700c812263",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "0jalAAZp0jal"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Venus Fly Trap",
+  "syncix_id": "9912c850-76a2-4eab-b9db-bca1731de4d0",
+  "schema_version": 1,
+  "last_updated": 1790327691333,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "5b19c0e5-0d0c-48f9-9aaf-b1e18d53e0ed"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.011413574,
+          0.25242394,
+          -0.007068634
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2d1dd06a-5e90-450e-abc7-ebe5e3594d01",
+    "e2194eac-d0f1-4c11-8936-bc2ed5f010fc",
+    "64caa02c-8163-497a-82c9-46935034778f",
+    "b4b93a6c-c9fc-47c5-985b-114cb8870b15",
+    "4a20d39d-cbf6-4c1d-b6c6-f358911b329d",
+    "127b90cd-f200-4a62-b763-18cbeab08faf",
+    "b87c5042-cdec-465d-9704-60e934de3ade",
+    "5b19c0e5-0d0c-48f9-9aaf-b1e18d53e0ed",
+    "c205f176-6b34-4e80-8fc0-df62b5986f13",
+    "fdba3a4c-451f-4140-9179-488351622645"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cVkLEEOMcVkL"
+    }
+  }
+}

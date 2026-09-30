@@ -1,0 +1,63 @@
+{
+  "class_name": "Model",
+  "name": "Eden Fruit",
+  "syncix_id": "e0f0f92b-dec1-4226-9c5a-a53a09d69983",
+  "schema_version": 1,
+  "last_updated": 1790327691329,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "98a95b77-c512-438e-bb5a-823118914d0d"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.2267608,
+          -2.84063,
+          -0.117832154
+        ],
+        "rot": [
+          -0.40672168,
+          -3.5556738e-8,
+          -0.9135521,
+          -7.557517e-9,
+          1.0,
+          -3.5556738e-8,
+          0.9135521,
+          -7.557517e-9,
+          -0.40672168
+        ]
+      }
+    }
+  },
+  "children": [
+    "9a223d09-23da-4aaf-bb5c-37c53d622fa1",
+    "899c35ef-cf7f-4913-996b-a7f0c8e2aff0",
+    "229674d1-7d73-4424-bef8-e65eddc6726f",
+    "2b3ad6b8-a724-4fe7-aa14-d25bd6866a76",
+    "9bb8b148-98fe-4cb3-aa7c-93b848fc3882",
+    "c39c3a0c-79bd-42a6-bd4d-072eb670f676",
+    "98a95b77-c512-438e-bb5a-823118914d0d",
+    "e27f3b28-b4c7-4a30-8626-2e2c316da5ff",
+    "02b05d41-ca7e-4127-adce-682bda14bce3",
+    "a209f42b-ec63-420e-926c-eaea15be94b9",
+    "11c15e1d-0e05-470e-bc7a-3adeac36c57f",
+    "d5c8b2cb-932e-4b3b-a6f3-c4406e8af2f3",
+    "14a2a5cf-54af-4a97-b417-336265f79998",
+    "f00279c1-7a7c-48b4-90cd-8c4a99214449",
+    "b724c838-f0d3-42b1-bf90-2f6de293afba",
+    "52f8e9e2-e350-41b8-9120-ba3d9bfb46b3",
+    "47189a35-7b4a-42f7-ad11-207ee4c4e113",
+    "5a45fed8-7d1b-4b99-8500-059058fce6b3",
+    "9835977f-6098-48bc-b64c-1cca24cf7187",
+    "ef5a9e26-c72b-4e50-8dbd-cb155c4ef2a2"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6BDu2Zag6BDu"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Starfruit Plant",
+  "syncix_id": "84fd9bb8-7410-4f49-9eec-2fd0fafc8f7e",
+  "schema_version": 1,
+  "last_updated": 1790327691245,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1313.2006,
+          438.57,
+          -446.89655
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "37fc0a4b-daac-42fc-bbe9-64edd05d811a",
+    "4f51cb1e-eb62-4328-9093-45ebfaefcb6e",
+    "4af3a38b-382f-4d56-801e-a0a3cd071fc7",
+    "6bf75222-5e9c-48ce-94d8-7b6c34904bc7",
+    "fc919632-50cc-4849-b0ae-014e4b911859",
+    "e41c3591-c194-4e6c-9b62-521bfb712c4e",
+    "4e9ad4a5-b05a-4274-86db-2092ac893a90",
+    "132fb1eb-97dc-4400-93d5-0017655c3411",
+    "3a015138-49f2-4a90-9a58-0dcf489972d6",
+    "6ce71dca-a340-404b-814d-a4f494b9e9a1"
+  ],
+  "parent": "97e7f7a2-2228-4c39-b593-b8b06c63eb3a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "QkXzccTXQkXz"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "class_name": "NoCollisionConstraint",
+  "name": "LeftFootNoCollision",
+  "syncix_id": "e00e9fc4-0f5d-4cf7-baa8-a9d7d4eb6e46",
+  "schema_version": 1,
+  "last_updated": 1790327691262,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "84f5113d-f333-4b62-84c7-0d9dc2df0721"
+    },
+    "Part1": {
+      "Ref": "989772a9-67f5-459a-a3f1-679af030929d"
+    }
+  },
+  "children": [],
+  "parent": "84f5113d-f333-4b62-84c7-0d9dc2df0721",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "p4lqUvjhp4lq"
+    }
+  }
+}

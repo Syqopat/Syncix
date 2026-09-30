@@ -1,0 +1,115 @@
+{
+  "class_name": "Humanoid",
+  "name": "Humanoid",
+  "syncix_id": "e0370196-8af2-41a2-992e-399158b77061",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "AutoJumpEnabled": {
+      "Boolean": true
+    },
+    "AutoRotate": {
+      "Boolean": true
+    },
+    "AutomaticScalingEnabled": {
+      "Boolean": true
+    },
+    "BreakJointsOnDeath": {
+      "Boolean": true
+    },
+    "CameraOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "DisplayDistanceType": {
+      "String": "Enum.HumanoidDisplayDistanceType.None"
+    },
+    "DisplayName": {
+      "String": ""
+    },
+    "EvaluateStateMachine": {
+      "Boolean": true
+    },
+    "Health": {
+      "Number": 100.0
+    },
+    "HealthDisplayDistance": {
+      "Number": 100.0
+    },
+    "HealthDisplayType": {
+      "String": "Enum.HumanoidHealthDisplayType.DisplayWhenDamaged"
+    },
+    "HipHeight": {
+      "Number": 0.0
+    },
+    "Jump": {
+      "Boolean": false
+    },
+    "JumpHeight": {
+      "Number": 7.199999809265137
+    },
+    "JumpPower": {
+      "Number": 50.0
+    },
+    "MaxHealth": {
+      "Number": 100.0
+    },
+    "MaxSlopeAngle": {
+      "Number": 89.0
+    },
+    "NameDisplayDistance": {
+      "Number": 100.0
+    },
+    "NameOcclusion": {
+      "String": "Enum.NameOcclusion.OccludeAll"
+    },
+    "PlatformStand": {
+      "Boolean": false
+    },
+    "RequiresNeck": {
+      "Boolean": true
+    },
+    "RigType": {
+      "String": "Enum.HumanoidRigType.R6"
+    },
+    "Sit": {
+      "Boolean": false
+    },
+    "TargetPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "UseJumpPower": {
+      "Boolean": true
+    },
+    "WalkSpeed": {
+      "Number": 16.0
+    },
+    "WalkToPart": {
+      "Ref": ""
+    },
+    "WalkToPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [
+    "cf053a99-0d1f-4a4e-b963-a4eeef07aecc",
+    "a7c4271c-1d67-4db0-98ff-5904be37e399"
+  ],
+  "parent": "cbb9313e-3f7f-4055-8604-5d3209de02ca",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ztkP3fPNztkP"
+    }
+  }
+}

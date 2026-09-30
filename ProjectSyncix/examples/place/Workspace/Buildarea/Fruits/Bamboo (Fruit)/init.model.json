@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Bamboo (Fruit)",
+  "syncix_id": "f65dc384-39b6-4471-88d3-b5e1e06d03f5",
+  "schema_version": 1,
+  "last_updated": 1790327691220,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.62863,
+          -613.09375
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "31f8d816-8234-4414-b66c-449066c973a5"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "szcLODgKszcL"
+    }
+  }
+}

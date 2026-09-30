@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Cactus (Grown)",
+  "syncix_id": "e31945cd-e77b-427a-9fb0-42c7d2be2e98",
+  "schema_version": 1,
+  "last_updated": 1790327691218,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          435.0,
+          -557.78125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8299fcae-8898-46f7-92fd-f1a6654eb0b3",
+    "2e172991-7fda-4583-a5eb-66aa7a7d3c46",
+    "fec92d13-7ef0-49b5-90fc-32fc98e78e05",
+    "9ee2d303-274f-479c-9195-3da83b550127",
+    "0c64e551-d455-428f-8c2c-1d4f6cc96c81",
+    "b537632c-3b5b-432c-96d8-30bde6981064",
+    "a11c48b4-e409-4aec-9d25-d179dcf3ddd5",
+    "76e65aa4-8f79-43bf-9076-9b4af96da23f",
+    "3163a9c9-aba0-4ed7-bc95-2a000815cc6b",
+    "0aca0559-2792-49f7-a30d-f2e9b4607f49"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "YvIu55osYvIu"
+    }
+  }
+}

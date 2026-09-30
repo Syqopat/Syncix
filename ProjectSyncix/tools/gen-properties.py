@@ -161,7 +161,7 @@ return {
 }
 """ % (dump.get("Version", "?"), "\n".join(rows))
 
-target = os.path.join(ROOT, "studio-plugin", "src", "Observer", "PropertyTable.lua")
+target = os.path.join(ROOT, "packages", "studio-plugin", "src", "Observer", "PropertyTable.lua")
 io.open(target, "w", encoding="utf-8").write(output)
 
 print("classes: %d" % len(classes))

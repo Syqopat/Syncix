@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "TopLeftValve",
+  "syncix_id": "2a7c4ccb-a287-40ce-b0cf-c0505d526b5f",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "7e1a9e82-2220-44b0-abdf-a1b78e934aca"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          356.8056,
+          444.825,
+          -198.55879
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          -4.371139e-8,
+          -1.0,
+          0.0,
+          1.0,
+          -4.371139e-8,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7e1a9e82-2220-44b0-abdf-a1b78e934aca",
+    "854de6b0-2a9b-4d96-bf5c-8bcf022504de",
+    "af4646b1-26e0-4f5d-8952-124af67e5097",
+    "d994fee1-24c9-426d-aa6b-1368ab7f16c3",
+    "3da4e947-c297-45a1-b00a-6ba55dee85da",
+    "b2ae6a19-076f-47da-83af-9728a34197cf",
+    "3d307954-79e6-4ba2-8894-4a6a6943fcc6",
+    "e91cfa62-76ba-4fde-9524-0651b6debf9f",
+    "4c97dec2-f794-4127-b2e3-c2ae61be3184",
+    "13f602d4-70e9-46d1-9621-b76bc71c0835",
+    "d7c9ba40-f05e-48cd-93cd-a830c861b47a"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "EjqsjYQmEjqs"
+    }
+  }
+}

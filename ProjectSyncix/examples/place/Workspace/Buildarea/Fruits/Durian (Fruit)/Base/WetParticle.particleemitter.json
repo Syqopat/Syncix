@@ -1,0 +1,183 @@
+{
+  "class_name": "ParticleEmitter",
+  "name": "WetParticle",
+  "syncix_id": "4d640f4c-3a27-45ef-8855-34e866618191",
+  "schema_version": 1,
+  "last_updated": 1790327691221,
+  "properties": {
+    "Acceleration": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Brightness": {
+      "Number": 1.0
+    },
+    "Color": {
+      "ColorSequence": [
+        {
+          "t": 0.0,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0
+        },
+        {
+          "t": 1.0,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0
+        }
+      ]
+    },
+    "Drag": {
+      "Number": 0.0
+    },
+    "EmissionDirection": {
+      "String": "Enum.NormalId.Top"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FlipbookFramerate": {
+      "NumberRange": {
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "FlipbookIncompatible": {
+      "String": "Particle texture must be 1024 by 1024 to use flipbooks."
+    },
+    "FlipbookLayout": {
+      "String": "Enum.ParticleFlipbookLayout.None"
+    },
+    "FlipbookMode": {
+      "String": "Enum.ParticleFlipbookMode.Loop"
+    },
+    "FlipbookStartRandom": {
+      "Boolean": false
+    },
+    "Lifetime": {
+      "NumberRange": {
+        "min": 5.0,
+        "max": 10.0
+      }
+    },
+    "LightEmission": {
+      "Number": 0.0
+    },
+    "LightInfluence": {
+      "Number": 0.0
+    },
+    "LockedToPart": {
+      "Boolean": false
+    },
+    "Orientation": {
+      "String": "Enum.ParticleOrientation.FacingCamera"
+    },
+    "Rate": {
+      "Number": 2.0
+    },
+    "RotSpeed": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "Rotation": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "Shape": {
+      "String": "Enum.ParticleEmitterShape.Box"
+    },
+    "ShapeInOut": {
+      "String": "Enum.ParticleEmitterShapeInOut.Outward"
+    },
+    "ShapePartial": {
+      "Number": 1.0
+    },
+    "ShapeStyle": {
+      "String": "Enum.ParticleEmitterShapeStyle.Volume"
+    },
+    "Size": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 1.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 1.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Speed": {
+      "NumberRange": {
+        "min": 5.0,
+        "max": 5.0
+      }
+    },
+    "SpreadAngle": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "Squash": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Texture": {
+      "String": "rbxassetid://12313056191"
+    },
+    "TimeScale": {
+      "Number": 1.0
+    },
+    "Transparency": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "VelocityInheritance": {
+      "Number": 0.0
+    },
+    "WindAffectsDrag": {
+      "Boolean": false
+    },
+    "ZOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "716dcde0-c5ce-47af-889a-efb92c96e58d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cjYmvawkcjYm"
+    }
+  }
+}

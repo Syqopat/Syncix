@@ -1,0 +1,64 @@
+{
+  "class_name": "Model",
+  "name": "Fruit",
+  "syncix_id": "bb4c3eb9-40b8-4a10-952e-82e0f38c5b5b",
+  "schema_version": 1,
+  "last_updated": 1790327691241,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          491.57285,
+          438.5241,
+          27.383038
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "42744618-7c9f-4de1-a257-87422b1c8bca",
+    "85fbc615-be46-453d-b517-f602ab780426",
+    "66ae0cac-c874-43a6-ae44-9c282e2efb12",
+    "32d503ec-4e4f-48f2-908e-0e9b373e4714",
+    "8d43a80b-5ac3-4012-9a52-4891d6e272e4",
+    "08742a23-fd2b-4146-a28b-e4892f80208a",
+    "94c73875-a3e8-40ca-ba4e-841461b26019",
+    "4f44e2c0-1d46-4bf4-9a71-5e6011699694",
+    "02781923-da90-4e32-8be7-e4b4de28d6ec",
+    "c32c80be-b279-4ae0-8476-7abe0d7fdfd5",
+    "86b2479c-3217-4e94-994f-976ef29a026f",
+    "35b762e8-364f-439e-aed1-09e314d88664",
+    "4e25a779-32b6-4dae-a0c6-3c86cb6bf9cd",
+    "26d12e10-3dd8-4921-9387-b2c897275544",
+    "91257da4-ae28-404f-8bef-4389d9855a7f",
+    "09d6400d-a78b-409e-8705-4f2fe8f42bf6",
+    "1e32fef8-ca73-4122-a180-f58afdf59ff2",
+    "b2950ed1-99b2-4474-9c1b-cb3a1035c0d7",
+    "67ec540c-1dfb-4a79-81e1-5aebf65366b8",
+    "33e12f6b-9724-4fd2-a699-215b770d3d10",
+    "ec35aa4d-d4e5-4754-9b3b-07ff2fdb0b8e"
+  ],
+  "parent": "f1daeba9-07be-4fea-bee8-adc14ef7dd9b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "4a6RTLGE4a6R"
+    }
+  }
+}

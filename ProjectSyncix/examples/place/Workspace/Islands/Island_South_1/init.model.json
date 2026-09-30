@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "Island_South_1",
+  "syncix_id": "2daadca2-fd3a-49ce-b440-b9f7ba417477",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -100.0,
+          119.5,
+          350.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "a709820d-7e80-4982-8c9a-b9c459650cfa",
+    "38ea22bc-7c66-40cd-a33f-adb007e2c504",
+    "39ba86c1-3ccf-4784-bdf9-279a9c5b1c76"
+  ],
+  "parent": "c27ecf15-a0c2-4576-8e08-e61596b54ed1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "t25xvE9Bt25x"
+    }
+  }
+}

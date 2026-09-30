@@ -1,0 +1,73 @@
+{
+  "class_name": "Model",
+  "name": "Celestial Tree",
+  "syncix_id": "fd37a50c-4de8-4a0e-bb9d-7330f0825818",
+  "schema_version": 1,
+  "last_updated": 1790327691367,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.050000012,
+          0.92125,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "402cc927-1b8c-4aeb-b141-c1110e9da959",
+    "52b7769a-16f8-49e3-b96a-f8ba60111400",
+    "f59c5f52-c83a-4362-bacb-e3428fd7ea6e",
+    "ab924ac0-59b4-438f-91fb-2e97fb18a182",
+    "02034715-d2c1-4e28-a034-26133d03ae4d",
+    "c8db9812-f64d-4685-bceb-f80312faff02",
+    "c34cbdac-abfa-4a44-af22-c65ba14b3e66",
+    "1ba1616b-5c03-4249-a54b-a12f2ca4ee71",
+    "7bd0a0cc-fd69-4872-a00e-56162f81962b",
+    "e8ed44f4-f3fe-4e27-97db-23966bbc8596",
+    "2ed951ed-a5c3-4c2a-bc0d-0843edd4d7ba",
+    "94aa6f8c-f2d7-47f2-9f22-18d387176cc3",
+    "df4512ce-5943-4577-b9d9-6377c62e9064",
+    "4c92184a-43ac-4104-a7f1-19960e60a1bb",
+    "62253179-d459-4ce5-986b-ed6925e5e670",
+    "b56a0609-06ec-41f3-b370-9a172561e895",
+    "991c9f59-a0ce-4512-b76c-e7ff168c59fd",
+    "de5ccdc9-b437-4848-81fd-a69c95000136",
+    "156fd8f5-cbab-49fb-be38-1fb609b954a7",
+    "3934f843-1692-4413-a15c-cbfb75e12414",
+    "b29d863c-62f1-4ec9-aa34-16bcf04d93bf",
+    "1d362dfe-9243-4594-952a-6bad127c683e",
+    "f4b58e50-2d0d-45cf-8300-24f052f7e7af",
+    "0fbc2a80-7e25-46e5-9703-78a945b21b13",
+    "9157dae6-f333-48b7-ac90-962e3b733fbb",
+    "f4d5d392-3944-47be-941c-7270533e003a",
+    "29214073-45c5-43ce-8baa-5783f08fabfe",
+    "17648fd3-c688-425a-8776-218e6efd29d9",
+    "fb11ce2a-eae6-49da-8060-17a959aee02c",
+    "e0bdf731-c425-445f-a20f-7ec63d4a934d"
+  ],
+  "parent": "0ad399e0-a0ac-425d-9760-db2ab61f15e8",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "7v63qAAw7v63"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "LeftKneeRigAttachment",
+  "syncix_id": "a1179e16-3a54-498e-8848-cf91ff71927b",
+  "schema_version": 1,
+  "last_updated": 1790327691182,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.11037437,
+          -0.6022108,
+          -0.01035026
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          8.019531,
+          125.165695,
+          -14.150651
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "60aa61f8-bb89-4172-8125-ab35250e54d7"
+  ],
+  "parent": "1d186f10-f6c9-46dd-bc55-7bd1735cca97",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "24197Xa82419"
+    }
+  }
+}

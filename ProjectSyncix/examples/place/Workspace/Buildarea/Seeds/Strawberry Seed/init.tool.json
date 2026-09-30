@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Strawberry Seed",
+  "syncix_id": "5e81a037-002e-47c8-bdba-a65e865c442f",
+  "schema_version": 1,
+  "last_updated": 1790327691189,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Strawberry Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1578.0,
+          435.0,
+          -23.09375
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "cb412a0f-0e71-4e38-8c04-ab3c4899143e",
+    "bc15a11e-a555-4406-9860-8c267a618c20"
+  ],
+  "parent": "c7f1542c-9dd3-47fc-bef1-95719d5479fd",
+  "attributes": {
+    "ItemName": {
+      "String": "Strawberry"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Strawberry"
+    },
+    "_lemonadeUniqueId": {
+      "String": "PKzmNsdpPKzm"
+    }
+  }
+}

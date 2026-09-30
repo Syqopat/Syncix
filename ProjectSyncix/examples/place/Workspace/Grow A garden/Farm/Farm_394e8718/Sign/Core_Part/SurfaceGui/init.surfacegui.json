@@ -1,0 +1,89 @@
+{
+  "class_name": "SurfaceGui",
+  "name": "SurfaceGui",
+  "syncix_id": "b4319288-ee47-46c8-b66d-7f413ba5e130",
+  "schema_version": 1,
+  "last_updated": 1790327691272,
+  "properties": {
+    "Active": {
+      "Boolean": true
+    },
+    "Adornee": {
+      "Ref": ""
+    },
+    "AlwaysOnTop": {
+      "Boolean": false
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "Brightness": {
+      "Number": 1.0
+    },
+    "CanvasSize": {
+      "Vector2": {
+        "x": 800.0,
+        "y": 600.0
+      }
+    },
+    "ClipsDescendants": {
+      "Boolean": true
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Face": {
+      "String": "Enum.NormalId.Left"
+    },
+    "LightInfluence": {
+      "Number": 1.0
+    },
+    "PixelsPerStud": {
+      "Number": 41.66666793823242
+    },
+    "ResetOnSpawn": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SizingMode": {
+      "String": "Enum.SurfaceGuiSizingMode.PixelsPerStud"
+    },
+    "ToolPunchThroughDistance": {
+      "Number": 0.0
+    },
+    "ZIndexBehavior": {
+      "String": "Enum.ZIndexBehavior.Sibling"
+    },
+    "ZOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "9a664537-aa8a-4944-9b8b-6199e238d1d6",
+    "2adad136-40ce-4881-8b2f-aedcc4584953",
+    "77c9cf5f-9ab2-453e-8377-8bf0d27dc852"
+  ],
+  "parent": "b61e1118-a649-4a42-ba21-950d01fc3384",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "GDuU8ov9GDuU"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "RightWristRigAttachment",
+  "syncix_id": "5a25ded6-245a-4fc5-a1d5-1e76b76ce49b",
+  "schema_version": 1,
+  "last_updated": 1790327691180,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.070940495,
+          -0.49704137,
+          -0.21222587
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          7.806411,
+          126.61665,
+          -16.147799
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "a228239e-5e3a-4d32-ae23-a1c02745c496"
+  ],
+  "parent": "9bd63d16-2237-4b65-bba2-bd2179ce4464",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "kw2LdNtDkw2L"
+    }
+  }
+}

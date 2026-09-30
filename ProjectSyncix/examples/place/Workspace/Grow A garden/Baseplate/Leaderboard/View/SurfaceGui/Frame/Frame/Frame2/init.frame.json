@@ -1,0 +1,132 @@
+{
+  "class_name": "Frame",
+  "name": "Frame2",
+  "syncix_id": "2e032e43-faed-4934-881f-bfa5a57bc0d6",
+  "schema_version": 1,
+  "last_updated": 1790327691268,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 1.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "Selectable": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 1.0,
+        "xo": 0.0,
+        "ys": 0.025,
+        "yo": 0.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "Style": {
+      "String": "Enum.FrameStyle.Custom"
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [
+    "dc62f639-9be2-4c56-b22a-07c3cb4562b5"
+  ],
+  "parent": "1a033e17-1c4a-40fa-b462-8ecadfc4a9cc",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "sY1jKaNdsY1j"
+    }
+  }
+}

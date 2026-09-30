@@ -1,0 +1,74 @@
+{
+  "class_name": "Motor6D",
+  "name": "RootJoint",
+  "syncix_id": "9fa5f9dd-e4ef-4e14-96cb-15b8cffefed3",
+  "schema_version": 1,
+  "last_updated": 1790327691289,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0
+        ]
+      }
+    },
+    "CurrentAngle": {
+      "Number": 0.0
+    },
+    "DesiredAngle": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "MaxVelocity": {
+      "Number": 0.10000000149011612
+    },
+    "Part0": {
+      "Ref": "c93301dc-35de-4515-9df0-7f06bc81444e"
+    },
+    "Part1": {
+      "Ref": "f99d7eb8-b564-4867-860d-1999b5dda0d5"
+    }
+  },
+  "children": [],
+  "parent": "c93301dc-35de-4515-9df0-7f06bc81444e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "WAdzz8LfWAdz"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "class_name": "Highlight",
+  "name": "Highlight",
+  "syncix_id": "70c94c68-6d80-41ba-9af3-83cd7ab12ae0",
+  "schema_version": 1,
+  "last_updated": 1790327691289,
+  "properties": {
+    "Adornee": {
+      "Ref": "bd7d8f4f-60fb-49a6-b62b-85e3e21d5b7c"
+    },
+    "DepthMode": {
+      "String": "Enum.HighlightDepthMode.Occluded"
+    },
+    "Enabled": {
+      "Boolean": false
+    },
+    "FillColor": {
+      "Color3": {
+        "r": 1.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "FillTransparency": {
+      "Number": 1.0
+    },
+    "OutlineColor": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "OutlineTransparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "bd7d8f4f-60fb-49a6-b62b-85e3e21d5b7c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Xq6OhGFlXq6O"
+    }
+  }
+}

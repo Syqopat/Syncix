@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Cursed Fruit Seed",
+  "syncix_id": "74cd7869-0100-45c2-83be-bfae01af47d7",
+  "schema_version": 1,
+  "last_updated": 1790327691189,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Cursed Fruit Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1578.0,
+          435.0,
+          -428.71875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e9b32a9f-2141-4217-b1d4-a4d7a8bc1a11",
+    "b4578559-7342-4675-9a65-e3e41279d027"
+  ],
+  "parent": "c7f1542c-9dd3-47fc-bef1-95719d5479fd",
+  "attributes": {
+    "ItemName": {
+      "String": "Cursed Fruit"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Cursed Fruit"
+    },
+    "_lemonadeUniqueId": {
+      "String": "iyZqf5DPiyZq"
+    }
+  }
+}

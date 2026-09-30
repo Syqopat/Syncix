@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "Stirrer",
+  "syncix_id": "1e990146-d949-4769-a7d3-8ee22426418f",
+  "schema_version": 1,
+  "last_updated": 1790327691159,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          521.9523,
+          553.6,
+          265.77518
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fe7a4388-394a-4c7a-8a1c-271242b8f28a",
+    "205001de-9492-4f57-a687-4f4ac9d0964e",
+    "ec69c82f-eb93-4c0e-b933-23f391bcf344"
+  ],
+  "parent": "e7356478-965b-4163-8d30-d399e6d34c58",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "GDxNNNf1GDxN"
+    }
+  }
+}

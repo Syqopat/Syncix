@@ -1,0 +1,70 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub",
+  "syncix_id": "1a8726e2-d780-488d-b11d-9e2964494a7a",
+  "schema_version": 1,
+  "last_updated": 1790327691237,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          465.51056,
+          437.23392,
+          26.880621
+        ],
+        "rot": [
+          -0.500011,
+          -0.27882817,
+          -0.8199048,
+          0.0,
+          0.9467514,
+          -0.32196543,
+          0.86601907,
+          -0.16098624,
+          -0.47338617
+        ]
+      }
+    }
+  },
+  "children": [
+    "e52eb370-d5b0-49f3-9567-6fa3a99677b8",
+    "9c0937f7-b50b-4fda-a141-edf61a5d14a7",
+    "453ad998-f45e-4ac0-a1c4-c960f5d5f1d5",
+    "f73466aa-10b8-4241-a99c-a7a7211474c6",
+    "395d4d7e-e8e5-418b-87f9-20ce954e8e57",
+    "c9a87923-16cc-4b44-a3ee-4ae921c97312",
+    "e354f66b-8dd7-4404-8c9b-3bda9706c29b",
+    "bdb8576d-79a9-495e-b25f-78df0965b294",
+    "2000682c-a2cb-40ed-8796-882b6bd7a75b",
+    "b150ca2a-4671-4a92-9e0b-a65e885d221b",
+    "e72d195d-d0c7-45c1-a460-882afa768f1f",
+    "093da812-d040-43fa-a04e-b4707206a61a",
+    "b269fed3-3d2b-4122-83ff-29e292311dba",
+    "a5c88ecf-f304-4b2c-a99e-ceb8f33cec44",
+    "55bfd251-7daa-4749-a380-07ceb8fb6075",
+    "a466213d-1d32-4957-90c2-46ac94ecbf71",
+    "6bfdee12-974a-460f-82c5-fb24cfa397e8",
+    "5856daa3-5578-4e87-a90f-d2fb4e23cca8",
+    "8a8ad0c4-f884-4526-b86a-c54fd07d06f8",
+    "757e3567-a5b9-4660-9832-971a68804118",
+    "87eb812c-4cc6-48ce-96de-4742ae37a2de",
+    "deeba9e4-d618-47fa-9a71-f81c67f46c5b",
+    "73eb9943-cb5d-4d61-adb3-a1fba433e09c",
+    "1641943a-4754-420e-b7e3-e68cc6e4e684",
+    "072b2560-23c2-472b-9bde-9e32c158c6d7",
+    "275a3b06-c153-47fc-976d-83dba1d9ddd5",
+    "645f7d23-58f2-4485-bc56-6a0fc910903c"
+  ],
+  "parent": "43cfeeaf-a40e-49e9-8a16-06179872bf5e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "PT0hBXaYPT0h"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Frostleaf Display",
+  "syncix_id": "961b4cdd-f058-4b95-a968-158042f37227",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          444.0,
+          437.538,
+          4.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "669b2658-6d9b-4cc5-be01-228706c10ff4",
+    "c7d50577-022b-4408-9e67-54990fdd06b5",
+    "b65c30a6-1a99-42c0-8f6a-d0376e7f5222",
+    "86447d7f-0038-4717-b504-89ec662396df"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "D4mHXJDjD4mH"
+    }
+  }
+}

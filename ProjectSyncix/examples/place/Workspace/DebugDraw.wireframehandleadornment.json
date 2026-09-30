@@ -1,0 +1,75 @@
+{
+  "class_name": "WireframeHandleAdornment",
+  "name": "DebugDraw",
+  "syncix_id": "91ce3f52-64e8-4993-a1fb-c719e34d1e53",
+  "schema_version": 1,
+  "last_updated": 1790327691293,
+  "properties": {
+    "AdornCullingMode": {
+      "String": "Enum.AdornCullingMode.Automatic"
+    },
+    "Adornee": {
+      "Ref": "00000000-0000-4000-8000-000000000001"
+    },
+    "AlwaysOnTop": {
+      "Boolean": true
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Color3": {
+      "Color3": {
+        "r": 0.26666668,
+        "g": 0.26666668,
+        "b": 0.26666668
+      }
+    },
+    "Scale": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      }
+    },
+    "SizeRelativeOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Transparency": {
+      "Number": 0.0
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000001",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iZP9DvTPiZP9"
+    }
+  }
+}

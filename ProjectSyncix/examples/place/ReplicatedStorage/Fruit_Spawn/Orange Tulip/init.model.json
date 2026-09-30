@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Orange Tulip",
+  "syncix_id": "c5dfec39-fc90-4a2c-8d8d-ce578ed135f2",
+  "schema_version": 1,
+  "last_updated": 1790327691333,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "d813e89d-01fc-4ece-9b3f-1f1375d665d6"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.00047931517,
+          0.43216133,
+          -0.023803413
+        ],
+        "rot": [
+          1.0,
+          0.000036194924,
+          -0.00002965331,
+          -0.000030494924,
+          0.9848035,
+          0.17367247,
+          0.000035488745,
+          -0.17367247,
+          0.9848035
+        ]
+      }
+    }
+  },
+  "children": [
+    "76071f71-4900-424c-819d-f5c50bca3a11",
+    "5f1ca58d-93e5-4ca4-8598-01b72c801787",
+    "23854666-2faf-4b42-9044-fb8c69dcf9d8",
+    "e911209f-69bf-4ee0-bc09-1daa543f7069",
+    "13c5eb00-fa70-4fb6-8f58-fd5b74240f87",
+    "1299ee08-1da9-4c92-a9d4-79d07862b5bc",
+    "efa94341-3a5a-4107-be49-20afd1ba044b",
+    "13632389-c931-4934-92cc-7bb3d272056b",
+    "d813e89d-01fc-4ece-9b3f-1f1375d665d6",
+    "658e88d5-50b2-4c6d-af81-c962402c9252",
+    "f110d7d1-f30e-4e93-96d6-7506d0222630",
+    "00b71c85-b362-44c7-ac79-16f7d3c5f88e",
+    "198c3636-2278-4c47-9357-5b853ff560c4",
+    "fb8d6541-8942-41b1-bb6f-7a22a43c8e2d",
+    "40eece15-5598-4fa2-a104-abb1043b2c0d"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "PxauuB5DPxau"
+    }
+  }
+}

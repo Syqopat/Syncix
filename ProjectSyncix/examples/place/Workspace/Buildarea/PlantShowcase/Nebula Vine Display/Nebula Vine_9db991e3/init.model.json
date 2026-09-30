@@ -1,0 +1,73 @@
+{
+  "class_name": "Model",
+  "name": "Nebula Vine",
+  "syncix_id": "9db991e3-f3c2-488c-b756-e85040027d46",
+  "schema_version": 1,
+  "last_updated": 1790327691242,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          501.5,
+          436.2425,
+          27.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3c1bce85-5f61-4af3-a65b-e27f8374c6e6",
+    "126fd2ec-51f6-4f47-99cd-a75b921caa50",
+    "a3e5051b-159d-40cf-b1d0-150516635a43",
+    "39fb5e71-57f2-48cb-969e-da8646e9d370",
+    "e61c6dfe-80eb-40a9-9a8d-0d80f848180b",
+    "d60abea2-1236-4f7c-9f84-d9af56a06c18",
+    "df11a7e9-41e7-4285-8e0d-929ffcf84807",
+    "4cd4cc64-d2cf-4e3d-958f-5bb951cf165c",
+    "a380bee4-8e69-4371-849c-92015ba099db",
+    "1b438b18-f437-4cf0-af18-3dcdaa2516fc",
+    "d6a6a9f7-bb1d-43ae-acf6-6c2b498b0290",
+    "53995a59-b240-4b11-862c-f94beddc438b",
+    "9e450c1c-d603-4beb-b764-774f7f834a85",
+    "f9dede65-1344-4cd1-9f09-1263162ab642",
+    "5543649a-5a1d-4755-898d-fe6f115fd8dc",
+    "26de3971-6437-4f1c-a0f9-25c567684d05",
+    "3880c69d-c6e7-463f-bb33-e6d20bd3708e",
+    "9f221e8e-9160-4601-bed8-56ee01e4ed4a",
+    "3b13a7a8-e30d-4cd1-b214-8dfcd0c76a8e",
+    "18de1f2a-2645-488e-a91a-70433887a8b3",
+    "668ecde8-3302-469e-af0e-ca5462e4484e",
+    "8b8693ce-9c29-47f5-9a4a-65959ea394da",
+    "80112ed4-b98e-4164-af31-738a131c6800",
+    "7987ddd3-3a47-4c77-a8e2-d52cbf315e76",
+    "c88d666e-c2b0-421e-8207-284af84f2b19",
+    "2da9abec-85a2-498d-845e-3adb568fd28d",
+    "d5ec4fd3-15f0-48fb-9ca8-5ed5d112a2eb",
+    "04ceffb8-0abe-453b-b27f-f16b302f0453",
+    "eb31466f-c1df-47ea-88e0-8b532a82d969",
+    "ea60eeb7-6989-4a6e-bf7a-65107b4b05f8"
+  ],
+  "parent": "295d7bc7-e77b-4247-b9fc-23f63ed14128",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "wvqGZY4SwvqG"
+    }
+  }
+}

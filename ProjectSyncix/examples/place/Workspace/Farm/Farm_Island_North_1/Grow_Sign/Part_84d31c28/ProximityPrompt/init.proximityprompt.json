@@ -1,0 +1,63 @@
+{
+  "class_name": "ProximityPrompt",
+  "name": "ProximityPrompt",
+  "syncix_id": "6ab14f1d-611a-4aca-bf5f-be4d603ae802",
+  "schema_version": 1,
+  "last_updated": 1790327691320,
+  "properties": {
+    "ActionText": {
+      "String": ""
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "ClickablePrompt": {
+      "Boolean": true
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Exclusivity": {
+      "String": "Enum.ProximityPromptExclusivity.OnePerButton"
+    },
+    "GamepadKeyCode": {
+      "String": "Enum.KeyCode.ButtonX"
+    },
+    "HoldDuration": {
+      "Number": 0.0
+    },
+    "KeyboardKeyCode": {
+      "String": "Enum.KeyCode.E"
+    },
+    "MaxActivationDistance": {
+      "Number": 10.0
+    },
+    "ObjectText": {
+      "String": ""
+    },
+    "RequiresLineOfSight": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Style": {
+      "String": "Enum.ProximityPromptStyle.Custom"
+    },
+    "UIOffset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "children": [
+    "a760fa3b-ddd8-4667-a204-b1169f6ceeb9"
+  ],
+  "parent": "84d31c28-35e2-41e7-a6e3-f63710134ebf",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "K8CEhmRHK8CE"
+    }
+  }
+}

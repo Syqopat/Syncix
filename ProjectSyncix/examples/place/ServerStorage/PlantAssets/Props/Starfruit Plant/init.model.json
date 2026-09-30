@@ -1,0 +1,69 @@
+{
+  "class_name": "Model",
+  "name": "Starfruit Plant",
+  "syncix_id": "9def3775-d5ae-41cd-9b8a-dae65854b25d",
+  "schema_version": 1,
+  "last_updated": 1790327691366,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.82350004,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "a1e2c792-38f0-42fa-bc82-5542a1566143",
+    "6cf5a77b-ff8d-4e4b-8e8d-e67e3f918cb0",
+    "212cd204-7376-4556-8045-ac1b21a6da4b",
+    "9dede709-6d6b-452c-954f-23868c353031",
+    "9f81f3ee-aebe-4b67-b379-72be4e6aa2dd",
+    "5c12da9b-1e84-4c36-b57e-d77eace9e17d",
+    "a9883627-8a5a-402d-83c1-b3b3015a151e",
+    "b29bc4e9-7818-4b62-a187-16acd6995463",
+    "fa933056-d30a-4937-82ce-f140e404ac7f",
+    "433822ca-ac87-45c8-9b28-8ec102c6d19e",
+    "a28de5fb-027e-4706-8bc0-6b67897733fd",
+    "4a3a2a84-f97d-4681-a6ae-ec8ef18fcbac",
+    "08a7809f-be15-4d6d-bdf3-ebe1ef838cba",
+    "cc5a73b6-9e3d-4cbf-9b33-6ab46b989f75",
+    "ef8bd95f-4fef-4e7e-9bd4-4a6c8d963613",
+    "291806f7-a492-46bb-834f-d9d634e593a0",
+    "aa43b2cc-8843-447c-aedb-9bf1b121da6f",
+    "e0e52e1a-dcaf-420d-b578-597f09227d56",
+    "781feb0c-3754-4aed-abe5-147698610fcd",
+    "4af41ac8-1da1-491b-a2d1-d8964f4e93f7",
+    "479afff1-1702-4bad-a424-f9a8b1b07d36",
+    "590e063e-7209-4af2-8079-dec477697f99",
+    "64390c57-9a71-4877-8c8a-5eb540b5a01e",
+    "193f0567-1926-4103-90d0-5a507eeed085",
+    "f464f35a-f955-49f0-a20b-4f0cf4ae60ca",
+    "9ead017b-45c4-4c34-a05b-eec44f4dc805"
+  ],
+  "parent": "0ad399e0-a0ac-425d-9760-db2ab61f15e8",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "m85OgeXvm85O"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Coconut Palm",
+  "syncix_id": "c5cd113a-4961-4b46-96bf-8275bdeb7191",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.41,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3416effa-0eb3-4a7d-85be-c68b03607e88",
+    "2b0cf08b-0289-4516-b940-7f13e1269f08",
+    "26fc2ce9-0237-4c82-bbd4-3dfe1465e926",
+    "33f8fc7e-8311-41a1-8dff-96b48aff27c9"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "57dbFFao57db"
+    }
+  }
+}

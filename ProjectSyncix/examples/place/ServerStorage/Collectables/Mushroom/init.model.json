@@ -1,0 +1,73 @@
+{
+  "class_name": "Model",
+  "name": "Mushroom",
+  "syncix_id": "68274386-8ed4-4003-80ac-82c37a03dee2",
+  "schema_version": 1,
+  "last_updated": 1790327691342,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "9f04111c-ba70-4cd0-832b-1dd6a4400c77"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0038933754,
+          5.753582,
+          0.020403266
+        ],
+        "rot": [
+          0.9802466,
+          -0.19777913,
+          0.00009549863,
+          -0.00008106232,
+          0.00008106232,
+          1.0,
+          -0.19777913,
+          -0.9802466,
+          0.000063420885
+        ]
+      }
+    }
+  },
+  "children": [
+    "40cf6007-cc22-47ac-8049-21405f432d7a",
+    "dad339bd-9733-4c67-819d-e1eb1d2f4686",
+    "536c9eb9-8268-4235-b49d-04dee806099a",
+    "39b2b8ea-b5bf-493f-9b82-0d0f0db6c878",
+    "718e1cf2-8c70-48f7-bb02-6c8881b7da0d",
+    "3292c74c-96bf-4a60-9736-86550508e980",
+    "b7fa16aa-0a57-4af4-a50f-6dac3af4e989",
+    "b0de968d-e688-41b4-a181-6e1d190c713d",
+    "1b605e68-e273-4865-bb12-6427c3f997ed",
+    "33821649-de53-4549-9884-78c8492cae08",
+    "0d9146dd-bc87-43b7-b957-79be1ee8752a",
+    "3531324d-a320-495d-b5ac-6aa6e6bae02e",
+    "9f04111c-ba70-4cd0-832b-1dd6a4400c77",
+    "5dead9c6-b9d3-4f50-a5df-6375b54a09f3",
+    "49aaf5c2-e4a5-46bf-be81-2582f53dc4d0",
+    "17aa07b1-7877-4cd6-9e23-68b75c3d2cbf",
+    "7fa549e5-452d-435d-adb8-2498c4b452db",
+    "198d71c0-c120-47dc-8f9f-2925871f5f21",
+    "452f0ba4-640f-47f0-995a-50b5106b672b",
+    "9ef03a6f-7324-4aa2-b5c9-5b931d853426",
+    "4043758e-1e0a-4f35-a78a-7a972a5920d3",
+    "44b2bad7-962e-4cf0-a620-4c7d894b50cd",
+    "b5776487-5cbc-41b2-9a36-cd733b166782",
+    "56ce9dde-5117-4ad7-b035-84d3335e8345",
+    "52347f9f-daa5-4b47-aa45-db3a9eb68417",
+    "485f8b6a-dae7-42c7-aa7c-499de1b4b834",
+    "0fa44817-e337-4b38-8c7e-1f2e577b9936",
+    "f2113a43-c614-406c-8e49-1928e2211877",
+    "a0d26d96-38cf-4249-89be-c0df2d34bcb5",
+    "01d75e09-32a2-4054-ab36-756bde1797f1"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "hTqX3yRthTqX"
+    }
+  }
+}

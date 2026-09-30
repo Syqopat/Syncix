@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Cherry Tree Display",
+  "syncix_id": "832c113c-27ee-4e96-a38e-ce4156ce099c",
+  "schema_version": 1,
+  "last_updated": 1790327691240,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          470.0,
+          439.02512,
+          4.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e8efb75a-2dab-499c-a0ed-4cb7083bc303",
+    "ef049f03-8113-4833-9f19-38808f1d3ce7",
+    "3dec61df-c023-4f61-b79a-9808b700c75c",
+    "2fc3e101-92b7-43a1-a8df-663ac555577b"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "hAQoaThzhAQo"
+    }
+  }
+}

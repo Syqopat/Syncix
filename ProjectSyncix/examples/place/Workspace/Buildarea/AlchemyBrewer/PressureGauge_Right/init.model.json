@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "PressureGauge_Right",
+  "syncix_id": "5c520d13-a98e-4d40-bbe8-caafbad02812",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "b0530ea4-f2df-40d3-9535-f64e4c43da1f"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          359.5056,
+          444.825,
+          -202.82878
+        ],
+        "rot": [
+          1.0,
+          -4.371139e-8,
+          -4.371139e-8,
+          -4.3711385e-8,
+          4.3711392e-8,
+          -1.0,
+          4.3711392e-8,
+          1.0,
+          4.371139e-8
+        ]
+      }
+    }
+  },
+  "children": [
+    "c3b2b34e-9bd5-4fdd-8b82-7ee82f928471",
+    "739bd568-815e-451b-a77e-3582b5b1f834",
+    "32c88207-c7c5-4336-bb10-cc567332030c",
+    "b0530ea4-f2df-40d3-9535-f64e4c43da1f"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "PSiVvWhnPSiV"
+    }
+  }
+}

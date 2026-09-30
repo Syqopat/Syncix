@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Eden Fruit",
+  "syncix_id": "76d357d8-ca09-4569-8965-b9c72cff988c",
+  "schema_version": 1,
+  "last_updated": 1790327691326,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Eden Fruit (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "449f9a09-3b22-4ecd-a099-dced7d4b9d96",
+    "bb702146-ee89-4976-99f8-1372afffc017"
+  ],
+  "parent": "95d7fa16-5410-489e-8c1f-d0ca091e98f9",
+  "attributes": {
+    "ItemName": {
+      "String": "Eden Fruit"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Eden Fruit"
+    },
+    "_lemonadeUniqueId": {
+      "String": "NBYbp9mKNBYb"
+    }
+  }
+}

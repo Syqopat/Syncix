@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Peach",
+  "syncix_id": "df11c0e3-df0d-4130-b2b4-d47cf9a84151",
+  "schema_version": 1,
+  "last_updated": 1790327691332,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "6eb14587-393e-45f2-bbc8-a8a36d0dad67"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.046939865,
+          -0.7577511,
+          0.017349245
+        ],
+        "rot": [
+          -0.73722756,
+          -6.445048e-8,
+          -0.6756445,
+          -2.8356055e-8,
+          1.0,
+          -6.445048e-8,
+          0.6756445,
+          -2.8356055e-8,
+          -0.73722756
+        ]
+      }
+    }
+  },
+  "children": [
+    "1e057768-6f1f-4258-8be7-775683bef2a8",
+    "9d651e0a-1f56-4cdc-8432-f9896e76b96e",
+    "b1572a8d-f7a7-4b9b-b57e-999b70c5d510",
+    "e06122ff-3c3e-4942-a539-43b19f1f4942",
+    "30545f74-fd80-4ba2-bb4a-1e8fa87be055",
+    "4e9f04f5-ded8-44ac-be39-8743ec89f782",
+    "6145d7e5-3dca-4e14-bed7-885a61844fba",
+    "5d36e6be-3850-46d1-b409-e803bc5a0187",
+    "6eb14587-393e-45f2-bbc8-a8a36d0dad67",
+    "00623a5a-36ac-42cb-9db6-16dfcb49ffb1",
+    "7e18b477-3277-49b4-bfcb-c250a6941efc",
+    "33cc004f-5590-4bc8-b3b7-4919949b4485",
+    "f3710160-a8b3-4cd7-9036-f00a6b27f902",
+    "e835e344-d844-438e-a26d-10ba3203fd23"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "3B2xzjya3B2x"
+    }
+  }
+}

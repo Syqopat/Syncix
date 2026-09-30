@@ -1,0 +1,87 @@
+{
+  "class_name": "Attachment",
+  "name": "WaistBackAttachment",
+  "syncix_id": "2b942962-065e-4d4a-af06-7f00551cabd7",
+  "schema_version": 1,
+  "last_updated": 1790327691325,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          -1.0,
+          0.5
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          436.25003,
+          -595.3505
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [],
+  "parent": "c6c10e14-da71-4d36-b57b-5f4abe3e6ccf",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NlEnOq3bNlEn"
+    }
+  }
+}

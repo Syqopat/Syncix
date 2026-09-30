@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Coconut Palm",
+  "syncix_id": "5f6b6bbb-fdff-4191-bfdd-ed0b53c3fe91",
+  "schema_version": 1,
+  "last_updated": 1790327691240,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          449.5,
+          436.2085,
+          27.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fa1342cb-0986-4bcb-ad38-7ad105668730",
+    "3991a712-ffc7-4a5a-83a0-94185f03eeb6",
+    "15889361-3f36-4678-bdaf-b776a767c2f0",
+    "c7638d0f-7102-4b34-ad72-376f1a3d5ff9",
+    "baabf649-8904-4a30-ba47-24de2372d445",
+    "221a90b4-7b7c-4fb3-9df9-a10e2a2dbead",
+    "be426a97-718b-4001-9466-5bb904a2bbdf",
+    "e320ab11-194c-42db-ae54-8a458cd9b524",
+    "fefb80a1-975a-4a9c-8178-78e909ce0518",
+    "8b670f75-40aa-48d9-a352-45d0901eae88",
+    "fdef7fcb-24e9-4e6f-970b-753500451314",
+    "91a595da-f34a-4283-9b34-785bf75a6b07",
+    "871af912-bc7b-415b-8900-a1b34071cd11",
+    "e79a303a-49d4-4c4a-bea8-b242c0f53c34"
+  ],
+  "parent": "d7057e1e-da69-4e2f-8a24-08514373465d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "SYS2qDRDSYS2"
+    }
+  }
+}

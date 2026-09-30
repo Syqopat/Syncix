@@ -1,0 +1,186 @@
+{
+  "class_name": "ImageLabel",
+  "name": "ImageLabel",
+  "syncix_id": "d583d802-fc74-41b7-8592-d9c12040bfe9",
+  "schema_version": 1,
+  "last_updated": 1790327691268,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 0.30980393,
+        "g": 0.30980393,
+        "b": 0.30980393
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 1.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "Image": {
+      "String": "rbxthumb://type=AvatarHeadShot&id=327423121&w=420&h=420"
+    },
+    "ImageColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "ImageRectOffset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "ImageRectSize": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "ImageTransparency": {
+      "Number": 1.0
+    },
+    "LayoutOrder": {
+      "Number": 2.0
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "ResampleMode": {
+      "String": "Enum.ResamplerMode.Default"
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "ScaleType": {
+      "String": "Enum.ScaleType.Stretch"
+    },
+    "Selectable": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 1.0,
+        "xo": 0.0,
+        "ys": 1.0,
+        "yo": 0.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "SliceCenter": {
+      "Rect": {
+        "min": [
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "SliceScale": {
+      "Number": 1.0
+    },
+    "TileSize": {
+      "UDim2": {
+        "xs": 1.0,
+        "xo": 0.0,
+        "ys": 1.0,
+        "yo": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [
+    "2fc14e22-c3ff-4516-bfb3-0b8e91a71225",
+    "131a9aa3-72c0-475d-84fc-48fed442b502",
+    "e1a423cd-07da-4303-b7e3-aa1f88530aa0",
+    "eb0ff20a-6dae-4c28-b994-c6476c2aa6ee"
+  ],
+  "parent": "05210490-112c-4fff-89af-286ddd4cbedc",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "JIKubPkQJIKu"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "class_name": "Model",
+  "name": "VaporHelix",
+  "syncix_id": "b2763333-0729-4813-8583-2af6938e45d6",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          357.0056,
+          438.45502,
+          -206.7788
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          -4.371139e-8,
+          1.0,
+          0.0,
+          -1.0,
+          -4.371139e-8,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2a7478f1-2af6-4700-bfcc-73d8b69aaa5c",
+    "1721f7e8-1e56-4669-a137-c2a55c0f1cd5",
+    "9bdef64b-d85d-4dc4-b75c-d3c267af0154",
+    "8ab724f4-14a3-4c6c-9643-9f2a0072d9e4",
+    "adf9a824-fd75-4eba-afc7-d21a706dbe57",
+    "5c3946d4-59e4-4d13-a1c9-fb39e3b6793b",
+    "775d157c-8a10-4971-925f-83f68adc0140",
+    "2f623922-9f0e-4a57-968e-f9787be57502",
+    "c252dc18-071d-436c-8d89-d5f73b78b529",
+    "b2061802-a00f-40ff-a984-93a2546fada5",
+    "380b0404-b6ae-4978-bbbd-0d86e8271781",
+    "dfd31709-3d04-4624-9953-ea52b2b62f50",
+    "89b14f53-b43b-4c5a-89a7-cef41c7558c5",
+    "83af75e4-146b-481c-af9f-7ca4a7cc24c9",
+    "fcbc54e1-8653-4ec1-afce-97f09f879f8b",
+    "6881caa7-1031-4661-be47-e7db746b6090"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "AD6RFGaiAD6R"
+    }
+  }
+}

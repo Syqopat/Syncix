@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "TestPlant",
+  "syncix_id": "e2f8f45a-acf2-4dda-926f-4daee1379478",
+  "schema_version": 1,
+  "last_updated": 1790327691334,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "458570ac-462e-4ffe-b29b-7bc1e50e1570"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "04742fe9-46e9-4f4f-9d85-a28534a037be",
+    "c939dbbf-962a-4a08-869e-c9a23ce4393c",
+    "b991046f-88d5-4f96-8eff-224392759d1e",
+    "2a179130-1b1a-4ecb-9803-60bf42a8ca71",
+    "5a2e9fd4-882d-48fe-9e0e-6ad017a64329",
+    "43a80ae5-fa9f-465f-b6c3-d25a7098f461",
+    "01c7bf13-da9e-4140-aa85-37a02151af18",
+    "d15f1fe4-6349-4c8e-be99-4cb3dd432512",
+    "26e01a55-7a65-42dc-be24-a980cd976a5e",
+    "ddf3f93c-114e-473e-9a72-f997abb3ef9f",
+    "458570ac-462e-4ffe-b29b-7bc1e50e1570"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "VFJ5weXJVFJ5"
+    }
+  }
+}

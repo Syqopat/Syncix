@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "LeftCollarAttachment",
+  "syncix_id": "5f484eee-3875-47fd-9ea6-8cd60ead664a",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.9999999,
+          0.800017,
+          -7.273974e-8
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          570.24994,
+          438.5035,
+          69.25
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "00f230bb-ebd2-4673-8e6e-78f7f181d097"
+  ],
+  "parent": "1303072f-c64e-413c-990f-c4de5e68b626",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ucelg3YUucel"
+    }
+  }
+}

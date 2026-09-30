@@ -1,0 +1,25 @@
+{
+  "class_name": "NoCollisionConstraint",
+  "name": "RightHandNoCollision",
+  "syncix_id": "a6661847-0827-45bc-8548-87a7ebc11336",
+  "schema_version": 1,
+  "last_updated": 1790327691186,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "ea3475a2-5d57-4b4e-b6b3-c02d97825ecb"
+    },
+    "Part1": {
+      "Ref": "6c74220a-1b1d-420a-a1d8-65fe3865807c"
+    }
+  },
+  "children": [],
+  "parent": "ea3475a2-5d57-4b4e-b6b3-c02d97825ecb",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "QX1ofY9xQX1o"
+    }
+  }
+}

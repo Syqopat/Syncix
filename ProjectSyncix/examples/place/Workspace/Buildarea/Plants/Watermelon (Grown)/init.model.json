@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Watermelon (Grown)",
+  "syncix_id": "a8964604-ab6c-46bf-abe9-8e34336ad0b6",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1539.8408,
+          436.14716,
+          69.09375
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "52655b37-65c8-4c18-b940-8b21097f44eb",
+    "e643eeba-191c-48ac-a2eb-a0118a7583b3",
+    "d1f280c0-55a8-4b90-baef-3192df3c7c32",
+    "7967877f-4889-4790-ac8c-b8b23111d7c5",
+    "3f4b050b-dbb8-4b66-9a55-a02de1d4769b",
+    "e7754950-3132-4ee8-9de2-c17e3e34a14e",
+    "d9ea7aec-8b0c-4ab5-a519-6bc4b6d9da7c",
+    "c64f6086-8e74-4b88-8099-0247600e4fe5",
+    "b63311e9-a316-4d0f-be85-332a304ecec8",
+    "aa64d62b-d6de-4e5f-abc5-df5d747f79cd",
+    "96b50feb-a8f8-42cf-babe-19d8f337dbf9",
+    "da358cdf-2ccc-4cf2-bf8c-1a84406cebe3"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "hmdNrIuKhmdN"
+    }
+  }
+}

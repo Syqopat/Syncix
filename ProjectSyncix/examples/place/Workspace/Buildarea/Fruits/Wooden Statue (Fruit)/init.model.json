@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Wooden Statue (Fruit)",
+  "syncix_id": "771c9c6c-530a-46c4-bc02-f5d756e9a32f",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.8,
+          87.53125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "1832a2b7-0467-486a-9721-e7b5223546fa"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "rHiOScPPrHiO"
+    }
+  }
+}

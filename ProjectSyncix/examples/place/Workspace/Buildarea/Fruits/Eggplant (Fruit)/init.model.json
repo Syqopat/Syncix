@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Eggplant (Fruit)",
+  "syncix_id": "80e23764-73e4-4bc9-8c15-4088360af8b8",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0542,
+          435.9651,
+          -336.53125
+        ],
+        "rot": [
+          1.0,
+          2.9802322e-8,
+          2.3841858e-7,
+          -2.9802322e-8,
+          1.0,
+          7.4505753e-9,
+          -2.3841858e-7,
+          -7.450582e-9,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7e74a5ca-f287-4262-85c0-b3de0f733b23",
+    "7938bfa3-733b-41ad-ab1d-7daef0355554",
+    "32a70037-899f-4c12-b851-308d8ef3275e",
+    "4a23e644-a826-472d-9563-e9bf0f27d460",
+    "6a8bed27-a265-4640-904b-b4cbb9b1c0c9",
+    "b221dd3e-3029-4297-839a-6c231627d838",
+    "2e875b9a-85eb-4649-87a5-bf4b40402dc2",
+    "8828fb7a-601c-40fa-8400-8747f152265b",
+    "f0200911-f0dc-4b94-a8aa-4b240c02ffe2",
+    "fbc18c9d-a8da-49d3-9592-80c4ae519167",
+    "2b5ffd4c-913b-457d-9ddf-744cd8fb3067",
+    "d640f86e-e160-40db-9530-01c41cbfecb6",
+    "b20444c0-939c-4dd7-9ae6-6ceb6e2787bf",
+    "da51c166-1722-4683-a17f-1061800e78cd",
+    "78f6266a-73ff-4aff-b40a-5b4e29c10143",
+    "9623f734-ab70-48df-bc41-96b5c51d7cd0",
+    "b4dba93c-4ef9-46da-9300-38e92d2e1afd"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iKLautcuiKLa"
+    }
+  }
+}

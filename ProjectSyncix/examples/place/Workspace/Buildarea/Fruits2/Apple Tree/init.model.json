@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Apple Tree",
+  "syncix_id": "d1cce6a8-7a63-408c-85b2-a45ef98bca4a",
+  "schema_version": 1,
+  "last_updated": 1790327691242,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1202.75,
+          436.035,
+          -557.7812
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "68f032fc-598d-4fa0-b724-ec6c5f8413a1",
+    "7dff2306-a7f1-47b6-bfab-5a0da7b19048",
+    "f7a294c6-6ee3-4609-90b6-5b753a465b0b",
+    "9068d03a-f43f-4efe-a256-8728f8e06233"
+  ],
+  "parent": "017fddfd-0673-4a0a-a8c7-0e57745d1382",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ahuKSpr1ahuK"
+    }
+  }
+}

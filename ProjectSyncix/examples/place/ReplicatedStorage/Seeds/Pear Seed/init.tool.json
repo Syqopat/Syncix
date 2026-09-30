@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Pear Seed",
+  "syncix_id": "1055814a-289c-45fc-a0db-ef9a148a89a9",
+  "schema_version": 1,
+  "last_updated": 1790327691325,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Pear Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "a53ba6dc-9225-4bd8-a4a3-99303f26f6b7",
+    "6b8f6abc-8de1-4e45-b5d1-2433ab7f9d54"
+  ],
+  "parent": "95d7fa16-5410-489e-8c1f-d0ca091e98f9",
+  "attributes": {
+    "ItemName": {
+      "String": "Pear"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Pear"
+    },
+    "_lemonadeUniqueId": {
+      "String": "TK8sgbc6TK8s"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+script.Parent:LoadAnimation(script.Animation):Play()

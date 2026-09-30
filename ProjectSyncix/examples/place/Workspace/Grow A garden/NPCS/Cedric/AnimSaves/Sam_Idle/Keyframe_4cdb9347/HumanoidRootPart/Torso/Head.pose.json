@@ -1,0 +1,45 @@
+{
+  "class_name": "Pose",
+  "name": "Head",
+  "syncix_id": "a817f075-33f8-4b21-95f8-6f6b1511aa1c",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "EasingDirection": {
+      "String": "Enum.PoseEasingDirection.In"
+    },
+    "EasingStyle": {
+      "String": "Enum.PoseEasingStyle.Linear"
+    },
+    "Weight": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "6dc5efeb-233c-48d1-82a8-c01179ad5100",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "y5vgqvcAy5vg"
+    }
+  }
+}

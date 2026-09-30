@@ -1,0 +1,65 @@
+{
+  "class_name": "Model",
+  "name": "Nebula Vine",
+  "syncix_id": "f1daeba9-07be-4fea-bee8-adc14ef7dd9b",
+  "schema_version": 1,
+  "last_updated": 1790327691241,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          491.41998,
+          437.7,
+          27.31477
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "298d80dc-8b23-49c8-89dc-45741a540a44",
+    "4251bcd8-839d-47dc-934e-35d46b89b8be",
+    "ab51bd52-1bca-419e-8a3b-3b92020010f2",
+    "57d11d6b-54cc-4231-a172-3685ea159788",
+    "862947b1-31cc-4bdc-9fee-35152027b51b",
+    "f9011a76-421d-4e9e-b268-3b2ef0b74a01",
+    "e6b157a6-0eec-4b20-abc3-1f844d10e621",
+    "bb4c3eb9-40b8-4a10-952e-82e0f38c5b5b",
+    "a6fa53ce-84fc-49a7-a328-fb9a9211f7ba",
+    "07ff03d0-6dd0-42c9-844f-6a55dfa2f87c",
+    "2b419c69-f335-4ca0-ba47-9eadbf2099a5",
+    "d4d182fc-6dd9-451e-b8bc-d7e4eb68d81c",
+    "9a799c7d-56eb-4a02-90dd-8327b816913d",
+    "43888d20-29d3-4b00-913b-c5660da029d1",
+    "790534d6-e31a-44cc-8fb4-4d56a25b8988",
+    "ebfc8eec-982b-4804-a4ad-c8712c1e860b",
+    "9c13b8f8-99c1-4078-b40b-84429529c2ad",
+    "51dad285-f3d6-4723-9232-9095e6326299",
+    "59bbb540-e5b5-4e8a-ad19-70809fb6bca9",
+    "b870ed85-d413-4849-a220-0cfeec14f0ed",
+    "f8851102-c024-48d5-ad01-cda91fb24467",
+    "0a16ef3f-7b92-48de-b01e-e77c8248d180"
+  ],
+  "parent": "295d7bc7-e77b-4247-b9fc-23f63ed14128",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "tCi4y80YtCi4"
+    }
+  }
+}

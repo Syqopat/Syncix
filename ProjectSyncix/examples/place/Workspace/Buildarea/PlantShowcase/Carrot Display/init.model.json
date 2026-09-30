@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Carrot Display",
+  "syncix_id": "146af2ee-4467-4e01-af56-f98c2bb24dd2",
+  "schema_version": 1,
+  "last_updated": 1790327691238,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          418.0,
+          436.35388,
+          -19.95
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8f739102-808e-4189-93db-fd89900a8ecc",
+    "61361b97-01e5-47ee-89c4-bb261847714a",
+    "9d029a44-fc8b-400e-8d5d-762eb85bc626",
+    "6904505d-80d1-4919-a10e-f99e821afa1e"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Ea1Gq9vZEa1G"
+    }
+  }
+}

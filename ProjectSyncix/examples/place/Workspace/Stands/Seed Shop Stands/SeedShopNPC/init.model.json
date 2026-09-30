@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "SeedShopNPC",
+  "syncix_id": "0eefe7b4-08d0-40ef-af47-62f3608a4306",
+  "schema_version": 1,
+  "last_updated": 1790327691184,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "4ca53d8d-31bb-4c35-8a01-9ff6c0d467ee"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          8.238551,
+          127.062836,
+          15.214959
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "b1cb001b-14f7-4d7e-a4a7-0342ba1d4a0f",
+    "0707ffb3-3b89-4131-ab84-d537a6e49c6a",
+    "4266538b-6ff3-48e5-8311-da5a672cd7c0",
+    "dc43cb18-62bc-4be0-8875-bf3cc4e75d55",
+    "3e8dd467-9389-481b-80b6-8e8244e65a31",
+    "08778cd7-b579-4de1-88dc-18700c812263",
+    "582d890f-0d46-493b-a1e3-5afeae81e704",
+    "556cc273-a2a3-4717-8d58-d06242112fdb",
+    "2f00ce27-74de-46ce-b01c-4d0d81a19830",
+    "4d7bf40a-6838-41c8-9b42-1055e09f9dd4",
+    "721a5949-dd32-4122-98b1-f4fe07a1c76c",
+    "97e186af-8905-403c-a32f-b627ba857758",
+    "bb334fa9-627d-4f01-a06c-015a9e7aea38",
+    "d8e5d7ba-720c-4a5c-92e7-5e568d1eda7d",
+    "6818f915-5aa6-47f6-9500-92ce05f36bc6",
+    "5bfa9c19-9e9d-438b-8a85-3dca1f3f7e12",
+    "bc801516-d7cd-4e0c-a679-2b45d44ddb85",
+    "05e6ae3f-b17c-4013-ab29-5b128e2d93fa",
+    "b06921f6-f582-4c2c-940d-165947181fbd",
+    "6c74220a-1b1d-420a-a1d8-65fe3865807c",
+    "d721c18b-392d-47ce-8375-38961f8ad7a4",
+    "8bc39579-248a-46b5-b03c-a339fbe390fd",
+    "9df4ec59-b376-4ee4-b44c-82a208564a6a",
+    "ea3475a2-5d57-4b4e-b6b3-c02d97825ecb",
+    "1cd94c10-d5d7-47db-bb3e-515649d597bb",
+    "45cdc94f-37b0-468e-8d76-db4abd9df38f",
+    "6376ff87-d0d4-44dd-a83a-310c80ec06f3",
+    "4ca53d8d-31bb-4c35-8a01-9ff6c0d467ee"
+  ],
+  "parent": "432af1b2-bacf-4d5d-9244-9a453617baa5",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "WAlLesBFWAlL"
+    }
+  }
+}

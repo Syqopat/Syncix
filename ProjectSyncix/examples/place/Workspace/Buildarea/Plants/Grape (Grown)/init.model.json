@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Grape (Grown)",
+  "syncix_id": "055c7436-fa81-4ea0-8346-3d037cab6b41",
+  "schema_version": 1,
+  "last_updated": 1790327691218,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          435.0,
+          -318.09375
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "d9e9914f-0156-4cee-9a83-a1752daef037",
+    "4da47d93-5aed-4457-a943-6121230d5821",
+    "b3264480-757b-4b6f-8174-9fdbf3b3fadd",
+    "4023b990-98ba-4b4c-9877-87a50a5fd068",
+    "876ce3ac-a5cc-48c7-acfd-09ce662d52fc",
+    "0918d705-8b74-470c-8f39-a9d08ae5c1ce",
+    "b1f1259d-8e85-4332-8e74-be8327b39b47",
+    "011e3955-b713-4cc6-83dd-f742ff5d0bc1",
+    "baa6caba-3a04-4357-9174-11dd49530a86",
+    "a1dfb0a9-0292-4518-bd35-d1c998428bac"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "4GzKBqbT4GzK"
+    }
+  }
+}

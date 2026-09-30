@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Model",
+  "syncix_id": "7d3ff2f7-e93d-43b9-9fe6-12b16a5220e1",
+  "schema_version": 1,
+  "last_updated": 1790327691168,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1006.2625,
+          825.2281,
+          -92.73596
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.99999356,
+          0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7dac7a7f-ca14-4773-b77a-3b104c1082c3",
+    "e3367b6b-5773-41ab-9f8c-732ab78763a8"
+  ],
+  "parent": "f159e2ba-be64-4e67-913a-6635868d9b4e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "kkK7oMTXkkK7"
+    }
+  }
+}

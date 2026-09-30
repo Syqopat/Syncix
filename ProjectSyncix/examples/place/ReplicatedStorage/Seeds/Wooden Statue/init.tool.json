@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Wooden Statue",
+  "syncix_id": "7209de1c-f1b5-4a79-91db-f23815dda663",
+  "schema_version": 1,
+  "last_updated": 1790327691326,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Wooden Statue (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "27a39838-70dc-4c3a-811e-c0f343b293ba",
+    "aa818ce0-12f1-43c6-89ad-82e71ad52542"
+  ],
+  "parent": "95d7fa16-5410-489e-8c1f-d0ca091e98f9",
+  "attributes": {
+    "ItemName": {
+      "String": "Wooden Statue"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Wooden Statue"
+    },
+    "_lemonadeUniqueId": {
+      "String": "2BNutwDx2BNu"
+    }
+  }
+}

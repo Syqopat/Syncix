@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Mango Tree Display",
+  "syncix_id": "8c8ec06d-3a13-4ef4-8438-b569833dbc18",
+  "schema_version": 1,
+  "last_updated": 1790327691230,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          418.0,
+          439.45413,
+          4.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "afe03be2-bb5c-4bf9-aa33-0f1797f5b88a",
+    "527d38c8-4fe4-4210-abca-9e364170f959",
+    "79679975-1c5d-4e66-8d77-46eab280efe1",
+    "8516d7c8-6f8b-4375-bede-9113b989890b"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "oOOJgJgyoOOJ"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "class_name": "Model",
+  "name": "Cedric",
+  "syncix_id": "cbb9313e-3f7f-4055-8604-5d3209de02ca",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "0e18fa4b-ef95-4d01-a575-96f3e48371f9"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1759.3143,
+          191.9996,
+          0.40586329
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "12157b1a-9c83-49f0-8996-344cb8384b14",
+    "642cccff-8548-42b8-8592-e8ce525a7a1c",
+    "9654b41f-ef51-49c1-934d-64f26dc042e2",
+    "0e18fa4b-ef95-4d01-a575-96f3e48371f9",
+    "9ad23716-b389-4bad-a6f5-a340f448b808",
+    "8bc9cc54-035e-474e-85cc-332f423909af",
+    "495f464b-c3ff-41a9-b069-887614112d3d",
+    "eb5f8bf1-abb1-4a65-9912-3ab43cec4328",
+    "3cc260ef-f8f0-489d-bb00-a88dded27205",
+    "b1bc14b3-de25-410e-ba20-8aef63dde072",
+    "48cd726a-17cd-41e6-b5fe-f66155d98b36",
+    "6f97abc0-47ab-45a8-9615-ea1a1feb775a",
+    "2b7a968e-4ea6-42db-9909-c79dcc7366ca",
+    "e0370196-8af2-41a2-992e-399158b77061",
+    "8046c9b4-b168-49e4-945b-44224b4eba11",
+    "8788798b-4430-4abb-9079-c05135bdc73f",
+    "35099eb6-9372-4fa0-9974-dd6541e817ae",
+    "c430a87f-2b38-4e4f-9f01-b8799e92619e",
+    "6a808f31-c316-4829-8539-4824e6a6b085",
+    "f08f1558-530f-432c-be9b-afd676185902"
+  ],
+  "parent": "7d6f946e-244e-42ea-804f-c620f1ef9b33",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iL2IXkAMiL2I"
+    }
+  },
+  "tags": [
+    "NPCLookAt"
+  ]
+}

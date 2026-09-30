@@ -1,0 +1,78 @@
+{
+  "class_name": "Model",
+  "name": "Frostleaf",
+  "syncix_id": "e56b034d-e827-4f32-a07a-c4e47964a0d7",
+  "schema_version": 1,
+  "last_updated": 1790327691246,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1312.75,
+          437.988,
+          -520.9062
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "563eb490-a5c0-4c89-8b88-09703ac298d4",
+    "7e4ca814-02e5-489b-975b-88bda24ae0ea",
+    "d0edac57-6654-4edd-b11a-04d82a232f23",
+    "29c64def-24dc-414b-848a-3ad9e26f6b02",
+    "3ec1534f-d8ba-4694-ad2e-dffc2fd72555",
+    "4bf4ef2e-392c-4c44-a779-b3b50e98492c",
+    "080913c2-05e2-4136-83db-0c42cf1df944",
+    "5d8024f2-4c9a-4841-9a28-a22ca263845a",
+    "627042c4-4a02-4f3f-9d18-fc10d2a3dc7d",
+    "a9021561-1fc1-4e63-b31e-ee762f2c01d4",
+    "7eda4e16-f05e-4e03-9dda-8769d7898f9e",
+    "3e487577-61c0-401f-9587-61ff569e7958",
+    "500ebe5e-da8d-432c-920e-2b041e5a1335",
+    "0ac67713-a863-4805-a0cb-5efd183ff546",
+    "9bc420c9-302e-4efa-9755-074f86287d4c",
+    "a31b2e9b-c420-42c6-bfa9-9e9632741dc3",
+    "3153474d-0235-413b-bf2f-22edb52a035a",
+    "46408ab5-c502-48f5-985f-26d238218ba1",
+    "787d1c77-78b1-46f8-876d-297f4071e577",
+    "66b6c33c-3195-4ef3-8421-b24c979bca33",
+    "c3809d2c-d9b3-44b2-8b15-9de070544850",
+    "0dc24cae-c73e-4175-aead-1a30febbfb52",
+    "30c9e44e-d4b9-49df-9b7c-bb37cc273e0e",
+    "d4844aaf-743f-432c-af58-9e9a5781bda2",
+    "ad0b0765-cc54-4653-84e8-db7ce745bac1",
+    "4251b675-32ab-4bd2-93e7-5ca9e7c4fff1",
+    "4b117ed4-b3b7-45d4-b757-3311e42dd9d3",
+    "110e74d5-fb2e-4b15-a910-3e88eae1428e",
+    "b3264557-60f8-46ef-972f-e3d4e894eb87",
+    "035e40c4-c60e-4468-9646-f2306c4932e2",
+    "3cd5ed8b-7e68-4d8c-aed9-472e1fabaf33",
+    "9174a1b1-e113-4658-8b9e-436c526322c8",
+    "b62f6711-9657-4f87-90f8-5f2250bf8a07",
+    "97a26b03-bf9e-432f-8b45-c4aff212ba42",
+    "51b4a48c-6416-475c-9167-bc898219d4f4"
+  ],
+  "parent": "97e7f7a2-2228-4c39-b593-b8b06c63eb3a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "YtmAOFrNYtmA"
+    }
+  }
+}

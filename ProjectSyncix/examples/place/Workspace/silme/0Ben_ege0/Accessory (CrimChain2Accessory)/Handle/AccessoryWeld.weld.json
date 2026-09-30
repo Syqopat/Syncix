@@ -1,0 +1,60 @@
+{
+  "class_name": "Weld",
+  "name": "AccessoryWeld",
+  "syncix_id": "b93b3fb3-0a8c-4e31-a75e-b55a28b80cc5",
+  "schema_version": 1,
+  "last_updated": 1790327691179,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          0.000015258789,
+          0.30651236,
+          0.00048828125
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "c8f38107-1e56-4efe-b838-56c3763bd0e7"
+    },
+    "Part1": {
+      "Ref": "7c995f39-a80d-404d-b525-d5f60e737973"
+    }
+  },
+  "children": [],
+  "parent": "c8f38107-1e56-4efe-b838-56c3763bd0e7"
+}

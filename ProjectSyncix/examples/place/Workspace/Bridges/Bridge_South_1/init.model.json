@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Bridge_South_1",
+  "syncix_id": "91638b78-2988-4b71-acf7-3a1b6675cf42",
+  "schema_version": 1,
+  "last_updated": 1790327691164,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -85.0,
+          124.1,
+          160.65
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "4bf8b6fb-6cf3-453c-a0b6-38648e517d87",
+    "7891a29a-85ed-434d-938d-4bdb85f6adbc",
+    "844ac053-db70-4513-9599-6a437e4ca8e4",
+    "a1350e56-036a-428d-b172-0735b9597eed",
+    "1d81630b-1df9-49f8-8bd9-8d3dc058a871",
+    "af1da8b1-db84-4116-93fc-afa114c03d72",
+    "1ede7e64-bbc9-470b-a923-6790f5ceb1f0",
+    "f1431de7-b5ae-4b93-bee5-90d8d7fabdb2",
+    "cd0b9ceb-d3f3-433e-a5e2-0d7857f4ce76",
+    "088be6a4-4596-49c9-a4e8-c17e9668be49",
+    "5065e0e6-c109-4d01-8ed0-fc527f6814ef",
+    "2763bd6f-2e77-4d42-be9a-55b9586c12c8",
+    "e7d45f52-5cbf-4595-9d82-2802a37ca8fd",
+    "45c7594a-0785-4a9f-977d-2231fc2de274",
+    "57b08aad-421b-45c6-8cb4-c7bd4eea0c75",
+    "82abd633-e263-4dfa-9b65-198ff282ce2a",
+    "f550b662-cb34-4d1b-8ee2-ef6178cf849f"
+  ],
+  "parent": "ec69e548-6df2-453b-afe3-80edde7e545f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "TX9FQPEOTX9F"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "RightElbowRigAttachment",
+  "syncix_id": "c2ebc4b6-08cc-40a6-92f9-57cbb24030a0",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.15797792,
+          0.2465853,
+          -0.024165722
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 6.834403e-31,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          1009.14197,
+          798.62286,
+          -110.87444
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          6.834403e-31,
+          1.0,
+          0.0,
+          -1.0,
+          -6.834403e-31,
+          0.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": -6.834403e-31
+      }
+    }
+  },
+  "children": [
+    "6b5c7059-dd97-47cd-8fcb-875c8672c2f8"
+  ],
+  "parent": "ec5e9632-1aa6-4463-aff4-a0e6e6f302a0",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "0JfscEO80Jfs"
+    }
+  }
+}

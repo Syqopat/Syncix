@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Blueberry Seed",
+  "syncix_id": "c5285cb0-ba6a-4847-b69f-11a92c23dfb9",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Blueberry Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "4106a425-dcf5-4180-b6c2-e0beddbbef7c",
+    "9499d460-f41d-4c4b-b9f6-762aba7c8c6d"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000008",
+  "attributes": {
+    "ItemName": {
+      "String": "Blueberry"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Blueberry"
+    },
+    "_lemonadeUniqueId": {
+      "String": "pfncamaspfnc"
+    }
+  }
+}

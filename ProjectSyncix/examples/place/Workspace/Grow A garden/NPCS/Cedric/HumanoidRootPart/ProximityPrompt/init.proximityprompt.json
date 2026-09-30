@@ -1,0 +1,63 @@
+{
+  "class_name": "ProximityPrompt",
+  "name": "ProximityPrompt",
+  "syncix_id": "e36adc65-5fdb-4443-bbd3-05f3fcbec353",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "ActionText": {
+      "String": "Talk"
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "ClickablePrompt": {
+      "Boolean": true
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Exclusivity": {
+      "String": "Enum.ProximityPromptExclusivity.OnePerButton"
+    },
+    "GamepadKeyCode": {
+      "String": "Enum.KeyCode.ButtonX"
+    },
+    "HoldDuration": {
+      "Number": 0.0
+    },
+    "KeyboardKeyCode": {
+      "String": "Enum.KeyCode.E"
+    },
+    "MaxActivationDistance": {
+      "Number": 10.0
+    },
+    "ObjectText": {
+      "String": "Steven"
+    },
+    "RequiresLineOfSight": {
+      "Boolean": false
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Style": {
+      "String": "Enum.ProximityPromptStyle.Custom"
+    },
+    "UIOffset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  },
+  "children": [
+    "25861a61-4c0e-4725-956c-da9cfc8e399f"
+  ],
+  "parent": "0e18fa4b-ef95-4d01-a575-96f3e48371f9",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cEvsXy66cEvs"
+    }
+  }
+}

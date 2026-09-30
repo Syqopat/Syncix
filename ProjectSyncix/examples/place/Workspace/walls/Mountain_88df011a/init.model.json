@@ -1,0 +1,40 @@
+{
+  "class_name": "Model",
+  "name": "Mountain",
+  "syncix_id": "88df011a-40a4-4b87-9d70-b3d1f98ada94",
+  "schema_version": 1,
+  "last_updated": 1790327691323,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          877.053,
+          807.3829,
+          1.376976
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "09460951-0dcb-4d32-a075-abebea10d8c0",
+    "013121be-60e4-488c-bf02-0b554b232c1d"
+  ],
+  "parent": "35145d15-ed2e-467b-8147-57a5d9de7c59"
+}

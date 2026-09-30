@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Mushroom (Fruit)",
+  "syncix_id": "7d246bc1-6c42-4482-9cd8-922e93b7d50b",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          438.39,
+          -244.34375
+        ],
+        "rot": [
+          -1.0,
+          8.742278e-8,
+          0.0,
+          8.742278e-8,
+          1.0,
+          8.742278e-8,
+          7.642742e-15,
+          8.742278e-8,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c4d67e73-a691-47dc-951d-89e15ec86070"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "JmMQ3nJlJmMQ"
+    }
+  }
+}

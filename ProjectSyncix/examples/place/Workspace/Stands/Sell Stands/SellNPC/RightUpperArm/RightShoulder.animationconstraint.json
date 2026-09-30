@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "RightShoulder",
+  "syncix_id": "71dfd70a-3f3f-446f-b3f8-f906b71e1075",
+  "schema_version": 1,
+  "last_updated": 1790327691184,
+  "properties": {
+    "Attachment0": {
+      "Ref": "b86541fd-0c0f-407e-88c1-279060c81185"
+    },
+    "Attachment1": {
+      "Ref": "078b8d6e-9a4a-4d43-a867-37d0e8e35b2a"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "ecf49256-14dc-4a74-8ce6-38fa096cd75c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "7KDb5ed97KDb"
+    }
+  }
+}

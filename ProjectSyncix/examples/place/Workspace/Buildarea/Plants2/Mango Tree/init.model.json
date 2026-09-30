@@ -1,0 +1,66 @@
+{
+  "class_name": "Model",
+  "name": "Mango Tree",
+  "syncix_id": "fe50188b-4eb5-4f60-ae4d-66cdc73d15cb",
+  "schema_version": 1,
+  "last_updated": 1790327691244,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1312.7112,
+          439.88116,
+          -539.0465
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "6fb7a0c9-f870-4f57-9ef1-b58fb140922e",
+    "6f3c6d1b-ae28-4e35-864e-521f877f17b3",
+    "1a2d3c8e-5060-4938-a8d2-8b1e339e531a",
+    "c4da7207-c5d2-4c65-b56c-583d2aafd300",
+    "400f511e-0852-41a7-9953-4f764f9edddc",
+    "7b7a4933-9100-4460-b130-9ce3bc130583",
+    "f5d88da1-dae8-43b5-8cf5-0c0d93a1fcf4",
+    "a45a55fd-971a-424d-b454-5768c93ae16a",
+    "2ba88d50-b281-46d8-9e09-3ae37c569020",
+    "a5f8e386-de00-4bc4-b0a6-8ab8018a1fd5",
+    "2df32578-879e-4260-992d-0bcf56681031",
+    "01a47ea4-7953-4295-a85a-331be4e79cb0",
+    "a2daa9da-98f2-4fc7-8083-02b2ae6e194e",
+    "8a472055-6d39-40a7-9b77-92391652abba",
+    "3f7b8a79-69b6-497e-9340-babf9bce8f56",
+    "88788f20-f392-4774-81d0-038cdd06e340",
+    "91af954f-e8f7-4260-8161-24d7d66d3c60",
+    "c9774ac2-bc36-4d51-a458-7a5cee2394b5",
+    "a3739e1a-2176-441e-8592-d0889b20db97",
+    "3f1d7d72-d482-4f1d-a224-3cc08cd6c65c",
+    "d386a84e-7d74-4759-93c9-4b8e5a824a5b",
+    "9d4fe0b2-8f1f-4257-8fe7-fd058f251ffe",
+    "23189dcd-2896-4076-ad59-51746d3ad2b9"
+  ],
+  "parent": "97e7f7a2-2228-4c39-b593-b8b06c63eb3a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "qedUSKG0qedU"
+    }
+  }
+}

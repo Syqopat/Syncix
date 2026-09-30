@@ -1,0 +1,45 @@
+{
+  "class_name": "Pose",
+  "name": "Left Leg",
+  "syncix_id": "48dffc75-f5a3-4dea-8a40-77df62e47861",
+  "schema_version": 1,
+  "last_updated": 1790327691292,
+  "properties": {
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.08000028,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "EasingDirection": {
+      "String": "Enum.PoseEasingDirection.In"
+    },
+    "EasingStyle": {
+      "String": "Enum.PoseEasingStyle.Linear"
+    },
+    "Weight": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "ac1eb6d1-e45b-46c4-81c7-095c7e65a4e4",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "UlwDT4B9UlwD"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "class_name": "Model",
+  "name": "Cranberry",
+  "syncix_id": "3668ac36-7b65-4309-8412-80a0dffdae3e",
+  "schema_version": 1,
+  "last_updated": 1790327691329,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "5868602d-ea97-4056-a2b0-e6db91729f3c"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "59ad7b21-fd0e-47fb-a0f2-cc26b547a4d7",
+    "81db57c0-5348-4a9d-9b5b-41f815542c13",
+    "59ee20d3-cbce-41b0-b4a5-5bbe9eaa7a28",
+    "aa5e7687-81e3-42bf-a5e0-3853f44836f1",
+    "89108538-c74a-4863-8513-79fe92529498",
+    "bc9c068b-fba9-4a22-bcf9-4274b40912d5",
+    "170cbb2e-1f08-48d0-a97c-3f6beee0e387",
+    "6b42dae1-aed8-43c0-878f-ec80b12a8aa2",
+    "5868602d-ea97-4056-a2b0-e6db91729f3c"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "CmXYdZpdCmXY"
+    }
+  }
+}

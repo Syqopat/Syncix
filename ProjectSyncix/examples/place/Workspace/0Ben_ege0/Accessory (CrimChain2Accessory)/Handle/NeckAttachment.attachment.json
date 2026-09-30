@@ -1,0 +1,87 @@
+{
+  "class_name": "Attachment",
+  "name": "NeckAttachment",
+  "syncix_id": "581a8d2e-9448-49d7-88e6-c79fb34b6acb",
+  "schema_version": 1,
+  "last_updated": 1790327691324,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.000015258789,
+          0.30651236,
+          0.00048828125
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          438.25003,
+          -595.8505
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [],
+  "parent": "601472c7-8ad2-4c47-ac2e-c05b3beb1bae",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Tmb3hKmMTmb3"
+    }
+  }
+}

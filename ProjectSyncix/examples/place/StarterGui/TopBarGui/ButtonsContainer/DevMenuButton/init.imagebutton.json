@@ -1,0 +1,202 @@
+{
+  "class_name": "ImageButton",
+  "name": "DevMenuButton",
+  "syncix_id": "5189e16f-c7eb-4cb4-9df9-ae2124d49a95",
+  "schema_version": 1,
+  "last_updated": 1790327691388,
+  "properties": {
+    "Active": {
+      "Boolean": true
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "AutoButtonColor": {
+      "Boolean": true
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 0.1176,
+        "g": 0.1176,
+        "b": 0.1569
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 0.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.105882354,
+        "g": 0.16470589,
+        "b": 0.20784314
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "HoverImage": {
+      "String": ""
+    },
+    "Image": {
+      "String": "rbxassetid://71015713698716"
+    },
+    "ImageColor3": {
+      "Color3": {
+        "r": 0.1176,
+        "g": 0.1176,
+        "b": 0.1569
+      }
+    },
+    "ImageRectOffset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "ImageRectSize": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "ImageTransparency": {
+      "Number": 0.0
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "Modal": {
+      "Boolean": false
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "PressedImage": {
+      "String": ""
+    },
+    "ResampleMode": {
+      "String": "Enum.ResamplerMode.Default"
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "ScaleType": {
+      "String": "Enum.ScaleType.Tile"
+    },
+    "Selectable": {
+      "Boolean": true
+    },
+    "Selected": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 160.0,
+        "ys": 0.0,
+        "yo": 42.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "SliceCenter": {
+      "Rect": {
+        "min": [
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "SliceScale": {
+      "Number": 1.0
+    },
+    "Style": {
+      "String": "Enum.ButtonStyle.Custom"
+    },
+    "TileSize": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 52.0,
+        "ys": 0.0,
+        "yo": 52.0
+      }
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 10.0
+    }
+  },
+  "children": [
+    "772e2ee3-b535-49c1-accb-e1b49405a7b5",
+    "c107eb12-2d3e-41c8-9f0a-ff1c9771e97e"
+  ],
+  "parent": "d9aed40c-a7d4-495a-b598-9d2eda2c2c72",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "9ANkNHu09ANk"
+    }
+  }
+}

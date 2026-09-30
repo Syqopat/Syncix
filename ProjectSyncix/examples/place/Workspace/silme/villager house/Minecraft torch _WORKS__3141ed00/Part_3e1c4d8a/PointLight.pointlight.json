@@ -1,0 +1,35 @@
+{
+  "class_name": "PointLight",
+  "name": "PointLight",
+  "syncix_id": "a364cd29-0173-44c4-bbc4-d4d5ef509ed4",
+  "schema_version": 1,
+  "last_updated": 1790327691175,
+  "properties": {
+    "Brightness": {
+      "Number": 5.0
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.91372555,
+        "g": 0.8078432,
+        "b": 0.34509805
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Range": {
+      "Number": 8.0
+    },
+    "Shadows": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "3e1c4d8a-0ac5-48ee-bfd5-37837bdaae90",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iJB8ThHNiJB8"
+    }
+  }
+}

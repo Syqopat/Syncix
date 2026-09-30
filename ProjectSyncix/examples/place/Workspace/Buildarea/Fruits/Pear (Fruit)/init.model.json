@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Pear (Fruit)",
+  "syncix_id": "d4a18698-8fd4-4a52-ba06-d3252d501653",
+  "schema_version": 1,
+  "last_updated": 1790327691224,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.4282,
+          -152.15625
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c33fb7c3-6c7c-4862-b498-df08029e3afc",
+    "1ca98a3a-baf9-4918-abbc-3e156c1e41ec",
+    "e7d33385-6acf-44b4-9d8e-bdc28ac482c0",
+    "f649048a-b012-49ac-a181-95f11765a1ef",
+    "0119cd9e-1ea1-4cf5-a924-c1046b4a0a88",
+    "54bbc9dc-3fa0-4ece-b4b1-6d43ab486938",
+    "8da4f7d0-d6bf-42fc-8b04-6b660e418ca6",
+    "691a2cce-898d-4d59-8e69-9cbdd67be0f9",
+    "3d886e58-4367-46c7-98c7-8aa9c16635e8",
+    "17824032-508e-4a41-a4b9-cd952a2e91c7",
+    "02152ab4-a33a-466a-abd6-c749f20f4e99",
+    "d66e659c-3013-490f-8f58-cbfd9dc40c4c"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Nb2eYc9RNb2e"
+    }
+  }
+}

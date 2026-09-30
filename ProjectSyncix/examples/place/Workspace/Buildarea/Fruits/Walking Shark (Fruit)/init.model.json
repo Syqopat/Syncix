@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Walking Shark (Fruit)",
+  "syncix_id": "88136550-aca2-45b9-97de-126c1e98a67f",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.51947,
+          50.65625
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8195342d-34c7-4f17-9367-cc5d1a418a3f"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "2tDr6ltH2tDr"
+    }
+  }
+}

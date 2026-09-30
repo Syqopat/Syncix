@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Pumpkin",
+  "syncix_id": "c6835972-7957-47a3-a444-f101e7806e93",
+  "schema_version": 1,
+  "last_updated": 1790327691335,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "1ad5c33a-6107-4fb9-9a2f-7cb1ad602645"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.39715,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "129bccb1-0f1e-4303-8cc4-e47f273092b1",
+    "07e06a11-b10e-4c2e-a4db-4538d3dc120c",
+    "f12ce508-a314-4856-85b1-eed0eafbcb0d",
+    "5a3f9416-5848-4457-a265-075d97eee5e6",
+    "62699bd2-74cc-4ee4-a427-50b202e6d767",
+    "40d4aa0c-5f0d-45e6-9234-8ecef5a3f137",
+    "7b01fcdd-f080-4e14-8655-f5aa6a2c403f",
+    "967e5c45-be0d-4b82-bf02-770a5a1c6cf1",
+    "1ad5c33a-6107-4fb9-9a2f-7cb1ad602645",
+    "d1e098f1-1ca5-48d9-a292-f12da754a962",
+    "c4527be8-48bd-4034-bdce-8454a4ba48d9",
+    "47d7bafb-c0f2-4087-ac96-fa0612ad001b"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Ludq30WyLudq"
+    }
+  }
+}

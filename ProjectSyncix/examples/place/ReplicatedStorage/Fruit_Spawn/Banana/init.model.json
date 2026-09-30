@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Banana",
+  "syncix_id": "9087e012-0514-4db7-a830-f1c50141a4dd",
+  "schema_version": 1,
+  "last_updated": 1790327691331,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "23760c5a-8067-4f4c-b4f1-a7435c63e869"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          2.6708585e-7,
+          0.75427693,
+          -0.3188956
+        ],
+        "rot": [
+          1.0,
+          -0.000019369745,
+          -0.000046730773,
+          0.000019375917,
+          1.0,
+          0.0001320539,
+          0.000046728215,
+          -0.0001320548,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fab776dc-9406-4ffb-bdff-00660a78658e",
+    "2fd6614c-1998-4e12-ab46-bff5bf151773",
+    "7ff38c0d-783c-4fa9-b8b3-0bcecb8a7491",
+    "7070e31a-6deb-47ef-87a6-62d6bef3c4a8",
+    "a3471d0d-7c92-4549-b7ca-55d5fa90b404",
+    "a4cedb89-0690-4e20-8bdc-c452d14efeb2",
+    "061e86bd-c90d-4217-8d46-fb260f37c0d8",
+    "23760c5a-8067-4f4c-b4f1-a7435c63e869",
+    "c85b1448-cbb1-4a49-83ff-69f73ebe56ab",
+    "6a85a0b5-9f93-4329-b86b-e0aed707c173",
+    "d33266ae-e519-4c6d-925a-d7e2854e31fe",
+    "b93b51c2-4acb-483c-937c-1764d8b8656b",
+    "9a0a2729-b00d-47fe-9ff8-a22fdb8b540c",
+    "837d965a-3202-4692-b0df-f3f2f9b5173e",
+    "cb61c90c-7698-4fcc-b2db-7bfc5c97938a"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "IrxCM4KIIrxC"
+    }
+  }
+}

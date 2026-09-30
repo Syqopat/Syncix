@@ -1,0 +1,61 @@
+{
+  "class_name": "Model",
+  "name": "Raspberry",
+  "syncix_id": "bd38bf92-d279-497d-9513-1083fe2ade82",
+  "schema_version": 1,
+  "last_updated": 1790327691331,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "4f5dae50-8c93-4abf-aabb-5efb55be812a"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.058284283,
+          0.24257648,
+          -0.28996307
+        ],
+        "rot": [
+          0.018912971,
+          -0.085895434,
+          -0.9961246,
+          -0.59230137,
+          -0.80362254,
+          0.0580503,
+          -0.8054945,
+          0.5889081,
+          -0.06607488
+        ]
+      }
+    }
+  },
+  "children": [
+    "7a786517-070f-4b74-bf13-299482af816a",
+    "e3430a24-d0ec-4f21-a4bd-27aff6730832",
+    "50273d6f-b84c-4288-8245-a43dc29cd134",
+    "ceafa409-fe2e-4425-85be-985c04ba8207",
+    "62b0bd5e-4520-423d-bc06-3507d3671915",
+    "e561172e-3186-40a6-b0eb-8c40b5c43f9d",
+    "9f89ea52-dc36-49d6-bd03-f2855072f29e",
+    "4f5dae50-8c93-4abf-aabb-5efb55be812a",
+    "65121998-c734-44b2-94c9-a660adf97317",
+    "b48a2556-ca5b-4d47-a546-378296e31517",
+    "ee487895-8e99-49cf-831b-fb9fd09ae70c",
+    "4c52d502-0685-4f43-a81d-a6988f28c9de",
+    "237ac4bb-73a1-4c9f-835d-6f9d6b4f56be",
+    "7c81aa08-ab30-474b-8044-799aad8ca5a6",
+    "93fcdf93-d6d9-48d6-aabb-0646153be572",
+    "312a9b62-4a19-42f2-ac90-fd14ad8fafb2",
+    "88b82ef0-ac75-4e76-ab59-cc9a3c9e67de",
+    "9c2d7a68-da17-4c9c-a89c-33553d851106"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5V1YlZyU5V1Y"
+    }
+  }
+}

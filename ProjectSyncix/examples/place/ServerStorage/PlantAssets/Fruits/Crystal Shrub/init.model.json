@@ -1,0 +1,52 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub",
+  "syncix_id": "9f6e7b10-d21e-41e3-ad66-db08d4c6d2e0",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.09078124,
+          0.56117165,
+          0.005246043
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c856916f-c5b0-43f4-bc62-ec873f763587",
+    "d41c4dd8-693f-479e-a75e-4e381ce1902b",
+    "9900056f-1d36-47e0-9cb5-bd12974fdb35",
+    "dd54c363-28fc-426c-a607-6305a682023c",
+    "da0142ec-42e3-4fd2-959e-2dc250e8c6bd",
+    "d3b94160-58f7-4509-b7cd-341e2830d7a3",
+    "b0bb8e3e-800c-4316-b3f8-9ee7755458ac",
+    "359158d4-a741-44a5-906d-9abe37190b9b",
+    "cd8e4e1f-a8e0-40ee-84c7-bab03cce916b"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "qQoathGIqQoa"
+    }
+  }
+}

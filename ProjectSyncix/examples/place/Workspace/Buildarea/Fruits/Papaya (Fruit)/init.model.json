@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Papaya (Fruit)",
+  "syncix_id": "68d5f397-30bd-49bb-ad69-7210b41232a0",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          436.03204,
+          -207.46875
+        ],
+        "rot": [
+          1.0,
+          1.4901163e-8,
+          8.940697e-8,
+          -1.4901159e-8,
+          1.0,
+          -4.3772168e-8,
+          -8.940697e-8,
+          4.3772168e-8,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "6cfd2fc0-f779-490d-adf1-98dc882b8978",
+    "114f6208-e7db-4c8e-8831-07a89c5cad33",
+    "c4b72da1-f77b-4e00-9925-c8095a6577d6",
+    "6e0b9dc3-74f8-49f5-99fd-428cbba6bae8",
+    "1439e36a-c657-4fec-bd71-e12f2b5bc901",
+    "f6d47cba-a5c0-4673-a525-8fb02d4770b9",
+    "0b29ff79-7847-4523-accb-392f94ea411a",
+    "0d187d75-256b-45d6-b66d-c0d4ca17b415",
+    "4d054009-6820-4fa9-b3dd-43aa6aa3c1da",
+    "5645793f-b5b4-4941-95bb-339245e3595d",
+    "7ba40116-9272-4633-aba1-c0f5511685fd",
+    "9d51aaea-fd49-46d3-b631-aca1f0e66f2b",
+    "259f20d9-56c0-4360-8aa7-9a02de94d1ee",
+    "e42039a6-519e-49eb-a5d6-09bb65175f70",
+    "d5b898e6-94eb-4733-82eb-4e0568ffc85e",
+    "303bfe8b-e48a-43f3-825b-3a41d49369b7",
+    "0131087e-6f85-4582-9e5d-b47daf1c922a"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "XoZFU4N9XoZF"
+    }
+  }
+}

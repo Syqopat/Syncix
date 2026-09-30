@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "FrontGasValve",
+  "syncix_id": "d2dc01dc-e874-42f2-a133-7eace0d7c855",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "fc760740-228d-45da-a997-52132b74e58b"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          360.0556,
+          437.685,
+          -201.4788
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "65ae2b48-685e-44f4-ae9e-84077bc17c42",
+    "e5171628-ebb8-45e3-ad42-c476342dff53",
+    "3944bdcb-7ebb-42a2-8129-dc16e3837728",
+    "623f3c32-16e5-4431-9c1a-69ff74324783",
+    "fc760740-228d-45da-a997-52132b74e58b",
+    "cff72da5-ac04-4128-900a-0914c945e820",
+    "f9644fd7-f3d7-4cdf-a380-7b0cec9662b9",
+    "bfa108c2-b642-47e2-b7e8-9a4b2943af8a",
+    "56bca922-a85e-4080-9be5-38a717e4048b",
+    "02b42e27-4733-46ac-a170-ee79b3831085",
+    "662c303f-13f9-4d81-b55d-92c92b81dd75"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "gdz4XII4gdz4"
+    }
+  }
+}

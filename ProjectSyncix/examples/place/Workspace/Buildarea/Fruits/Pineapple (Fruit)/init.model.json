@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Pineapple (Fruit)",
+  "syncix_id": "da600216-ec73-407a-a15b-7fbaedcfe9f2",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1429.974,
+          436.09842,
+          -133.71875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c23e1c38-c8f1-4fc6-9cac-e5823742658b",
+    "da3d81f5-63ee-4ab6-9876-001ab517fadd",
+    "73328f15-0df9-4227-957b-45ead7260777",
+    "9f6233db-131d-4edf-b882-00e6c40923a2",
+    "5ac176e8-6a7d-4998-ba63-da91773f49ea",
+    "e7356847-9009-4c6e-b988-a41a1a6e826f",
+    "4d785515-5a41-4034-ba78-56690fce32a8",
+    "279e0433-e81a-415e-921a-a0700462c940",
+    "12fe8d56-e3f2-4b08-96a7-37eeee37a340",
+    "cdf806ae-76fd-4728-89d0-7738e9e47492",
+    "07401d49-93dd-4358-9667-f359a9e7b7f7",
+    "7526bc0d-475e-4eb8-a522-423e388cb6e7",
+    "b4c46741-1b8d-4eac-8b39-ee1e6f7eb2d8",
+    "cd05cc31-b35d-49fc-afab-d7cc43d3c2e5",
+    "b7d3e01b-5fda-47d4-a710-4417c7fc99fc",
+    "347fd449-0bfa-4516-b817-758506428264",
+    "de2fc60c-1188-4bc3-80a1-df9131010fa4",
+    "2eaa292d-d678-45cf-87a9-8917ca5d11ae",
+    "d885b420-cb8c-4e97-97dc-84451f5ce5f6",
+    "421efe3d-8c1c-4851-889e-28dfa4101d66",
+    "1fd8971f-efb4-449a-b376-8ff624b69df9",
+    "bc980f14-fbed-4fed-b11b-d8ac49506e3d",
+    "eaa03253-aed0-4cc0-81f1-dcdc9bd026a7",
+    "d04508ce-09da-43bd-9c59-8cfd8e181159",
+    "101e4c34-f884-441c-8881-9aee0ba875b1",
+    "3c6a0e68-5d16-4859-a046-8226a73a4a48",
+    "a10362dc-4438-4b17-8e28-125320e972f9",
+    "9ec8e027-a716-4871-8d16-777fba1e3cf6"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "xVHDVKfDxVHD"
+    }
+  }
+}

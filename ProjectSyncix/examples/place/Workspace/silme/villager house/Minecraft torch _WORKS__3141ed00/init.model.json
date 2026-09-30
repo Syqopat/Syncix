@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Minecraft torch *WORKS*",
+  "syncix_id": "3141ed00-1e1b-4505-ab31-42933bec78f5",
+  "schema_version": 1,
+  "last_updated": 1790327691175,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1003.6649,
+          809.72455,
+          -94.98417
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          -0.34202302,
+          0.93968475,
+          0.0,
+          0.93969077,
+          0.34202522,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3e1c4d8a-0ac5-48ee-bfd5-37837bdaae90",
+    "cb3139a8-ae1c-4bbd-b507-e3ba7a4f4fc7"
+  ],
+  "parent": "34484384-e800-4dd7-b733-8b3c6d4daaa1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "LOokF9qeLOok"
+    }
+  }
+}

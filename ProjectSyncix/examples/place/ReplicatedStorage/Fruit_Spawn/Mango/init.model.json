@@ -1,0 +1,62 @@
+{
+  "class_name": "Model",
+  "name": "Mango",
+  "syncix_id": "14b48b71-1ae9-4811-bc37-d94e0cd5efd6",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "f6539dc9-1093-42d7-9b6c-832d1a2a19d9"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.23522222,
+          -2.3503673,
+          -0.06533289
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "44ecf56d-c4ee-42fd-8e4c-e9e26e29ff83",
+    "39a88de4-5319-45eb-b992-04c20c8642c1",
+    "5136121b-5d6d-49dc-8c3b-db28cc811a54",
+    "55896703-8e8e-4d5a-85e5-3883d14cfce9",
+    "c0ec154a-2a89-4430-9572-7eea96dbd16f",
+    "3a072db3-bf77-4894-885b-bc5391d5f69a",
+    "e676e843-6a1a-4e92-8728-52adb73889f7",
+    "adacfe78-a550-4cd4-8b02-f9f5e5eb99ec",
+    "f6539dc9-1093-42d7-9b6c-832d1a2a19d9",
+    "a5e01eaa-f870-41ac-a895-db49fe4f82e7",
+    "45a368b9-a3db-4721-a094-84f716ce8fb3",
+    "71b6dbc5-1fa3-45a2-8516-70778624beef",
+    "ea45ba10-a7ef-45fb-9f2f-6f07a7e4ac82",
+    "c878fcb2-086e-4b42-933b-f513e9217a65",
+    "8b6dd404-3d9f-4c74-8572-a57d799ec8af",
+    "250dd65a-b739-473a-99ae-f35d1fcd216e",
+    "3ef328ed-2552-4c15-8034-221f9386a80e",
+    "6a721a14-f2b2-4168-9205-eaf06a28a733",
+    "8a88c261-d1e1-44f5-89a4-6807e3b4072f"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "tfeJrY8OtfeJ"
+    }
+  }
+}

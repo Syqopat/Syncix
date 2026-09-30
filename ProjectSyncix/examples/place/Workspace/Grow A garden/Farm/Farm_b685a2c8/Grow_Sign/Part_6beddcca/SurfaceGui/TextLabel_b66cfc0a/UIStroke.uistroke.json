@@ -1,0 +1,38 @@
+{
+  "class_name": "UIStroke",
+  "name": "UIStroke",
+  "syncix_id": "3c8c833d-9c51-4730-b1b6-091673d6eed4",
+  "schema_version": 1,
+  "last_updated": 1790327691282,
+  "properties": {
+    "ApplyStrokeMode": {
+      "String": "Enum.ApplyStrokeMode.Contextual"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LineJoinMode": {
+      "String": "Enum.LineJoinMode.Round"
+    },
+    "Thickness": {
+      "Number": 3.0
+    },
+    "Transparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "b66cfc0a-e009-4ffd-ac29-c616e254b085",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Lu5BSWWCLu5B"
+    }
+  }
+}

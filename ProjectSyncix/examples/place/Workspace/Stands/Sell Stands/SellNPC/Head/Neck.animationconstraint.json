@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "Neck",
+  "syncix_id": "6bbb1742-2a85-422a-8abf-c16e48e1c8aa",
+  "schema_version": 1,
+  "last_updated": 1790327691183,
+  "properties": {
+    "Attachment0": {
+      "Ref": "5b32108e-4e62-499f-bb41-ff36dfb7a54c"
+    },
+    "Attachment1": {
+      "Ref": "984e94cb-b47c-4599-aebf-e35998a707f4"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "b497abc9-6462-4ed5-af70-00ff6b82cce7",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "i96ecrTJi96e"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "class_name": "UIListLayout",
+  "name": "UIListLayout",
+  "syncix_id": "d4ba5ebd-28cb-4842-8100-9e83ed254074",
+  "schema_version": 1,
+  "last_updated": 1790327691317,
+  "properties": {
+    "FillDirection": {
+      "String": "Enum.FillDirection.Horizontal"
+    },
+    "HorizontalAlignment": {
+      "String": "Enum.HorizontalAlignment.Center"
+    },
+    "Padding": {
+      "UDim": {
+        "scale": 0.025,
+        "offset": 0.0
+      }
+    },
+    "SortOrder": {
+      "String": "Enum.SortOrder.LayoutOrder"
+    },
+    "VerticalAlignment": {
+      "String": "Enum.VerticalAlignment.Center"
+    }
+  },
+  "children": [],
+  "parent": "9cf0b38d-0530-4107-a83d-fa02da864c53",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "mLsp800emLsp"
+    }
+  }
+}

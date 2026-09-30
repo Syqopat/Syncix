@@ -1,0 +1,42 @@
+{
+  "class_name": "Model",
+  "name": "Daffodil single",
+  "syncix_id": "fafc512a-ae2f-4a24-85cb-86ef10d8e10e",
+  "schema_version": 1,
+  "last_updated": 1790327691269,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1972.3303,
+          189.00002,
+          -2.4846976
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [],
+  "parent": "1012ae19-3336-4122-863a-7b2a4a5d0699",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "EsbDvFcUEsbD"
+    }
+  }
+}

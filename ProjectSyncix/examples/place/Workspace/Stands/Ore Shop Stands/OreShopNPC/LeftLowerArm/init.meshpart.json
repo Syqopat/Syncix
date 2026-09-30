@@ -1,0 +1,154 @@
+{
+  "class_name": "MeshPart",
+  "name": "LeftLowerArm",
+  "syncix_id": "3ccb50c9-6d51-45e9-941b-38871bab8b29",
+  "schema_version": 1,
+  "last_updated": 1790327691181,
+  "properties": {
+    "Anchored": {
+      "Boolean": false
+    },
+    "BackSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "BottomSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "BrickColor": {
+      "BrickColor": "Really black"
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          8.018635,
+          127.11369,
+          -13.234344
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "CanCollide": {
+      "Boolean": false
+    },
+    "CanQuery": {
+      "Boolean": true
+    },
+    "CanTouch": {
+      "Boolean": true
+    },
+    "CastShadow": {
+      "Boolean": true
+    },
+    "CollisionGroup": {
+      "String": "Default"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.06666667,
+        "g": 0.06666667,
+        "b": 0.06666667
+      }
+    },
+    "CustomPhysicalProperties": {
+      "Ref": ""
+    },
+    "EnableFluidForces": {
+      "Boolean": true
+    },
+    "FrontSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "LeftSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "Locked": {
+      "Boolean": false
+    },
+    "Massless": {
+      "Boolean": false
+    },
+    "Material": {
+      "String": "Enum.Material.Plastic"
+    },
+    "MaterialVariant": {
+      "String": ""
+    },
+    "PivotOffset": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Reflectance": {
+      "Number": 0.0
+    },
+    "RightSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "RootPriority": {
+      "Number": 0.0
+    },
+    "Rotation": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 90.0,
+        "z": 0.0
+      }
+    },
+    "Size": {
+      "Vector3": {
+        "x": 0.84327394,
+        "y": 1.2796174,
+        "z": 0.93799996
+      }
+    },
+    "TextureID": {
+      "String": ""
+    },
+    "TopSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "Transparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "caf59e22-c738-4325-a15f-f0ae11725d83",
+    "070df72c-fefd-4add-90e4-c919e14059e0",
+    "15380dc9-c270-4e9c-8753-13db55296dd7",
+    "56ff8681-7e41-4111-bae7-cade098e7166",
+    "86295372-8db9-48d1-a888-19a985943ba7",
+    "5ceaf479-76b6-4752-b5dd-6f7e46e33466",
+    "bb3ba830-f0ce-483a-90cf-3b749b094070"
+  ],
+  "parent": "f464ad9a-e692-409a-8b20-5f40f677b05f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "46m6aw7R46m6"
+    }
+  }
+}

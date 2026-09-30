@@ -1,0 +1,50 @@
+{
+  "class_name": "Pose",
+  "name": "Torso",
+  "syncix_id": "7fcc207e-369f-4c2f-9d79-14a20d160a3b",
+  "schema_version": 1,
+  "last_updated": 1790327691292,
+  "properties": {
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          -0.094093665
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "EasingDirection": {
+      "String": "Enum.PoseEasingDirection.In"
+    },
+    "EasingStyle": {
+      "String": "Enum.PoseEasingStyle.Linear"
+    },
+    "Weight": {
+      "Number": 1.0
+    }
+  },
+  "children": [
+    "4fdc6092-f7f9-4ea8-9394-2d0784001218",
+    "32360ebe-22c8-445b-892a-1b07210754d3",
+    "90f95b43-035c-4da5-903d-7b5a5b60b6ac",
+    "81f7be22-daa3-434b-8fc4-a400fd33910c"
+  ],
+  "parent": "97e443c6-20f0-4f34-92ff-317636eb3604",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "YeG5iX9nYeG5"
+    }
+  }
+}

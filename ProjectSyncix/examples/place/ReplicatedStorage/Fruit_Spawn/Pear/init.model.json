@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Pear",
+  "syncix_id": "586d1d8c-faf5-4afe-ba2b-921ebe5c4df2",
+  "schema_version": 1,
+  "last_updated": 1790327691329,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "25970b0a-89ee-46da-a71a-e54bf55a6090"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.000029563904,
+          0.64976454,
+          0.00002861023
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "53a94d8b-8639-42ef-af31-8d35db0784cc",
+    "50578912-96c2-4c11-8424-e3ca2edbdba2",
+    "2cf69251-5fa6-4888-bd03-7b74a692b567",
+    "9b487d40-dafe-4691-8593-fb9590641c97",
+    "83da7df2-3b33-49a9-a455-46e959c80b6b",
+    "5006da27-56d0-4230-bf21-a78255ba1622",
+    "745ab60c-3faf-4824-a6e9-1be3ef2b6c8d",
+    "25970b0a-89ee-46da-a71a-e54bf55a6090",
+    "cff7e78c-8bfe-477a-834b-f828b1770f50",
+    "253046d7-bbfa-4ba5-8ed6-77480b634c25",
+    "62f51723-f333-4f2c-9466-6aa6e4408228",
+    "dd87f2a3-14b0-4290-8849-73dcbc0117d9"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "wmyNlIXRwmyN"
+    }
+  }
+}

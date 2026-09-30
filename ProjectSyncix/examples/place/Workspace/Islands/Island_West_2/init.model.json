@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "Island_West_2",
+  "syncix_id": "7384b65f-02d7-4cc0-a6df-3ac6431afb89",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -350.0,
+          119.5,
+          100.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "1a6473e6-b65e-4163-aabd-553c9f9ece53",
+    "dd2d482f-e369-49b0-b78a-d1b8a8cbce1a",
+    "f62825a0-d916-476e-803f-ff53fd05c4bc"
+  ],
+  "parent": "c27ecf15-a0c2-4576-8e08-e61596b54ed1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "RQw44qVZRQw4"
+    }
+  }
+}

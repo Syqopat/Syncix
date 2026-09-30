@@ -1,0 +1,64 @@
+{
+  "class_name": "Model",
+  "name": "Corn",
+  "syncix_id": "f857adfb-3b16-469a-9e00-714d79a79143",
+  "schema_version": 1,
+  "last_updated": 1790327691335,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "81f05bde-bbb4-43ff-9745-c3569cbcb51e"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.029195964,
+          2.0335455,
+          0.0011923313
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "6807c799-b54e-4a42-919b-c90107994472",
+    "6b5779d7-b880-4639-90fc-51ddfafc11e2",
+    "a63c87ca-f677-4112-96ec-fee34d131396",
+    "2ef76501-f05e-40c7-a93c-4c588ff0eb69",
+    "940ee328-1712-4f9f-aa59-2464b4228c5f",
+    "dbbf9fbc-5431-4445-be1c-ed91e711d799",
+    "d1ec0a9c-3527-433d-8612-69624bc8faed",
+    "3c1bf061-2c36-4e2d-a322-4df7d2fb5bdd",
+    "6c92aafc-4449-4d7f-bede-5bac031e3595",
+    "47046cf5-e0ed-4ad7-8fdb-42940463a6b5",
+    "81f05bde-bbb4-43ff-9745-c3569cbcb51e",
+    "7b818ce8-b969-4f7b-8742-974c56e7906b",
+    "f8e614ea-cb40-4161-b998-f81bd96ac2bd",
+    "14857578-73e2-4dd4-87ff-3e855c68054e",
+    "391dd37b-8e92-468d-a9cd-8dfc8c3fce9a",
+    "e79c3974-b14c-4b63-8520-b8ff8f4214bb",
+    "984ece5f-e860-4126-a205-209563d6dbe5",
+    "c0b22839-3c59-4b58-95f6-266704d5a339",
+    "54877918-c3bb-4a9e-9718-f6ac25e5bb9c",
+    "f6e7590d-2928-4e0f-9323-039170e4affe",
+    "ef791b02-7f31-4bf5-9cf3-4a9a9366c5ee"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5dOiKjgQ5dOi"
+    }
+  }
+}

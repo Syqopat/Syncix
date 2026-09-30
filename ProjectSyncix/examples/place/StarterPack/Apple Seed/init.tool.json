@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Apple Seed",
+  "syncix_id": "8a01e4d8-f66d-4a8e-8a25-255fba364df1",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Apple Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "67122ee2-8fa8-40a7-9ee5-7be5f286a42f",
+    "b02632b9-58e4-4f7c-9ad4-e3863833e96b"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000008",
+  "attributes": {
+    "ItemName": {
+      "String": "Apple"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Apple"
+    },
+    "_lemonadeUniqueId": {
+      "String": "26Agu95326Ag"
+    }
+  }
+}

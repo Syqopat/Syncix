@@ -1,0 +1,56 @@
+{
+  "class_name": "Model",
+  "name": "Red Lollipop",
+  "syncix_id": "744c2259-e2a8-448d-af11-7e70c90537cd",
+  "schema_version": 1,
+  "last_updated": 1790327691344,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "ba2b6658-a26d-45ef-bc94-b07d91535280"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.009260334,
+          0.71803,
+          0.00007773927
+        ],
+        "rot": [
+          0.99991584,
+          -0.0000064373016,
+          -0.01299838,
+          -0.012998283,
+          0.00008022785,
+          -0.99991566,
+          0.0000076293945,
+          1.0000004,
+          0.000080307946
+        ]
+      }
+    }
+  },
+  "children": [
+    "38f68163-8383-4e5e-bc4e-95654df653d0",
+    "dc0c5edc-b914-45c0-a586-e2b0c1daa931",
+    "45d4d274-0bcb-4afa-80b0-dd2a67b19ff7",
+    "ccc34bda-6eba-4340-973e-9d5cb5251688",
+    "a9507535-8f3b-4303-8f50-fdca601ab1c0",
+    "4dff91d5-98c7-434e-a0e5-956f082ea84e",
+    "facfd493-d214-450c-9c7a-e0610090a427",
+    "856f5fda-6075-4905-8938-9bc0703cc27e",
+    "ba2b6658-a26d-45ef-bc94-b07d91535280",
+    "c0b90260-1aa1-4cfd-a3ff-c33a143f6acd",
+    "60b3aaf3-61a0-4533-b257-e9a5a2c8abf0",
+    "36899408-62bb-4550-bb2f-31f99fde3512",
+    "47821eca-fb47-4839-aea7-96fa3a9531c1"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "HgF61M2qHgF6"
+    }
+  }
+}

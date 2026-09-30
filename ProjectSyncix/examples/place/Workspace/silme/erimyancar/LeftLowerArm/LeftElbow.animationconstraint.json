@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "LeftElbow",
+  "syncix_id": "8bd26125-ba7c-4dbf-ad44-527582444281",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "Attachment0": {
+      "Ref": "5053b85e-940f-4b6a-a1f7-f4255ec44cad"
+    },
+    "Attachment1": {
+      "Ref": "f2881e6a-27a0-4fc1-86fe-6b2a90b9717e"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "39be0b41-109e-47a0-8159-d46d007f99b3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "40dobipr40do"
+    }
+  }
+}

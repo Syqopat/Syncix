@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "Strawberry",
+  "syncix_id": "a975be6e-7eb3-4ef1-9c32-14dfa6909c6a",
+  "schema_version": 1,
+  "last_updated": 1790327691386,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.47423625,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "61f2289a-d9d0-4a5d-897d-151fb2341476",
+    "2f84412e-93c8-4ac3-953e-b380d812be9e",
+    "9a190255-9f7f-401b-a47d-2097b13f5d41",
+    "73023f89-0521-4eb8-8356-13c832dcb83b",
+    "c2a3aab7-9c16-49ae-8be0-1ebc6ee92c13",
+    "a82cf5fc-5594-4b54-876c-640afbe66e00",
+    "4811f81f-4b13-4efe-8d13-e0eedd35a054",
+    "509e0a58-4156-40cb-95a2-bc518daa3369",
+    "b510fadc-8c89-4098-807c-4a36e524f764",
+    "6cd4f966-d1fe-4041-ac62-05f2ab2aaacf",
+    "a52386d3-fde9-46d6-a223-9d756e86ff12"
+  ],
+  "parent": "aef1af18-7d54-4e30-9912-077ef6c14426",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "39aGPPnX39aG"
+    }
+  }
+}

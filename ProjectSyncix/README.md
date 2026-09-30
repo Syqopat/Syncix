@@ -170,9 +170,9 @@ file goes into version control and the key would become public.
 
 | Component | Language | Role |
 |---|---|---|
-| `core-engine` | Rust | state model, disk writer, HTTP/WebSocket server, CLI |
-| `studio-plugin` | Luau | observer and executor inside Studio |
-| `vscode-extension` | TypeScript | explorer, inspector, commands, auto install |
+| `packages/core-engine` | Rust | state model, disk writer, HTTP/WebSocket server, CLI |
+| `packages/studio-plugin` | Luau | observer and executor inside Studio |
+| `packages/vscode-extension` | TypeScript | explorer, inspector, commands, auto install |
 
 Studio talks to the core over HTTP long-poll; the editor uses a WebSocket. Instance
 identity (`__syncix_id`) is created once, at creation time, and **never** changes on
@@ -181,15 +181,15 @@ rename, reparent or reconnect.
 ## Development
 
 ```bash
-cd core-engine && cargo test
+cd packages/core-engine && cargo test
 ```
 
 ```bash
-sh tools/luau-check.sh $(find studio-plugin/src -name "*.lua")
+sh tools/luau-check.sh $(find packages/studio-plugin/src -name "*.lua")
 ```
 
 ```bash
-cd vscode-extension && npm run compile
+cd packages/vscode-extension && npm run compile
 ```
 
 All three components must carry the same version number (`Cargo.toml`,

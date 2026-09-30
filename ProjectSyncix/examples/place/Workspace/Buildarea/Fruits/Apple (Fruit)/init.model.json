@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "Apple (Fruit)",
+  "syncix_id": "b3cd64f0-ab80-47c7-ba96-4835babd6fd2",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.19937,
+          -631.53125
+        ],
+        "rot": [
+          -4.371139e-8,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -4.371139e-8
+        ]
+      }
+    }
+  },
+  "children": [
+    "8600997e-7d7a-48a1-a28c-b46a40b3b656",
+    "3d55459d-d24d-4c49-bf17-27b11d56a15e",
+    "32f60c27-f224-4207-bcac-40ade410f142",
+    "66af4f85-1df6-4b48-95cd-f05bc5066cba",
+    "34dc647d-d724-448e-ac1b-ae1527ad7da5",
+    "4ff96655-5ebb-4fc5-89b5-b4f3f457f142",
+    "d54e9303-8879-4a5c-9bc9-3a8ea2ac7072",
+    "d8ecdb7e-18a9-4e41-8e45-3a77b3101e4b",
+    "cb05bd57-ded1-4996-adc4-269ba0083188",
+    "7d8c3f63-c2a4-4287-8f55-1b3e72cf18e3",
+    "45bbaf84-f790-4c13-ab58-0316ee8a6be3"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "3tNbeXTt3tNb"
+    }
+  }
+}

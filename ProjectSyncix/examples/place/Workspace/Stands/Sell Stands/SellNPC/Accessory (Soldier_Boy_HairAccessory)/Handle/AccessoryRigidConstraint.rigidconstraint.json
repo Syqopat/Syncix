@@ -1,0 +1,31 @@
+{
+  "class_name": "RigidConstraint",
+  "name": "AccessoryRigidConstraint",
+  "syncix_id": "dc457591-8b23-4bbc-8b87-8fc650a5cf89",
+  "schema_version": 1,
+  "last_updated": 1790327691183,
+  "properties": {
+    "Attachment0": {
+      "Ref": "4fa92bfe-2fbc-4414-ad79-7209494d0cd8"
+    },
+    "Attachment1": {
+      "Ref": "e8d3b185-a02f-41a6-be1d-bccaeb27f28e"
+    },
+    "Color": {
+      "BrickColor": "Medium stone grey"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "6c9750dd-9e19-4ff2-885e-33f9b9d6999c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ioWY5SrtioWY"
+    }
+  }
+}

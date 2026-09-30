@@ -1,0 +1,77 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub",
+  "syncix_id": "d03696b9-9e24-4057-a5eb-4d6f40068166",
+  "schema_version": 1,
+  "last_updated": 1790327691236,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          475.5,
+          436.3462,
+          27.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "803a95d0-f9db-431c-9c9e-27a9ce904720",
+    "b1fadaa7-77a8-43d0-aedc-d08a7fc3e65d",
+    "dbe8d736-0f70-402b-ae06-70b5a76b36ab",
+    "a07be72d-57a6-4856-ab8f-f6ddb764c30f",
+    "af9748fa-ab13-4415-8501-70140d9f0324",
+    "d7824d1f-e042-4091-a52a-805da31f549d",
+    "29c4fe3a-3b53-41c1-b796-bc9ac5a25748",
+    "4ef23924-7e3d-45bd-9994-4a2496fefe14",
+    "c2294569-9bde-4f07-8ca9-41baf3bf9b5a",
+    "5a16b569-dd14-4a2a-8a26-5b0a45b9333b",
+    "8fd427fe-4ca7-4379-bb87-dcca169e1e1c",
+    "c84e53ae-a016-4a0e-b58b-b4b60cd6d3a5",
+    "2fad9d21-97f1-4122-ae4f-3232bb48223f",
+    "293d60d0-85b8-4586-87d3-6d7c8439fd9c",
+    "2fc4872b-dd17-4731-89cd-0f1387d86cd2",
+    "21c7a8c7-96b7-4ff9-aadb-e70e82b4fde6",
+    "e33bbc18-206b-47a0-8a56-14368474d32a",
+    "73d96a32-ecb1-4375-8ac8-11b8baaba0a3",
+    "e9405873-9a62-490e-8646-b5c4367edd58",
+    "1ddb61c8-6dac-4591-8817-61b3e7101083",
+    "4ded8f72-b5b0-493a-bc23-0cf6f7f7efa9",
+    "1ec70e79-1a54-47f9-b4b8-a5ff95225e10",
+    "8b63b181-82c9-4e5a-9f92-2c731e0113b7",
+    "098b65be-5a6a-4fcf-ba41-ffc6d1a28717",
+    "512e92c4-72d1-4f18-9d3b-099d70f1f62d",
+    "99b433fc-38aa-4558-8a03-37d11c0e4e2e",
+    "955dc4d3-5c9c-4bdd-b470-81a5cc8b73b3",
+    "64805d14-fb14-4c50-b8bd-3c159ba92ad9",
+    "ebfe6e40-9762-425b-958e-9563b2e39ff6",
+    "e67723bc-b820-4265-b6bc-fc67ed02b237",
+    "7d44667e-070a-4cee-ae85-0e350bdfe252",
+    "5f58848c-69dc-456b-a733-a31183f76d0c",
+    "d1a599b9-7b04-4ffd-9c56-48acd00a99e8",
+    "08899320-e743-4d4c-b791-10e4898106bc"
+  ],
+  "parent": "43cfeeaf-a40e-49e9-8a16-06179872bf5e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "1J24kGgC1J24"
+    }
+  }
+}

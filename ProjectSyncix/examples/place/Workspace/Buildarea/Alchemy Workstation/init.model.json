@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Alchemy Workstation",
+  "syncix_id": "c4bcc5f9-ad58-42ca-8a6a-3b27d8772da2",
+  "schema_version": 1,
+  "last_updated": 1790327691267,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          504.07605,
+          564.6116,
+          432.63736
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "000cfefd-da24-4047-a31d-f9072ca60f67"
+  ],
+  "parent": "314828fa-c475-4672-9b71-e842e7e89a1b",
+  "attributes": {
+    "RBX_ReimportId": {
+      "String": "2218f5f8-5133-4448-9677-3005f7480897"
+    },
+    "_lemonadeUniqueId": {
+      "String": "YaS3ZEBBYaS3"
+    }
+  }
+}

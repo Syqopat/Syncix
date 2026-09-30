@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Carrot Seed",
+  "syncix_id": "03b4b14e-df18-41d5-a875-44eab1799f14",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Carrot Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "a555be5f-406a-499b-b5c8-0a462ab0e381",
+    "dbf09717-5a6e-4164-b1a8-ae1a3e9bcb27"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000008",
+  "attributes": {
+    "ItemName": {
+      "String": "Carrot"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Carrot"
+    },
+    "_lemonadeUniqueId": {
+      "String": "1RBo5kMM1RBo"
+    }
+  }
+}

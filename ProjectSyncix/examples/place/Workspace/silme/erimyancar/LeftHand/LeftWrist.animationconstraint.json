@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "LeftWrist",
+  "syncix_id": "0f54aa40-7962-40b7-ba0b-bc6decf4c5c7",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "Attachment0": {
+      "Ref": "be501f20-3c64-41be-909a-02ce121b1ebe"
+    },
+    "Attachment1": {
+      "Ref": "1bb95b07-c6df-4c86-affa-1668d072fd71"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "4bff5c8a-0e9c-4950-af82-58df0c31437a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "qvrchfyiqvrc"
+    }
+  }
+}

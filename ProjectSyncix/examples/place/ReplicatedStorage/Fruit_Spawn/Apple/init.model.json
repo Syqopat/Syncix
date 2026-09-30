@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "Apple",
+  "syncix_id": "348fb5d6-7418-4310-93d0-e146a58e8b3f",
+  "schema_version": 1,
+  "last_updated": 1790327691334,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "6ce05bfd-4b24-43ca-9733-eb5e4b4b4ae1"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          -0.1896011,
+          -1.1368684e-13
+        ],
+        "rot": [
+          -4.371139e-8,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -4.371139e-8
+        ]
+      }
+    }
+  },
+  "children": [
+    "5b142426-bb24-4fee-9927-eaebeef698b1",
+    "f59b12fd-0554-4587-8d25-d4777c0db426",
+    "9f19842d-7113-45d4-9977-8b1f1f7cc041",
+    "91dc33d9-7736-412f-8d46-232ce02086ca",
+    "a25711ab-aacc-4b5f-8ac2-b1029366b966",
+    "a1fcadf0-d4be-467c-ae42-acbd43ac0426",
+    "b5d9a033-3e8f-4b6f-95d7-57a8e6b79a6d",
+    "6ce05bfd-4b24-43ca-9733-eb5e4b4b4ae1",
+    "97dfb864-8a0b-4883-a196-7d9bd3baeeca",
+    "39d455d6-7e37-4309-8d5c-865f512d737e",
+    "e030cf54-3693-43e2-9061-8e3151933c22"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5TY2leV35TY2"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Carrot (Fruit)",
+  "syncix_id": "0fc49738-094b-4d6b-a667-bc1a7f08f384",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.25,
+          -520.90625
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5cbfab57-0184-4621-9b1c-2181bd1ccac1"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "MBvAQZuUMBvA"
+    }
+  }
+}

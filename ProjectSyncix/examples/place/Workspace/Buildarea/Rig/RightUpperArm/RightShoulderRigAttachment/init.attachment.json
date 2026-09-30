@@ -1,0 +1,90 @@
+{
+  "class_name": "Attachment",
+  "name": "RightShoulderRigAttachment",
+  "syncix_id": "1655bef5-962a-4ce2-bb72-f37c9d66f402",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.5000007,
+          0.3943267,
+          8.940697e-8
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          570.24994,
+          438.2665,
+          67.25
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "26a4b086-e24a-404f-ad0a-8f80ca505e5e",
+    "7aec8d87-5ce6-4576-88bb-61efe37c0fbc"
+  ],
+  "parent": "2ffb644d-b748-4cd7-8920-79a4e9d115c4",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "wrxEmXPLwrxE"
+    }
+  }
+}

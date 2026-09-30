@@ -1,0 +1,74 @@
+{
+  "class_name": "Model",
+  "name": "Sell Stands",
+  "syncix_id": "65361526-13a1-4de1-a622-f9f4ad35e6a3",
+  "schema_version": 1,
+  "last_updated": 1790327691292,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "ef24dbc2-99fd-4a26-8c46-7b23ad78fce6"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1760.6145,
+          191.76619,
+          0.40607715
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "a4b1cd62-7224-4ad1-a275-8ab169a5ba4a",
+    "8bd7c952-9aba-4ea8-adbc-c66bb5ed802b",
+    "943ec28e-813e-4599-b960-5b1b347256b0",
+    "9e7cd5d3-953a-4a00-aa75-d315ebf9264c",
+    "0de0cb79-1d92-437d-8904-901d74ae7990",
+    "80cf27fa-7ff5-446a-bd43-2abcf5e79de3",
+    "d6466d10-b3a0-4d9d-ad03-cde086b70f7b",
+    "8b6fbba7-1272-4313-8000-1b0ec80d90f9",
+    "26387a9a-ff34-46ed-aedf-371a886db42c",
+    "f1fd6fea-9310-497f-93f1-75a742a7124d",
+    "8077086d-cdff-4d2a-a981-d47e2f064076",
+    "75bce259-e40e-443f-8264-04c3d82d42b2",
+    "4e2a9696-f402-4ef6-81e0-518a2ef7086d",
+    "8dab1330-2f6c-49b2-aa70-aa86fac5b897",
+    "85f6a3aa-3e82-46f1-b8ba-415bbe898eb4",
+    "e0e6f1ef-d147-4093-ad41-2860e47b1929",
+    "31b32dfa-87b7-4879-a632-74141f259330",
+    "6496bba7-7ae3-47a3-ab26-e348429165ad",
+    "8484ac93-038a-4335-81e7-1e86ecb77254",
+    "63f3986f-336f-44ce-9a89-d8ad8cedeccd",
+    "7e913150-dc7f-4089-964d-a02671cf6861",
+    "fdddb65c-7a2b-43c2-a70a-f5093608a88c",
+    "ab10663f-8b75-4e53-a517-111a6441c92e",
+    "65e5bce6-7312-4295-a2b7-aff18c64cb6d",
+    "a33acd78-1565-4099-a3c1-8a2fbe8a2e8b",
+    "29f9d294-cdf9-4f99-a777-036341d78c75",
+    "bc068cfb-9d37-4e51-a62e-d921f62307e7",
+    "ef24dbc2-99fd-4a26-8c46-7b23ad78fce6",
+    "0e290d88-3b54-483e-8d4f-c84ddb41d365",
+    "e29489d0-faf1-400f-953a-94174fc3c3b9",
+    "796ad01d-219a-4099-a461-332e78b4357b"
+  ],
+  "parent": "7d6f946e-244e-42ea-804f-c620f1ef9b33",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "JkaoWoKcJkao"
+    }
+  }
+}

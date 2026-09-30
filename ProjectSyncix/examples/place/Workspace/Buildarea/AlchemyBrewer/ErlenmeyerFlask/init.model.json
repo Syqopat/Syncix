@@ -1,0 +1,65 @@
+{
+  "class_name": "Model",
+  "name": "ErlenmeyerFlask",
+  "syncix_id": "35bc46ba-561d-40f2-8ec4-c5a2fdd26fd3",
+  "schema_version": 1,
+  "last_updated": 1790327691259,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          358.5056,
+          436.335,
+          -208.3788
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "acce8625-a524-4bec-aacf-cf03fa13a599",
+    "28213385-f7a2-4342-a0a8-3a166fce0cc7",
+    "851a4031-3830-4f3c-b2dc-ca2f2c66f8b7",
+    "6f87bf28-0e14-4570-bc45-65450c7b8b06",
+    "076034a9-e94d-4783-bc36-00141fe0baf4",
+    "aeb7b91e-cf24-478e-a9cb-9a21b96fc1cb",
+    "f7ae07be-739d-437d-ba24-a889c716fc15",
+    "373122be-e4e8-44a8-8f45-6c4314f90c90",
+    "162a8ad6-b0f1-4910-a813-7d4e248c8b1d",
+    "4466bb81-2a7e-43de-8d22-6c72e2bd0fa5",
+    "e90fb045-64c7-427c-a185-92fc070745e5",
+    "c26be701-a1b7-4fae-a49e-4618eb96cd02",
+    "33de8ee0-dbfe-457f-aa66-f3f231c26392",
+    "33a05aa2-c6db-4f7d-b8d3-876155013431",
+    "e180123c-b6ad-4f87-967e-09359f8c378d",
+    "731dd1eb-929c-41bc-a196-42e5c23fe841",
+    "7f877fd0-152d-4603-a1c0-b21e73f1f6f2",
+    "dd50ccd1-58d9-4509-994d-1b35a8a506df",
+    "149cea1a-8e07-41c2-8cdf-b2d63432d636",
+    "68bd3726-5a88-4c3c-94d5-5465a26d421b",
+    "cad1c4bd-2fab-49ad-8bab-cd7abc2d4a96",
+    "e4a80577-b59e-4506-b24e-9119181dbbdd"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ZtzjYIRFZtzj"
+    }
+  }
+}

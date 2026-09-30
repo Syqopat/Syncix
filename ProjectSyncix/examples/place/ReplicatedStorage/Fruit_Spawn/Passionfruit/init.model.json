@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Passionfruit",
+  "syncix_id": "22133d93-6825-4de8-b330-1aa80be05b60",
+  "schema_version": 1,
+  "last_updated": 1790327691327,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "cf39f36b-f69a-432f-96d6-71db93e2a3d7"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          -0.000015258789,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e3c8fbbb-2a06-4d8f-9e5c-9284568f9cc2",
+    "02c0f706-75fd-449a-b099-7032a50f258f",
+    "60ba2add-547f-4663-a078-9976df734e7a",
+    "329e3673-236b-46bc-a342-f435424838c3",
+    "cbe5fc12-ea3d-4b83-b9af-b8fc03d5ce2e",
+    "d179f766-0e1c-45a3-a00e-05a111e4786f",
+    "4b88bb37-c99a-4f6b-9537-6ec22c662f49",
+    "82ef3c2c-774b-4011-bdc8-09d5f1dadd49",
+    "cf39f36b-f69a-432f-96d6-71db93e2a3d7",
+    "90ec6383-8e5a-4f58-acbc-17f2e7266364"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "HjS9OPwiHjS9"
+    }
+  }
+}

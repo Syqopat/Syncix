@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Cherry Tree",
+  "syncix_id": "e8efb75a-2dab-499c-a0ed-4cb7083bc303",
+  "schema_version": 1,
+  "last_updated": 1790327691240,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          465.1691,
+          439.2561,
+          2.474825
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c915373b-2666-4b8f-b6bc-0cfba517fcd5",
+    "a37bbe7b-d47e-48f7-9e40-f127fd2aa37f",
+    "8db11f89-5095-4034-b819-3ffd04379085",
+    "d85259f5-ca69-4270-aa67-5b5e695bd834",
+    "95c6fec6-90bb-459e-969a-d71f848de728",
+    "11cfab67-6794-406b-9993-d2ef1ed43dda",
+    "f73d06b5-789d-4625-ba03-25f6c11ec988",
+    "8565d70b-e3b1-48f9-950d-974ae4306111",
+    "40ca6b22-895e-4136-8f12-3af632b4e6a6",
+    "1260b87b-7614-427a-9732-f08399346d73",
+    "c4590959-59d9-4bba-b516-5d22a6248e6b",
+    "4f379619-286c-4b1f-9ac8-e06b21c2c8f2",
+    "38ef1c7a-b46d-490b-8d52-6e95ff6a80c5",
+    "009ff200-6738-48b5-8505-3ca5142d6d69",
+    "99bedf62-a464-4dcf-a67b-4b037ddf3b37",
+    "92901692-35a1-4b36-8553-87ac471b263f",
+    "e805ff04-81a4-4ce7-87e8-4cd35084e516"
+  ],
+  "parent": "832c113c-27ee-4e96-a38e-ce4156ce099c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "RipO8NCSRipO"
+    }
+  }
+}

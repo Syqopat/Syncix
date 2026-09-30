@@ -1,0 +1,61 @@
+{
+  "class_name": "Model",
+  "name": "Raspberry (Fruit)",
+  "syncix_id": "80921f18-2c0a-4fb8-8d80-6e7108880dd9",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0168,
+          434.86212,
+          -96.84046
+        ],
+        "rot": [
+          0.018912971,
+          -0.085895434,
+          -0.9961246,
+          -0.59230137,
+          -0.80362254,
+          0.0580503,
+          -0.8054945,
+          0.5889081,
+          -0.06607488
+        ]
+      }
+    }
+  },
+  "children": [
+    "b1661747-5360-44d3-b919-22a7eaf366b9",
+    "7f4cab85-d73e-452a-ab65-56eead4a872c",
+    "22c4c20f-8363-43e5-9a99-2ead4fdb39e0",
+    "d78638e1-7a78-46fe-924d-d3d2852b9522",
+    "877b0568-7e64-417f-96be-b2482e72cfb1",
+    "a23983b0-466d-49ab-b44a-db1636f502fe",
+    "46fc3f4f-5d76-4139-a96c-04339420f536",
+    "c0dfd6e0-6e1b-40f4-8677-c05d917586f3",
+    "2be28e3b-44a2-494a-9992-43d60ec68a09",
+    "8b9c2d20-ac84-4aa2-9469-369ffe81fd29",
+    "51c0fa23-449e-4e57-a0e1-5a2de088bd9a",
+    "40ac56df-f0e3-4648-bee4-15b4d2d02b53",
+    "5539f7d1-e128-4d3b-9168-d3e06a8aff75",
+    "492051cc-f5ae-43f1-abfc-c48eb64a8048",
+    "0069d4f8-0653-44f3-bbb0-f0a611f2a845",
+    "c739fbc1-9b33-46ea-8019-1fa4dc2bb196",
+    "236eafae-389a-48b7-a769-218bdb712553",
+    "050ef185-71d7-4932-809e-cf186af6d49b"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "dVDSDg8wdVDS"
+    }
+  }
+}

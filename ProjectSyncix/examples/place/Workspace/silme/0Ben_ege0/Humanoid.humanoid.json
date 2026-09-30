@@ -1,0 +1,112 @@
+{
+  "class_name": "Humanoid",
+  "name": "Humanoid",
+  "syncix_id": "4ba82f72-c0a5-4103-8de0-c233c55694e9",
+  "schema_version": 1,
+  "last_updated": 1790327691179,
+  "properties": {
+    "AutoJumpEnabled": {
+      "Boolean": true
+    },
+    "AutoRotate": {
+      "Boolean": true
+    },
+    "AutomaticScalingEnabled": {
+      "Boolean": true
+    },
+    "BreakJointsOnDeath": {
+      "Boolean": true
+    },
+    "CameraOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "DisplayDistanceType": {
+      "String": "Enum.HumanoidDisplayDistanceType.None"
+    },
+    "DisplayName": {
+      "String": ""
+    },
+    "EvaluateStateMachine": {
+      "Boolean": true
+    },
+    "Health": {
+      "Number": 100.0
+    },
+    "HealthDisplayDistance": {
+      "Number": 0.0
+    },
+    "HealthDisplayType": {
+      "String": "Enum.HumanoidHealthDisplayType.DisplayWhenDamaged"
+    },
+    "HipHeight": {
+      "Number": 0.0
+    },
+    "Jump": {
+      "Boolean": false
+    },
+    "JumpHeight": {
+      "Number": 7.199999809265137
+    },
+    "JumpPower": {
+      "Number": 50.0
+    },
+    "MaxHealth": {
+      "Number": 100.0
+    },
+    "MaxSlopeAngle": {
+      "Number": 89.0
+    },
+    "NameDisplayDistance": {
+      "Number": 0.0
+    },
+    "NameOcclusion": {
+      "String": "Enum.NameOcclusion.OccludeAll"
+    },
+    "PlatformStand": {
+      "Boolean": false
+    },
+    "RequiresNeck": {
+      "Boolean": true
+    },
+    "RigType": {
+      "String": "Enum.HumanoidRigType.R6"
+    },
+    "Sit": {
+      "Boolean": false
+    },
+    "TargetPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "UseJumpPower": {
+      "Boolean": true
+    },
+    "WalkSpeed": {
+      "Number": 16.0
+    },
+    "WalkToPart": {
+      "Ref": ""
+    },
+    "WalkToPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [],
+  "parent": "3ed87e61-8d57-49b1-850a-71851a3f5de3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "JomBPepDJomB"
+    }
+  }
+}

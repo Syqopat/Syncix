@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "Waist",
+  "syncix_id": "034556ba-cbc2-4f8d-9146-27b9b70fcb09",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Attachment0": {
+      "Ref": "54fdc0ad-d140-4146-ae82-fa7b21007cb6"
+    },
+    "Attachment1": {
+      "Ref": "de3bee0c-a1a0-4342-8bc3-9bd87423fa2e"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "1303072f-c64e-413c-990f-c4de5e68b626",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "KPspyMAaKPsp"
+    }
+  }
+}

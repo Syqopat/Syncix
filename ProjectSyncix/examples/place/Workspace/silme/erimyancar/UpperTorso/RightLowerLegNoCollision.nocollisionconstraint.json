@@ -1,0 +1,25 @@
+{
+  "class_name": "NoCollisionConstraint",
+  "name": "RightLowerLegNoCollision",
+  "syncix_id": "a6179663-0795-446a-98fc-218e59f884ee",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "b9e219f9-faac-4dc9-80ae-332d99e7b34b"
+    },
+    "Part1": {
+      "Ref": "199c1856-2ffc-4b99-9616-83ade0b963f6"
+    }
+  },
+  "children": [],
+  "parent": "b9e219f9-faac-4dc9-80ae-332d99e7b34b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "bsKyRFxPbsKy"
+    }
+  }
+}

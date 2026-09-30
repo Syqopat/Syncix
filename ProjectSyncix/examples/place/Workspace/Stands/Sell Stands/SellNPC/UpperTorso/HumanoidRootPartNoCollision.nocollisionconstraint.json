@@ -1,0 +1,25 @@
+{
+  "class_name": "NoCollisionConstraint",
+  "name": "HumanoidRootPartNoCollision",
+  "syncix_id": "451133b2-bf65-4742-823b-09014e9de3fa",
+  "schema_version": 1,
+  "last_updated": 1790327691183,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "6abd6399-9f7c-4db9-91af-d1a0d4b63d21"
+    },
+    "Part1": {
+      "Ref": "3f2809fa-bab9-4150-acba-43986aaaf2f3"
+    }
+  },
+  "children": [],
+  "parent": "6abd6399-9f7c-4db9-91af-d1a0d4b63d21",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iRHTvyaSiRHT"
+    }
+  }
+}

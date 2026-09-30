@@ -1,0 +1,154 @@
+{
+  "class_name": "Part",
+  "name": "FruitPart5",
+  "syncix_id": "5974af07-549c-49a3-a737-304383293780",
+  "schema_version": 1,
+  "last_updated": 1790327691374,
+  "properties": {
+    "Anchored": {
+      "Boolean": true
+    },
+    "BackSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "BottomSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "BrickColor": {
+      "BrickColor": "Maroon"
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.7574,
+          0.4019,
+          0.3123
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "CanCollide": {
+      "Boolean": false
+    },
+    "CanQuery": {
+      "Boolean": true
+    },
+    "CanTouch": {
+      "Boolean": false
+    },
+    "CastShadow": {
+      "Boolean": false
+    },
+    "CollisionGroup": {
+      "String": "Default"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.45490196,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "CustomPhysicalProperties": {
+      "Ref": ""
+    },
+    "EnableFluidForces": {
+      "Boolean": true
+    },
+    "FrontSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "LeftSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "Locked": {
+      "Boolean": false
+    },
+    "Massless": {
+      "Boolean": false
+    },
+    "Material": {
+      "String": "Enum.Material.Plastic"
+    },
+    "MaterialVariant": {
+      "String": ""
+    },
+    "PivotOffset": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Reflectance": {
+      "Number": 0.0
+    },
+    "RightSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "RootPriority": {
+      "Number": 0.0
+    },
+    "Rotation": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Shape": {
+      "String": "Enum.PartType.Block"
+    },
+    "Size": {
+      "Vector3": {
+        "x": 0.1427,
+        "y": 0.0714,
+        "z": 0.1427
+      }
+    },
+    "TopSurface": {
+      "String": "Enum.SurfaceType.Inlet"
+    },
+    "Transparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "16c2d241-f09e-4282-8534-8ecf033d1cef",
+    "98082c3d-3edd-4d93-be56-e4825604d40c",
+    "46455cc7-0633-4da4-bf55-51bf1b80dc0a",
+    "77a2feca-535d-4ff4-aa71-b59a6c2756dd",
+    "98c6c33d-737a-49e8-b4fd-76136b87997e",
+    "2823a8c9-1f3c-4f2f-9bff-d0da46e87e2c",
+    "039e2465-8da5-4f7d-b4b7-4ccab94133e1",
+    "58f88a5f-f513-44e3-ace2-fcca88341fc6",
+    "470f24c3-a47d-4502-90ae-47108e961016",
+    "03f7ad7b-b92d-48ce-946e-242fa0025be9",
+    "66e864fb-6d1b-41ac-9820-c6cd5fd0178e",
+    "faec88dd-9eb7-4f2d-8535-ceae3ede550d"
+  ],
+  "parent": "b3a18a76-41f7-42a0-bcdc-30c710f8d503"
+}

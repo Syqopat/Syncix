@@ -1,0 +1,49 @@
+{
+  "class_name": "Model",
+  "name": "Leaderboard",
+  "syncix_id": "31de16cb-9b5b-4490-94ec-e0019b620818",
+  "schema_version": 1,
+  "last_updated": 1790327691268,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1757.9885,
+          195.5,
+          -13.000007
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "ffbf61dc-21d1-44c0-bc27-3b627ffe7576",
+    "e26b7fb9-933c-43c7-b1aa-da25bd775770",
+    "97d58634-171a-4b47-bc49-d7d6c35ac55d",
+    "582241c4-6749-41b0-b620-faa24d6e487f",
+    "1a4a1536-1ec1-4027-99c7-0e7aeba0b1b9",
+    "ba64cfac-e14b-49ea-92e7-b8046c82c540"
+  ],
+  "parent": "1012ae19-3336-4122-863a-7b2a4a5d0699",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "34rzZbeG34rz"
+    }
+  }
+}

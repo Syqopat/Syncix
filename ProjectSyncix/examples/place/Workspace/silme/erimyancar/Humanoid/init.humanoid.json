@@ -1,0 +1,121 @@
+{
+  "class_name": "Humanoid",
+  "name": "Humanoid",
+  "syncix_id": "2ebed0b2-0181-418f-8f10-f83bad263049",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "AutoJumpEnabled": {
+      "Boolean": true
+    },
+    "AutoRotate": {
+      "Boolean": true
+    },
+    "AutomaticScalingEnabled": {
+      "Boolean": true
+    },
+    "BreakJointsOnDeath": {
+      "Boolean": true
+    },
+    "CameraOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "DisplayDistanceType": {
+      "String": "Enum.HumanoidDisplayDistanceType.Viewer"
+    },
+    "DisplayName": {
+      "String": ""
+    },
+    "EvaluateStateMachine": {
+      "Boolean": true
+    },
+    "Health": {
+      "Number": 100.0
+    },
+    "HealthDisplayDistance": {
+      "Number": 100.0
+    },
+    "HealthDisplayType": {
+      "String": "Enum.HumanoidHealthDisplayType.DisplayWhenDamaged"
+    },
+    "HipHeight": {
+      "Number": 1.5561704635620117
+    },
+    "Jump": {
+      "Boolean": false
+    },
+    "JumpHeight": {
+      "Number": 7.199999809265137
+    },
+    "JumpPower": {
+      "Number": 50.0
+    },
+    "MaxHealth": {
+      "Number": 100.0
+    },
+    "MaxSlopeAngle": {
+      "Number": 89.0
+    },
+    "NameDisplayDistance": {
+      "Number": 100.0
+    },
+    "NameOcclusion": {
+      "String": "Enum.NameOcclusion.OccludeAll"
+    },
+    "PlatformStand": {
+      "Boolean": false
+    },
+    "RequiresNeck": {
+      "Boolean": true
+    },
+    "RigType": {
+      "String": "Enum.HumanoidRigType.R15"
+    },
+    "Sit": {
+      "Boolean": false
+    },
+    "TargetPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "UseJumpPower": {
+      "Boolean": true
+    },
+    "WalkSpeed": {
+      "Number": 16.0
+    },
+    "WalkToPart": {
+      "Ref": ""
+    },
+    "WalkToPoint": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [
+    "90cbb239-c078-498d-88a6-a7436a992f1e",
+    "7c1f0041-d259-4e99-9a12-725a4f8c5af1",
+    "98d327ed-a8eb-4e80-94f0-05aba18cd48c",
+    "9f8a0f28-0816-40f6-8e2b-679ef0d183da",
+    "dba14d9d-161d-4b14-b1b5-2f8d8da1d057",
+    "d4574b70-4d11-414f-9a5f-25562a906bdf",
+    "c7dd96d4-46db-495a-b496-924618f7107b",
+    "e7132591-c854-4f50-a1be-2b400880d266"
+  ],
+  "parent": "2879845d-70b4-4816-bbc6-1c295442ee56",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "O9xfo5VxO9xf"
+    }
+  }
+}

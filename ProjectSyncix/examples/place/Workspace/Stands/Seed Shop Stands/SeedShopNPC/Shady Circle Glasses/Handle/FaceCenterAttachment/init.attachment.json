@@ -1,0 +1,96 @@
+{
+  "class_name": "Attachment",
+  "name": "FaceCenterAttachment",
+  "syncix_id": "d61f8f69-4687-4941-921c-9fa614f231b7",
+  "schema_version": 1,
+  "last_updated": 1790327691185,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": -7.871375e-9,
+        "z": -3.0299813e-15
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -3.9652054e-10,
+          -0.20337465,
+          0.31429568
+        ],
+        "rot": [
+          1.0,
+          7.4602395e-9,
+          2.5106512e-9,
+          -7.871375e-9,
+          0.9477684,
+          0.31895933,
+          -3.0299813e-15,
+          -0.31895933,
+          0.9477684
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 7.4602395e-9,
+        "y": 0.9477684,
+        "z": -0.31895933
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          8.238551,
+          128.55484,
+          15.214958
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.4901161e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.4901161e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.4901161e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "743a9393-a3f5-496f-b08a-d9c6be528830"
+  ],
+  "parent": "3fad5c9e-c952-4bcd-afef-a3fbdff0dcf5",
+  "attributes": {
+    "RBXOriginalAttachmentRotation": {
+      "Vector3": {
+        "x": 2.374581e-14,
+        "y": 1.7360514e-13,
+        "z": -4.5099657e-7
+      }
+    },
+    "_lemonadeUniqueId": {
+      "String": "lFT7MN9vlFT7"
+    }
+  }
+}

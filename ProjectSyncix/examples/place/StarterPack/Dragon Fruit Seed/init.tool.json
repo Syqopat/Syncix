@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Dragon Fruit Seed",
+  "syncix_id": "a613acf6-6cba-40e3-98fa-2e889a8a6f2e",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Dragon Fruit Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "6d286b71-dbb2-439f-9daa-6d1240c2a895",
+    "e84f1de7-9f55-4ecc-bc43-2e04b6b21595"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000008",
+  "attributes": {
+    "ItemName": {
+      "String": "Dragon Fruit"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Dragon Fruit"
+    },
+    "_lemonadeUniqueId": {
+      "String": "f27ToXI6f27T"
+    }
+  }
+}

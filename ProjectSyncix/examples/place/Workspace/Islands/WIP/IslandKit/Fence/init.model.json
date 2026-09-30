@@ -1,0 +1,120 @@
+{
+  "class_name": "Model",
+  "name": "Fence",
+  "syncix_id": "a3f6a1a8-ee9a-449a-ab29-353c7ee45830",
+  "schema_version": 1,
+  "last_updated": 1790327691159,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          506.8,
+          547.6,
+          213.5
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3fd17e5c-0d7e-4d97-9d16-9977cb58fb9d",
+    "8a4d12db-7aa9-4152-b217-f2220961a75d",
+    "769ade72-98e5-4cb4-9172-14913112509c",
+    "0836c6b6-05cc-48fb-9a00-6d19477450fc",
+    "94e12afb-7ad8-4e70-b27e-77bd691ead0f",
+    "df51c16e-5905-48f4-8d7e-fa5fe83e6aa6",
+    "f183b3fe-cdfd-45e6-9482-7fa7b82fbe56",
+    "bbafb592-2f78-4aea-aed8-3d6fbdaad8b2",
+    "1b8fdfc1-cb67-49fa-982f-da5f716065c5",
+    "4ee8ad1d-ab0f-4808-8ccd-8282a9b6d267",
+    "d818229d-0fda-462d-8a27-a3eec4894d8f",
+    "d153cbd1-30e3-4846-a92b-2538d7ca1505",
+    "9dac40be-70e8-4475-83eb-bd3589efc7b9",
+    "1480ed5b-a322-47a4-885d-02590c3c72f0",
+    "3cce75c6-c618-4aad-9a18-e96104e6ac9a",
+    "8e938081-6e10-41d3-bab7-e7cb132e064f",
+    "9702a95e-3d6d-45cb-829b-806f8984b984",
+    "72984886-3cb8-4cf3-8c23-991b0969a316",
+    "2118c2b8-f774-497a-9287-07a7a13317a3",
+    "6c312eec-e452-45ab-a934-424fceb594d6",
+    "c0e93500-e5c8-49ef-b445-5da88d8425d0",
+    "dd2a6fa0-2126-40be-898b-b67a3009cd82",
+    "4bfea9d4-5ea7-49f8-8fcf-fa3b1269fdd3",
+    "5ca9c949-699d-434e-a85e-79c39707bb01",
+    "ead858ea-0c50-4c37-9239-ed9e1ca8f371",
+    "c277aa8b-7723-45b2-8982-6b15fc7dd866",
+    "b4f5433c-7a80-4dcd-8896-9d74c75d9ef1",
+    "7edf7d1e-61cd-4de2-906a-da22aa063edf",
+    "0cf32360-7b69-4d4c-b633-696d70cba977",
+    "fd07b6b8-2770-4d0b-9e44-a480f4c497ee",
+    "1602c3d7-8611-4d1c-aeed-47a4a1f6325f",
+    "9e82b938-6c22-4a4a-a6c0-2ded26648c70",
+    "7481c1d3-2d07-4b10-8d81-5d193d5fb754",
+    "c1420234-f27b-4a6a-a308-0b207b44efc8",
+    "e188a200-a8f0-4439-b8df-07cc33cd8d73",
+    "496353d3-3b3a-4bbf-ada5-26cec6289e07",
+    "6d6f78ef-d919-4098-a439-de6be6b55337",
+    "7c4016ff-336d-4737-9b5c-a00727301242",
+    "09c217ca-c5b0-4ea1-b1ea-fd8a930dd213",
+    "a89cd1fe-f96c-4414-860c-cf993cb2ead8",
+    "5cf6e9dd-1f7b-4f14-a460-9310e6fbf69a",
+    "29aa59da-d198-419e-87ee-7dc789bbb395",
+    "346d8d89-f049-467d-85cb-ba434d381705",
+    "2a56e5df-bb71-4e85-a7f4-800c9ea52374",
+    "14eae77b-ee4d-4ceb-a242-2d2649817502",
+    "9c630e30-d7c3-4493-a584-754fa6e36c7b",
+    "dff65b7d-5b2c-4b3d-9e5c-ae894125fe38",
+    "7571cec1-9d0a-4a04-8727-70dd31a87693",
+    "13342f81-8b34-4450-bfd4-16e25ceb9d2a",
+    "b9715f91-b1a8-44fd-8494-f498124834f2",
+    "f683ac9b-5cf2-4bf9-b507-6cc4f0b26a68",
+    "ee9a8fd1-01a9-4313-90eb-3d25abdf9f49",
+    "b94b54e9-13d9-49a9-8f36-4db7523103cc",
+    "7ed5a624-8fd1-4c16-b167-bd19dc9acca9",
+    "dc80017a-2032-4daa-8a82-21e278a3a318",
+    "a42b9b13-c8df-4d6c-a893-04a522f1ec1c",
+    "47c60efd-8fd8-4f0f-bff9-8ea68aecc02b",
+    "3c29f322-300f-4d6d-8fda-bc396292dbe5",
+    "f816848d-d52e-4b8f-87a6-79d4b962ee69",
+    "9cf609eb-906a-4c2e-af61-fdd81c68c4f0",
+    "00e9be5b-821a-4d03-ac78-7edc3291d778",
+    "c12b1021-0f34-4772-b30f-437c46bd489a",
+    "f5237f03-6711-4628-8ca1-53f32a865390",
+    "c37d3a49-d76d-4cc9-bcf3-fcb7c3f33ccf",
+    "cbed260f-ae78-479f-8c06-2b4363127efb",
+    "4cf16f81-b762-4df6-a78c-80cebdf1f73a",
+    "9e719ec5-1a1a-470d-886e-5751f1e18089",
+    "dc3506c5-cf0a-493f-8119-c240ddef87dd",
+    "661dbf1d-671c-4ff8-a903-008df218885e",
+    "9ecce283-962c-4aa2-86a1-79474bf3fd90",
+    "7c61ab98-8401-4477-ab82-844e1c831202",
+    "36ce9f8c-643d-4ae3-a24a-2dfca73567b8",
+    "cfa727bd-e87c-4f2d-b8d7-c24ba740deed",
+    "55daff84-dd13-447e-8fbc-15098cce64ff",
+    "7b31fc6f-be77-429c-8ec4-da6bdc4a9220",
+    "66f6ae5a-c60a-4a22-85db-1662f6a2aff2",
+    "3a9402f9-f672-4967-9fe6-424f56affdd2"
+  ],
+  "parent": "0b24e17d-fa81-4b1e-9401-457df38b69f3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "KMP2OTXrKMP2"
+    }
+  }
+}

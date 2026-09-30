@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Tomato (Fruit)",
+  "syncix_id": "6b6afe6a-3510-438d-8830-c672487a8bcc",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.3875,
+          13.78125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5575b0c4-3560-4208-988a-651a70e88f0b",
+    "52a69d0a-52dc-446c-b5c4-7e571682f8aa",
+    "42593796-cd36-4a0f-aef1-b6129e34e4d8",
+    "0829d2df-66cb-4152-9df4-0110797b0244",
+    "50479f71-32cd-49ad-9f72-a8ec387e8fa0",
+    "f60588d6-b079-40f9-894e-41a583bf0d90",
+    "f5433b92-6c58-441d-91df-a0ac9710a189",
+    "f90336ef-b511-4525-84fb-e607c1f236e1",
+    "50e575a8-e290-44c3-b85e-476bae6e72aa",
+    "7616363b-81f2-4cea-aee1-c327036b7356",
+    "bb4cd99a-0984-4300-9d48-26be7a8f53a8",
+    "0e4e7d63-030c-4f7b-bcd4-072ec4437891"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ZCruIgQEZCru"
+    }
+  }
+}

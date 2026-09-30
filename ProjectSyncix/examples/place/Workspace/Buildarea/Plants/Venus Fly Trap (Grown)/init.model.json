@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Venus Fly Trap (Grown)",
+  "syncix_id": "8bbaa987-2e55-4fa8-9a75-e071341485be",
+  "schema_version": 1,
+  "last_updated": 1790327691213,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          436.21936,
+          32.21875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "734de0db-450d-4336-96ba-72c1b514b843",
+    "2dd0f56f-d303-4f94-a4b5-5b19e336e635",
+    "72c75c94-f6a4-4ca3-b069-968326e36f5e",
+    "d88b4112-bae5-42d4-ab5e-8b2e4e6a2fc3",
+    "cab4deb3-3e26-4c6b-8d58-a2bf2141ea82",
+    "09cb6230-2f22-4d41-a563-a641fdaeff0d",
+    "3e51a194-2532-4b6a-b050-1418aa3a5e71",
+    "e35339d8-d760-4b32-9915-4e33802051d8",
+    "aee0702e-e3bd-4be7-8007-9c8403366aba",
+    "1d4c6c44-1a1a-4077-9bab-838477194a32"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NzHNgFWgNzHN"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "class_name": "Model",
+  "name": "blue tupe",
+  "syncix_id": "adbeb2bf-e086-4a8c-bd56-15cb775e9f50",
+  "schema_version": 1,
+  "last_updated": 1790327691264,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "198f4d34-ed28-4030-bf28-88545067b9d1"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          415.96542,
+          435.05002,
+          -90.05929
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "afd34297-03cb-4452-bac3-06c45c31e3ed",
+    "0a0f0ab8-9140-4cb6-9785-6787508beb2c",
+    "59d33c7e-d1c5-4d94-abb6-c51e272fe24b",
+    "43a74860-afbe-4545-995e-0ec9f989df36",
+    "956b6270-5f2d-4c91-a53b-c5f3b641c91e",
+    "c3f7a6e3-b410-4f4f-8a59-8a19d6d52ef6",
+    "07324481-afe4-4679-b7ac-1ddb26dd80ea",
+    "fae4af24-f6d9-44cb-b603-a345167bd980"
+  ],
+  "parent": "314828fa-c475-4672-9b71-e842e7e89a1b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "FjuJYfkMFjuJ"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "class_name": "Weld",
+  "name": "AccessoryWeld",
+  "syncix_id": "f25257a7-d5d0-401c-b06e-cfbf5018aece",
+  "schema_version": 1,
+  "last_updated": 1790327691289,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          8.65839e-9,
+          0.99947643,
+          -0.010221276
+        ],
+        "rot": [
+          1.0,
+          -0.0,
+          0.0,
+          0.0,
+          0.9950384,
+          0.09949197,
+          -0.0,
+          -0.09949197,
+          0.9950384
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.6,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "1f3be479-ad52-477c-b86e-e6d3fc744d9d"
+    },
+    "Part1": {
+      "Ref": "ea3b2153-6db0-43db-9cb4-493889347c64"
+    }
+  },
+  "children": [],
+  "parent": "1f3be479-ad52-477c-b86e-e6d3fc744d9d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5Q8tWKc05Q8t"
+    }
+  }
+}

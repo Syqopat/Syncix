@@ -1,0 +1,64 @@
+{
+  "class_name": "ScreenGui",
+  "name": "Sheckles_UI",
+  "syncix_id": "1576955b-b214-4211-bbbe-88eacca2f30c",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "ClipToDeviceSafeArea": {
+      "Boolean": true
+    },
+    "DisplayOrder": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IgnoreGuiInset": {
+      "Boolean": false
+    },
+    "ResetOnSpawn": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "SafeAreaCompatibility": {
+      "String": "Enum.SafeAreaCompatibility.FullscreenExtension"
+    },
+    "ScreenInsets": {
+      "String": "Enum.ScreenInsets.CoreUISafeInsets"
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "ZIndexBehavior": {
+      "String": "Enum.ZIndexBehavior.Sibling"
+    }
+  },
+  "children": [
+    "a81bded5-d9c6-45e7-b0de-378f276a48b7",
+    "04d1a099-4554-4654-b515-5dc4dd24ce04"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000007",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "A4z9JLjTA4z9"
+    }
+  }
+}

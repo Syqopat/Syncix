@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Cherry OLD",
+  "syncix_id": "e578b55c-0f96-4e34-b35b-7fa1c04fb472",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "cda929f2-e7dd-4e36-912c-6a38ae0dec6a"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.00014662743,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5167f50b-2cb5-47a1-8329-62d17b829f49",
+    "c46eb8a4-9e3e-41d8-803c-01eb263539a7",
+    "6f98c64d-43d3-4de6-8b84-cd39a336f85d",
+    "7728f1bc-ba78-4c0e-ab24-a5878ba1ce50",
+    "d16083b3-131c-4d95-94a6-85b890c5333a",
+    "e62cd060-3d6d-4aea-bac4-03f4bae4a643",
+    "46e1a92b-e46e-49ee-9c37-63c26fad6829",
+    "c39d3330-86be-46dc-a8f9-d4c7fa4c8963",
+    "68f6b1a0-afa2-4fde-aa30-0c03a7816317",
+    "2a0b66b7-fe87-4049-ab47-9a03a75f3b2e",
+    "cda929f2-e7dd-4e36-912c-6a38ae0dec6a",
+    "d5b5b371-b8ff-4a8c-b499-a9cbf3f8a24b"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "57DgjGnn57Dg"
+    }
+  }
+}

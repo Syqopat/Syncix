@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Blueberry (Fruit)",
+  "syncix_id": "375358fa-702e-4028-9a47-26d95c9c3380",
+  "schema_version": 1,
+  "last_updated": 1790327691325,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1200.0,
+          580.9332,
+          -481.1571
+        ],
+        "rot": [
+          1.0,
+          -0.0,
+          0.0,
+          0.0,
+          -0.98078465,
+          0.19509335,
+          0.0,
+          -0.19509335,
+          -0.98078465
+        ]
+      }
+    }
+  },
+  "children": [
+    "bb2da7e1-1751-417a-a13e-1c3aa4c0a803",
+    "5d133ee8-bd85-4ce4-80f6-0488e2c2ee9a",
+    "40e6a415-fe52-4f7f-855b-c66d58590299",
+    "dec27661-02e7-46ad-abc2-c80bff898cb4",
+    "fcdfd9e5-b4ad-41a5-b54f-10e0517a1e98",
+    "bb0551e1-2bde-45b3-96a8-8d304734c3ab",
+    "e7e5bb42-86ab-40ee-92d4-aa63feb04299",
+    "5fe2c4f6-b871-4056-b644-5214bc720663",
+    "b259cdd6-0604-4c0a-af83-5f40e4f3b0f9",
+    "bd114824-3882-4d88-addd-0741655f22b5",
+    "ce1da927-014e-4c73-ae47-8dbd95f9d721",
+    "28159deb-fb18-490f-8608-8039da171682"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000001",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "aQMYE3ukaQMY"
+    }
+  }
+}

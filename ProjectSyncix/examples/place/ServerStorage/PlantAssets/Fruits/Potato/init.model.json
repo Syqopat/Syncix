@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Potato",
+  "syncix_id": "e7bbb631-d2f6-4d2c-9d90-9e52145c49d5",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.41,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "acfce4e5-acb0-4bf6-9bac-7e3fdede6240",
+    "6be6ca72-bb6d-481c-b740-93884b155f42",
+    "c3f693ad-fa64-43f3-8841-224cb7e51e0e",
+    "6cce8016-392c-4df1-b837-80bc2fdde619"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "kxwwfFQKkxww"
+    }
+  }
+}

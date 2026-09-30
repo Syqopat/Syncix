@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Blueberry",
+  "syncix_id": "ca7e112f-d424-4468-a7cb-cf41fc3c5ca1",
+  "schema_version": 1,
+  "last_updated": 1790327691239,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          491.5052,
+          436.875,
+          -21.063774
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "1d126ef3-4903-450d-b27a-72baa244873e",
+    "a3767833-9bc2-4662-a857-fce41fb32972",
+    "b4149ea0-94a2-4887-8537-188c282ec9ba",
+    "52b74fe6-b84a-4ab1-848a-993a4e1938ee",
+    "9f5b951b-b948-4343-96fb-8039aad8f68d",
+    "6b2786b2-732e-468d-9064-065b1a6a9be7",
+    "e81d36ea-3879-4214-825d-789a3a99dd47",
+    "bc11c164-7cbd-47b1-9287-e2b281a525b4",
+    "cb71b2cf-11dd-4382-94ea-f5cbcac297ba",
+    "4fcbbfdf-1273-4c9f-abfe-dd4fe7c26964",
+    "908ec3e1-757b-470a-ba77-590688af1a7a",
+    "b54c2092-7278-4735-973a-deb71aff10e6",
+    "149ce723-3152-462c-a0ea-7e935d6c71a3",
+    "51ee732d-472a-4a07-b666-0c65fbea25c2",
+    "16dc7f74-dae0-46ea-9f89-c0e605763fc8"
+  ],
+  "parent": "87334591-4884-4dd3-ac37-798232033396",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "rJK7A1ptrJK7"
+    }
+  }
+}

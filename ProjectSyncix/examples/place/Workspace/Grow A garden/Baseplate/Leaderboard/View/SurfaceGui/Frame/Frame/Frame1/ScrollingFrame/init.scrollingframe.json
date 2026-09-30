@@ -1,0 +1,186 @@
+{
+  "class_name": "ScrollingFrame",
+  "name": "ScrollingFrame",
+  "syncix_id": "77cb1d1d-06fb-4af5-ada8-1152f439dbc6",
+  "schema_version": 1,
+  "last_updated": 1790327691268,
+  "properties": {
+    "Active": {
+      "Boolean": true
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticCanvasSize": {
+      "String": "Enum.AutomaticSize.Y"
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 1.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "BottomImage": {
+      "String": "rbxasset://textures/ui/Scroll/scroll-bottom.png"
+    },
+    "CanvasPosition": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "CanvasSize": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "ClipsDescendants": {
+      "Boolean": true
+    },
+    "ElasticBehavior": {
+      "String": "Enum.ElasticBehavior.WhenScrollable"
+    },
+    "HorizontalScrollBarInset": {
+      "String": "Enum.ScrollBarInset.None"
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "MidImage": {
+      "String": "rbxasset://textures/ui/Scroll/scroll-middle.png"
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.0,
+        "yo": 0.0
+      }
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "ScrollBarImageColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "ScrollBarImageTransparency": {
+      "Number": 0.0
+    },
+    "ScrollBarThickness": {
+      "Number": 0.0
+    },
+    "ScrollingDirection": {
+      "String": "Enum.ScrollingDirection.XY"
+    },
+    "ScrollingEnabled": {
+      "Boolean": true
+    },
+    "Selectable": {
+      "Boolean": true
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": true
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 1.0,
+        "xo": 0.0,
+        "ys": 1.0,
+        "yo": 0.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "TopImage": {
+      "String": "rbxasset://textures/ui/Scroll/scroll-top.png"
+    },
+    "VerticalScrollBarInset": {
+      "String": "Enum.ScrollBarInset.None"
+    },
+    "VerticalScrollBarPosition": {
+      "String": "Enum.VerticalScrollBarPosition.Right"
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [
+    "c3e99dbd-7802-418d-a8fe-f921fe98a16a"
+  ],
+  "parent": "52c72358-f72b-42a9-b988-c99bfb120cd6",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "HYyQT4F9HYyQ"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Grow_Sign",
+  "syncix_id": "dc15cfe0-75ac-44b3-b8bc-bb1c4818bb6c",
+  "schema_version": 1,
+  "last_updated": 1790327691267,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          550.81,
+          437.50015,
+          16.10003
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0000005,
+          0.0,
+          1.0,
+          0.0,
+          -1.0000005,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fc421d19-59cb-417e-be9b-5dfba905e8b5",
+    "da7570c8-142e-4b6a-9af1-3fcb2afa297c"
+  ],
+  "parent": "314828fa-c475-4672-9b71-e842e7e89a1b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "HSQEO6LZHSQE"
+    }
+  }
+}

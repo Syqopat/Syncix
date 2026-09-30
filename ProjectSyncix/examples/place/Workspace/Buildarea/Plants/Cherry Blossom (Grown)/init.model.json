@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Cherry Blossom (Grown)",
+  "syncix_id": "32ad9acb-8ed1-46be-8130-33d0fcd11e3d",
+  "schema_version": 1,
+  "last_updated": 1790327691218,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          435.0,
+          -502.46875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "13e4e1df-d520-41e2-8d74-b89018fd5115",
+    "f16d6905-d64c-4dfe-abe5-395bdd311d3f",
+    "6eb2ea94-ad07-45e8-9b3f-92703b59235d",
+    "a5ab1f72-72d1-4de4-8102-629bd463cc32",
+    "de9b112c-e2aa-4e49-a694-ce9f6ecbd9fc",
+    "60705c30-7998-491c-93f8-d2de99dc8645",
+    "262b8133-b49e-4a57-995a-f0f0cecf55eb",
+    "edfa55ad-9a75-4113-8fec-e25eeda418cb",
+    "f8df0c78-8bd6-4c64-b3e9-d8c7f00d1cb4",
+    "620ec723-7a49-42b2-b798-63e353f1960a"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "jrwyjsWyjrwy"
+    }
+  }
+}

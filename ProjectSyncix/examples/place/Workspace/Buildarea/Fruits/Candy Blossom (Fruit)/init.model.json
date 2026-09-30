@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Candy Blossom (Fruit)",
+  "syncix_id": "3e3d8936-0534-404a-bad4-8dc42175e2a6",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.59528,
+          -539.37146
+        ],
+        "rot": [
+          0.9545415,
+          -0.000024974343,
+          -0.29807806,
+          0.012065409,
+          0.9991837,
+          0.038553588,
+          0.2978338,
+          -0.040397435,
+          0.9537626
+        ]
+      }
+    }
+  },
+  "children": [
+    "42aaf859-f2aa-4579-8d97-c83ea7d4d099",
+    "7a1a7842-97ff-445d-829e-3d404b6b8450",
+    "f4055d47-0af9-4188-a729-d941a570fb9c",
+    "2dbd1fc4-9a0c-4217-802f-c6f9540465cd",
+    "eb8083a2-aa71-46b4-9c73-0b04f669f6c1",
+    "5899b50c-5ec2-4b66-beb7-c7c4c2c52815",
+    "01a04478-7750-47c1-a156-e9e2ec97de11",
+    "8070a14e-a394-43a4-b95e-1f9e9d1064a9",
+    "8e9d351a-a8e4-489f-bbb6-0a85c1aa7d4b",
+    "c3ee779a-9cf8-423a-959a-3da154eec90f",
+    "d6995c54-022f-4fb0-8ee5-63d17eede3b6",
+    "b8ab523b-edca-4f8a-b8e0-8d417517e506",
+    "30a4bfed-ec64-43e2-8308-6bf6959060e3",
+    "b5b0c34a-7a7d-4a40-a640-399ab0f3ef8a",
+    "0bcddbbc-c87e-4f2b-b45c-2675995bf459"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "YkNP1gGUYkNP"
+    }
+  }
+}

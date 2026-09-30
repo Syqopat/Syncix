@@ -1,0 +1,92 @@
+{
+  "class_name": "Tool",
+  "name": "Tomato Seed",
+  "syncix_id": "41a8cbdb-1f08-441c-a727-c7a97605dee1",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "CanBeDropped": {
+      "Boolean": false
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Grip": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "ManualActivationOnly": {
+      "Boolean": false
+    },
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "RequiresHandle": {
+      "Boolean": true
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "ToolTip": {
+      "String": "Tomato Seed (Tarlana tiklayarak ek)"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e837542a-cafe-4416-8846-bae7135cfd11",
+    "9055dba4-580f-49af-a6c2-688bd43b6586"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000008",
+  "attributes": {
+    "ItemName": {
+      "String": "Tomato"
+    },
+    "Quantity": {
+      "Number": 99.0
+    },
+    "Seed": {
+      "String": "Tomato"
+    },
+    "_lemonadeUniqueId": {
+      "String": "qYX7D5WqqYX7"
+    }
+  }
+}

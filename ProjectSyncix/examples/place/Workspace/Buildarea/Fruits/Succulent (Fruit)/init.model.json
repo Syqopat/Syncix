@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Succulent (Fruit)",
+  "syncix_id": "460f964d-9a1c-42f4-835f-cb9cd4f8f8b4",
+  "schema_version": 1,
+  "last_updated": 1790327691223,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0002,
+          436.4503,
+          -5.611514
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c9410a2d-b6e8-4f5e-a63e-0fdb66956d60",
+    "898c1c7f-5ea0-4801-ba66-45a224f83b21",
+    "0346875b-9f4a-4012-9a06-f43d7e0f9566",
+    "67eee82c-9975-460c-be64-ac93e2114c60",
+    "6f1c9baa-f11f-4448-9df7-192a6ddf8123",
+    "296f1816-8367-417b-94d6-e46919ebbf21",
+    "014dd4a8-a97e-4436-a214-e74b91a839af",
+    "c50d676f-bb5a-4281-803e-ba648486b47f",
+    "f6c5d81a-c0b5-4471-864f-d8789bd804f1",
+    "df7823f2-c8af-4ab4-bdf1-6598d641fa3c",
+    "5f4ca0cc-6128-4614-ad2d-16ac75f3813b",
+    "dac6ad7a-66d3-404f-9d15-7f25dd81823f"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iLTq3bRviLTq"
+    }
+  }
+}

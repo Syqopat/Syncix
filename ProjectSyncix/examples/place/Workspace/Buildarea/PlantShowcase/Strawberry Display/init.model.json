@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Strawberry Display",
+  "syncix_id": "616d2f3f-11d0-41ba-8c7d-c5a2305d854b",
+  "schema_version": 1,
+  "last_updated": 1790327691231,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          470.0,
+          436.12482,
+          -19.95
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "eb01486c-d083-43a8-91a4-bd7c088caced",
+    "1c8ed8f5-620c-4d72-a250-629d28612bce",
+    "138afb19-0cb8-4908-8d53-aa2f8cc2273a",
+    "ad96173a-e70d-43ed-9f7c-7b780989ee77"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "hWpZvCXphWpZ"
+    }
+  }
+}

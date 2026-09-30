@@ -1,0 +1,197 @@
+{
+  "class_name": "ParticleEmitter",
+  "name": "ParticleEmitter",
+  "syncix_id": "f323f7e9-499d-4e40-8758-05d5b85aecca",
+  "schema_version": 1,
+  "last_updated": 1790327691293,
+  "properties": {
+    "Acceleration": {
+      "Vector3": {
+        "x": 0.0,
+        "y": -35.0,
+        "z": 0.0
+      }
+    },
+    "Brightness": {
+      "Number": 0.20000000298023224
+    },
+    "Color": {
+      "ColorSequence": [
+        {
+          "t": 0.0,
+          "r": 0.172549,
+          "g": 0.321569,
+          "b": 0.854902
+        },
+        {
+          "t": 1.0,
+          "r": 0.172549,
+          "g": 0.321569,
+          "b": 0.854902
+        }
+      ]
+    },
+    "Drag": {
+      "Number": 2.0
+    },
+    "EmissionDirection": {
+      "String": "Enum.NormalId.Top"
+    },
+    "Enabled": {
+      "Boolean": false
+    },
+    "FlipbookFramerate": {
+      "NumberRange": {
+        "min": 15.0,
+        "max": 15.0
+      }
+    },
+    "FlipbookIncompatible": {
+      "String": "Particle texture must be 1024 by 1024 to use flipbooks."
+    },
+    "FlipbookLayout": {
+      "String": "Enum.ParticleFlipbookLayout.Grid4x4"
+    },
+    "FlipbookMode": {
+      "String": "Enum.ParticleFlipbookMode.Loop"
+    },
+    "FlipbookStartRandom": {
+      "Boolean": false
+    },
+    "Lifetime": {
+      "NumberRange": {
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "LightEmission": {
+      "Number": 1.0
+    },
+    "LightInfluence": {
+      "Number": 0.0
+    },
+    "LockedToPart": {
+      "Boolean": false
+    },
+    "Orientation": {
+      "String": "Enum.ParticleOrientation.FacingCamera"
+    },
+    "Rate": {
+      "Number": 15.0
+    },
+    "RotSpeed": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 0.0
+      }
+    },
+    "Rotation": {
+      "NumberRange": {
+        "min": -360.0,
+        "max": 360.0
+      }
+    },
+    "Shape": {
+      "String": "Enum.ParticleEmitterShape.Box"
+    },
+    "ShapeInOut": {
+      "String": "Enum.ParticleEmitterShapeInOut.Outward"
+    },
+    "ShapePartial": {
+      "Number": 1.0
+    },
+    "ShapeStyle": {
+      "String": "Enum.ParticleEmitterShapeStyle.Volume"
+    },
+    "Size": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.25,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.25,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Speed": {
+      "NumberRange": {
+        "min": 5.0,
+        "max": 5.0
+      }
+    },
+    "SpreadAngle": {
+      "Vector2": {
+        "x": -45.0,
+        "y": 45.0
+      }
+    },
+    "Squash": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 0.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Texture": {
+      "String": "rbxassetid://8733226116"
+    },
+    "TimeScale": {
+      "Number": 1.0
+    },
+    "Transparency": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.386503,
+          "v": 0.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 1.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "VelocityInheritance": {
+      "Number": 0.0
+    },
+    "WindAffectsDrag": {
+      "Boolean": false
+    },
+    "ZOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "6553c3ce-76cc-4433-89c9-5c6e351ace18",
+  "attributes": {
+    "EmitCount": {
+      "Number": 3.0
+    },
+    "EmitDelay": {
+      "Number": 0.0
+    },
+    "EmitDuration": {
+      "Number": 0.0
+    },
+    "_lemonadeUniqueId": {
+      "String": "qGoOaQrjqGoO"
+    }
+  }
+}

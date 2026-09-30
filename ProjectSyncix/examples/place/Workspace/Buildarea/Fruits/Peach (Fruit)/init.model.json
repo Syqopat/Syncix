@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Peach (Fruit)",
+  "syncix_id": "c8d72766-3260-47fb-9508-3ee0ac678e47",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.35275,
+          -170.59375
+        ],
+        "rot": [
+          -0.73722756,
+          -6.445048e-8,
+          -0.6756445,
+          -2.8356055e-8,
+          1.0,
+          -6.445048e-8,
+          0.6756445,
+          -2.8356055e-8,
+          -0.73722756
+        ]
+      }
+    }
+  },
+  "children": [
+    "4099d8b0-6564-43a7-bc5b-257b63ce25c8",
+    "2f7fcae7-7891-4b9a-968e-89726bdd0d05",
+    "1b2b8f8e-3c76-4165-b633-ec0ca0fa4914",
+    "c2edc25e-9c5f-4d36-b127-5e20b081a8a8",
+    "35261b5c-b4d1-45ef-9108-d7a01f61331a",
+    "59e7dead-160d-4dcb-8f71-3f15d29fb5f7",
+    "62779d8b-fb8b-450b-81ea-8d4580a335ba",
+    "7b23da22-fcc0-4ec9-923b-253ff0b84c89",
+    "56b365f1-314a-470b-9276-8917d516485f",
+    "ec054a7e-82f1-4b2e-8408-a7d1b2bcc18d",
+    "46029114-e61c-48ad-8cda-15812065b293",
+    "c3ea38d6-664a-4c62-a60e-27b0f6a73293",
+    "7bf5e7e7-29eb-44c1-8560-108542b6cdb5",
+    "c1096769-acb4-4168-968f-e667c0b1c8c8"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Amgf3uyQAmgf"
+    }
+  }
+}

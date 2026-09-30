@@ -1,0 +1,56 @@
+{
+  "class_name": "Model",
+  "name": "Strawberry (Fruit)",
+  "syncix_id": "963ac905-7ad8-4135-88f2-8a411b7c6c4c",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.93024,
+          -23.066996
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.38268736,
+          -0.9238779,
+          0.0,
+          0.9238779,
+          -0.38268736
+        ]
+      }
+    }
+  },
+  "children": [
+    "46fa105f-4cbc-45ac-983b-0d3fc5a24ca6",
+    "e0ae63a3-ff09-41e8-a280-b9890644a39b",
+    "a904090c-5541-4692-aa87-5262ebbcb6c1",
+    "52a251c3-e373-4b1f-a4ef-b1b2252da888",
+    "2c473128-7f51-464f-a891-7231b6284c0b",
+    "2fb4e9fc-0af6-4b2c-847b-31e37700f21b",
+    "4efff56a-f0ed-4889-b585-b75c9a0562fb",
+    "dc63bc44-7a43-4f7f-b9aa-de2b55afbacb",
+    "6f853c39-693e-4285-9f65-a8277696c7ce",
+    "1dfd1b98-2ffd-489d-9079-5a9eb248c547",
+    "00040310-d11e-41d3-a23f-94e05915c4e7",
+    "b28ec50d-ad12-46be-aca2-4977648475f8",
+    "cc00f6c8-4267-4427-b7ff-21a2d5950796"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "VEOESWKQVEOE"
+    }
+  }
+}

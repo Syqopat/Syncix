@@ -1,0 +1,191 @@
+{
+  "class_name": "TextLabel",
+  "name": "Money",
+  "syncix_id": "04d1a099-4554-4654-b515-5dc4dd24ce04",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 1.0
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.None"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 1.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/ComicNeueAngular.json",
+        "weight": "Enum.FontWeight.Bold",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "LineHeight": {
+      "Number": 1.0
+    },
+    "MaxVisibleGraphemes": {
+      "Number": -1.0
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.009662707,
+        "xo": 0.0,
+        "ys": 0.9331814,
+        "yo": 0.0
+      }
+    },
+    "RichText": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "Selectable": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 0.17714047,
+        "xo": 0.0,
+        "ys": 0.03817534,
+        "yo": 0.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "Text": {
+      "String": "Money"
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 0.43921572,
+        "g": 1.0,
+        "b": 0.43137258
+      }
+    },
+    "TextDirection": {
+      "String": "Enum.TextDirection.Auto"
+    },
+    "TextScaled": {
+      "Boolean": true
+    },
+    "TextSize": {
+      "Number": 14.0
+    },
+    "TextStrokeColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextStrokeTransparency": {
+      "Number": 1.0
+    },
+    "TextTransparency": {
+      "Number": 0.0
+    },
+    "TextTruncate": {
+      "String": "Enum.TextTruncate.None"
+    },
+    "TextWrapped": {
+      "Boolean": true
+    },
+    "TextXAlignment": {
+      "String": "Enum.TextXAlignment.Left"
+    },
+    "TextYAlignment": {
+      "String": "Enum.TextYAlignment.Center"
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "ZIndex": {
+      "Number": 2.0
+    }
+  },
+  "children": [
+    "0aef2e68-6677-4a38-8470-86b25afce96a",
+    "6d7096a5-667b-4fc1-a7e6-d1fdacab1193",
+    "eed140d9-7949-4794-9240-7f1a6c134a87"
+  ],
+  "parent": "1576955b-b214-4211-bbbe-88eacca2f30c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "G57ZuHCiG57Z"
+    }
+  }
+}

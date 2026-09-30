@@ -1,0 +1,84 @@
+{
+  "class_name": "Model",
+  "name": "Soul Fruit",
+  "syncix_id": "63b56bec-8743-4e0b-8f0a-1915a66ef532",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "45ddc745-18df-46c5-9adb-86eb257a7d29"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.00048828125,
+          2.7205749,
+          0.00013422966
+        ],
+        "rot": [
+          -4.371139e-8,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          -1.0,
+          0.0,
+          -4.371139e-8
+        ]
+      }
+    }
+  },
+  "children": [
+    "8fc404ac-7a32-4b66-82f2-9b2a5a94378d",
+    "1b400648-c313-46fc-a73c-be0c45a96046",
+    "0469c94c-e8db-4da3-b361-e92f0d05df9a",
+    "413a0cce-15c7-47ad-b205-51ebd634c026",
+    "989dc896-fb9b-40ea-8891-d927ed3d3baf",
+    "05eabff2-392a-46cb-8540-91430c509254",
+    "87c8c92d-74ff-4599-9073-70d674358469",
+    "45ddc745-18df-46c5-9adb-86eb257a7d29",
+    "956add45-740b-4779-8aaa-04a910df848a",
+    "7574b4b8-963a-425f-a071-3f7c982979c6",
+    "b286cfaa-1503-4d36-9ee3-96ce6a70f5d9",
+    "ef2d4c18-52a1-4d2e-952d-cf1199e74ad3",
+    "d97412a1-35c1-4328-a4f8-51ea30410b50",
+    "6a0acf7a-fff9-46a4-86ba-073f47833256",
+    "c74f9bc3-640a-4e3b-a107-7109f85f7938",
+    "83916b94-c0fe-444f-bf8d-7fdf29314124",
+    "c2f95feb-7957-46b6-8a87-ff96c67da013",
+    "e22e2ea7-f0fa-4305-8c57-7c2479c8ad30",
+    "d93e4e52-b696-4f66-88d3-5d4ca6cbb08e",
+    "6b5c1c71-607a-4cf2-a7d5-2190e5d74231",
+    "a7d531df-baf8-4ae8-aedd-ced0ffa5e2ae",
+    "6c7d288d-5a06-44a2-afe6-4db954c5a659",
+    "66fa3e8e-4e0d-4fa0-828b-dba3d72eeee6",
+    "6ee041a6-8f3b-4b27-8686-bea8a8e3411d",
+    "59b430ef-0248-4c50-b772-92fc322ddda9",
+    "d72d799c-7e37-4bd7-a8a1-4530fc61a22e",
+    "b2ac7c62-18c7-4ca6-8223-6c7fb77c883c",
+    "fc3acaf8-b649-4fa4-b35c-04c81af5645f",
+    "d36bcf2f-531d-467f-91a7-56212360565f",
+    "4ea23e84-6b8d-48e4-b9ca-7075026521b8",
+    "3d7b15ac-5d35-4246-b166-28f14a2ee363",
+    "e1ab3ce0-8c7e-4d6f-b3e0-2301582fd56b",
+    "dac66b77-79fe-4da9-b513-a50215a9051c",
+    "5cefb287-b37f-40ad-89ea-be5b223e842f",
+    "3b0aa320-66df-4238-8847-77d6bdceb3e7",
+    "a78bc538-41a4-4a8c-89cf-56f2d2e16f3e",
+    "9739d63c-89eb-42c1-8a21-a11be9912fec",
+    "f2f34c90-4371-457a-bd1e-fec7767da430",
+    "cfdc01f3-9a6e-44ec-81c2-2fb0e5130d45",
+    "02835809-9ab8-4d9b-b5f5-efceeaa1eccf",
+    "16cad2a0-a419-4923-8a1b-30041346542c"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "vKyyq2xFvKyy"
+    }
+  }
+}

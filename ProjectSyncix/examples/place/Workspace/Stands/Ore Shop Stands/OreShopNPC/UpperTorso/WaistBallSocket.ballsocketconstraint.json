@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "WaistBallSocket",
+  "syncix_id": "cd0a55b8-e91b-454f-b8d7-5162d71e42b1",
+  "schema_version": 1,
+  "last_updated": 1790327691181,
+  "properties": {
+    "Attachment0": {
+      "Ref": "fa00fe80-c7f3-4e9d-b37c-cd2a869b1218"
+    },
+    "Attachment1": {
+      "Ref": "13687cd7-19dc-461f-968d-d8a4c46ddca9"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 52.78069686889649
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -40.0
+    },
+    "TwistUpperAngle": {
+      "Number": 20.0
+    },
+    "UpperAngle": {
+      "Number": 20.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "2cc019a2-99e3-420d-8276-368a18ca4cf6",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "GE4AvKESGE4A"
+    }
+  }
+}

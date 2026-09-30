@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Succulent",
+  "syncix_id": "39cfd258-0ac5-46ee-9c37-2a14ea99f534",
+  "schema_version": 1,
+  "last_updated": 1790327691332,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "dd247c2c-cae2-41d4-8005-7578ce63f52c"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.00037765503,
+          0.0005950928,
+          -1.8832313
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "becc241f-d012-419e-ab59-b9e5d52fa206",
+    "38e6d72a-772b-4938-9a98-cd3875a5767f",
+    "22df7228-fdd0-4b8a-915b-bdcbca1088e2",
+    "85c3036d-85b6-47fb-b1fa-1cafb7b969d5",
+    "e54008ea-2426-415f-8db7-bb5856d81851",
+    "7abbb0cb-8a0d-4355-be7a-3cfbedf40c57",
+    "6d11aadf-5215-46d2-9bbc-e7ae1156dbd9",
+    "dd247c2c-cae2-41d4-8005-7578ce63f52c",
+    "8f3876ff-7746-49f6-8a83-b6b30a0039b5",
+    "6a57ff2b-fe29-475a-99e0-c3684d932c41",
+    "04cb3d1c-1ba6-471f-a5a8-86824011d5ee",
+    "e875fc18-cdbd-4aaa-9f31-092ce3351a92"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ET6MissiET6M"
+    }
+  }
+}

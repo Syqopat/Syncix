@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "flower",
+  "syncix_id": "6c1e371b-6c0b-4493-9a59-80f0f85a1f1c",
+  "schema_version": 1,
+  "last_updated": 1790327691170,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1008.8588,
+          798.5051,
+          -92.37829
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          0.99999356,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "4ab27920-3ccf-4c8e-bcfd-82105e5800ef",
+    "db6f0d45-3370-4604-ad3a-04eeb362006c"
+  ],
+  "parent": "34484384-e800-4dd7-b733-8b3c6d4daaa1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "CdgimWukCdgi"
+    }
+  }
+}

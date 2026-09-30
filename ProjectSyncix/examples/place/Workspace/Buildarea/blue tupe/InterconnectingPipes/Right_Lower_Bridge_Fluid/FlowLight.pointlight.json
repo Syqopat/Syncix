@@ -1,0 +1,35 @@
+{
+  "class_name": "PointLight",
+  "name": "FlowLight",
+  "syncix_id": "cae304d9-286e-41c1-b7c0-c14cfb5d3d3b",
+  "schema_version": 1,
+  "last_updated": 1790327691264,
+  "properties": {
+    "Brightness": {
+      "Number": 0.800000011920929
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.7647059,
+        "b": 1.0
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Range": {
+      "Number": 4.5
+    },
+    "Shadows": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "a5a423a6-4a41-454c-9344-30121a8ead30",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "rD0DxiTNrD0D"
+    }
+  }
+}

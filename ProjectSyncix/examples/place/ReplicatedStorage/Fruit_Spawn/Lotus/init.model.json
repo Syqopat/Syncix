@@ -1,0 +1,83 @@
+{
+  "class_name": "Model",
+  "name": "Lotus",
+  "syncix_id": "8dd373f9-ae77-45b7-91a2-400e6fc42892",
+  "schema_version": 1,
+  "last_updated": 1790327691329,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "1e6829d2-a23a-4072-924f-03c20cf19c05"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.67388856,
+          3.2475245,
+          0.6895118
+        ],
+        "rot": [
+          -0.3498252,
+          0.3027103,
+          -0.8865601,
+          0.2123926,
+          0.9473407,
+          0.23965608,
+          0.9124208,
+          -0.104461044,
+          -0.39569706
+        ]
+      }
+    }
+  },
+  "children": [
+    "a8333f65-36a6-488c-9ccc-1c05aac842c1",
+    "7c0c9ccc-5891-4519-8a07-db5c8ae71051",
+    "51ecce50-f876-4446-8776-254380967b39",
+    "c8d89b61-3186-4a7f-8de7-d9da41971407",
+    "3a34218e-4f9d-452e-bfa7-e8bc8f8a2987",
+    "e29f974c-b0b2-4621-a76f-76dd94a0f4dc",
+    "fce35837-5886-4459-b884-7f0a233422f7",
+    "00e7a69d-83ba-48c8-914a-a07b8c077fd2",
+    "1fb9fa18-8f2d-408d-98f9-2ec3af90eeaf",
+    "f3480698-8391-422f-b82b-d7079f2e90a2",
+    "a174d74a-d58b-4916-861e-ad615b1e09ab",
+    "1e6829d2-a23a-4072-924f-03c20cf19c05",
+    "8f0b60b4-2b84-4817-b38c-8fd0aa13da5d",
+    "9763bb52-8e4b-4648-895b-bf0074947938",
+    "2a42dd32-4310-4c75-ac9f-d4e7cbf0eaa9",
+    "2cd722e8-fa55-47d9-9dfb-a5587704ea06",
+    "d1597b08-adaf-4265-ba32-415bc8ad39be",
+    "51ab31ed-8257-485e-9bdf-79f1525a5182",
+    "62af3d38-4fd6-4716-a5e4-551d4b2f439f",
+    "69893dd2-2230-4878-8d98-0b2591abda4c",
+    "ad01361d-f729-4396-9e12-750be52c5e99",
+    "3bf62113-4a0d-420a-bcf0-a28c0bb8f918",
+    "cc94516a-cc39-41cd-aa93-affc89281fc0",
+    "ab874f31-6d06-4cac-b50b-2ccce897c7be",
+    "d093bf43-4d0c-45d3-a887-d1edf4f4d995",
+    "be8519e0-8f6d-4f16-9046-4312b8197e5d",
+    "c70eadb6-49f7-4990-ab58-3a6e87541248",
+    "dcf6a6ea-59cd-4de8-93e3-52b38fe558c4",
+    "824139ae-be06-4475-837c-2850bbee5c71",
+    "ca3d5e40-4323-4d0f-ac38-00b83dfec8ec",
+    "ad8a8e6b-44ea-4c37-9330-847e5b15d44b",
+    "7cd6456a-f5e7-4f19-9338-b97712435ab9",
+    "ee09ebc1-ddcc-4923-b539-d166f1498fef",
+    "9cea0def-0b69-4f3e-a1ac-2811c7853b20",
+    "30c6bede-d46c-4d8d-8a32-45708b2d1237",
+    "fea8a25f-183a-401a-810b-90b3afe504a3",
+    "8a626743-22e0-41f8-a00f-1b9cb2a5df0b",
+    "abf3a79d-c7c9-45ee-ad61-048f9ce33093",
+    "66a30a32-3629-453f-934a-2c355ee79a69",
+    "e196256b-1d8d-49ca-8784-a6cdac6ec469"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "X5hkgSXbX5hk"
+    }
+  }
+}

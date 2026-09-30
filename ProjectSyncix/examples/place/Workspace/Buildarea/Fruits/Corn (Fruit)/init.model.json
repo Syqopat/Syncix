@@ -1,0 +1,59 @@
+{
+  "class_name": "Model",
+  "name": "Corn (Fruit)",
+  "syncix_id": "09a9b7a2-ffe5-4b56-af46-5a3786c0f250",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.3005,
+          -465.59375
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "b8a5a7d0-d7f1-4f1d-8f24-42971584e654",
+    "f215afa3-f1f9-467e-a5eb-16ee1a541388",
+    "7f061313-00bb-4582-8326-a342547a2fd9",
+    "7b5c7bbe-7708-4a2e-91b9-1cb473710cb7",
+    "bcc92864-de0b-482c-ac50-9c799895332e",
+    "d6529f01-25ee-40ed-8c7f-ff7276abb546",
+    "a86f2d66-1679-4c18-9330-d8fa4b9ccf3a",
+    "94f9b25f-83a1-4c8f-af4b-702c3032f7d0",
+    "5cf1922b-a30a-45e6-a0b8-7368a88cc976",
+    "911f1bf6-378a-4eb9-aa5b-7a88bbba9f1a",
+    "7ffed3c9-04c4-41d6-be1f-07869670102a",
+    "2fedf76b-7a87-48e7-b38e-8fd0b73c8522",
+    "ee9e88ad-b5ef-455b-9c46-ee48afc8d1a3",
+    "08f4f793-ad81-40f6-9780-fe5b67eb8db8",
+    "3523160b-359f-4f3a-b4cc-2c76c2daf9fd",
+    "7ca57085-b68e-4008-92b2-b8023881ccf8"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "dK2GqyJ5dK2G"
+    }
+  }
+}

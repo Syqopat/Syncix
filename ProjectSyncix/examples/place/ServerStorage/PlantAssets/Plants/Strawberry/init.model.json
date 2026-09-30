@@ -1,0 +1,52 @@
+{
+  "class_name": "Model",
+  "name": "Strawberry",
+  "syncix_id": "df388502-53d8-48cc-acea-f3476f2895ef",
+  "schema_version": 1,
+  "last_updated": 1790327691374,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.5134281,
+          -0.0010035634
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "56f763c1-2ef6-4ac3-b474-ddd698bf357e",
+    "4dccc018-814f-4f3c-9554-b690c4b853e7",
+    "d454b093-02f9-4c38-a888-6a7c054d122c",
+    "007f3c73-b8eb-4776-b640-52d72efd04b0",
+    "d6a869ea-c9be-41e4-9e78-83594caef134",
+    "65ee0fe7-c6f9-469e-be22-631854ea5006",
+    "42cb2902-01e2-4d14-96ce-f20918a6bcf4",
+    "02a4000f-55d2-4afc-8004-4922301dc196",
+    "09c11bb0-52ec-4284-929e-1fcc81d97c74",
+    "6f9ef8cf-8f2b-4892-bba5-6f3f02b313ec",
+    "a5c64e11-d4b5-4013-b6bd-46e30346e32c",
+    "611e7103-59d4-42bf-9ae7-791c2662f53b",
+    "b570f10e-d474-40fc-83d0-55258406e9bb",
+    "0a6bc853-24ea-4688-a89b-022812eb96b9"
+  ],
+  "parent": "b441de6d-6f88-49e2-93b9-dc9fb8aa64db"
+}

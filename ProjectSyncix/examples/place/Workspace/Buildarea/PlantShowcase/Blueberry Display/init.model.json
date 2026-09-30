@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Blueberry Display",
+  "syncix_id": "87334591-4884-4dd3-ac37-798232033396",
+  "schema_version": 1,
+  "last_updated": 1790327691239,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          496.0,
+          436.625,
+          -19.95
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "ca7e112f-d424-4468-a7cb-cf41fc3c5ca1",
+    "fdc5fe14-1dcf-46ec-8fda-d50ce181c9ed",
+    "f99e536c-a33e-4837-b186-26a8ff446b00",
+    "d961024c-da0b-41c9-945f-71d495e63376"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "eY9eYbLXeY9e"
+    }
+  }
+}

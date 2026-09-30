@@ -1,0 +1,64 @@
+{
+  "class_name": "Model",
+  "name": "Josh",
+  "syncix_id": "9e7f8ba8-0b1c-49a5-929c-347ff385ac63",
+  "schema_version": 1,
+  "last_updated": 1790327691291,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "8bc8f364-0b25-4c2a-9641-989edda94498"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1759.3143,
+          191.9996,
+          -27.004194
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "98c99689-d484-46f1-a479-6ab95db25004",
+    "0f11b470-561a-45f2-93b8-86bc46bf4ef3",
+    "7e9f989e-c044-451e-af66-6559a54fbb7f",
+    "be7c0f9a-cbb3-4bfc-a7ec-46f27500ab73",
+    "091d2e24-3100-4d68-84a1-15d2a6b58b71",
+    "16866a5a-a90d-4963-83fc-b155e95632d4",
+    "50211d50-59ed-4855-b9c4-dffc3f812545",
+    "d41bfdae-f394-48d3-ab9d-2f1c5e7d69c1",
+    "768bb70a-4e54-4cfe-b371-1d9b25b55887",
+    "8bc8f364-0b25-4c2a-9641-989edda94498",
+    "9fed04db-1084-4053-ab6a-e60ed1ee6c3b",
+    "ac15480e-7158-423f-b758-0001af21567b",
+    "dd467e2d-95ec-41d1-ad3d-4e3d735ce9a3",
+    "5e7a58b2-a941-4153-a6fd-392597e250e6",
+    "dae130ab-82dd-4383-87d5-73af604cfa52",
+    "a4ef5ab8-f210-48a1-82a5-e2dd873187da",
+    "675f616c-f9f7-4d97-9eaf-cf1198739262",
+    "630e59a6-a222-4666-88f3-11fedb56ced6"
+  ],
+  "parent": "7d6f946e-244e-42ea-804f-c620f1ef9b33",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "gAZ7RRyIgAZ7"
+    }
+  },
+  "tags": [
+    "NPCLookAt"
+  ]
+}

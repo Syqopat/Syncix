@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Sigma",
+  "syncix_id": "23c9255d-b92e-49ca-8bbb-4a2264493e75",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "f67c0d43-bcd0-44fa-a311-3027b236a239"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.00045774513,
+          0.7374999,
+          -0.0002479553
+        ],
+        "rot": [
+          -1.0,
+          -8.742278e-8,
+          -8.742278e-8,
+          8.742278e-8,
+          -1.0,
+          0.0,
+          -8.742278e-8,
+          -7.642742e-15,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "70da6aa8-fdc0-4e03-8c63-b42446bfd7b9",
+    "17906ae6-cf7d-44c1-ad85-cfe58c7830b6",
+    "73ebaa5a-8195-48fb-a735-337ac99e5dfb",
+    "6d886edc-237b-4d74-a545-6fa75dd58e8a",
+    "eeedca09-8aab-4bc1-9104-8c8b4c8a12b6",
+    "e123ac5a-1c3f-49e8-b94b-295c79aea0ed",
+    "994e68e5-f41c-4263-a653-269daec57ed5",
+    "f67c0d43-bcd0-44fa-a311-3027b236a239",
+    "4138e9cf-9bf5-4778-8e4d-be3c107d488b",
+    "5a2deec0-f1a1-4ce6-bad8-01a042b8c7a7",
+    "274cd257-f232-4bf7-9419-b2871c2013fc",
+    "08470829-ceaa-4958-a67b-d9a7a7f4843d"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Ui1C47i6Ui1C"
+    }
+  }
+}

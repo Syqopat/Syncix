@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Succulent (Grown)",
+  "syncix_id": "3cac7353-6f26-4919-ba2a-38deb9ba4e4d",
+  "schema_version": 1,
+  "last_updated": 1790327691218,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0002,
+          436.4503,
+          -5.611514
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "0f713406-8c8d-4ebc-af42-479455d0c59a",
+    "be3b6d27-4c05-428a-82fb-8452e6c5c0c5",
+    "c154a7b4-aba0-4eeb-9af6-482dd31c3898",
+    "bf414de0-01f6-46e4-9bc2-c6081161a231",
+    "89db57ff-8445-47f4-920f-0eba3c45aec1",
+    "06914dbc-56b9-46a7-a700-73917a408bde",
+    "2cdeb9f2-4d70-4886-bef0-9ec89ea812f7",
+    "1f43da81-cb53-49fc-a4e4-3c72fe59ee1b",
+    "16c08574-81af-4e39-9d54-747266a2db9f",
+    "0409bfa6-9112-4d93-aa3e-5686d09247f3",
+    "d9390a36-d9d3-4ba2-9d87-b8956d6d71bd",
+    "98b6d96a-e7f1-4166-97ec-e63c6edab5c4"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "qHUFcHDJqHUF"
+    }
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "class_name": "MeshPart",
+  "name": "Head",
+  "syncix_id": "870cb199-f0f6-4f98-9bd6-25e04c62f1a7",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Anchored": {
+      "Boolean": false
+    },
+    "BackSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "BottomSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "BrickColor": {
+      "BrickColor": "Sand green"
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          570.24994,
+          439.0895,
+          68.25
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "CanCollide": {
+      "Boolean": true
+    },
+    "CanQuery": {
+      "Boolean": true
+    },
+    "CanTouch": {
+      "Boolean": true
+    },
+    "CastShadow": {
+      "Boolean": true
+    },
+    "CollisionGroup": {
+      "String": "Default"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.49803922,
+        "g": 0.49803922,
+        "b": 0.49803922
+      }
+    },
+    "CustomPhysicalProperties": {
+      "Ref": ""
+    },
+    "EnableFluidForces": {
+      "Boolean": true
+    },
+    "FrontSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "LeftSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "Locked": {
+      "Boolean": false
+    },
+    "Massless": {
+      "Boolean": false
+    },
+    "Material": {
+      "String": "Enum.Material.Plastic"
+    },
+    "MaterialVariant": {
+      "String": ""
+    },
+    "PivotOffset": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Reflectance": {
+      "Number": 0.0
+    },
+    "RightSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "RootPriority": {
+      "Number": 0.0
+    },
+    "Rotation": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 90.0,
+        "z": 0.0
+      }
+    },
+    "Size": {
+      "Vector3": {
+        "x": 1.1961951,
+        "y": 1.2029438,
+        "z": 1.1979091
+      }
+    },
+    "TextureID": {
+      "String": "https://assetdelivery.roblox.com/v1/asset/?id=111092388570647"
+    },
+    "TopSurface": {
+      "String": "Enum.SurfaceType.Smooth"
+    },
+    "Transparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "0da121fa-af21-4470-9a26-d3e5be9b964e",
+    "956da246-cc68-4ee7-96f4-2040ff85e1ba",
+    "c54476ec-f7bb-4f82-abca-ded0b07e63b4",
+    "48232a6f-070a-4bb0-94ec-1004f708424e",
+    "c3b2e6c5-53d8-43f3-b07c-bb4264359b1a",
+    "6e3f894c-f2e5-4917-89a8-45781a6db1c9",
+    "33b295a6-b724-450d-a899-884512335f87",
+    "f026ed4e-71b2-4c8f-a077-4e6b10ab4f7d",
+    "f423bd34-42a5-4d8c-ba7d-866b197fe2f6",
+    "75388689-7d5e-4e50-8423-95bd6487df14",
+    "cefc1f28-3bc1-4690-aee2-995e108e657a",
+    "f1927f4b-5d77-4b06-9658-7024e38344aa",
+    "0817d528-cf54-4358-bd5f-182df77ee945"
+  ],
+  "parent": "2a90450d-56bf-4d94-91b3-fd438855f1ab",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "AYTeVgzvAYTe"
+    }
+  }
+}

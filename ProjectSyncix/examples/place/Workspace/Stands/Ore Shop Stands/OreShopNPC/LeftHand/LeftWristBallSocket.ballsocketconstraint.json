@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "LeftWristBallSocket",
+  "syncix_id": "5a735302-e29d-4aa8-83a7-6b506d8de353",
+  "schema_version": 1,
+  "last_updated": 1790327691181,
+  "properties": {
+    "Attachment0": {
+      "Ref": "56ff8681-7e41-4111-bae7-cade098e7166"
+    },
+    "Attachment1": {
+      "Ref": "8c84349d-ca05-47d9-a7b1-3a706583bed7"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 30.11460685729981
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -10.0
+    },
+    "TwistUpperAngle": {
+      "Number": 10.0
+    },
+    "UpperAngle": {
+      "Number": 30.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "d450e694-b7c7-4b6a-88e1-d7458edbd825",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "a9CL6XcSa9CL"
+    }
+  }
+}

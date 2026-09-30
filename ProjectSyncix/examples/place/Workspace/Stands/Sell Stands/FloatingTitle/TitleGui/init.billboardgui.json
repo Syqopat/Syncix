@@ -1,0 +1,123 @@
+{
+  "class_name": "BillboardGui",
+  "name": "TitleGui",
+  "syncix_id": "0156a6a6-aad3-45a8-95d6-4a8a779d4c12",
+  "schema_version": 1,
+  "last_updated": 1790327691184,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "Adornee": {
+      "Ref": ""
+    },
+    "AlwaysOnTop": {
+      "Boolean": true
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "Brightness": {
+      "Number": 1.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "DistanceLowerLimit": {
+      "Number": 0.0
+    },
+    "DistanceStep": {
+      "Number": 0.0
+    },
+    "DistanceUpperLimit": {
+      "Number": -1.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "ExtentsOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "ExtentsOffsetWorldSpace": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "LightInfluence": {
+      "Number": 0.0
+    },
+    "MaxDistance": {
+      "Number": 45.0
+    },
+    "PlayerToHideFrom": {
+      "Ref": ""
+    },
+    "ResetOnSpawn": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 8.0,
+        "xo": 0.0,
+        "ys": 2.2,
+        "yo": 0.0
+      }
+    },
+    "SizeOffset": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "StudsOffset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "StudsOffsetWorldSpace": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "ZIndexBehavior": {
+      "String": "Enum.ZIndexBehavior.Global"
+    }
+  },
+  "children": [
+    "ba98eb6a-7ffd-4e07-9431-cef3408dac67"
+  ],
+  "parent": "dbc6ba15-565c-4b60-a97f-b6732c2e030e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "FBsKJRnZFBsK"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "class_name": "Model",
+  "name": "DecorationFence",
+  "syncix_id": "353be106-3197-4c4b-b764-11cf87ca8e98",
+  "schema_version": 1,
+  "last_updated": 1790327691279,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1927.2,
+          191.75,
+          -104.8
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7934f580-ee10-4164-8a6e-c78a01a44b8d",
+    "d24b7c8e-b24e-491e-abe0-f2e6676fad9c",
+    "eaa541f8-c3ca-46ff-b16c-025c1aafe9d5",
+    "b2442a34-dda1-4915-9c73-384d19491404",
+    "439aea8c-83ac-499f-849c-2cdceb1c7a1a",
+    "0b7b4fcf-8557-418e-86f3-efcaa1ef39e1",
+    "068b1e9f-d772-4d08-a46c-6255bb68f123",
+    "88abe882-be83-43d0-aece-236194b0ea45",
+    "8ed8fbea-7b25-4f55-921f-3c773be2ac6d",
+    "45525072-a7f1-432e-9803-35abb80034cc",
+    "5c338e58-5b37-4d77-a2a7-d61dd2a9d3eb",
+    "08f6e485-f0b2-4180-803f-dd7166347053",
+    "5df337bc-8eda-4e5f-9436-d382e8b62883",
+    "f266b86f-e862-4051-9825-b291db0350d3",
+    "82dda7a2-8f99-43fc-b610-e5081ed5574b",
+    "f2c235d6-b7d3-4d4d-8b99-fe22eec3114e",
+    "3d4d65db-80b0-4d19-be7f-77c0968f8954",
+    "9b3d2fee-b7e8-461d-a2ae-6f6531bff961"
+  ],
+  "parent": "b685a2c8-0fb4-419d-82e4-674f8065237e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NDhQp3rBNDhQ"
+    }
+  }
+}

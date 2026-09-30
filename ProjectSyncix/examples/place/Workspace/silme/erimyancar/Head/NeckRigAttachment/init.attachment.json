@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "NeckRigAttachment",
+  "syncix_id": "20df0eb0-de52-4ca4-8a1d-3830476c0587",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.0,
+          -0.5000001,
+          -0.00027224422
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 6.834403e-31,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          1008.4602,
+          799.58844,
+          -108.7376
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          6.834403e-31,
+          1.0,
+          0.0,
+          -1.0,
+          -6.834403e-31,
+          0.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": -6.834403e-31
+      }
+    }
+  },
+  "children": [
+    "e7b5c47c-89fb-4f4d-bfd7-8ad2ce85eaf3"
+  ],
+  "parent": "6e6d5dbf-7776-46ea-bfd0-77a7e34f313f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "EU3NxOaSEU3N"
+    }
+  }
+}

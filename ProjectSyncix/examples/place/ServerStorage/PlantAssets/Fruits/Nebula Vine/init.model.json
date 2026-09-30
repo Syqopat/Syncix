@@ -1,0 +1,51 @@
+{
+  "class_name": "Model",
+  "name": "Nebula Vine",
+  "syncix_id": "e1f99c1e-4844-4151-aadc-c05c5177fc49",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.45,
+          0.041320443
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "9a43cbde-4416-44ec-bbad-fb38a38ed244",
+    "d570eff8-54a0-4240-8d00-14154091148a",
+    "8e94f4d6-fccd-44bf-8561-aff347b14502",
+    "c6d11a32-091f-4c05-b8fd-d00dc392323e",
+    "ed0a92bd-f6f0-48ae-a802-0aeebaf4ed0b",
+    "aa850ae8-670b-4c47-a7d5-0ecfa226bb52",
+    "bc6b0fc1-a497-4a43-b41f-ce3b88c13aa9",
+    "67e09f85-3e55-4bd6-84ca-c41a9a67baea"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6BO2ItBj6BO2"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Passionfruit (Fruit)",
+  "syncix_id": "5ea5e050-f587-4b78-95a9-bc1b7cc99d73",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.0,
+          -189.03125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "bd1caf69-c52b-4045-9b5f-08823d19e505",
+    "6e0ef5ba-2014-438a-a69c-38fa863feca3",
+    "183dc578-5c57-4d01-a057-fc5af38aea35",
+    "5c78a9da-91f6-49e2-9ac6-7f18121622a2",
+    "88fd1ae1-685e-4831-86c8-794410c20438",
+    "dd903704-a629-4801-847f-06e699f0059a",
+    "6562a1fe-bac0-40df-b720-c7251c9bc44b",
+    "b18e7569-7f0b-428d-bd99-2d938bdfeef9",
+    "89c12166-7a40-4cff-8a37-69eb4656386c",
+    "f03c34f4-eff0-40a4-8f01-33f9b4bac365"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "YlPmCD2uYlPm"
+    }
+  }
+}

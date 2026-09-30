@@ -1,0 +1,74 @@
+{
+  "class_name": "Motor6D",
+  "name": "Neck",
+  "syncix_id": "0ee60351-50b5-432e-8737-b4cfeb40f251",
+  "schema_version": 1,
+  "last_updated": 1790327691289,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "rot": [
+          -0.99997735,
+          0.006747748,
+          -3.4132972e-7,
+          -0.000028796494,
+          -0.0042169094,
+          0.9999911,
+          0.0067476863,
+          0.99996835,
+          0.004216969
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          -0.5,
+          0.0
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0
+        ]
+      }
+    },
+    "CurrentAngle": {
+      "Number": 0.0
+    },
+    "DesiredAngle": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "MaxVelocity": {
+      "Number": 0.10000000149011612
+    },
+    "Part0": {
+      "Ref": "f99d7eb8-b564-4867-860d-1999b5dda0d5"
+    },
+    "Part1": {
+      "Ref": "ea3b2153-6db0-43db-9cb4-493889347c64"
+    }
+  },
+  "children": [],
+  "parent": "f99d7eb8-b564-4867-860d-1999b5dda0d5",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Ffto42h7Ffto"
+    }
+  }
+}

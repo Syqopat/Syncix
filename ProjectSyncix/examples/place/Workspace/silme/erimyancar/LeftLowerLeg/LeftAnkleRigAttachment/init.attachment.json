@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "LeftAnkleRigAttachment",
+  "syncix_id": "0f8d2ea7-f8a8-4933-800b-33766db5b773",
+  "schema_version": 1,
+  "last_updated": 1790327691179,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.00210369,
+          -0.25532314,
+          0.016920261
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 6.834403e-31,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          1009.1371,
+          796.8223,
+          -107.86946
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          6.834403e-31,
+          1.0,
+          0.0,
+          -1.0,
+          -6.834403e-31,
+          0.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": -6.834403e-31
+      }
+    }
+  },
+  "children": [
+    "8dab52cc-e4d8-4311-a993-becd73367b49"
+  ],
+  "parent": "dc80a6a2-eccd-4bd6-a298-dcd99089a24a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "s6pyw5RJs6py"
+    }
+  }
+}

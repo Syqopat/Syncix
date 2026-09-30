@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Cutscene_Model",
+  "syncix_id": "8be89640-8881-4fa6-9d1c-1796603c70da",
+  "schema_version": 1,
+  "last_updated": 1790327691297,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Persistent"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -2036.95,
+          202.336,
+          77.26659
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e1ba0ef9-13b9-498c-a1cf-8ebc2c958bd1",
+    "16c7a1d8-4831-4f63-ab4e-a7ed33bbfa11"
+  ],
+  "parent": "b6e31b9f-ab94-4a43-bae6-6438c09a049d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "2Lvg8c9l2Lvg"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Eggplant",
+  "syncix_id": "a4f16d97-46ed-4edb-bd53-e022f7bbe12e",
+  "schema_version": 1,
+  "last_updated": 1790327691327,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "0a263fe9-2411-45da-86eb-07cd47df49fa"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.08348052,
+          -0.9991451,
+          0.00001524633
+        ],
+        "rot": [
+          1.0,
+          2.9802322e-8,
+          2.3841858e-7,
+          -2.9802322e-8,
+          1.0,
+          7.4505753e-9,
+          -2.3841858e-7,
+          -7.450582e-9,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "ccee82fd-263c-4f86-aa75-dac65203b915",
+    "71ee4cde-36e2-4437-9615-3dfeda5352d2",
+    "2d856cf0-0c3c-4074-afe0-2f93a75a5e45",
+    "adf6cab3-feb0-47dd-854e-1d2b22fdcd3a",
+    "5ad39d74-ffac-414c-a5e5-385cc113fc1e",
+    "04b2e6ec-958a-4a1b-8a47-22802a97354e",
+    "79ec479f-b2ba-4330-93a8-9de9f5a46e40",
+    "a892d991-f8e1-4d3d-9bf8-5fd135bbe793",
+    "0a263fe9-2411-45da-86eb-07cd47df49fa",
+    "7246b5c3-5a21-4ddc-a5ad-b1b9c1352496",
+    "cbb4011e-5e99-465c-88fa-39ce7a94c509",
+    "c6912c35-4606-4572-9ae5-b6093eacc1c3",
+    "812ddb9d-5778-4c5f-9e1e-66c831fbc14c",
+    "2a6f5d9e-99a0-4871-8a0c-ae8751e06c1a",
+    "c3af62a9-7c98-4d75-8c7e-696276eae64e",
+    "ef6294c2-0186-4c03-83de-a7a595324d95",
+    "5310527b-516e-4eec-9eaf-4d025b4eeb0a"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "B2GB4e5rB2GB"
+    }
+  }
+}

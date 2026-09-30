@@ -1,0 +1,56 @@
+{
+  "class_name": "Model",
+  "name": "Frostleaf",
+  "syncix_id": "eee2590a-d560-4cd7-9938-852ebfcb9517",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.027885184,
+          0.4164455,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "d0240f01-528a-4849-a4d8-7b2cc30adb52",
+    "168b9218-675e-456b-9d1d-1c52c85747cd",
+    "123c8f57-522e-4e03-b242-9412fad9aa73",
+    "6209bd26-58aa-4463-9cbc-5af26dcdde63",
+    "dc32624c-6d5b-43c6-9dbb-ad4020266846",
+    "92ac29c9-33be-4a6e-8187-1dbd0624d342",
+    "49795fa5-1b99-49c9-aa0d-2873c0b5274f",
+    "d6e65ddd-8e86-4a4d-b429-f66bd915d8b2",
+    "442ddfed-857d-4e82-a3d9-db03f6a46d96",
+    "cbfc46a3-0e00-4cac-bc04-e36a969b15fb",
+    "57ed6790-76bd-47c9-a77a-6350e9b4d873",
+    "d060f0f4-fc31-44a4-9eca-3debe57c6724",
+    "2fa01682-d6af-4e4c-90a6-4b71bf2230fb"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Rf7aJ2TnRf7a"
+    }
+  }
+}

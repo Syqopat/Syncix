@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub Display",
+  "syncix_id": "43cfeeaf-a40e-49e9-8a16-06179872bf5e",
+  "schema_version": 1,
+  "last_updated": 1790327691236,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          470.0,
+          437.11163,
+          28.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "d03696b9-9e24-4057-a5eb-4d6f40068166",
+    "1a8726e2-d780-488d-b11d-9e2964494a7a",
+    "d13fcbb4-053a-4338-a234-bb0f03f0a318",
+    "d35cc761-e579-4fc1-9d57-7fdd982c0268"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "k9DCKqukk9DC"
+    }
+  }
+}

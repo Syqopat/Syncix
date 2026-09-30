@@ -1,0 +1,48 @@
+{
+  "class_name": "Model",
+  "name": "Banana Tree",
+  "syncix_id": "622b70ba-b267-4eb6-8455-5b76f583de56",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.022748291,
+          0.20156004,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2c5aed30-d781-4791-bb43-20d83c50dd1a",
+    "77348507-9935-450a-bd33-e6c084541dd1",
+    "716b4d85-3feb-44ea-884a-ff8649742aeb",
+    "e7bb4832-271c-4fc7-b53f-225754402ca7",
+    "6852c9fc-d30b-4272-ba98-d3e3bdeb7cc4"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cpCzG8hvcpCz"
+    }
+  }
+}

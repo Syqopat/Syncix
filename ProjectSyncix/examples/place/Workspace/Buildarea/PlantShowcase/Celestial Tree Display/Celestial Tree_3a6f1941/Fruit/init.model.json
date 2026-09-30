@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Fruit",
+  "syncix_id": "460d7399-ec01-4b1c-81cf-9c9973630371",
+  "schema_version": 1,
+  "last_updated": 1790327691234,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          517.4741,
+          442.7712,
+          26.964363
+        ],
+        "rot": [
+          -0.8090042,
+          0.0,
+          -0.58780307,
+          0.0,
+          1.0,
+          0.0,
+          0.58780307,
+          0.0,
+          -0.8090042
+        ]
+      }
+    }
+  },
+  "children": [
+    "8e5e9ebd-4cac-4d61-9803-9a4f7484592b",
+    "3d65d7ce-6aaa-49b5-b47e-9ca4ca48ac6c",
+    "784aea6a-940e-4096-884d-c34a7714d513",
+    "88512647-0365-45f4-a4cb-36f987b264d1",
+    "af166d87-f9d9-42c3-96cf-028f112857a7",
+    "37949574-afa9-4d94-8a63-cd806fd8f8dc",
+    "857abb5c-a3cb-4f3c-a38c-808064199407",
+    "3f1b1bc2-355d-40ea-8d6b-46f88d0d6da6",
+    "16d9ddce-02e1-491d-a757-cd072ee98a92",
+    "cefb702b-47c9-453c-a361-1eaa426a1cc9",
+    "f7b363b0-4615-4156-a412-c127716376d1",
+    "d427f413-79ef-420a-8d69-2af4300e3fb3",
+    "6b02f4eb-042f-43bd-ba16-4edea99a396d",
+    "703041d5-7db7-49b2-939e-8f56786b3c8b",
+    "a9603a64-901a-4fd5-a38b-9e2d93075d28",
+    "f41dc573-5383-45dc-bc26-4910e9864a93",
+    "662efd12-5edc-476c-a019-05fcd7075c66",
+    "80164e81-7572-4b11-8c78-22c7357e385b",
+    "8ec604b6-2210-49a5-b2fb-5899e683f756",
+    "d60a3b19-8f34-45d4-af00-762d9de59510",
+    "6e1bafb3-c480-43f8-97b2-354a9db50d51",
+    "eeca5722-0c8d-481a-92d3-d42e321af799",
+    "8016bdef-c62b-4fd1-b486-776114f0ea49",
+    "67972e5b-8575-44bb-b23d-00b33539fb3e",
+    "645bf0cb-335c-4763-a944-098956b1dfa4",
+    "637fe13a-cbef-436e-8e02-27921817567d",
+    "06b3bfb8-dcfb-4db3-8be0-f1e7712d427d",
+    "43a1e881-da87-42f8-b651-7dbaad5d47c6"
+  ],
+  "parent": "3a6f1941-0557-4410-89ef-2777652e7511",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "vceu4Dnjvceu"
+    }
+  }
+}

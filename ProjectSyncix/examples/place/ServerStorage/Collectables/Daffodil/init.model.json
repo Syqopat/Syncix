@@ -1,0 +1,72 @@
+{
+  "class_name": "Model",
+  "name": "Daffodil",
+  "syncix_id": "dc11b719-abb9-4362-b2ee-f07a551d9e4a",
+  "schema_version": 1,
+  "last_updated": 1790327691335,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "ee25b4fa-e83f-4bdd-b9c6-5eaea6e3afd5"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.10309121,
+          1.0074879,
+          -0.014040986
+        ],
+        "rot": [
+          0.866018,
+          0.50001365,
+          -0.000018894672,
+          0.5000137,
+          -0.86601794,
+          -8.791685e-7,
+          -0.000016957521,
+          -0.000008702278,
+          -0.99999994
+        ]
+      }
+    }
+  },
+  "children": [
+    "a413a8f6-c5ea-40a3-a240-a8c7d271a92f",
+    "ee18b478-a9ae-4235-a965-39e973c8d3c7",
+    "f14eaff9-0b60-432d-a9cb-5d9eb1980b5b",
+    "7bfd5566-8d46-43f5-ab85-3b948e9b2430",
+    "da157dae-b932-4665-8b6a-a8a98f2ebee1",
+    "58dd90e3-5cf9-45c1-a9f1-93f7eb0ce482",
+    "57f027bd-7d8d-4c5e-82ee-ecae7ff8afbb",
+    "ed70ed41-47f7-4f33-b0c3-f2e07879ba9b",
+    "ee25b4fa-e83f-4bdd-b9c6-5eaea6e3afd5",
+    "998f035b-2ba4-4a90-8da4-0ce1ed7027ba",
+    "a8a8031a-7eed-4b96-a284-d051230c757a",
+    "e2cd449d-5cb9-40a4-b33f-965d1aa51eeb",
+    "05999dfa-a410-46dc-bb46-076b770a64fb",
+    "5f853fc0-264e-4427-b37d-e9f59b03662a",
+    "8c521a3e-a07f-4716-9ee2-a97c982c4845",
+    "31d5dc04-6a16-4d9d-be6a-7366c14f9298",
+    "c4a891c7-e174-4f25-9615-335966916073",
+    "0f930154-c396-4512-9962-521828a18ac2",
+    "e4086e4d-9e02-4a83-89a3-3bd3571fc444",
+    "ce08d1cf-e4c3-4292-9110-efb988072fd8",
+    "37a3bebc-d9ac-4999-bb7c-4a8440e6753f",
+    "912b2b34-ea43-4d42-bbfa-47361ddc7daf",
+    "5dd899c1-c681-4a06-8261-7cf56dde9df7",
+    "e9bbde27-2830-4714-9fe7-76afc7b279a0",
+    "37a0c4cf-5339-412a-a967-731b0720774c",
+    "5f1ae1c8-4c53-406c-b5cc-fded110af2c6",
+    "ce73081b-2ec2-4489-b3c4-b3fe3c97c15c",
+    "1f001adf-3436-4ad2-91e3-5ec431102546",
+    "e39b24c1-7c09-4bd9-b0b7-977fb9486818"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "AMb0RXlfAMb0"
+    }
+  }
+}

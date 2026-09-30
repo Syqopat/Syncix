@@ -1,0 +1,64 @@
+{
+  "class_name": "Sound",
+  "name": "tick2",
+  "syncix_id": "63b1ae36-d502-44bb-9467-d1962386e4d8",
+  "schema_version": 1,
+  "last_updated": 1790327691325,
+  "properties": {
+    "LoopRegion": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 60000.0
+      }
+    },
+    "Looped": {
+      "Boolean": false
+    },
+    "PlayOnRemove": {
+      "Boolean": false
+    },
+    "PlaybackRegion": {
+      "NumberRange": {
+        "min": 0.0,
+        "max": 60000.0
+      }
+    },
+    "PlaybackRegionsEnabled": {
+      "Boolean": false
+    },
+    "PlaybackSpeed": {
+      "Number": 1.0
+    },
+    "Playing": {
+      "Boolean": false
+    },
+    "RollOffMaxDistance": {
+      "Number": 10000.0
+    },
+    "RollOffMinDistance": {
+      "Number": 10.0
+    },
+    "RollOffMode": {
+      "String": "Enum.RollOffMode.Inverse"
+    },
+    "SoundGroup": {
+      "Ref": ""
+    },
+    "SoundId": {
+      "String": "rbxassetid://10066931761"
+    },
+    "TimePosition": {
+      "Number": 0.0
+    },
+    "Volume": {
+      "Number": 0.5
+    }
+  },
+  "children": [],
+  "parent": "8309222e-ed7e-4f29-8781-5c97d5ee992a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "7UBfYtIK7UBf"
+    }
+  }
+}

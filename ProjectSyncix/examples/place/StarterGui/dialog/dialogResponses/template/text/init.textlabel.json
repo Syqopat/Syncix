@@ -1,0 +1,190 @@
+{
+  "class_name": "TextLabel",
+  "name": "text",
+  "syncix_id": "a2711069-4099-44fb-befd-502100d9e1d5",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "Active": {
+      "Boolean": false
+    },
+    "AnchorPoint": {
+      "Vector2": {
+        "x": 0.0,
+        "y": 0.5
+      }
+    },
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "AutomaticSize": {
+      "String": "Enum.AutomaticSize.X"
+    },
+    "BackgroundColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "BackgroundTransparency": {
+      "Number": 1.0
+    },
+    "BorderColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "BorderMode": {
+      "String": "Enum.BorderMode.Outline"
+    },
+    "BorderSizePixel": {
+      "Number": 0.0
+    },
+    "ClipsDescendants": {
+      "Boolean": false
+    },
+    "FontFace": {
+      "Font": {
+        "family": "rbxasset://fonts/families/ComicNeueAngular.json",
+        "weight": "Enum.FontWeight.Bold",
+        "style": "Enum.FontStyle.Normal"
+      }
+    },
+    "LayoutOrder": {
+      "Number": 0.0
+    },
+    "LineHeight": {
+      "Number": 1.0
+    },
+    "MaxVisibleGraphemes": {
+      "Number": -1.0
+    },
+    "NextSelectionDown": {
+      "Ref": ""
+    },
+    "NextSelectionLeft": {
+      "Ref": ""
+    },
+    "NextSelectionRight": {
+      "Ref": ""
+    },
+    "NextSelectionUp": {
+      "Ref": ""
+    },
+    "Position": {
+      "UDim2": {
+        "xs": 0.02486256,
+        "xo": 0.0,
+        "ys": 0.5,
+        "yo": 0.0
+      }
+    },
+    "RichText": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "Rotation": {
+      "Number": 0.0
+    },
+    "Selectable": {
+      "Boolean": false
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "SelectionImageObject": {
+      "Ref": ""
+    },
+    "SelectionOrder": {
+      "Number": 0.0
+    },
+    "Size": {
+      "UDim2": {
+        "xs": 0.0,
+        "xo": 0.0,
+        "ys": 0.8,
+        "yo": 0.0
+      }
+    },
+    "SizeConstraint": {
+      "String": "Enum.SizeConstraint.RelativeXY"
+    },
+    "Text": {
+      "String": "1.) temp text"
+    },
+    "TextColor3": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    },
+    "TextDirection": {
+      "String": "Enum.TextDirection.Auto"
+    },
+    "TextScaled": {
+      "Boolean": true
+    },
+    "TextSize": {
+      "Number": 1.0
+    },
+    "TextStrokeColor3": {
+      "Color3": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "TextStrokeTransparency": {
+      "Number": 1.0
+    },
+    "TextTransparency": {
+      "Number": 0.0
+    },
+    "TextTruncate": {
+      "String": "Enum.TextTruncate.None"
+    },
+    "TextWrapped": {
+      "Boolean": true
+    },
+    "TextXAlignment": {
+      "String": "Enum.TextXAlignment.Left"
+    },
+    "TextYAlignment": {
+      "String": "Enum.TextYAlignment.Center"
+    },
+    "Visible": {
+      "Boolean": true
+    },
+    "ZIndex": {
+      "Number": 1.0
+    }
+  },
+  "children": [
+    "fc496f54-8a45-452e-9f99-d2ba2952817a",
+    "97725911-2834-4dc2-b5e1-ef1d1bc8be41"
+  ],
+  "parent": "807a281a-5bc7-4f83-baf2-bfc750989873",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "anjVyDVbanjV"
+    }
+  }
+}

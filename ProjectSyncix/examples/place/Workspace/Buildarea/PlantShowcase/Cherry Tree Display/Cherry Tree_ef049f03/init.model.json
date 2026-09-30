@@ -1,0 +1,78 @@
+{
+  "class_name": "Model",
+  "name": "Cherry Tree",
+  "syncix_id": "ef049f03-8113-4833-9f19-38808f1d3ce7",
+  "schema_version": 1,
+  "last_updated": 1790327691240,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          475.5,
+          436.215,
+          3.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5ce62b39-7ec8-48f7-98bf-138ac520c48d",
+    "937a2ac5-da37-48be-a332-0cb1c77fe885",
+    "4f7958a0-c71d-471f-86c0-110d0cdf8d5c",
+    "9b7facf1-1d48-401a-b180-e0aed6c38ed6",
+    "57c3a1b5-605c-4404-95f8-5e5cd755130f",
+    "825cbd15-bf4e-41c4-b475-cb2b0736045b",
+    "aa7db6f4-20a1-4572-be90-79145bd05cda",
+    "abc64c62-169f-489b-8998-9feb87460bef",
+    "d288b451-0b67-4fa6-8a7b-7ea899ddbb84",
+    "1cdb2888-3866-4478-99ce-7260422c167f",
+    "69b033dd-4daa-411e-a5cf-8715c977f41c",
+    "057fb03a-a3f3-42c3-84fe-61ccc1bc18ab",
+    "a132124f-cedc-4675-a1d7-69b3720ebdf6",
+    "2b4370aa-a335-4c47-aacb-5a494ab7f4c2",
+    "6e18c05f-fd8b-4df9-b8b8-9cdb7f795749",
+    "664afc4d-c3cb-4540-a15b-3c0c011bb3ca",
+    "2a7edbd5-5fdb-4361-bf51-28378aad21e0",
+    "75760535-28c4-425e-96ff-7b2dcffb7db3",
+    "99076016-b878-4a57-841b-cfdcba52db0f",
+    "a3a2bf07-74c7-413f-97c3-556d804fd447",
+    "124f1ee2-3ba3-4f46-a9d3-be5ccf153b5c",
+    "1a4fe977-732a-424f-85b8-8c1c7f95f851",
+    "317d1f89-013c-41e3-bda5-6f0d5018b3ed",
+    "a877aff1-c28b-4abc-8ed6-37c0d081409a",
+    "afd05057-ff44-4d1b-b43b-3db90e36e002",
+    "d1f2e3d2-08e1-4416-ba39-59484169cbd1",
+    "f64ddbef-e71d-484e-b487-8af35bbc80fb",
+    "f2510f13-bb0e-4481-9913-58f42ceab47f",
+    "d1a08c7b-92dd-477c-bba2-7299b8044a5d",
+    "699253fa-bc27-4e96-90ba-61d936ef111b",
+    "2409a332-0e4e-4eec-91da-8d1162818b6e",
+    "3959b8cc-651e-41b6-a7e1-8f697a4780b0",
+    "a571c0d9-8151-4205-8bb0-e8f96e998259",
+    "7a1bf065-7ce4-40c2-aa99-0fdbfb18fff1",
+    "a34aed77-81cc-432c-907b-3bde83d4772b"
+  ],
+  "parent": "832c113c-27ee-4e96-a38e-ce4156ce099c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "CWklxdLJCWkl"
+    }
+  }
+}

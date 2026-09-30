@@ -1,0 +1,65 @@
+{
+  "class_name": "Model",
+  "name": "Eloise",
+  "syncix_id": "bd7d8f4f-60fb-49a6-b62b-85e3e21d5b7c",
+  "schema_version": 1,
+  "last_updated": 1790327691289,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "ea3b2153-6db0-43db-9cb4-493889347c64"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -2093.444,
+          188.9426,
+          -14.20582
+        ],
+        "rot": [
+          0.0067476803,
+          -0.004216494,
+          -0.99996835,
+          0.000028797383,
+          0.9999912,
+          -0.0042163953,
+          0.99997723,
+          -3.4558252e-7,
+          0.0067477417
+        ]
+      }
+    }
+  },
+  "children": [
+    "f99d7eb8-b564-4867-860d-1999b5dda0d5",
+    "607d187b-bffe-4249-b12a-c7dbc8717b25",
+    "df4254e0-6b38-4a7c-be42-a1686f3f2f2e",
+    "6faf938c-2e38-4ad2-afa5-e27184de21d4",
+    "93748b33-fd29-46a3-a8b4-533cc4d01bce",
+    "3eb3cf36-0b95-4aaa-9631-83f96fdd1a07",
+    "a7a69ea5-6551-4b3e-86b6-994ea5de6cc7",
+    "c93301dc-35de-4515-9df0-7f06bc81444e",
+    "5ab21200-3421-4219-88ff-3c13a2719168",
+    "11d5b733-bf31-4a71-87d1-3dcb29f9ac62",
+    "119a1e60-7069-4877-ab38-1a7b7eccefb6",
+    "76a13579-be4a-47cf-a8d6-9370e32a06c9",
+    "89f80b9a-211e-4aba-9969-33bd757d9fab",
+    "70c94c68-6d80-41ba-9af3-83cd7ab12ae0",
+    "ea3b2153-6db0-43db-9cb4-493889347c64",
+    "db50dc11-286b-4000-9007-af358d92f1c6",
+    "7ce85634-c9de-49bf-ab40-df6d31a7e751",
+    "029538c9-cfd4-48cd-9c05-dd3af9d53025",
+    "0a58bad8-ecbd-402a-a81d-8d97caabdfda"
+  ],
+  "parent": "7d6f946e-244e-42ea-804f-c620f1ef9b33",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "SrvN9mTPSrvN"
+    }
+  },
+  "tags": [
+    "NPCLookAt"
+  ]
+}

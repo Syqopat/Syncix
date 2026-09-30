@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "PressureGauge_Left",
+  "syncix_id": "e513cb2a-7561-4cda-873d-3656593ea7ac",
+  "schema_version": 1,
+  "last_updated": 1790327691261,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "f8438e53-4fd1-40ce-984b-f73e18d3dcff"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          359.5056,
+          444.825,
+          -200.7288
+        ],
+        "rot": [
+          1.0,
+          -4.371139e-8,
+          -4.371139e-8,
+          -4.3711385e-8,
+          4.3711392e-8,
+          -1.0,
+          4.3711392e-8,
+          1.0,
+          4.371139e-8
+        ]
+      }
+    }
+  },
+  "children": [
+    "1abce81b-8e83-41b0-b1bd-156b8b524b55",
+    "f72617b7-9bd4-4895-aa7f-502218a12d08",
+    "f8438e53-4fd1-40ce-984b-f73e18d3dcff",
+    "c0e4f842-3115-498b-afbc-c8ae0a1e05bc"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "pflSEsUOpflS"
+    }
+  }
+}

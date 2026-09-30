@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Sigma",
+  "syncix_id": "8e9b1fe6-55b9-48c1-91be-41f4935339a0",
+  "schema_version": 1,
+  "last_updated": 1790327691342,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "efb43bba-00a6-4be2-ac18-e32c070691a9"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0000043,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0000043
+        ]
+      }
+    }
+  },
+  "children": [
+    "459a4267-bd87-43d0-8e04-f0a7cff7597c",
+    "b3f2c02b-5432-436d-b6af-48fe260caaef",
+    "1115a22c-d386-4ed7-8a92-551b4d2f3af1",
+    "966819e3-7272-459f-bfb7-9b99c4f3ec8e",
+    "fc40f89f-0d74-4ae1-9185-734a069f13b8",
+    "248710a8-1e42-4c66-8228-f4d843788d9b",
+    "fc62dc57-a413-490e-b184-01ba168b2f88",
+    "4995f1b9-0bc9-4adb-b0f2-92b4cd88ea32",
+    "f82bb9e6-7ec9-4b8f-9a4c-fc8a95b6c1b3",
+    "efb43bba-00a6-4be2-ac18-e32c070691a9"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "j2Qs6BZfj2Qs"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "class_name": "Model",
+  "name": "OreShopNPC",
+  "syncix_id": "f464ad9a-e692-409a-8b20-5f40f677b05f",
+  "schema_version": 1,
+  "last_updated": 1790327691180,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "9e934764-a1a5-4a53-9bda-bba932bd64d9"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          8.019531,
+          127.26968,
+          -14.6556015
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "b558ea60-363c-40a4-905a-5bf03ecd7b2a",
+    "98fd1b43-7fb2-427a-9570-ebb8716c820b",
+    "5fd5af31-2c8a-4942-9eb6-2b5f09515c02",
+    "9bd63d16-2237-4b65-bba2-bd2179ce4464",
+    "446a341d-83ce-4c53-8b40-1e81bb525aa0",
+    "8a4fd2f7-9dd2-4734-a11a-3c999b189aff",
+    "6680dc76-ef5e-4960-b280-3ef39628ad9b",
+    "f86066c3-c213-467d-824c-0fc74444230a",
+    "30c3a396-2eee-4b02-b7b2-8e1762ea859d",
+    "0ce1f815-e8af-4baa-a56b-9782d190c421",
+    "6ea00d4b-5387-4ae6-ad65-ed8cc3c51c37",
+    "00609d90-94f2-49db-accf-a00d487c433d",
+    "2cc019a2-99e3-420d-8276-368a18ca4cf6",
+    "d450e694-b7c7-4b6a-88e1-d7458edbd825",
+    "4f1009a4-c451-42f9-a825-c7471fc8b2cb",
+    "3ccb50c9-6d51-45e9-941b-38871bab8b29",
+    "22c5a2e1-f76a-4125-8412-9aec9463c827",
+    "11f08a8c-00f6-4af8-a6a0-8c24fba10a6c",
+    "9e934764-a1a5-4a53-9bda-bba932bd64d9",
+    "2e498b0e-1ef4-472d-b052-2d2777d63d43",
+    "1d186f10-f6c9-46dd-bc55-7bd1735cca97"
+  ],
+  "parent": "d4860bea-dd93-461e-8397-c2f482c6d5d5",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "gJVWjLLngJVW"
+    }
+  }
+}

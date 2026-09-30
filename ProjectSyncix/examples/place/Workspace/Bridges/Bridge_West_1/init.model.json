@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Bridge_West_1",
+  "syncix_id": "0c73aadf-d74b-4c5b-891a-6fe83677dc49",
+  "schema_version": 1,
+  "last_updated": 1790327691163,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -160.65,
+          124.1,
+          -85.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "27a5d49f-3b08-44c1-a480-9fd1baf15461",
+    "7361d0d4-3c76-4405-90c6-b8f2056a064c",
+    "7630d4be-2738-4afb-9465-20cdfc3e61b7",
+    "a1fc5d82-19c1-46e9-bd89-14f10faa01ac",
+    "f4a2919b-b5db-438d-8745-5d36891c31f9",
+    "0fe6711c-9ae2-4a2e-9335-2f4067188330",
+    "65d99a2d-a962-48ee-bea8-3f2c5d8ea41a",
+    "e361f8b8-f9ce-4695-a5a4-bb422261e884",
+    "6aa6c967-a55f-4d7e-8a4a-a4d42b7a5bb8",
+    "adfc53d3-4cd5-42d9-86c4-0d226a9ad5fc",
+    "0b7d5f6c-ea0d-46c6-ac67-e5ac8a1f014f",
+    "ee6d5487-329a-4d06-83c1-bb67942bf7e6",
+    "40f1cab0-400f-43e2-8bed-e6ffc9e9022e",
+    "b0ab18b2-df81-466d-9b72-b3994bc228c9",
+    "1ba596c3-a601-435a-94d8-5422899d5541",
+    "69361e8c-b96d-43c7-8f04-fff30b7a4fdf",
+    "552196d2-7249-40df-8b28-ffa46bbc1f47"
+  ],
+  "parent": "ec69e548-6df2-453b-afe3-80edde7e545f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5iXxp4vP5iXx"
+    }
+  }
+}

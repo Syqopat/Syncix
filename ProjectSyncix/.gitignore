@@ -1,13 +1,13 @@
 # Rust
-core-engine/target/
+packages/core-engine/target/
 
 # Node
-vscode-extension/node_modules/
-vscode-extension/out/
+packages/vscode-extension/node_modules/
+packages/vscode-extension/out/
 
 # Syncix working files
 .syncix/
-syncix-core.log
+*.log
 
 # Editor
 .vscode/
@@ -23,3 +23,8 @@ sourcemap.json
 
 # Python bytecode cache
 __pycache__/
+
+# Private tools, kept out of the repository on purpose
+apps/assetkit/
+apps/syncixlib/
+SyncixLib/

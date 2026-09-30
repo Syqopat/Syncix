@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Red Lollipop (Fruit)",
+  "syncix_id": "8796bbfd-d3cb-414e-a73d-56e642b01a0a",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.01196,
+          -78.40625
+        ],
+        "rot": [
+          1.0,
+          0.000104719766,
+          0.0,
+          -1.8180235e-9,
+          0.000017360844,
+          -1.0,
+          -0.000104719766,
+          1.0,
+          0.000017360844
+        ]
+      }
+    }
+  },
+  "children": [
+    "0318d0de-c0c6-4ab3-87a6-9587f067ce1a"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Gw3VA7QAGw3V"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "IslandTemplate",
+  "syncix_id": "dd4d95ae-f363-45f0-9b75-044ec9f82f67",
+  "schema_version": 1,
+  "last_updated": 1790327691161,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          601.75,
+          541.0,
+          228.5
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "f0236e3b-b324-4209-a1b6-92e7afecbd47",
+    "caae6706-88a1-4d91-b3ae-f76a3cb01139",
+    "6afe9214-c849-4890-96c7-340e16b8f095"
+  ],
+  "parent": "d8d27524-5add-4956-876a-adeb2d7a7b7f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "QW0KbtTLQW0K"
+    }
+  }
+}

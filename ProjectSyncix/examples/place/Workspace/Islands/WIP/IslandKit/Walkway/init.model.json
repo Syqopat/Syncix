@@ -1,0 +1,63 @@
+{
+  "class_name": "Model",
+  "name": "Walkway",
+  "syncix_id": "0a769e4a-4871-4b35-ac27-5805c9aabaa4",
+  "schema_version": 1,
+  "last_updated": 1790327691161,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          506.8,
+          545.75,
+          216.5
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8a584371-9693-4508-bf91-1e691e0db66b",
+    "9cd97e3c-d888-43e7-8123-0c3517a9a483",
+    "408386a0-c7f4-4fba-90f4-ee42feb3f723",
+    "02f860ec-bf2b-43f5-b208-3486f776753e",
+    "25bfc06b-8f3a-4a41-8d05-7be332546dde",
+    "901f6586-0d99-44bc-bea2-8ed860f52abb",
+    "0ba53f34-e612-4297-a6b5-b260384600ba",
+    "462270f9-bca6-4160-8fff-97420888c581",
+    "f9401c1a-207c-4d4d-9587-a516558adb7d",
+    "11b8c746-528c-4cd1-ab74-70937a2b6f50",
+    "34ecd3c8-1f0f-4d0d-89ce-0215b6011868",
+    "3865a56f-0993-4e10-930f-f3a13ec124df",
+    "77e4cdff-be7b-4713-ae61-9e5f98a4996f",
+    "1fe1d06f-b322-4a36-a0bf-242cce0a67d2",
+    "b18784ed-0abb-489f-b5fc-96978d2264a4",
+    "70d7de29-046e-4148-bb85-9c76d1a04212",
+    "10ab86ea-95e4-496a-aef7-4eab4c0fe253",
+    "64caf2b8-f0f7-42b0-9508-e3a08af4e353",
+    "c3f8759a-2a3b-4ba5-938d-39d774c2f110",
+    "ac0483a8-27e4-40ff-879a-2488b9c80a9d"
+  ],
+  "parent": "0b24e17d-fa81-4b1e-9401-457df38b69f3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5oXx0RCg5oXx"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Vortex",
+  "syncix_id": "b92b0561-8eee-410d-92ce-8214fedf77a9",
+  "schema_version": 1,
+  "last_updated": 1790327691159,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          510.20227,
+          438.97086,
+          -24.833862
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3bcc087e-f742-4464-970c-2ca0c8321590"
+  ],
+  "parent": "e7356478-965b-4163-8d30-d399e6d34c58",
+  "attributes": {
+    "RBX_ReimportId": {
+      "String": "3d2510f3-025c-4bb7-a366-a6b38ad2a597"
+    },
+    "_lemonadeUniqueId": {
+      "String": "CmVXSbksCmVX"
+    }
+  }
+}

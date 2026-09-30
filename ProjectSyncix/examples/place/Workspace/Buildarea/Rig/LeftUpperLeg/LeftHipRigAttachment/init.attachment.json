@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "LeftHipRigAttachment",
+  "syncix_id": "fb5bab14-b065-49e9-9c20-eb42922a56e3",
+  "schema_version": 1,
+  "last_updated": 1790327691262,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          5.9604645e-8,
+          0.4207822,
+          -1.6391277e-7
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.192093e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          570.24994,
+          436.5035,
+          68.75
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.192093e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1920936e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1920936e-7
+      }
+    }
+  },
+  "children": [
+    "6ed50372-b93e-421d-9e20-3675b703542a"
+  ],
+  "parent": "84f5113d-f333-4b62-84c7-0d9dc2df0721",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cIpYObFZcIpY"
+    }
+  }
+}

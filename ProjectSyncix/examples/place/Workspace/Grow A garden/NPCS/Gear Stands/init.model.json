@@ -1,0 +1,66 @@
+{
+  "class_name": "Model",
+  "name": "Gear Stands",
+  "syncix_id": "5f44bab6-5211-4128-85b8-9cd7d9bd3677",
+  "schema_version": 1,
+  "last_updated": 1790327691293,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -2095.126,
+          193.443,
+          -13.834001
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3077a91c-8ca0-4550-88f0-2955646093cb",
+    "0126a79b-afe6-4a5f-aac8-adcb6ca8374d",
+    "d231b0a6-da6c-4d32-bc77-c2b07a757679",
+    "9944f223-4fef-4fe1-b2ec-4b3c1825f980",
+    "d49d4304-c55f-40a7-b0f5-8cf99a882627",
+    "4973a693-4b44-4e3e-855a-30fc06c2203f",
+    "17e347fe-d6b2-4550-b5ed-04f7f002414a",
+    "e8633ca4-4fa8-4be2-8948-7bab8914c3dd",
+    "7cc2758a-d0a7-4e45-8a32-7f7b054474af",
+    "b8996150-5078-4d89-be66-dcf2aa51d7d6",
+    "0aac92cc-821d-48f8-b995-ee8fc81632b2",
+    "d50c9d7a-38a6-4f8f-a034-8d9c9adabe68",
+    "905909ea-4faf-44e2-afb4-b6f8c664cd20",
+    "b1429883-150c-4df0-bbd5-d29fc5b0eab5",
+    "8ced21f6-129e-4d44-945d-f2adc00aab2b",
+    "c2b87943-facd-4188-b7a0-bdb8e7a2e101",
+    "cff5bac7-1ba0-43ff-8ba8-4ee9e8f3363a",
+    "724ebea6-17d9-4e82-b3c0-93123f1d7c95",
+    "43de698e-93b8-4c78-a689-1f3e9881a703",
+    "e40fc57b-3f64-4da9-8a10-9f67aa051371",
+    "17afb55d-2f6c-49e1-8e16-2b09c4d91f22",
+    "3272b174-dbd4-4f97-93b9-77453f9b195b",
+    "ca59380f-48a6-4e46-8a99-bd7359aba52f"
+  ],
+  "parent": "7d6f946e-244e-42ea-804f-c620f1ef9b33",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "djjv3N2kdjjv"
+    }
+  }
+}

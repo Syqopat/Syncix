@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Bamboo",
+  "syncix_id": "76a4bfb2-af24-435c-802b-a13b73ba70a0",
+  "schema_version": 1,
+  "last_updated": 1790327691341,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "d2bbb32a-e198-4259-982c-9532d6ae5f67"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0000043,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0000043
+        ]
+      }
+    }
+  },
+  "children": [
+    "50b37511-ff27-49ca-a42f-565fc51a5b5d",
+    "f37e64e3-6eb4-4590-8799-4417c2618b3e",
+    "9a05e6fc-4fc1-46d2-83d3-16dba8a8311e",
+    "ae51a468-a506-430c-b8da-de53369dd023",
+    "59f493ea-9db4-4890-b684-e9f5cdfd2d6e",
+    "75c87b2b-d588-4128-9ba9-0fcbe5d9d2a1",
+    "3e679d00-3bfb-48d1-b2f1-cb574bfac011",
+    "7000a878-79c6-41fd-a9ca-fbb7359f2cbb",
+    "5ae5e2fc-5154-4e82-976e-ff570fa99d12",
+    "d2bbb32a-e198-4259-982c-9532d6ae5f67"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "fKoltUfffKol"
+    }
+  }
+}

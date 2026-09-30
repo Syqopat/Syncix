@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Apple Tree",
+  "syncix_id": "e43a23bf-916b-48ff-9b37-016a453e9a38",
+  "schema_version": 1,
+  "last_updated": 1790327691363,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.0147499,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "9c73b9ba-6c50-4b81-9c37-d314fde20a2c",
+    "adc717c2-6a3e-44db-b373-e4fa06f2cc9a",
+    "d4d642bb-4b0e-4d4c-b5db-bad7bc17cd59",
+    "518af212-cd71-4843-932b-4f23d915bf97",
+    "3002f709-6864-429d-8e5a-2cca1aa56dc4",
+    "d88d949b-f3af-4483-b920-698b948236a9",
+    "eb907ead-c8f0-43ed-8474-db74f9eb2017",
+    "a5745c32-c8b1-47c5-949b-4d46c48c6c80",
+    "1143b83a-cb8f-4ad3-8a12-aa6a942b4109",
+    "633e0de9-fd8f-4d5c-b825-6ec25cbd9eab",
+    "b252185f-d1c1-413d-ac01-86e5e3728af2",
+    "3888893a-8968-4462-a67f-f79e821e70eb",
+    "03eaa517-020a-4e61-aecc-6df809d83bdb",
+    "99a24291-aa5c-42e9-8ccd-2806e30be203"
+  ],
+  "parent": "0ad399e0-a0ac-425d-9760-db2ab61f15e8",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "0xjvml4k0xjv"
+    }
+  }
+}

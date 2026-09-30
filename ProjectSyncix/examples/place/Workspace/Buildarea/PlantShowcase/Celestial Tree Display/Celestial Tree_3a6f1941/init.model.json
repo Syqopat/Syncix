@@ -1,0 +1,69 @@
+{
+  "class_name": "Model",
+  "name": "Celestial Tree",
+  "syncix_id": "3a6f1941-0557-4410-89ef-2777652e7511",
+  "schema_version": 1,
+  "last_updated": 1790327691234,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          517.6968,
+          440.4513,
+          27.1776
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "460d7399-ec01-4b1c-81cf-9c9973630371",
+    "c1a8c23e-587e-420b-a35b-e3d3325a65bd",
+    "0b020805-06de-499f-92bf-37a44d5d30e9",
+    "a72818ff-cbb3-4105-923f-8b73a8e8de00",
+    "8916bba5-8234-41f5-886b-2c6a3b1896f8",
+    "0b89138e-8cfa-4c65-a455-f31e4431086a",
+    "55b88ce7-722a-4d07-8e8e-590f34a96f0c",
+    "5ba0d418-71a6-4e2e-9011-dc5d92ab36cb",
+    "5b589c7a-9d6c-409f-bd44-4cbbbad5171e",
+    "e59f7dd6-dfdb-45d6-ac69-7b423a126e94",
+    "c277bd42-3893-4d91-ad3e-4d819f7fc33f",
+    "2a14c6ea-d4d8-4dfc-925a-fc93b3cd651d",
+    "0f542bc6-5414-4bf3-b537-d91e64c4a9da",
+    "5d2d663f-4fe3-4d1b-a891-f70f7bfa9ec5",
+    "c1027899-9a36-41f2-a270-352f04403a04",
+    "b9b8e474-cd3b-4bd5-9651-fccb33ee94a5",
+    "cbc57139-5f18-4249-a010-8393e26d2dfe",
+    "13c9c3c1-cfe3-463b-9530-76cafbbf7772",
+    "d730855f-7f4c-49dd-bfd1-c5f1ff13aafa",
+    "6f56c17f-601e-47c8-ba1b-26b1fb3ea4f2",
+    "2d7c742e-424a-4c6b-b19f-5644ec24c9fb",
+    "8e74746a-b430-45c0-a86f-42fc9945cb70",
+    "402176e8-b29a-4d95-a87d-4a0b9e521947",
+    "08beccd1-dfe1-4284-84f7-ba38585aefef",
+    "be25203e-1670-4afa-a7c6-53303fcdd13c",
+    "da17a161-0b8b-4ff1-8403-017e6ce20418"
+  ],
+  "parent": "3c48fb22-e78f-4782-b82c-74640f98fb48",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "BINWsQNhBINW"
+    }
+  }
+}

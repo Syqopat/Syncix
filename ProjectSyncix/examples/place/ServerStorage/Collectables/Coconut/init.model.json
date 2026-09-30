@@ -1,0 +1,79 @@
+{
+  "class_name": "Model",
+  "name": "Coconut",
+  "syncix_id": "4f94deb5-940a-4471-836e-de041507d4b1",
+  "schema_version": 1,
+  "last_updated": 1790327691343,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "8f7c16bd-ebee-43dd-89a7-b7e0f691e64f"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          14.305499,
+          24.941185,
+          -10.138872
+        ],
+        "rot": [
+          0.99999905,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.99999905
+        ]
+      }
+    }
+  },
+  "children": [
+    "e48bfea5-a31e-4484-b122-30f478387d0c",
+    "64949065-abaa-4e2e-a1f5-a30db0b0bbd4",
+    "1b79298c-63f0-43ea-abab-c1fae60097d3",
+    "a6e292b3-99c1-4b54-91a3-a29e3f7c3deb",
+    "bea98d7f-a7be-4955-9df3-cde948154758",
+    "372ce8c4-7b80-46a2-8b3c-4521e5d36c5e",
+    "13cd9ae6-5edc-4dbb-bcf6-4fb4e943eeca",
+    "9cc8da34-b7f2-4fd1-82d4-7b11b06c7a01",
+    "9e0b89b2-e773-483b-939a-7e8708bcdfac",
+    "35c0d723-f69e-40c0-a0dd-c30b1826859b",
+    "8f7c16bd-ebee-43dd-89a7-b7e0f691e64f",
+    "271db5b4-17e7-45a1-81b5-9d33ea4f9477",
+    "968ffcf4-08cf-43e1-9559-27c81339e51a",
+    "557c37a4-6845-4e23-a78c-9f4719fb3844",
+    "ee974957-5ac5-4b70-9870-271a7f0b6af8",
+    "f043044d-b5c1-483d-9cc4-dd383234fac5",
+    "94cf1006-c830-4a05-a3e5-bbdd41f67ead",
+    "eaabda43-dfbf-45c9-a52f-5d613cd13000",
+    "b6f3c0c8-50ac-4ed3-b7ff-f435e3afc14f",
+    "9accc3dc-7951-49e2-b53f-2efc8ef56034",
+    "e8fca823-26a6-40ba-93be-328c3a3bd64f",
+    "90f85caf-4cbe-4e39-b99c-96cc36fa0929",
+    "3a58533d-c49c-4b57-9b91-30b0d6e0b40c",
+    "88c12435-2ccf-4952-922b-708c1f5c1837",
+    "247d5e70-0d1b-4c4d-8d8e-075180772bd4",
+    "97a02b88-6f05-48eb-8cc9-9740651257d2",
+    "5112edc3-4e04-4dd6-a3d5-75bba5453bdb",
+    "d395ebef-3fa6-487b-bcf7-38b5478ed8a2",
+    "88ca4358-db8b-4ea8-bea0-400cd796e452",
+    "a4fbd14d-a8b4-4d7d-9290-4b29a4c2aa98",
+    "adc15c09-dc72-4b8f-bd78-826eb9fadfa9",
+    "2fd94da6-42eb-4d8d-901a-2a7f4598fb39",
+    "6a1d0dd2-c58f-47a3-ab05-8691582ec60f",
+    "c24c5a6b-6cca-4721-ac31-36e98b937873",
+    "d16a811a-3117-473a-95d4-9f810679d4b9",
+    "c6e5fed9-2c73-4c04-859c-cab31b3fdc14"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "GdyulSrDGdyu"
+    }
+  }
+}

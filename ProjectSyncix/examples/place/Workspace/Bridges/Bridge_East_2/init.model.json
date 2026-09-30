@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Bridge_East_2",
+  "syncix_id": "d9b7b4b7-606a-47a6-bb38-6be10cf8e605",
+  "schema_version": 1,
+  "last_updated": 1790327691164,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          160.65,
+          124.1,
+          85.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "def0e075-92ff-42d4-adc9-5979c481d90a",
+    "a8206ef0-3212-498f-9135-44c2bc02b69a",
+    "fd9c8edd-3096-4894-acaa-5d37b830225f",
+    "7f3d5e49-26a6-4fc2-ac50-0282ee70a76b",
+    "5777b22a-5b7f-471b-b7f5-ee01a8424076",
+    "839029ea-272b-4eb2-b79d-bbf0be98938e",
+    "b9d14f6c-540b-4f90-acbe-77e30b42c6dc",
+    "d3a89670-7de0-401e-b064-d2f3adbf2663",
+    "4c47892f-3169-473c-8f17-cae6a56365c0",
+    "f1b15e97-f798-49f1-9423-d2f01ca7d14f",
+    "4d06ba26-e555-4c75-af6a-13826c3d25d6",
+    "5207fbc6-16de-4890-a41a-aed18b24925f",
+    "1aa74e56-bb1e-4d98-b262-8340cc1c73b8",
+    "5352b3d6-5f42-44b6-a4ee-be403deba953",
+    "94d2b24b-8f44-4907-877c-045380e2ac28",
+    "05019f50-faf6-480d-b5ff-013951582960",
+    "9925eb30-acd6-4dd0-a3fc-5ec817e18f97"
+  ],
+  "parent": "ec69e548-6df2-453b-afe3-80edde7e545f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cPeHv2oqcPeH"
+    }
+  }
+}

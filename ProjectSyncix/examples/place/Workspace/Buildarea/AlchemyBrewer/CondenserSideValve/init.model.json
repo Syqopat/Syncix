@@ -1,0 +1,54 @@
+{
+  "class_name": "Model",
+  "name": "CondenserSideValve",
+  "syncix_id": "459e48e0-1ed3-44e9-aa35-4db556478f5e",
+  "schema_version": 1,
+  "last_updated": 1790327691259,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "ccffee92-2548-47d7-be13-bffef15f1162"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          357.0056,
+          436.45502,
+          -209.1288
+        ],
+        "rot": [
+          4.371139e-8,
+          1.0,
+          -4.371139e-8,
+          1.0,
+          -4.3711392e-8,
+          -4.371139e-8,
+          -4.3711392e-8,
+          -4.3711385e-8,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c9e2f919-7f8f-4221-9ce9-5c366227e174",
+    "478385b9-8166-4a85-9694-02368221a538",
+    "8df98688-317e-4eda-954e-d482b7e60389",
+    "ccffee92-2548-47d7-be13-bffef15f1162",
+    "6dd24be6-337b-4ca3-a74a-c95c05fb7bdc",
+    "be049707-abb5-4f80-9b12-636495624aa4",
+    "93d20366-bc8b-4eb6-ad6b-1daf698661ce",
+    "838ff673-c49b-449b-9c9a-571ac0547d31",
+    "081f1730-561d-4f75-be55-ea21352c93a7",
+    "b21b5b99-cf18-40d4-a387-316c139e844f",
+    "34226aa4-a69e-49ee-b9c8-024dd92dd56f"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "I5LWsdCcI5LW"
+    }
+  }
+}

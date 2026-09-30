@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Watermelon (Fruit)",
+  "syncix_id": "25656c8e-c41a-4522-b619-cebb63909a98",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.80368,
+          69.09375
+        ],
+        "rot": [
+          0.000017360844,
+          1.0,
+          0.000104719766,
+          1.0,
+          -0.000017360853,
+          8.742278e-8,
+          8.92408e-8,
+          0.000104719766,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "88befd33-1e47-4c06-b985-7edc3064c6ce"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ju5i4vMMju5i"
+    }
+  }
+}

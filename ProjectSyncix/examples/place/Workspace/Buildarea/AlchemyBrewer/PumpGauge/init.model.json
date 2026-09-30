@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "PumpGauge",
+  "syncix_id": "bce2e878-e025-413c-a945-ed2651d9b832",
+  "schema_version": 1,
+  "last_updated": 1790327691261,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "7b11eb42-a035-46fb-8920-2d244773fab1"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          356.9056,
+          436.80502,
+          -195.0288
+        ],
+        "rot": [
+          -8.742278e-8,
+          -1.0,
+          1.9106855e-15,
+          0.0,
+          -1.9106855e-15,
+          -1.0,
+          1.0,
+          -8.742278e-8,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "30a136c0-0a3e-4cb3-b530-b5fd9366a444",
+    "7b11eb42-a035-46fb-8920-2d244773fab1",
+    "2493912a-4135-4da3-b90e-805ab7d18100",
+    "39d317f3-4971-4e43-8d45-b04f2522d658"
+  ],
+  "parent": "2558c1e1-a4e5-43d7-b330-a910fb168e43",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "qQqUECi6qQqU"
+    }
+  }
+}

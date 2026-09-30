@@ -1,0 +1,85 @@
+{
+  "class_name": "Model",
+  "name": "Papaya",
+  "syncix_id": "6a411acf-ae0c-40ba-b811-8b3ee545688b",
+  "schema_version": 1,
+  "last_updated": 1790327691343,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "e673b75f-4474-4b42-ad99-322744b5d98e"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.2709489,
+          7.062537,
+          -0.25789857
+        ],
+        "rot": [
+          0.68963957,
+          -0.71708196,
+          0.10094882,
+          0.000037044287,
+          -0.13936758,
+          -0.9902407,
+          0.72415274,
+          0.6829129,
+          -0.09608686
+        ]
+      }
+    }
+  },
+  "children": [
+    "df6aa4b4-f3ab-4b66-bdea-b6a92d0ff7e9",
+    "e2c63a65-0950-4eab-8eb4-16baab3427ac",
+    "a255f41e-df77-477e-bab1-68fe5288dec6",
+    "607d1c40-f808-474f-8291-901d6398606c",
+    "c1b8dc30-56a3-4f3c-aea3-7ea3efebb720",
+    "4a781633-cd26-4095-9c56-58fca7503ee0",
+    "0130de4b-84c9-4a35-a85e-ce166b7b1768",
+    "6e959ebe-afae-48ca-a3ce-5a87db5c60b4",
+    "c6c4f4cf-dacf-4d85-9f9b-633de4da2758",
+    "9fac80e7-d56d-4718-b402-9803afc4e17b",
+    "e673b75f-4474-4b42-ad99-322744b5d98e",
+    "360776db-d8c2-4b88-9750-f4d1b9bc6c9e",
+    "66da11b3-24d7-42b0-a358-84bd37d033c0",
+    "32a0d528-6cfe-4f0d-bc13-2dd9b164313c",
+    "eb59873c-b5ed-4897-bd03-7caacf6799ee",
+    "56360200-e471-430f-aa02-b1f3b539d9d9",
+    "bc5d6213-1d32-47e4-9770-e3eb017ebfa3",
+    "4bc25190-3637-440d-ae3c-4aea1f5b2695",
+    "d5d66f10-a0f1-4af3-883b-95bf72ab9242",
+    "7c97e0e0-1605-400d-afc4-1372c0822c2b",
+    "dff53fa3-543b-4101-953a-a36f4a80d759",
+    "7d8dc1ce-0407-4167-8ce5-c81eb75ec14a",
+    "b5efa4c4-6a54-42ef-9cb8-685bdac57865",
+    "3a52f807-ef30-4347-aa3b-92edf2b4958e",
+    "e7467ec5-5ebf-4379-b28a-87017f760562",
+    "2da17351-b66e-4ece-98ac-b0079ec662a1",
+    "c64d0218-cbcf-499a-ae6b-d0ab40f1724a",
+    "3c339db5-9fd2-4044-b0c7-27d28a472564",
+    "153f36a3-c253-41e3-900e-2806ef65730c",
+    "2f3c1453-5add-4a67-bfcb-11f78ee00146",
+    "472dcd07-e9c5-46c8-9fb8-1dfe7fc1f099",
+    "01047e1d-5b24-4399-b3bb-c21a52984733",
+    "ff69ae92-2d7f-41e2-a6fa-9070146efae8",
+    "e39b94ee-0d82-4715-8338-7896fe6cc266",
+    "2dc11a63-939b-4cb6-81aa-1b24ad52fd00",
+    "b0e48125-1c87-4136-933f-a9beecd33d1e",
+    "d0383231-2601-4a21-93ca-4ff1188c074d",
+    "5a2a7567-b37f-4101-963a-a0176232eadf",
+    "52017e5e-34eb-45f3-8132-66a9c7404c62",
+    "406e9696-bb82-4e96-80ae-d1c2fc5b2345",
+    "ee2579e4-b95f-4c2d-9ef0-99e2d27af1c7",
+    "5f1589a5-2e7a-4e4d-9e51-87f3fa9d0639"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "1Vij8yaE1Vij"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "class_name": "Model",
+  "name": "Main_Tube",
+  "syncix_id": "956b6270-5f2d-4c91-a53b-c5f3b641c91e",
+  "schema_version": 1,
+  "last_updated": 1790327691266,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          415.96542,
+          441.5125,
+          -90.05929
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "94d92aad-e73e-4a50-9297-01f0ed9b0d05",
+    "1add339d-35ea-4d20-bbb6-125fea9c2a47",
+    "3007857f-1f19-4101-abce-21d9b69f3834",
+    "35811022-41b1-4574-b107-14579417c185",
+    "c8e458a2-b618-4950-9f1f-d371971319f3",
+    "57787e00-2f12-49fa-8468-3a6a68ab4d24",
+    "e9c5fb1b-8c31-4192-b231-7e0e1ab6d1f7",
+    "8978bd2d-5ad7-45dd-b01e-e1c126d7aa3d",
+    "d6e0b20b-57a0-4dac-849c-b480f3f9c658",
+    "c3f22bab-5ea0-4a4e-a848-3ea8f74f8958",
+    "bb177355-95d4-4ae3-a95e-b0f730b7b4d1",
+    "e0e1a4d4-9431-4a8a-b1ae-e8aab27fd08d",
+    "a07eda93-7d84-4f01-9a28-ea5e523ee3f7",
+    "5912429f-5ddc-4e3a-8cb8-ed8254c42cd4",
+    "c358ceae-44a6-4392-b29d-6048ad550d74",
+    "165ac112-1a0f-4d44-a4a3-4584ee2d0359",
+    "9e208749-3b66-40e3-b1d3-4c6241d80621",
+    "88696567-9bf3-47ec-a10e-5b1c96859f5f",
+    "f73dd9f8-9b2a-4885-b3ce-e6ce90895112",
+    "f12480c6-3259-4ac0-9571-7923410923c2",
+    "a0dfa5bb-e61e-40cf-8c5f-c19eea5f0b23",
+    "198f4d34-ed28-4030-bf28-88545067b9d1",
+    "c2fc5051-7060-421c-9f8b-ace46f5a281c",
+    "97d70b19-b0f6-4499-9a28-5a2a4793e78a",
+    "5b6bf528-df15-494e-b26d-b2856e72864c",
+    "ef7765a3-dd7d-49f9-95c4-b9caf5e5543c",
+    "64ae8bb1-35ef-48f2-88d3-9fe27b2e88d1",
+    "96a74f4d-9ab4-498a-96ba-43a0be74d17e",
+    "7994499f-a3cc-4c1d-b53f-9dcd2c67ec02",
+    "4434031f-9f15-4833-906d-2e3c39b5695b",
+    "97284a14-064b-4dfa-9812-a17bb909f9a4",
+    "19af167e-6ef8-44b2-af9f-9843b1ca7f5a",
+    "c49f3bda-d082-4336-8445-ee94f9a59ca7",
+    "94ba4db2-20f6-47f6-83d1-a17590c46e71",
+    "fb230a5d-c2ce-4e54-a023-0203f38756fb",
+    "29950e30-2e98-4870-a410-069ae82eca1b",
+    "c825b4c5-dbb3-4682-9d59-a5fdd8bd28e2"
+  ],
+  "parent": "adbeb2bf-e086-4a8c-bd56-15cb775e9f50",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "lM9ibeyqlM9i"
+    }
+  }
+}

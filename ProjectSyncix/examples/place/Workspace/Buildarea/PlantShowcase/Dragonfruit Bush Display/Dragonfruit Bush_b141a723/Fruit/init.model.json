@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Fruit",
+  "syncix_id": "d99a7e4b-9a6f-4cf9-bf68-71e7818216cf",
+  "schema_version": 1,
+  "last_updated": 1790327691233,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          517.23474,
+          437.93808,
+          2.7923346
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "835f72d3-2c42-4c1d-b963-d62f3ded8e90",
+    "51ae9825-54fd-463b-91d4-0e036ddf0ce9",
+    "afa64ff3-474d-40aa-a05c-b6d7badf412a",
+    "94b4b1c5-3dc2-4506-bf6a-d42883f1d2d4",
+    "711b4ee1-b708-4b7a-8c40-a418e7c28e4f",
+    "4743193a-4ca6-4423-b1b1-52beaac6b777",
+    "c1d8c4cf-db17-405f-8087-1d91e290b1bb",
+    "6f7b1319-bcb4-4339-84d0-f852f0db798d",
+    "2b662368-4b9d-4cf2-b434-ab2b50032c24",
+    "e50aa0e4-26fa-4b30-a402-23a9a7c39dc8",
+    "62c7ddf9-a9dd-48bf-9947-0253994ff830",
+    "4debb6f7-e4a7-4e49-9c07-b75aaaaa4b69",
+    "23ab4ad9-08de-4d66-b483-d74dad9efbff",
+    "053ce670-4e8a-4f66-b351-7466df2f8355",
+    "cef2419f-2ff0-41fe-bc81-a8dc395f4600",
+    "e19486d3-c835-4b58-b68e-c8f4760696d0",
+    "83d3633d-5881-413c-be2d-dc38f392d2c7",
+    "701a0c90-dfe9-494c-9faf-9f64c52d04bd",
+    "6b13aa5c-0ea3-485e-8635-d6b91d61ec72",
+    "5c090894-5cdf-4341-8f2f-4912a16c1e9e",
+    "69b105cb-5268-421d-b819-cdbf945d35e1",
+    "e53f730d-46cc-4363-adfa-b5aa7b70ecb6",
+    "296595e1-6110-446c-8004-b06fbf40768a",
+    "91740d23-c2db-4e88-a80e-f1be7381f4e4",
+    "bf73c64f-45be-44e8-aadf-9e0e5f545c5d",
+    "354973b8-fcd9-4e9b-9fae-9056b71f07e9",
+    "aee1cb09-ace5-4a0a-9198-c6fe9a73919c",
+    "ddc29713-60aa-48b2-bd63-4060c7411100"
+  ],
+  "parent": "b141a723-6466-4cc6-87d0-c322abc9dd57",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "AkaVLhrNAkaV"
+    }
+  }
+}

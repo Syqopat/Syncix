@@ -1,0 +1,74 @@
+{
+  "class_name": "Model",
+  "name": "Blueberry",
+  "syncix_id": "43149491-62db-427e-86e9-2f2509f75b2d",
+  "schema_version": 1,
+  "last_updated": 1790327691258,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1257.75,
+          436.42776,
+          -576.2188
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8b5b2fd7-1381-4c20-ba15-24da20f31d67",
+    "c694db47-ee64-4805-9887-57dc25a6d386",
+    "dcbfcfc8-51c2-4e2f-b3ec-953403e6ce71",
+    "60f802a3-67f8-458a-bfb2-e0eb3f5164c8",
+    "77f887a5-6389-47e4-ab57-c5c54c149625",
+    "2256c5e2-470b-46ef-a69d-eaca82209120",
+    "9ea57645-10e7-4986-9d8b-5543111ce101",
+    "6d2c2816-56f7-4621-975b-df54d8036159",
+    "da02830c-2f5a-4042-8f3e-33fbd417ff3c",
+    "7d87e7cd-995a-4657-81eb-79910ddcfa02",
+    "fe239b09-a09d-49ed-b11d-57c617dc6b70",
+    "f8ae0513-0466-4ee3-a31f-8be231e5fa64",
+    "61dc095f-5c52-4a62-9eec-be0bff06c004",
+    "0cbdae65-06b7-47eb-97fd-5b54e1ff17cb",
+    "66d561dc-20d9-478a-89a8-7d5282906c75",
+    "8ed904c4-716b-493a-ae94-7766170e9ef7",
+    "06b28ccc-6aa4-45cf-88ab-3a674f197e65",
+    "c3e0a420-6397-4c7b-8d9f-37cb18028ef4",
+    "fde5854e-8e5d-483a-b5ce-c956798f0c58",
+    "fd9fe0a4-0f85-4565-99da-af9a2236f253",
+    "6f47d10e-b512-47b8-a847-46959816f631",
+    "e3542980-8132-4b6e-b3af-7ab498b0fc2a",
+    "6f674bf7-afb7-4aa9-9701-b6b8c4a4f1fc",
+    "1a125699-9761-46cb-a876-15f0416a0252",
+    "d7a43f82-10c4-40f4-b61f-54ca6cee6131",
+    "d8fa9c6b-6a4e-4be7-a76e-c4ef9fa757ab",
+    "fe7bccdb-670c-4405-be08-372e48abaef3",
+    "6111d4bb-29fc-40ab-920c-4c2599fe4803",
+    "9a6b7746-3807-4609-b3d7-f2143addba94",
+    "4877349c-f7c9-4dad-be59-31b4ff561726",
+    "e776e8ce-6bac-4f91-9bdb-08dc620ee957"
+  ],
+  "parent": "67f5252d-9746-42d7-b40b-6ad7e782c866",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "vx7bxuzbvx7b"
+    }
+  }
+}

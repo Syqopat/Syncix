@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "Root",
+  "syncix_id": "f59fa713-f9b9-47ac-af58-af1adcfb7a67",
+  "schema_version": 1,
+  "last_updated": 1790327691264,
+  "properties": {
+    "Attachment0": {
+      "Ref": "50a085a9-20e1-4bfd-9803-aefa968a17dc"
+    },
+    "Attachment1": {
+      "Ref": "ef1cf85b-6f30-414e-94bc-1a68286cabae"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "3e0f6287-5038-4ecb-ad52-a60aa4adc14d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Ac2AJTxjAc2A"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Bridge_Prop",
+  "syncix_id": "a92e2713-f3d8-426b-9ea3-0f07dcd39a38",
+  "schema_version": 1,
+  "last_updated": 1790327691161,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          506.75,
+          549.05005,
+          308.85
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "de57b928-91eb-4b07-abde-aa74e60a709f",
+    "87f654ec-4d22-4c7c-bc9b-c1f4b1fb2526",
+    "cd313822-e98e-407c-8c18-75030e9b9f05",
+    "170f0a10-ac17-4796-accc-df5cd19a8718",
+    "af4fa34f-848c-4840-826f-c78feb7d0fb4",
+    "4b551b93-3fa0-4cf0-83f5-7408bc6bb51b",
+    "4b1e78e6-0852-4630-9639-1cd72d130e52",
+    "ed301406-2380-4a99-a911-01bc71bd5413",
+    "51512f8a-8f78-4883-9044-9c360354810d",
+    "79cae20f-5ef9-4da1-9e23-1522e9d03bf4",
+    "cf4c1af9-28a5-4208-81b1-3d2c07f900b1",
+    "50a9125e-c347-4843-9f06-45a38c701db6",
+    "9660c758-40ad-4fa1-adde-46f5c73d2af2",
+    "9f510967-1392-4c3e-a6ed-b458ba9be602",
+    "d011c738-7f3c-4a54-8c1c-5530734c76fc",
+    "916f213f-d036-40ac-9e6d-1dce02b7687d",
+    "f92e5b6d-5fd5-49dd-a228-829962a07d6b"
+  ],
+  "parent": "d8d27524-5add-4956-876a-adeb2d7a7b7f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "f3JN64Pbf3JN"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Papaya",
+  "syncix_id": "afba47ab-8578-4180-a201-8e6b6da1eb4c",
+  "schema_version": 1,
+  "last_updated": 1790327691329,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "0c588adb-077f-4b77-a002-fda8c959f363"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -4.8985385e-9,
+          -0.32865214,
+          -1.4386387e-8
+        ],
+        "rot": [
+          1.0,
+          1.4901163e-8,
+          8.940697e-8,
+          -1.4901159e-8,
+          1.0,
+          -4.3772168e-8,
+          -8.940697e-8,
+          4.3772168e-8,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "f24f7904-b3d7-4483-a5e4-e80cb54be810",
+    "f231789f-1106-43a6-88bb-300bae6cef9b",
+    "2d09445c-f21e-4c7a-8c85-5706b7c3c65c",
+    "88cc3921-442d-4441-b643-1a76ee51191f",
+    "3770fb6e-2819-46fe-bcbd-44435452492a",
+    "9db11a77-85b2-48a8-8488-4e1c021c41ea",
+    "662e8cad-b655-4516-878f-81ef83868dd5",
+    "9290e569-4554-4cdd-a254-563f308a133a",
+    "0c588adb-077f-4b77-a002-fda8c959f363",
+    "53bd18cd-2655-42c5-9e4e-743221c80146",
+    "75b9a678-fe23-482e-8764-289ecab1bf87",
+    "d2284f4c-6b8f-4a91-82c3-805aa8d2c9dc",
+    "caf263ac-6ee3-4f3f-8fc1-9d8462bc8894",
+    "c3d65010-df06-4b67-8eb8-902a9909da6f",
+    "19a03870-5f7b-48ef-921a-8d857d4101b3",
+    "e3cd10e6-8ed8-4e3e-8215-304e037e1576",
+    "f6f58491-579f-4edf-91a3-93227cb1f797"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "arNijgEOarNi"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "class_name": "Motor6D",
+  "name": "Left Shoulder",
+  "syncix_id": "6bfee859-56bd-4f93-9ad6-9a5b336c1b5b",
+  "schema_version": 1,
+  "last_updated": 1790327691324,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          -1.0,
+          0.5,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          0.5,
+          0.5,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "CurrentAngle": {
+      "Number": 0.0
+    },
+    "DesiredAngle": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "MaxVelocity": {
+      "Number": 0.10000000149011612
+    },
+    "Part0": {
+      "Ref": "c6c10e14-da71-4d36-b57b-5f4abe3e6ccf"
+    },
+    "Part1": {
+      "Ref": "728ad37e-2eec-480a-8a57-8c3ca58d3a58"
+    }
+  },
+  "children": [],
+  "parent": "c6c10e14-da71-4d36-b57b-5f4abe3e6ccf",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "A549wAtZA549"
+    }
+  }
+}

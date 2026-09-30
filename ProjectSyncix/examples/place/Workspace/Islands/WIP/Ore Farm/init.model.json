@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Ore Farm",
+  "syncix_id": "dde7099e-7a97-45e7-8444-de6504b1369f",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          540.2,
+          546.55,
+          212.67502
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "bf49658b-d614-4e18-93da-857257d6d632",
+    "bb8c6d79-4704-4eea-a6d0-c0248a14c303",
+    "18143235-afc1-4571-98ec-0231071355e7",
+    "c0f0a7b2-3440-4983-b289-32866ac2f81c",
+    "ec7ccea2-33a6-46e2-a52b-657a88e1c173",
+    "c72b7513-f035-4d01-95e6-5f6cd11aaf36",
+    "f8918b9b-3ea2-4b94-9dba-8872ef47cd6f",
+    "9c16c2c0-5447-4a30-8d8f-222f36075374",
+    "26a2dd6e-1e5b-4cae-8c2d-7b854569bdb9",
+    "a05a2a41-e610-4955-b9b7-2fd1ee14ac8d"
+  ],
+  "parent": "d8d27524-5add-4956-876a-adeb2d7a7b7f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6yMzOxZp6yMz"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Pear (Grown)",
+  "syncix_id": "ece3ce49-6f0f-428b-b3a6-e622f95385fc",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          435.4282,
+          -152.15625
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "b0d01aef-a858-4c5e-82da-5187ad0ef4b9",
+    "29f2427f-0b3c-49d6-ba18-6ed951375ba0",
+    "d9a23c72-8e7a-4817-a67e-52e51a807916",
+    "3ac280ca-e7eb-4671-92c9-94f7de6c2f33",
+    "4fb99132-4a51-4470-9d7b-f9739120c116",
+    "9daca3ff-98c0-41c2-9d68-340f6a008423",
+    "7c80320e-9ef8-410f-9551-c22e7aec9823",
+    "6d163e4b-bbe3-4bf2-8588-cf3b57e5aae3",
+    "367d82f6-b799-433b-aeb1-a2d60d151415",
+    "9cf3c01b-8077-4100-8f3e-d51efcece45a",
+    "4f128106-6b6b-4b4a-9876-8011f9d8ad16",
+    "e498a304-2c10-415b-9b85-3e9f12702c36"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "wqlu4Pmiwqlu"
+    }
+  }
+}

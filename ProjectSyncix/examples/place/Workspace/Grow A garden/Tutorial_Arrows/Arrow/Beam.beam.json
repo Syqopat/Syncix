@@ -1,0 +1,107 @@
+{
+  "class_name": "Beam",
+  "name": "Beam",
+  "syncix_id": "5c1299ce-6412-4105-9eaa-603daff291e2",
+  "schema_version": 1,
+  "last_updated": 1790327691293,
+  "properties": {
+    "Attachment0": {
+      "Ref": "0eabcb5f-2377-49dc-9853-b71df4f9cc56"
+    },
+    "Attachment1": {
+      "Ref": ""
+    },
+    "Brightness": {
+      "Number": 1.0
+    },
+    "Color": {
+      "ColorSequence": [
+        {
+          "t": 0.0,
+          "r": 0.0,
+          "g": 0.0,
+          "b": 0.0
+        },
+        {
+          "t": 1.0,
+          "r": 0.0,
+          "g": 0.0,
+          "b": 0.0
+        }
+      ]
+    },
+    "CurveSize0": {
+      "Number": 0.0
+    },
+    "CurveSize1": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "FaceCamera": {
+      "Boolean": true
+    },
+    "LightEmission": {
+      "Number": 0.0
+    },
+    "LightInfluence": {
+      "Number": 0.0
+    },
+    "Segments": {
+      "Number": 10.0
+    },
+    "Texture": {
+      "String": "http://www.roblox.com/asset/?id=6399401493"
+    },
+    "TextureLength": {
+      "Number": 2.0
+    },
+    "TextureMode": {
+      "String": "Enum.TextureMode.Static"
+    },
+    "TextureSpeed": {
+      "Number": -2.0
+    },
+    "Transparency": {
+      "NumberSequence": [
+        {
+          "t": 0.0,
+          "v": 1.0,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.025,
+          "v": 0.55,
+          "envelope": 0.0
+        },
+        {
+          "t": 0.975,
+          "v": 0.55,
+          "envelope": 0.0
+        },
+        {
+          "t": 1.0,
+          "v": 1.0,
+          "envelope": 0.0
+        }
+      ]
+    },
+    "Width0": {
+      "Number": 2.0
+    },
+    "Width1": {
+      "Number": 2.0
+    },
+    "ZOffset": {
+      "Number": 0.0
+    }
+  },
+  "children": [],
+  "parent": "940b1969-0cad-47ff-aa83-defb5f6c7b6d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "XjpV4US2XjpV"
+    }
+  }
+}

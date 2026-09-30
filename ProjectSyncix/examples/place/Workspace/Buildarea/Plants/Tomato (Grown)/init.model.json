@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Tomato (Grown)",
+  "syncix_id": "dc9ef3af-e1f3-4c17-8b8f-793b03cd83ee",
+  "schema_version": 1,
+  "last_updated": 1790327691214,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0,
+          435.3875,
+          13.78125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5a7d3015-e7d3-42c4-babb-2ab4897adc6d",
+    "d668f68e-826c-4ea8-8be9-e20906830222",
+    "f55febbb-d819-4206-ba53-b7ba03ad1011",
+    "4a3cb170-b718-4ff8-9135-5b7d178459fc",
+    "79dbecf1-61d6-4df2-85d2-1b69bf0c103e",
+    "e000ddfb-cd46-4bbd-8082-baa0dd100121",
+    "94fb968d-8f1e-499d-924f-3aec8dd0affd",
+    "e988bd05-dafa-41e7-9640-d89db519cf60",
+    "b8092b77-3848-4e4a-9d67-3d60a80e98ea",
+    "535038ae-5d8d-4d45-9100-c3c0fa437c55",
+    "7753bed1-8b44-4248-bcac-6591f995fd04",
+    "2506679e-8c38-4d9f-bdc6-1e20e9d9cc0f"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "PHtYSw4oPHtY"
+    }
+  }
+}

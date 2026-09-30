@@ -1,0 +1,62 @@
+{
+  "class_name": "Model",
+  "name": "Mango (Fruit)",
+  "syncix_id": "7ed3147d-ee9b-46ab-ba0c-8dc5b2131856",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.1786,
+          441.6068,
+          -262.74097
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e5310a7e-e452-488b-8bdc-bb2386094168",
+    "57b51dd5-5214-484b-aa62-16adf4e776f2",
+    "712dfc0f-e3e5-4c28-b0ed-d082f88801e2",
+    "73291786-6851-4eae-9240-bbfc029c8680",
+    "abf39de0-2e87-4f34-a067-443433733864",
+    "4b922c7e-af40-436e-bc8a-c3028e8bfb8d",
+    "6e4d43f0-2603-42b5-8bc9-16fcc4a1f40d",
+    "fcd67fa0-f752-4622-acaa-26275b3194cb",
+    "b2b777c0-6db2-40b9-b955-5ec9dcc8500b",
+    "9b0e8abb-7516-4548-a112-df61407826ad",
+    "9367470a-ccbf-4f4b-8d52-674cd35e3532",
+    "ef462beb-6b59-47dc-8a13-7171b1427ac4",
+    "1bfa4d09-8709-4722-84d5-7ba518af12df",
+    "d71abb09-178d-4eae-b517-f2b7c72cf0cd",
+    "6c05e45d-6884-42ac-b390-82a9ae49ca9e",
+    "595ec324-40e3-4130-8aee-c50b92cc0b4d",
+    "c2894cbb-5631-4872-b57e-8f54b3bc3df9",
+    "6723c491-6ace-4127-b7e1-a06888edcd48",
+    "76dea0d1-361f-4310-8106-6849fc6c282f"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "K0J1andtK0J1"
+    }
+  }
+}

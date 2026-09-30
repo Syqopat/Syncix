@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "NeckBallSocket",
+  "syncix_id": "0817d528-cf54-4358-bd5f-182df77ee945",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Attachment0": {
+      "Ref": "6cd82430-724a-45a1-bf1c-0f53e283b68d"
+    },
+    "Attachment1": {
+      "Ref": "6e3f894c-f2e5-4917-89a8-45781a6db1c9"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 40.87651824951172
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -40.0
+    },
+    "TwistUpperAngle": {
+      "Number": 40.0
+    },
+    "UpperAngle": {
+      "Number": 45.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "870cb199-f0f6-4f98-9bd6-25e04c62f1a7",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "e4pke9Ice4pk"
+    }
+  }
+}

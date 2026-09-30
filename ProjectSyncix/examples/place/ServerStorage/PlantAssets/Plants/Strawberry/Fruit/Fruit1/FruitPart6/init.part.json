@@ -1,0 +1,154 @@
+{
+  "class_name": "Part",
+  "name": "FruitPart6",
+  "syncix_id": "aa8b18bd-c153-4895-8d23-30828200119f",
+  "schema_version": 1,
+  "last_updated": 1790327691374,
+  "properties": {
+    "Anchored": {
+      "Boolean": true
+    },
+    "BackSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "BottomSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "BrickColor": {
+      "BrickColor": "Maroon"
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.7574,
+          0.5089,
+          0.3123
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "CanCollide": {
+      "Boolean": false
+    },
+    "CanQuery": {
+      "Boolean": true
+    },
+    "CanTouch": {
+      "Boolean": false
+    },
+    "CastShadow": {
+      "Boolean": false
+    },
+    "CollisionGroup": {
+      "String": "Default"
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.45490196,
+        "g": 0.0,
+        "b": 0.0
+      }
+    },
+    "CustomPhysicalProperties": {
+      "Ref": ""
+    },
+    "EnableFluidForces": {
+      "Boolean": true
+    },
+    "FrontSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "LeftSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "Locked": {
+      "Boolean": false
+    },
+    "Massless": {
+      "Boolean": false
+    },
+    "Material": {
+      "String": "Enum.Material.Plastic"
+    },
+    "MaterialVariant": {
+      "String": ""
+    },
+    "PivotOffset": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Reflectance": {
+      "Number": 0.0
+    },
+    "RightSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "RootPriority": {
+      "Number": 0.0
+    },
+    "Rotation": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Shape": {
+      "String": "Enum.PartType.Block"
+    },
+    "Size": {
+      "Vector3": {
+        "x": 0.2141,
+        "y": 0.1427,
+        "z": 0.2141
+      }
+    },
+    "TopSurface": {
+      "String": "Enum.SurfaceType.Studs"
+    },
+    "Transparency": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "0a7a081e-b3af-4cdf-8ed6-9ec6bb9e842e",
+    "ce6f2621-f727-42e4-b003-718d736d1305",
+    "c7eb0777-8655-462f-95b9-853f598bdc68",
+    "0011b119-aa03-4f34-a2bd-58b3ccdb2236",
+    "2b6e82a2-3314-4751-b101-9c62519fa5f4",
+    "d38cf4e1-28af-4f61-94de-6fd4dada5113",
+    "ffb98c5e-d1a8-4b5b-9f3e-c9d775d77de0",
+    "90935b8c-68f0-45e9-9b98-393c2ff4cc27",
+    "d8734083-543c-45cc-84bb-270ad116bf38",
+    "65df7551-c757-45ac-bcf5-1d170c6d1523",
+    "b88dd277-8272-42ef-b361-832f4973337e",
+    "b5ee4fb9-485b-4bb9-b586-2c0d53a68631"
+  ],
+  "parent": "b3a18a76-41f7-42a0-bcdc-30c710f8d503"
+}

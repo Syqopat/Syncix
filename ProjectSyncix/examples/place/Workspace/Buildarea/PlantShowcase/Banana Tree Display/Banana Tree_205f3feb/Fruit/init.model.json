@@ -1,0 +1,75 @@
+{
+  "class_name": "Model",
+  "name": "Fruit",
+  "syncix_id": "1f5021c7-b6fc-400d-b4ba-c34bda7396ae",
+  "schema_version": 1,
+  "last_updated": 1790327691230,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          491.48666,
+          440.24054,
+          3.0
+        ],
+        "rot": [
+          0.89878386,
+          0.43839207,
+          0.0,
+          -0.4383921,
+          0.89878386,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fb4c711a-6545-48cc-ae69-78d53f1ae0d5",
+    "e2cf6119-08b8-45d5-a21b-fb0c7a04decd",
+    "f6721d6b-9c90-4892-8388-ddd15becb6f2",
+    "6c027594-d39c-438f-8846-186a6ef48683",
+    "cc89d70c-7e02-4f8f-92a1-82f813b0e6e3",
+    "ceeb6903-436b-416e-8400-b2a963d1a883",
+    "171eda7b-a506-4a9e-afe6-fc5a55836729",
+    "aad76544-0995-4f7a-883c-1b1734404134",
+    "3e67792d-cf5b-4197-a89f-997cff584c26",
+    "bb6dc352-e8e4-4277-923e-4a1a9b287ee5",
+    "1c1d5674-b3ff-403b-979b-fd330ec90582",
+    "0a2cc8a6-e333-487a-8aea-bf3c02be779d",
+    "23de4f99-b41f-4d79-86ed-39670f78b90f",
+    "f64833e8-dac3-4cf7-b6c1-2300a9e9dfa7",
+    "a4d9b8c6-33b5-4efb-a34c-dba809c734a3",
+    "28c3ca2b-d184-48f6-bb5e-deb590d97b38",
+    "a6527674-5e3b-40fb-8c3d-811194c61066",
+    "e7e60f85-34f5-4b65-a05f-39904421cdf3",
+    "2f5d5ac4-edcb-4391-8fce-833883925a11",
+    "b2a42d48-0485-46db-954b-af80262d429a",
+    "19a7dde6-dbf9-41cd-98be-abbb22da87a1",
+    "95f1ed41-f003-443e-be2c-99dfeed77c75",
+    "ce5c0893-fe55-40a5-9813-ceabfc2fe45d",
+    "11311aa3-b808-47b8-9779-d9c7eaf4f10b",
+    "d7352be6-4586-4690-970d-90bf3fecd172",
+    "58d00e8e-f452-467f-8c04-4f8f5a96ee20",
+    "53adc3be-9e24-4ceb-9789-b3bd5e9b69e9",
+    "b215aee3-34e7-4b6e-9b06-9887094bf5c1",
+    "728eed19-48a9-4274-b8ba-a322e44e1700",
+    "aa7c34e8-4aa7-49cd-b79f-787097be1a9d",
+    "6f52bd27-c1a9-4e59-adb1-a75bb54efb9f",
+    "a0693bca-c0f5-4705-902a-a8b211ca67d6"
+  ],
+  "parent": "205f3feb-a211-4ad1-b7ef-d4a596f924ab",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "R5MzS78MR5Mz"
+    }
+  }
+}

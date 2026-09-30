@@ -1,0 +1,45 @@
+{
+  "class_name": "Pose",
+  "name": "Left Arm",
+  "syncix_id": "4104c4aa-747c-44a5-a423-3c5acf6def21",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          -0.000007867813,
+          -0.23201366,
+          0.0
+        ],
+        "rot": [
+          -0.013989687,
+          0.9999021,
+          0.0,
+          -0.9999021,
+          -0.013989687,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "EasingDirection": {
+      "String": "Enum.PoseEasingDirection.In"
+    },
+    "EasingStyle": {
+      "String": "Enum.PoseEasingStyle.Linear"
+    },
+    "Weight": {
+      "Number": 1.0
+    }
+  },
+  "children": [],
+  "parent": "64120dff-96cf-409c-a040-6fafcf2bf06f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6eRqFXkO6eRq"
+    }
+  }
+}

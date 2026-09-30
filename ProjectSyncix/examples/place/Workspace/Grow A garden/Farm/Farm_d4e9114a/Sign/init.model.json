@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Sign",
+  "syncix_id": "f0dd2f03-5de7-4812-9cb6-749f75c5ad05",
+  "schema_version": 1,
+  "last_updated": 1790327691286,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Persistent"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1800.5,
+          192.0,
+          -60.0
+        ],
+        "rot": [
+          0.25886434,
+          0.0,
+          0.9659137,
+          0.0,
+          1.0,
+          0.0,
+          -0.9659137,
+          0.0,
+          0.25886434
+        ]
+      }
+    }
+  },
+  "children": [
+    "068f0c7c-7a1f-4792-9afc-94801409242f",
+    "ee5bcf5e-5c9d-4cff-8539-4f6f026e790b"
+  ],
+  "parent": "d4e9114a-209d-4ab0-b6a2-cda2e5c6659e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Wiblze9vWibl"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "Island_East_2",
+  "syncix_id": "c8d92141-491e-4484-8395-6056519d013b",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          350.0,
+          119.5,
+          100.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8fac6ee6-faf8-4d8b-bd8b-d2b1454fee84",
+    "776a1495-0965-49c8-994a-b5cc1afaf316",
+    "f6dcbda4-8fd5-41d2-b453-3b99f488fb58"
+  ],
+  "parent": "c27ecf15-a0c2-4576-8e08-e61596b54ed1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "EGdGBoYKEGdG"
+    }
+  }
+}

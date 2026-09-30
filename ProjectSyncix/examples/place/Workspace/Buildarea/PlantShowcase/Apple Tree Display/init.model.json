@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Apple Tree Display",
+  "syncix_id": "a2071e98-0fca-4b03-a88c-c2f0f594c9ab",
+  "schema_version": 1,
+  "last_updated": 1790327691235,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          522.0,
+          439.3832,
+          -19.95
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8eaccd01-92b0-4b4d-9a03-498ff230e5d5",
+    "7db1fc42-556a-4748-a0a6-51874694cfc9",
+    "b917a515-af1d-471a-ba8d-81f30fa4cf5e",
+    "26c8ca2a-c30a-42bd-8ae2-ca1cd3a4f617"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "TTSQ8FECTTSQ"
+    }
+  }
+}

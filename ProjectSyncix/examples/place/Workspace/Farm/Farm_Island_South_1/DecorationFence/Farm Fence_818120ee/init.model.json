@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Farm Fence",
+  "syncix_id": "818120ee-317a-4159-8fb5-29d7dbbc7c34",
+  "schema_version": 1,
+  "last_updated": 1790327691310,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -1993.2,
+          191.75,
+          39.166595
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "46317987-1584-45df-8c50-0d7ee20a85fd",
+    "f2b3f4dd-c8c2-466d-8ea5-3f74bc7487b9",
+    "6a799d86-bbac-4c41-b2c5-93e9a12b27d0",
+    "19a7975b-228a-4491-b21e-611bb60cb9b1",
+    "f645a3fd-68e7-4905-b23f-a44687d35091",
+    "36901160-0a3e-46c4-ad1b-bf74443fd07e",
+    "1f6c54d8-73bf-47b0-9b49-46d14f2c1e1f",
+    "5df970d3-523c-4450-82b1-c1569b7a8bbe",
+    "76d95403-6708-4489-b748-37de93d5463a",
+    "a45300ea-b7fb-4991-a5cd-e3948cce19b4"
+  ],
+  "parent": "a44a6093-3ed0-448e-87d5-f1603f2e29fb",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Y462LuamY462"
+    }
+  }
+}

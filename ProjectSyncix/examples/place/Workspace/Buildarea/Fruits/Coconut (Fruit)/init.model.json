@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Coconut (Fruit)",
+  "syncix_id": "148bf3c0-ec93-4973-8fe9-9a1287ace733",
+  "schema_version": 1,
+  "last_updated": 1790327691224,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.75,
+          -484.03125
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "0abecc6b-be7d-4aac-b4fd-ace28dab2279",
+    "13091fd8-a29d-4914-bee5-a51300acceb7",
+    "e046f62b-2560-484c-8fc4-32c8423ea824",
+    "0a830bbb-bbd0-40c2-922f-5150e04233ff",
+    "a2f9dbeb-d2fa-4be5-af37-8020c43d8123",
+    "760f3b5d-4657-434d-9e2f-4582fec662ff",
+    "a3a35340-b0b0-43f6-b17c-bba63e69c9a4",
+    "35077bf4-154b-4ae5-b707-8d5897680cd5",
+    "566db2bf-9c6c-4ed3-81ce-c8173e1a89d7",
+    "a808b73e-be4d-4c62-b4d4-5feb23877656"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Mae2CnICMae2"
+    }
+  }
+}

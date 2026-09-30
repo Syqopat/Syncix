@@ -1,0 +1,89 @@
+{
+  "class_name": "Attachment",
+  "name": "HairAttachment",
+  "syncix_id": "d1375afc-4d0e-4381-93f2-d7edda5c6428",
+  "schema_version": 1,
+  "last_updated": 1790327691180,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": -7.871374e-9,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.002456506,
+          0.23292857,
+          0.029770589
+        ],
+        "rot": [
+          1.0,
+          7.871374e-9,
+          -3.2622297e-24,
+          -7.871374e-9,
+          1.0,
+          -4.1444224e-16,
+          0.0,
+          4.1444224e-16,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 7.871374e-9,
+        "y": 1.0,
+        "z": 4.1444224e-16
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 4.7683528e-7,
+        "y": -1.11337926e-7,
+        "z": -1.0
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          8.019531,
+          129.53593,
+          -14.6556015
+        ],
+        "rot": [
+          4.7683528e-7,
+          -1.19208735e-7,
+          1.0,
+          -1.11337926e-7,
+          1.0,
+          1.1920879e-7,
+          -1.0,
+          -1.1133798e-7,
+          4.7683528e-7
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": -1.19208735e-7,
+        "y": 1.0,
+        "z": -1.1133798e-7
+      }
+    }
+  },
+  "children": [
+    "ac82638e-222e-403e-a4ef-78d3e9e2b4ca"
+  ],
+  "parent": "c5b4054a-e907-4549-9133-ef9299e5c261",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "BKNFHsYqBKNF"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "LeftHip",
+  "syncix_id": "322c5dfa-5ccd-4a2e-b513-a2f7787aa29e",
+  "schema_version": 1,
+  "last_updated": 1790327691183,
+  "properties": {
+    "Attachment0": {
+      "Ref": "e5b53d2e-58c1-4828-a295-1d8dedfc99ef"
+    },
+    "Attachment1": {
+      "Ref": "a32aaf33-aceb-4ad6-b10f-27c3e9ee76f2"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "c73ac462-6304-48b1-9b71-4dea9d861123",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "5ASwfz8m5ASw"
+    }
+  }
+}

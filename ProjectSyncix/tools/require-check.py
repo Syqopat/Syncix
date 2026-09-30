@@ -24,7 +24,7 @@ NAME = r"[A-Za-z_]\w*"
 
 ROOT = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "studio-plugin",
+    "packages/studio-plugin",
     "src",
 )
 

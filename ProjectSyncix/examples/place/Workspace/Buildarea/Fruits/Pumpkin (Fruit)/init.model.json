@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Pumpkin (Fruit)",
+  "syncix_id": "85783248-98a8-4b6c-82d8-6dc21846a550",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.80368,
+          -115.28125
+        ],
+        "rot": [
+          0.000017360844,
+          1.0,
+          0.000104719766,
+          1.0,
+          -0.000017360853,
+          8.742278e-8,
+          8.92408e-8,
+          0.000104719766,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "0890a589-007e-4937-8088-da8ff241f7f2"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Aorp5FpBAorp"
+    }
+  }
+}

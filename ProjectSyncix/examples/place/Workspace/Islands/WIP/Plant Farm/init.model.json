@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Plant Farm",
+  "syncix_id": "09691dbc-198f-402c-9fb5-6d359c0a3e87",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          470.55,
+          546.55,
+          213.95001
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e3b13eb1-623b-40b0-9b12-34fef029682d",
+    "ed5e544a-2d21-42bd-9aed-d032f674b3df",
+    "769bce9c-5ab6-498b-b375-f474a35df911",
+    "0d9006f9-4bfc-4f6f-a592-477a6bc9f1ac",
+    "cdb34437-530c-43e8-b705-5d2180588497",
+    "4d68d787-0304-43be-bf32-667aab7d4457",
+    "58b0753c-1422-4ad9-880f-52df9d1b2361",
+    "c8a31314-0a17-4fcf-855a-0f67dec1d855",
+    "74ba5c4f-95fd-409e-85a4-6c6e9e806674",
+    "aa18bcb8-f36d-42c5-9fa0-3e9b15842e85"
+  ],
+  "parent": "d8d27524-5add-4956-876a-adeb2d7a7b7f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Dtr36glvDtr3"
+    }
+  }
+}

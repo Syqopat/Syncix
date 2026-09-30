@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Starfruit Plant Display",
+  "syncix_id": "1cd8cb08-81fa-489c-a27e-5947f64d3594",
+  "schema_version": 1,
+  "last_updated": 1790327691228,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          418.0,
+          438.1425,
+          28.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2b5983fa-70f8-4861-b7e1-57d449b120f8",
+    "b2a9e520-9ec0-4cec-812e-fb2aa438c04a",
+    "9941ce36-d53f-4f4a-b46a-f84050ff5b37",
+    "dabf5c70-f023-4089-9481-c49d71fe7c8b"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "91FvXd2y91Fv"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "class_name": "Model",
+  "name": "Dragonfruit Bush",
+  "syncix_id": "518e595e-b201-4854-8d0e-0e94d3cf2b88",
+  "schema_version": 1,
+  "last_updated": 1790327691368,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.08042292,
+          0.52585435,
+          0.08937007
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2f8620cb-888e-4d1d-b947-88e77a9182cb",
+    "ed278431-dc40-46df-b9c7-21cabdee7c4d",
+    "975afb12-401d-4a46-9039-9038165c1037",
+    "f51f563c-ec53-4976-b2f2-fe5e69aab1c8",
+    "14e095da-72a1-4f85-87da-8c4f0e34127e",
+    "0ce751b7-4a77-44cb-a6b5-1ec3111a33de",
+    "8c61258c-1335-49f5-8cdc-dc8156726400",
+    "7fa1c596-9502-4346-99af-335d18c69894"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "2VcHgIBT2VcH"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Dragonfruit Bush Display",
+  "syncix_id": "da1af088-e638-47af-b7af-2ad838e27025",
+  "schema_version": 1,
+  "last_updated": 1790327691233,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          522.0,
+          437.2771,
+          4.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "296628f3-0c40-4f21-ace0-6ed4a47be7a6",
+    "b141a723-6466-4cc6-87d0-c322abc9dd57",
+    "9d57c5d9-b084-4c8a-a026-3acd8d562ec6",
+    "ce892083-3df6-4ae9-8dde-67f4a094dd69"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "rN2vAhmArN2v"
+    }
+  }
+}

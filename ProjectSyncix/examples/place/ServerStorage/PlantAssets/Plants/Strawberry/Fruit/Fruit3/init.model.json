@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Fruit3",
+  "syncix_id": "76d6dd07-1f09-43e8-9db7-cb3e256e4f7c",
+  "schema_version": 1,
+  "last_updated": 1790327691374,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.08055,
+          0.50002193,
+          -0.7939
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "0e9e75b8-ccfa-44e7-ace6-ea706379368a",
+    "1435257e-6026-4d63-bb8b-4b791dd3b0ad",
+    "f37def8e-f200-4137-9737-1c4f81308d62",
+    "89fa510a-1fad-497f-bc16-649cd0e34c21",
+    "9beb9122-d092-4ee3-8c84-8120ffbbbdd4",
+    "600eb989-c711-494b-bb26-fce441b1e71e"
+  ],
+  "parent": "56f763c1-2ef6-4ac3-b474-ddd698bf357e"
+}

@@ -1,0 +1,87 @@
+{
+  "class_name": "Attachment",
+  "name": "HatAttachment",
+  "syncix_id": "f2a149c8-2ddb-4841-9aed-c79f2cb24480",
+  "schema_version": 1,
+  "last_updated": 1790327691292,
+  "properties": {
+    "Axis": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.6,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "SecondaryAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    },
+    "WorldAxis": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -0.99999994
+      }
+    },
+    "WorldCFrame": {
+      "CFrame": {
+        "pos": [
+          -1759.3143,
+          194.09961,
+          -27.004194
+        ],
+        "rot": [
+          0.0,
+          1.7881393e-7,
+          0.99999994,
+          0.0,
+          0.99999994,
+          -1.1920929e-7,
+          -0.99999994,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "WorldSecondaryAxis": {
+      "Vector3": {
+        "x": 1.7881393e-7,
+        "y": 0.99999994,
+        "z": 0.0
+      }
+    }
+  },
+  "children": [],
+  "parent": "5e7a58b2-a941-4153-a6fd-392597e250e6",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "118JUHug118J"
+    }
+  }
+}

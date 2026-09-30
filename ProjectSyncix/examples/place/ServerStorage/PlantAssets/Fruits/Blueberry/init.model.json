@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Blueberry",
+  "syncix_id": "fd0ddef3-5772-406c-8494-d53158e3dc1c",
+  "schema_version": 1,
+  "last_updated": 1790327691369,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0021325224,
+          0.23835658,
+          0.04238976
+        ],
+        "rot": [
+          -0.573612,
+          0.0000047354483,
+          0.8191272,
+          0.21200442,
+          0.9659272,
+          0.1484552,
+          -0.7912165,
+          0.25881428,
+          -0.5540683
+        ]
+      }
+    }
+  },
+  "children": [
+    "92c8c292-4963-48e3-ac89-f142c5d690f1",
+    "d8592c7a-2666-46e9-805b-496a7c6de26a",
+    "210d9702-9d9d-4e1c-be0f-d52526eec394",
+    "887859b5-5cf0-43df-bb18-e060abb8bb2c",
+    "08f4500a-c607-465e-9c8b-28b415df2813",
+    "965796e5-d34c-4aa3-ad90-ece5ee5cd312",
+    "4d5e1e02-0eea-4c10-8a1c-83e4be8689e8"
+  ],
+  "parent": "901a8ea2-fbd1-4305-adf6-c199962b29df"
+}

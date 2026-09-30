@@ -1,0 +1,39 @@
+{
+  "class_name": "Accessory",
+  "name": "Accessory (CrimChain2Accessory)",
+  "syncix_id": "e85cb29a-5006-4e6d-92d1-991bd3b1a524",
+  "schema_version": 1,
+  "last_updated": 1790327691324,
+  "properties": {
+    "AttachmentPoint": {
+      "CFrame": {
+        "pos": [
+          0.000015258789,
+          0.30651236,
+          0.00048828125
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "b8596475-13b2-4263-ad86-d3de4939dbf6",
+    "601472c7-8ad2-4c47-ac2e-c05b3beb1bae"
+  ],
+  "parent": "0d58e42a-4559-4da9-a2f4-3262add4bb9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "eNaWGCUEeNaW"
+    }
+  }
+}

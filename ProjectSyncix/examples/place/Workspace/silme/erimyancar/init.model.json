@@ -1,0 +1,64 @@
+{
+  "class_name": "Model",
+  "name": "erimyancar",
+  "syncix_id": "2879845d-70b4-4816-bbc6-1c295442ee56",
+  "schema_version": 1,
+  "last_updated": 1790327691177,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "818cfb3c-5e36-4e07-b8ea-7e5ce2078d3c"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1009.1419,
+          799.22906,
+          -108.7376
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          -0.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "fa416ab9-d85d-46ec-9d33-b8ef02fe2c50",
+    "b9e219f9-faac-4dc9-80ae-332d99e7b34b",
+    "2ebed0b2-0181-418f-8f10-f83bad263049",
+    "13c634d5-a678-4dc6-98aa-35dc7fc5969d",
+    "818cfb3c-5e36-4e07-b8ea-7e5ce2078d3c",
+    "7d071182-4b9e-490f-a648-739ded03a143",
+    "27e3f5bb-0037-49b2-aac6-9f4108ca5675",
+    "70c74b6e-cbc5-4e47-8b51-957c566b850b",
+    "5fce42e8-0838-449f-afa1-cd250856e5ce",
+    "6e6d5dbf-7776-46ea-bfd0-77a7e34f313f",
+    "ec5e9632-1aa6-4463-aff4-a0e6e6f302a0",
+    "74365459-d1fa-452a-a290-95b2dd2a95eb",
+    "4bff5c8a-0e9c-4950-af82-58df0c31437a",
+    "31cc80b9-801b-4fa0-a824-16add5592799",
+    "39be0b41-109e-47a0-8159-d46d007f99b3",
+    "77e2487d-b27f-4028-9086-cdf848af2f0e",
+    "84b2496c-17c2-4460-a92f-2fe7ea2fb988",
+    "199c1856-2ffc-4b99-9616-83ade0b963f6",
+    "a61ea90c-c03b-416e-9e2c-43975a3d662b",
+    "b597e8ea-5b7a-448f-b98a-a01335060a6b",
+    "dc80a6a2-eccd-4bd6-a298-dcd99089a24a"
+  ],
+  "parent": "4151af40-b15b-456a-86fa-d8d6b0029987",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6lvjqQpj6lvj"
+    }
+  }
+}

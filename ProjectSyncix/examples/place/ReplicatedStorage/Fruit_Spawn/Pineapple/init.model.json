@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Pineapple",
+  "syncix_id": "145de3c4-9375-4c0d-a4b9-03688dc6991a",
+  "schema_version": 1,
+  "last_updated": 1790327691331,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "2c7138a3-1e51-41e9-8b48-9007ac9695e0"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.3988417,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "c4bc93c3-1f14-47de-a42e-921cdb00ff80",
+    "8cb38fc1-7ebf-458b-aff9-b30fa9154c9d",
+    "7620b335-cbd8-4817-8b31-e0c36972a48b",
+    "238771ea-1bab-4d2e-9891-5efb070e8a25",
+    "98456505-7c32-4ce7-8034-ffde0bd12dee",
+    "df4b443f-dc92-4dd3-83ae-dcb7baad2787",
+    "7e22b12c-d612-4f38-9774-39c425cbcdd9",
+    "2c7138a3-1e51-41e9-8b48-9007ac9695e0",
+    "1a4fb3dd-e5d0-49b9-a8b9-a8f45ea86366",
+    "5bde33c0-b1a4-45b6-8dbc-3f842bb4e65d",
+    "814fab56-01c3-4c41-acb5-e2f18a1059a4",
+    "8c15f438-196c-4aa8-b1ea-08c9998e76b3",
+    "24631854-0a06-48f4-872c-005eeb04e443",
+    "0a4c5b17-946d-4e9d-a4c6-1ed9fe17916b",
+    "7d00ff32-28ff-4555-8af8-07bfa288c569",
+    "ca985e00-3786-4b30-80fa-9563eab9b3b5",
+    "9e6caf26-cb70-40cc-8857-af2edf9111fe",
+    "e258a077-9db9-4bfd-97f4-5dc73baa3351",
+    "2ddeec37-4bda-4fee-b04f-6530cd5bece1",
+    "339a62d4-c560-4e2e-948c-31b6d8766c26",
+    "4d2639f6-66e7-4206-9a94-873427e61898",
+    "a65e45c6-d9d7-4ddf-bf02-b3892edd7861",
+    "7c52165c-a51f-4af4-bfa3-7ec6d1c3e517",
+    "5e588bdf-21d1-445a-a6e0-09f3b6f494ec",
+    "7cdf6fea-c853-4413-82ae-ce9c1001173a",
+    "1b1a62cd-a39c-44e5-a0bb-f01cce9bf756",
+    "6bc45626-c78c-4b9e-9864-25d08b181110",
+    "1567cead-1314-4020-9dc7-376a5dd61e55"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "DqlhAsU2Dqlh"
+    }
+  }
+}

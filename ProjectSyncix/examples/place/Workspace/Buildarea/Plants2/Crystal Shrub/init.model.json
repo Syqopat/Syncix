@@ -1,0 +1,70 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub",
+  "syncix_id": "f059f28f-72f3-4975-a508-bc5b38e8a2a9",
+  "schema_version": 1,
+  "last_updated": 1790327691250,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1312.7606,
+          437.43396,
+          -410.40067
+        ],
+        "rot": [
+          -0.500011,
+          -0.27882817,
+          -0.8199048,
+          0.0,
+          0.9467514,
+          -0.32196543,
+          0.86601907,
+          -0.16098624,
+          -0.47338617
+        ]
+      }
+    }
+  },
+  "children": [
+    "02fc20a3-6c6f-4002-9a6e-ef4140438160",
+    "afd390a2-09ff-413e-9a0c-aec1bfb8d241",
+    "be532bfd-1d5b-446a-a9e4-ff36cb13e835",
+    "3157feb1-93a0-44ee-b87b-6ec1c046386b",
+    "13fd959e-cb66-4f1e-9424-357df7a5fef3",
+    "a9baaf7c-ab65-4282-af49-355029272f3b",
+    "d0feca63-82f0-410e-b12f-9376d9bfcb56",
+    "3e161d8d-5849-4ff2-8b52-e9099e9f5066",
+    "c8c783f3-1129-4321-b2b5-31ac5810d3d5",
+    "10c2f792-645a-4520-b42b-d2ce3f55bcd1",
+    "d012594b-59bf-4c12-bdfb-315be869980f",
+    "47075ba0-4195-4aff-bb97-2c566a2d33d7",
+    "5a05758e-bc53-4824-b41d-a8027fe830b3",
+    "567a79d9-3e70-46b3-a29b-c829c64c42c4",
+    "13e543dc-08c7-47ff-9974-a99c456a9386",
+    "3ef5f867-42a9-4af8-b4b3-a829fe0858bf",
+    "ce1d8a66-7c18-4bcd-9cf2-cf5ac2bb4637",
+    "57c658a9-6975-4df0-89b7-24188141d402",
+    "20d1a52d-9573-4472-89e6-ca3685123e92",
+    "38bab012-10f4-410f-bc96-fc6fee00d50f",
+    "1cd571f6-7e00-486d-bc45-5434455702a9",
+    "86bc6bfd-c2ce-46e5-8545-2b513375ef14",
+    "eb473c85-74f2-4759-be47-e3a796aa8ed4",
+    "4b57728e-f46c-4a90-927f-d8fcbe1e2035",
+    "a7950415-e595-42b2-ae23-37a557ab66aa",
+    "4c149ee5-5377-4b71-a244-6cf2d966bbb1",
+    "4a478268-d4ce-4539-8665-2d527ba6ed19"
+  ],
+  "parent": "97e7f7a2-2228-4c39-b593-b8b06c63eb3a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "bL3e7U6kbL3e"
+    }
+  }
+}

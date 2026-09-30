@@ -1,0 +1,51 @@
+{
+  "class_name": "Model",
+  "name": "Leaves",
+  "syncix_id": "a851e2ce-2a74-4c58-a220-9c6d82a41ace",
+  "schema_version": 1,
+  "last_updated": 1790327691221,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1429.5812,
+          436.218,
+          -281.59573
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "324b5436-a5ba-4499-892e-617699e14b26",
+    "de32b6bf-0be5-41ac-9f36-05b38ee5f615",
+    "cad76acf-4453-4866-9229-49740a3d14b2",
+    "09a55bfe-2b3b-48c6-bef6-9ab8e61f6941",
+    "e5f843cb-34d4-410f-9aa2-783688973250",
+    "1eec7dff-67fb-4bdf-99ad-5389d805dde9",
+    "52155c45-687f-4bde-b251-0a0af233c75f",
+    "664c58c2-39de-4c25-a596-71b37083a480"
+  ],
+  "parent": "c35d2862-7c5d-4ec4-8795-384d7353d693",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "MF4Izm5BMF4I"
+    }
+  }
+}

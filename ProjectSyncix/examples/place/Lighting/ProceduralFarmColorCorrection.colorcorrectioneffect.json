@@ -1,0 +1,30 @@
+{
+  "class_name": "ColorCorrectionEffect",
+  "name": "ProceduralFarmColorCorrection",
+  "syncix_id": "2add94cd-a620-47a4-aff3-72feeb9ddb29",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "Brightness": {
+      "Number": 0.029999999329447746
+    },
+    "Contrast": {
+      "Number": 0.07999999821186066
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Saturation": {
+      "Number": 0.03999999910593033
+    },
+    "TintColor": {
+      "Color3": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      }
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000009"
+}

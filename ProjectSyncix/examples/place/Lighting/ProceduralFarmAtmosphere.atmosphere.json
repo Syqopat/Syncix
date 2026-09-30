@@ -1,0 +1,37 @@
+{
+  "class_name": "Atmosphere",
+  "name": "ProceduralFarmAtmosphere",
+  "syncix_id": "d1298e1b-31e5-4250-97d2-54f1f64d974f",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "Color": {
+      "Color3": {
+        "r": 0.74509805,
+        "g": 0.8039216,
+        "b": 0.8627451
+      }
+    },
+    "Decay": {
+      "Color3": {
+        "r": 0.4117647,
+        "g": 0.45490196,
+        "b": 0.5176471
+      }
+    },
+    "Density": {
+      "Number": 0.2199999988079071
+    },
+    "Glare": {
+      "Number": 0.07999999821186066
+    },
+    "Haze": {
+      "Number": 0.4000000059604645
+    },
+    "Offset": {
+      "Number": 0.05000000074505806
+    }
+  },
+  "children": [],
+  "parent": "00000000-0000-4000-8000-000000000009"
+}

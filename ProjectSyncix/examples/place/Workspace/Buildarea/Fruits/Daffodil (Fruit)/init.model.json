@@ -1,0 +1,44 @@
+{
+  "class_name": "Model",
+  "name": "Daffodil (Fruit)",
+  "syncix_id": "b906bd8c-0fe3-4a17-8c5e-a52d832d2876",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          434.55173,
+          -410.28125
+        ],
+        "rot": [
+          -0.22413898,
+          -0.9659281,
+          -0.12940136,
+          0.83653104,
+          -0.25881073,
+          0.4829419,
+          -0.49997762,
+          -0.0000021383166,
+          0.8660384
+        ]
+      }
+    }
+  },
+  "children": [
+    "3cd7da18-5f85-44a8-b540-f0a57c150f25"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "PK7iekhVPK7i"
+    }
+  }
+}

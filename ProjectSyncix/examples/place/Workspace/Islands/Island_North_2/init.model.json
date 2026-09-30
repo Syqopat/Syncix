@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "Island_North_2",
+  "syncix_id": "d92d17fa-ce41-412a-be36-838ca94f4b87",
+  "schema_version": 1,
+  "last_updated": 1790327691162,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          85.0,
+          98.181244,
+          -255.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2b26e286-20ca-4321-a1fb-70b5f2a1dfe7",
+    "94b7de2a-867f-4278-b228-3a202cd5cb1a"
+  ],
+  "parent": "c27ecf15-a0c2-4576-8e08-e61596b54ed1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "lBOlmaEklBOl"
+    }
+  }
+}

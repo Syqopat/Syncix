@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "RightShoulderBallSocket",
+  "syncix_id": "7a9259b8-b037-407b-81c9-c6b9d0bc8996",
+  "schema_version": 1,
+  "last_updated": 1790327691181,
+  "properties": {
+    "Attachment0": {
+      "Ref": "0c824e3e-87b9-4e4b-a2f2-f535100af612"
+    },
+    "Attachment1": {
+      "Ref": "471a8922-f944-4865-a8bc-886db0fa106e"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 39.76274490356445
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -85.0
+    },
+    "TwistUpperAngle": {
+      "Number": 85.0
+    },
+    "UpperAngle": {
+      "Number": 110.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "22c5a2e1-f76a-4125-8412-9aec9463c827",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "8Kyzh9v38Kyz"
+    }
+  }
+}

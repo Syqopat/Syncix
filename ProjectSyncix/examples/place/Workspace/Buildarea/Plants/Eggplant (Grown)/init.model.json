@@ -1,0 +1,60 @@
+{
+  "class_name": "Model",
+  "name": "Eggplant (Grown)",
+  "syncix_id": "eb2be7e7-165c-4767-9a0c-9e472e88dbd1",
+  "schema_version": 1,
+  "last_updated": 1790327691197,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0542,
+          435.9651,
+          -336.53125
+        ],
+        "rot": [
+          1.0,
+          2.9802322e-8,
+          2.3841858e-7,
+          -2.9802322e-8,
+          1.0,
+          7.4505753e-9,
+          -2.3841858e-7,
+          -7.450582e-9,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "5579c7bc-bf41-4758-bc85-e5849b8a939a",
+    "bd6df58c-ccb8-4d0b-b253-33c4d67ea400",
+    "a0f02dc1-dd4b-4fec-809e-e123a89831a6",
+    "4973570e-a6a9-4d3e-9fc5-a0d8aef2199e",
+    "3a3c362f-a63f-49f3-be74-bab4ea6931af",
+    "e6e8f63e-b1d4-4d15-a05d-92ae9adafcec",
+    "450482eb-f456-4c0e-b421-c4fce57ec5e9",
+    "9401fd99-4db7-4e73-ad55-7f034f2a20a9",
+    "10cb476d-2c16-4675-99eb-93655f32187a",
+    "7c2fcbe3-5af6-4936-a077-3bea668812cd",
+    "933dad79-d3f5-4048-8410-7afbf60b3915",
+    "99c93fea-dac6-40cb-a564-dc9fdbba4bb0",
+    "7ae3d7d0-ece9-487f-9c0f-7c950a271fe3",
+    "bfe46126-957b-4f40-969d-223b5b9b9c8d",
+    "5a38e25d-fca7-42e6-9c41-80ef9a91af0a",
+    "01e0185d-2410-46fb-8367-446c9de7d048",
+    "180be4b5-29dc-427b-a6e9-4d0b2e088937"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "gqb27By8gqb2"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "class_name": "Model",
+  "name": "Decoration",
+  "syncix_id": "d0e812a6-45f6-4f35-bfb6-ac1c070fdb9c",
+  "schema_version": 1,
+  "last_updated": 1790327691272,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -2037.2,
+          189.06003,
+          77.26657
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "20a3949e-02b9-4afd-b61b-91f34f83979b",
+    "f9ed75f8-ac9b-4a77-81b6-77fc0c47c79e",
+    "bf36c980-02ca-4992-8d3e-9bfd83173cf2",
+    "eee24f72-421c-4ad0-ae5a-1b877c80fad5",
+    "7ea488cb-3705-47dd-a245-3d1b48eec35e",
+    "c22ca2e7-ac93-4eec-8caa-534fb03773eb",
+    "b865818d-fa3a-4985-9450-e273468b78c5",
+    "a70c65d4-9a98-457a-a84a-dd5b1d2a7805",
+    "fea73a19-17b5-4d65-8ce9-efaa5c669e39",
+    "a7ff16c7-6802-419c-ab17-582da444cddc",
+    "095a6d6d-0700-4b6b-8818-84460e482b03",
+    "a54b5f67-a3b4-42ee-9e36-a1f8d378caa6",
+    "7e09e135-0209-444f-b341-238e84bd28e4",
+    "080e143b-a41b-40aa-9751-7f2602c685c1",
+    "f458d0cb-1947-485a-88fb-19119cb4cbf3",
+    "0e4bf180-6547-410c-8e9f-309a2a881d54"
+  ],
+  "parent": "394e8718-509a-428c-997e-763575a5bf27",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "6ILWgL1x6ILW"
+    }
+  }
+}

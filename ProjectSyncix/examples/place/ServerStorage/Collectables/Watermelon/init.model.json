@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Watermelon",
+  "syncix_id": "3cf52f35-61fe-4aec-bb48-e056eafb0f1e",
+  "schema_version": 1,
+  "last_updated": 1790327691335,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "6866da31-db3b-405b-b8ab-855eacec2933"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          1.39715,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "8a151bba-cc9e-4ddb-b08d-611178ef9444",
+    "33f26d8c-c811-4686-82a1-3141a10f293b",
+    "0d257e43-6039-4f2d-bea1-72d0ffda16b0",
+    "ca892b18-9aec-417d-b09e-1fa03ee91a32",
+    "8cd17356-29a8-47d3-bbef-deb8e294ed44",
+    "c8092e65-33c0-4c01-b90b-d06b094cb5a9",
+    "0c3c0743-8ab9-42fa-811b-8bb1e3d9cd88",
+    "39556c21-447d-45bb-b0d6-45b346d40e76",
+    "6866da31-db3b-405b-b8ab-855eacec2933",
+    "6a831820-2ec5-40af-bf6c-c85ad7b356de",
+    "5465fc12-98ee-42c6-be14-9a6054591fbe",
+    "0091ff82-1d57-42b1-b50b-6eafb8e59e9f"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "LY83jNakLY83"
+    }
+  }
+}

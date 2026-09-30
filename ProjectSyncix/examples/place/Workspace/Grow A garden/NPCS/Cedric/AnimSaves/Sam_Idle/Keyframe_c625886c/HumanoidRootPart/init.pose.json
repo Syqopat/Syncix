@@ -1,0 +1,48 @@
+{
+  "class_name": "Pose",
+  "name": "HumanoidRootPart",
+  "syncix_id": "753b8e88-ac09-4d35-9403-1ecda4488112",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "CFrame": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "EasingDirection": {
+      "String": "Enum.PoseEasingDirection.In"
+    },
+    "EasingStyle": {
+      "String": "Enum.PoseEasingStyle.Linear"
+    },
+    "Weight": {
+      "Number": 0.0
+    }
+  },
+  "children": [
+    "527bf556-0c10-40c5-aedf-e961b90f48be",
+    "e3eca431-9c34-4e0a-94a8-d2feb1ad26a9"
+  ],
+  "parent": "c625886c-e7a0-4fcc-bfa7-261202bc69b2",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "SbX7k00ESbX7"
+    }
+  }
+}

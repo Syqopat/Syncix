@@ -1,0 +1,61 @@
+{
+  "class_name": "Model",
+  "name": "Dragonfruit Bush",
+  "syncix_id": "a60af692-adc0-43ac-94f5-62c562cbc627",
+  "schema_version": 1,
+  "last_updated": 1790327691372,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          2.2271001,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "76b78509-a7c9-4e6f-b610-c2c49b6c1562",
+    "a7d77661-821e-457f-880c-52ec8025011c",
+    "f6602b30-7b8f-4c22-b0d2-99493ad188d7",
+    "fe0723c1-863e-4b7d-afa3-93f04b62cd78",
+    "8d484fac-b016-4b20-8afa-79ddb724fe7c",
+    "633a1ff4-55af-446a-8d04-f5f1addff33b",
+    "0b6851b9-c4fd-405d-b190-58401fb189fa",
+    "ed5b22ef-9742-45c1-943b-3fd228127f94",
+    "805a8d08-bada-4b96-9372-582024689857",
+    "53061c55-828b-4368-9260-87cb941d657d",
+    "2c4ce06e-3330-4174-a76c-509c0e9d4f01",
+    "3d58d4d7-2045-4649-ad1d-590d8e5cd8de",
+    "8ab1c18c-367a-4648-b5b4-0a8874823b11",
+    "9f434528-4149-4440-bed3-0ad5937bf450",
+    "44d147d0-b38f-491b-b274-751519d7e2e0",
+    "c3d67219-744e-4aa3-a8ac-73333757ac38",
+    "6b87cd47-39e0-4eeb-807a-5caa5f65b5c2",
+    "2b8d6502-bb77-4cc0-bda1-818263c9b03c"
+  ],
+  "parent": "b441de6d-6f88-49e2-93b9-dc9fb8aa64db",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "ZsiJPyiqZsiJ"
+    }
+  }
+}

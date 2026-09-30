@@ -1,0 +1,74 @@
+{
+  "class_name": "Motor6D",
+  "name": "Left Hip",
+  "syncix_id": "a2f24b0b-1892-47b7-b062-546a3e5bda4a",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "C0": {
+      "CFrame": {
+        "pos": [
+          -1.0,
+          -1.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "C1": {
+      "CFrame": {
+        "pos": [
+          -0.5,
+          1.0,
+          0.0
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "CurrentAngle": {
+      "Number": 0.0
+    },
+    "DesiredAngle": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "MaxVelocity": {
+      "Number": 0.10000000149011612
+    },
+    "Part0": {
+      "Ref": "6f97abc0-47ab-45a8-9615-ea1a1feb775a"
+    },
+    "Part1": {
+      "Ref": "c430a87f-2b38-4e4f-9f01-b8799e92619e"
+    }
+  },
+  "children": [],
+  "parent": "6f97abc0-47ab-45a8-9615-ea1a1feb775a",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "iUCNXfVziUCN"
+    }
+  }
+}

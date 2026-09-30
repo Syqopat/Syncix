@@ -1,0 +1,46 @@
+{
+  "class_name": "Model",
+  "name": "SecondIslandTemplate",
+  "syncix_id": "faf18951-1407-41c3-879d-8c5ecfd27603",
+  "schema_version": 1,
+  "last_updated": 1790327691161,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          576.3579,
+          541.0,
+          398.25
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "2591e67c-5e4b-4df3-bb96-6d5b813d1ed4",
+    "b9254e8e-6c78-487c-ba9c-a4117baac627",
+    "44dc3131-bd47-472b-bc26-27caa773022c"
+  ],
+  "parent": "d8d27524-5add-4956-876a-adeb2d7a7b7f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "zSD9ux1hzSD9"
+    }
+  }
+}

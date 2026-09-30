@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Durian (Fruit)",
+  "syncix_id": "d78a492b-3a5f-4d98-bd15-900a96089466",
+  "schema_version": 1,
+  "last_updated": 1790327691220,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0911,
+          435.9184,
+          -373.3203
+        ],
+        "rot": [
+          -0.99772924,
+          -0.06735268,
+          -0.000007033349,
+          0.017442055,
+          -0.2582771,
+          -0.9659134,
+          0.06505504,
+          -0.9637202,
+          0.25886536
+        ]
+      }
+    }
+  },
+  "children": [
+    "3fe74bda-0715-44c5-be71-d9b6ed5d38c2",
+    "8a0236a2-2bf7-4714-9ab2-5645522d34e6",
+    "8e0b97eb-3b9f-4b39-9f95-111ff0c528e0",
+    "88467121-565f-45a2-9e7f-ba87c2d8f3f9",
+    "1b663bea-a367-46cf-be1e-0404b27c3733",
+    "8d824bc3-6699-4273-a49f-8b96c1fd291b",
+    "f44e7842-8d40-4c1f-b3b6-e3526db34b63",
+    "7e5b21d0-8223-4de0-be7a-2de2a99a1520",
+    "6ea0a65f-87f6-408a-a6ad-39ef56208e30",
+    "e5c2133f-d74c-495c-b194-4855a0bdd905",
+    "38b1a89c-2b8c-4653-8741-988d08d670b8",
+    "d23e0045-b4fe-469e-a9f2-c3ed1271478e",
+    "6c0c22df-cd05-45ba-84c8-91ad2bb1d10f",
+    "b160b226-a6be-4a25-9afa-7e255e72e87d",
+    "0a9d83a2-51e0-4f42-aa4b-6f7b4a869faa",
+    "cdbd64bf-8635-43ea-8e1c-4832b48a21dd",
+    "c5f2202d-43e1-4034-ba32-fca2b667f332",
+    "18b379f6-bcb1-487d-a487-6ce4793b57fa",
+    "769074f4-3499-43c2-a04b-7134a769f6b1",
+    "894ee927-3f88-4e38-8744-334d2defeda2",
+    "b24438c8-11e9-411a-bfe0-6c037455b505",
+    "716dcde0-c5ce-47af-889a-efb92c96e58d",
+    "a3c88816-d237-4656-ba75-752b95fedda7",
+    "ce47f908-5b52-4302-ac7a-8e34b78f481e",
+    "57f64e66-4903-4a48-8d22-2cd9e7bc6ef9",
+    "8fc51366-0103-4455-b258-9b8db9524c26",
+    "8f3e0fcf-0b32-41ae-8e97-82ef677be03a",
+    "781a49e5-84d7-40f3-a6c3-660b3e73a34a"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "RhSGWhEoRhSG"
+    }
+  }
+}

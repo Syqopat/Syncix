@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Candy Blossom",
+  "syncix_id": "9f6a7d91-1eb5-4e83-ad32-f57fb86ba649",
+  "schema_version": 1,
+  "last_updated": 1790327691332,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "436ebbd5-bfae-4f2f-b72c-b84d7cd34d02"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.000017149374,
+          0.6858594,
+          -0.027729597
+        ],
+        "rot": [
+          0.9545415,
+          -0.000024974343,
+          -0.29807806,
+          0.012065409,
+          0.9991837,
+          0.038553588,
+          0.2978338,
+          -0.040397435,
+          0.9537626
+        ]
+      }
+    }
+  },
+  "children": [
+    "6f8c42c6-c6ad-49de-966a-6bb1cb1b8c40",
+    "f9bd991f-e17d-4585-b373-88dedf9d6eda",
+    "045f3367-03d9-4ea7-8b09-c25421d2dcf3",
+    "39ef8c51-e94e-4a58-94de-2d6f57c4365c",
+    "25276ce0-b0e3-410a-8544-033592607a96",
+    "d5078930-06f6-4a61-adfd-f1bb37157f50",
+    "8a002fa3-4fe6-4737-aabc-f1bad9acff4d",
+    "e7ce2f5d-2faf-4817-96d9-9480783f561e",
+    "436ebbd5-bfae-4f2f-b72c-b84d7cd34d02",
+    "138086e6-d601-4627-b6d9-fa5ebd4f059f",
+    "895c26cb-ec12-48c5-9120-8aa60906e5ef",
+    "fccd2bf1-8e59-4611-b71c-9d6285d0be79",
+    "ae9c5d56-f18f-4769-acfb-7efb7bdf49d6",
+    "155b0918-a425-4ca9-b563-12293034c859",
+    "4a80ece3-4faf-4935-bd31-110b65964172"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "taFor2NRtaFo"
+    }
+  }
+}

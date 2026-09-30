@@ -1,0 +1,58 @@
+{
+  "class_name": "Model",
+  "name": "Banana (Fruit)",
+  "syncix_id": "27d8dc85-246c-4a90-a49f-4657b39d85a5",
+  "schema_version": 1,
+  "last_updated": 1790327691219,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.4083,
+          -594.6947
+        ],
+        "rot": [
+          1.0,
+          -0.000019369745,
+          -0.000046730773,
+          0.000019375917,
+          1.0,
+          0.0001320539,
+          0.000046728215,
+          -0.0001320548,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "55be5341-2310-437b-a604-17d7606c7745",
+    "ab62ca28-a4c9-49e1-a4c3-102e5f04b741",
+    "530cd81b-044f-43af-81f4-cdf52a6d49b8",
+    "b09ddb65-1a3d-4838-85e4-c5520f37bb20",
+    "fc9aef5e-a35f-465d-8933-6fe67e710b51",
+    "97757385-0d5d-4b6e-abef-42b902c943bf",
+    "ba11a35c-c3c0-4154-87ab-28452119c7b8",
+    "8386dbf2-c685-4adf-a8b0-ccff57b99826",
+    "d9a3d3ee-ef2c-4067-a96d-984cdf7cee9f",
+    "b57adb3e-79dd-49d1-8552-696a29687843",
+    "87938322-7faa-4409-8898-dc5da4d918b8",
+    "558e51d1-d6bc-499d-a75a-68cd9847eec2",
+    "8c2791a5-0cf4-45c7-8166-235735516d0b",
+    "801ce7e5-cb02-4efe-9316-78884d96422e",
+    "1e494251-6fcb-4122-8761-aeb59e24bafd"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "367X8ix9367X"
+    }
+  }
+}

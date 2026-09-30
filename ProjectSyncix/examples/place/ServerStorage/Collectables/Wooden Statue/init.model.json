@@ -1,0 +1,100 @@
+{
+  "class_name": "Model",
+  "name": "Wooden Statue",
+  "syncix_id": "cc234052-ee25-4ed6-b88a-68e4d6ea7813",
+  "schema_version": 1,
+  "last_updated": 1790327691358,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "127d3414-58ff-481a-b4e7-8653a50e233c"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          -0.18340617,
+          2.450008,
+          0.56807697
+        ],
+        "rot": [
+          0.9848077,
+          0.17364818,
+          0.0,
+          0.0,
+          0.0,
+          -1.0,
+          -0.17364818,
+          0.9848077,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "e1ed9f58-ddf4-4542-b8c1-5f45948c0a84",
+    "8d5abf3b-a82e-4ef0-b379-13a35d6dc913",
+    "c47ed1d7-cae6-46f7-989c-5cd122f1458a",
+    "28a8976f-1a4e-4e66-9597-eb11a525b140",
+    "3f59eada-e0fe-4ebe-a1c8-ba3434f72162",
+    "b37d5983-4824-4848-a1f4-1f2d7a3e0c59",
+    "0e401bdd-d8d3-4d7a-8299-9e2c4e8478c1",
+    "127d3414-58ff-481a-b4e7-8653a50e233c",
+    "9e6bb0c2-66c0-4eae-9e27-a16389863d37",
+    "e1f90268-4e08-49be-b3ff-874c8524b07a",
+    "a929d538-7c77-4a62-b8a4-3338b49b277e",
+    "6f754f41-c797-4f51-83e3-67c299430d6e",
+    "7ac8282c-fe1a-4c35-ae1b-62f80a098cd3",
+    "a8826374-d409-47cf-89d8-85942ddfaca4",
+    "80e165dc-63a9-45e4-aea1-7b3cb5d02730",
+    "cd78e517-18b3-4ddd-8258-8399283b99e3",
+    "32102674-83cb-4112-8736-78fb90d20734",
+    "1dc03921-21ac-4525-bc4f-0e14ae0910b8",
+    "fdc64eaf-314f-47ac-a811-d667b52feb79",
+    "86005093-1e30-46df-bf16-ae99f56a7dea",
+    "f930666a-11a8-4806-9b1b-1b3ca5e4f1c3",
+    "754d87d2-a863-405f-a8ab-bf5fbc98e65b",
+    "63947d6d-053a-4566-a665-0eaeb6221c0a",
+    "f1822188-1d72-45ef-b3af-b0c85c56c55f",
+    "60512e89-3c9f-4d8e-b809-ee73a90f44f2",
+    "2460bea4-7538-408c-ad7e-2057e6dd9c3d",
+    "7f22dda7-30d0-44f5-9fd9-605ebd63034e",
+    "e45ccd0f-645c-490a-b8ad-73fa7ace7d7d",
+    "4cbc9946-3285-4cd9-a35b-bd8db8f6d1f2",
+    "5fd3f476-9959-450f-a920-d725c1bc7f9f",
+    "d933560a-454e-4e50-bf3c-13b12cad59e5",
+    "fa4c8290-d986-4b0e-8643-409c4a39ddca",
+    "af96e210-5efc-4f77-bea0-bc36e2f913ca",
+    "33716139-d6f7-40c3-af7c-9067927a29a4",
+    "ae54fc14-d0e0-4ab4-8aa3-25e056ab2a61",
+    "eea7c61c-5e9b-4a32-9539-e7f493487b2c",
+    "aebe5073-8f13-4e2c-939d-cc9c5a451237",
+    "7150899a-5edb-44d9-b136-527d5d2bc3c0",
+    "f7adb3a2-cd96-40e6-b14f-da2c133cea4c",
+    "31e88bc8-f393-42aa-8da4-02335177be7a",
+    "2dc78ad1-7863-4f34-8413-3da681508156",
+    "f66ef538-ca31-4dc8-bbe7-22b9e5060095",
+    "c507880f-e15c-44e5-bcdc-6aa434facaa0",
+    "240d6fe6-87a6-4de4-8843-ffb0d8e820a3",
+    "a4b1e4aa-226e-4c4c-9a52-552c196e4ca8",
+    "f385d43d-e8f8-40b0-bb5b-0083a38531a7",
+    "65fe117d-94f6-4181-accc-52174247fd6d",
+    "01e7a63a-c8d9-4225-99ef-cb1120ee1525",
+    "d454d5c8-474f-4ceb-9c28-c6c2f1afd7f2",
+    "53bdd93a-37f2-488c-93b7-448092ce9988",
+    "74318bcd-e792-4050-8318-8071715055dc",
+    "c998f259-e8ea-4c3e-960c-5ad11323e95b",
+    "0ff92224-ec04-46fa-ae69-d106fa5d504c",
+    "c6be0913-9dc0-42c3-a60e-be1e6e810f24",
+    "acb4741d-878d-4760-9421-b7c4354db55a",
+    "6c072168-53d9-4f32-b2e0-2c233816a7ce",
+    "dd5d0613-576c-416b-9bf0-0eb7e066e36c"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "cQTI5pBlcQTI"
+    }
+  }
+}

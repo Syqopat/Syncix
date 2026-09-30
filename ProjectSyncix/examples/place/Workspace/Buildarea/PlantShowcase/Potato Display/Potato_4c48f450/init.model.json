@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Potato",
+  "syncix_id": "4c48f450-fa23-4e59-9209-a1a7aa7879d9",
+  "schema_version": 1,
+  "last_updated": 1790327691235,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          449.5,
+          436.2085,
+          -21.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7ede2fc2-e8ae-43ba-832e-a8f11f6ca425",
+    "1dd48ad2-16a5-47a0-a9c5-0cababd3e601",
+    "875f2090-f123-4419-8452-fb1bb5796475",
+    "ae5a220a-47ab-4314-bbb0-7acb2268d7a2",
+    "4206430e-a0f1-4db5-8ca6-18f0f4a3054e",
+    "82ffb7d7-9fed-4b1c-b666-3f4d82282398",
+    "3d85abd6-d743-4760-becd-e1b28e7c992b",
+    "13cb8687-863e-4322-a046-5228878119c8",
+    "2aca8eda-5a05-41fa-b3d5-2ee71e10654a",
+    "276266ab-8a61-4df1-bc9a-37c9e893069f",
+    "f4aa2a97-4bc5-419b-bfb4-b65de17fc513",
+    "0f0f1298-0ec8-455f-9390-c252717d60b4",
+    "27c25124-686c-4ce9-8cc2-73b307f7c490",
+    "15358aae-6ffe-45ed-bf81-95d3c91f7739"
+  ],
+  "parent": "724788f5-91c3-40b6-821b-32ef50873dba",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "758RAgQW758R"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Coconut",
+  "syncix_id": "6e549aa6-eb7a-4ff4-a624-6ae097623154",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "192f0d74-403b-4454-9c85-b6a8325132d4"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "7ef06796-255e-423c-b8fc-3a16969acc33",
+    "482d6895-198b-454d-b216-e63e72129515",
+    "c4350986-cef2-4372-a217-2008bfa6229f",
+    "ae00b5f5-b60a-4e75-b410-37e3d1ae139e",
+    "97d996ff-3a4b-432e-abf0-1a00dce24869",
+    "845427e8-e799-428b-9bf1-27e261b58cee",
+    "4d115424-8521-41e5-ac88-bb9b0aadfddb",
+    "97d8c593-7a75-413f-8742-c00be3a6189a",
+    "192f0d74-403b-4454-9c85-b6a8325132d4",
+    "4365bf50-a84c-40e4-a190-a50170aa4139"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "bicqRht7bicq"
+    }
+  }
+}

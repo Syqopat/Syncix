@@ -1,0 +1,70 @@
+{
+  "class_name": "Model",
+  "name": "Crystal Shrub",
+  "syncix_id": "943ff2c3-d736-49ca-8ee5-58e1125ba284",
+  "schema_version": 1,
+  "last_updated": 1790327691373,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.010543525,
+          1.9339134,
+          -0.11938262
+        ],
+        "rot": [
+          -0.500011,
+          -0.27882817,
+          -0.8199048,
+          0.0,
+          0.9467514,
+          -0.32196543,
+          0.86601907,
+          -0.16098624,
+          -0.47338617
+        ]
+      }
+    }
+  },
+  "children": [
+    "1aae3675-17fa-4d6f-bed1-33f38ace7b13",
+    "e69c4179-5ba0-4f33-9616-e9926cec32d3",
+    "aa96f789-1a63-47e9-b850-198129c8aaf3",
+    "2ca4513a-41eb-436c-b4b6-0d011f3a3307",
+    "0ce616f4-bdc5-4be2-8566-6b8071ff10b0",
+    "afeaf5db-801f-4c19-a432-408f47b7231f",
+    "5266ff5d-d9fa-4ade-bd2d-87af2b1f47c0",
+    "cba7c0ca-4fae-43c7-bd72-657a797f3906",
+    "59ec9005-654e-4e64-a699-71c9b7ab4dfa",
+    "73248e8b-5bbc-48a7-a86f-15a946d535fd",
+    "12e705c9-9df2-47eb-9f3e-8b681014fd25",
+    "39bffc4f-6ca3-4cd1-a1eb-6c63e162f56e",
+    "9813ac52-ff9f-4600-98cb-f46edca6443e",
+    "e6d36024-fec6-47a1-b28f-18da064bc020",
+    "6bd9ae52-f098-4e5a-9ea7-9ef4914304cf",
+    "f5ef27da-d34c-4660-bedf-d8a55bd6dfee",
+    "0704d33c-c42b-456a-947d-6b8ee64009b3",
+    "a9d41b9c-1a67-443e-b6a7-5bff340542c6",
+    "b9182f64-8326-423e-8cc6-5f5d50b9fd28",
+    "d0dd8aa3-d9c9-45b0-9e67-5e9ba142b9c1",
+    "1d428987-94d9-45bc-833c-9a1d286695ea",
+    "c86a1500-35b5-4eee-b4a3-c87bf5e38c42",
+    "7c501ae7-e87b-4f77-8658-ae560dd69d5e",
+    "ad301942-f74f-4642-a1c3-b5efca5293be",
+    "9d08d628-512f-4b00-b7e9-0633288c956e",
+    "29bb9e0f-c977-4f57-a64c-73a38636c143",
+    "3dcadb37-eb5f-4e37-9ed1-4effc341cadd"
+  ],
+  "parent": "b441de6d-6f88-49e2-93b9-dc9fb8aa64db",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NNTUD9sONNTU"
+    }
+  }
+}

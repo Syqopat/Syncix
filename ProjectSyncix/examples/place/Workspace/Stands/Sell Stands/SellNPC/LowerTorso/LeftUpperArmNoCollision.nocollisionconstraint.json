@@ -1,0 +1,25 @@
+{
+  "class_name": "NoCollisionConstraint",
+  "name": "LeftUpperArmNoCollision",
+  "syncix_id": "8c550440-a8a5-46f1-af98-0873c69ca65b",
+  "schema_version": 1,
+  "last_updated": 1790327691183,
+  "properties": {
+    "Enabled": {
+      "Boolean": true
+    },
+    "Part0": {
+      "Ref": "bb9ce7fb-0ead-4624-a251-06c7f1ada635"
+    },
+    "Part1": {
+      "Ref": "87df2956-3c1f-416d-8891-78d64d1bb898"
+    }
+  },
+  "children": [],
+  "parent": "bb9ce7fb-0ead-4624-a251-06c7f1ada635",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "raDMvomSraDM"
+    }
+  }
+}

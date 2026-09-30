@@ -1,0 +1,50 @@
+{
+  "class_name": "Model",
+  "name": "RotorAssembly",
+  "syncix_id": "7c244699-bf1b-429f-b23f-e866db393085",
+  "schema_version": 1,
+  "last_updated": 1790327691264,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "80e22f4c-b0da-452d-b496-48871274cde4"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          421.16544,
+          437.48502,
+          -90.05929
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "0e05606e-becd-49b7-a514-35489140575a",
+    "5da98747-8e3d-41b6-b6de-2030237734b6",
+    "1a3fee58-b03b-4d49-90fd-f6a8a92f0f0f",
+    "69f3f4f2-f288-41c0-8e04-80ac47beecd0",
+    "6dbbccb4-9891-4f3d-bfae-f90c243609dd",
+    "a7e2a1a6-1bbd-4e6a-929d-9b6baac5688a",
+    "80e22f4c-b0da-452d-b496-48871274cde4"
+  ],
+  "parent": "0a0f0ab8-9140-4cb6-9785-6787508beb2c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "yCKdIkZhyCKd"
+    }
+  }
+}

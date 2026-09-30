@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Durian",
+  "syncix_id": "dfaa8998-39c5-40a3-9d63-16cde0b25394",
+  "schema_version": 1,
+  "last_updated": 1790327691330,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "78b504ba-5304-432a-a258-f58fb6f5e561"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.070378624,
+          0.23501211,
+          -2.4091544
+        ],
+        "rot": [
+          -0.99772924,
+          -0.06735268,
+          -0.000007033349,
+          0.017442055,
+          -0.2582771,
+          -0.9659134,
+          0.06505504,
+          -0.9637202,
+          0.25886536
+        ]
+      }
+    }
+  },
+  "children": [
+    "6418c22b-2377-44c6-8553-a5ec5d264689",
+    "a4d396c0-0579-4cf6-a8c7-fe87e5fb54a1",
+    "a0217026-34e1-47f0-a391-d76dd34d0c2c",
+    "1cc90425-40f0-4bbf-bea9-5ef3299fbfd0",
+    "1f6bcfa2-d9db-4c51-a3ec-48313b186143",
+    "57de1f75-583a-409f-8723-13b456b2ee1f",
+    "c842d2dd-8206-4692-839f-924b3240bf5a",
+    "3ba0ac1d-c141-4848-9b95-709e3986d2b2",
+    "26a2937c-2419-4239-824a-6f062c5e64cf",
+    "4b22870b-69ee-4700-9da4-e63287d6b341",
+    "cf8f104d-1211-43cd-961f-eab5be10613c",
+    "92dad8c6-dcf6-4a61-9250-63ec9b8c2053",
+    "78b504ba-5304-432a-a258-f58fb6f5e561",
+    "5e98918b-11f5-4de8-9292-c1af99580d56",
+    "fd4900b0-95f9-4809-beea-741ccc56d7d3",
+    "56810ca7-c489-456d-8ef7-1247efb7069c",
+    "13f25289-f6a7-4740-8ef1-faff0a3d7c08",
+    "18a9526f-87a2-41e6-a0ba-ee7f20a31c89",
+    "c407311b-6818-4446-8920-00a099b60027",
+    "33f1ad9c-42e7-401c-94bb-dfc18833cf4d",
+    "95491a8f-ec12-4b62-84b9-ddba82aa472a",
+    "4b1b557e-7c9d-40a2-8e08-2e85a148b332",
+    "cf15a756-62d9-4398-b40a-3ff578b83fa4",
+    "db6ec125-8b38-48cb-938c-81ee91620c3f",
+    "1ac7bce3-0621-4ac3-92ea-14e5279d6c1c",
+    "bfa80c2b-cd22-4432-9155-140484d17661",
+    "18c98811-c866-485d-9efd-1c8f8a08c1a7",
+    "3f0093ab-7f16-46b0-a5e8-566129bf5aef"
+  ],
+  "parent": "5cdc1e35-1d71-47bf-bd8d-46a772f57cd3",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "8KAgDHum8KAg"
+    }
+  }
+}

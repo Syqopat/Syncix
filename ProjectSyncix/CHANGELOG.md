@@ -349,7 +349,7 @@ versions follow [Semantic Versioning](https://semver.org/).
 - The Studio toolbar button no longer shows Roblox's built-in **Robux** icon,
   which had nothing to do with Syncix. It shows the name only; a real icon needs
   an image uploaded to Roblox, which is the account owner's decision.
-  `vscode-extension/resources/logo.png` is ready to upload.
+  `packages/vscode-extension/resources/logo.png` is ready to upload.
 
 ### Known limitations
 

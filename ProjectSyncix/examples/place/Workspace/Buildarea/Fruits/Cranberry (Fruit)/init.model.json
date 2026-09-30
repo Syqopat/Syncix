@@ -1,0 +1,52 @@
+{
+  "class_name": "Model",
+  "name": "Cranberry (Fruit)",
+  "syncix_id": "55a71de1-c6e1-4373-8913-1854bdb2ffda",
+  "schema_version": 1,
+  "last_updated": 1790327691225,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.0,
+          -447.15625
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "d720017b-52f9-47a2-83cd-174d34c5f45d",
+    "82578220-f9c9-4ebe-973a-468b0cda1699",
+    "e636807b-9ff4-4767-ac48-41785957b2ea",
+    "80f57800-5e98-4ac9-bf86-968658584e00",
+    "a394ed14-c6d4-4a32-b0f9-65538705604e",
+    "b2e863f6-6907-4a35-ad5e-12a72c66c169",
+    "75c8b3e0-1ca1-4574-8104-bcbdd3f1912e",
+    "f2b0fe2b-3112-47e3-ac1e-f442ae86f3e5",
+    "18ad13d7-84e1-478e-b287-d9e585eace94"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "Cg03LzZrCg03"
+    }
+  }
+}

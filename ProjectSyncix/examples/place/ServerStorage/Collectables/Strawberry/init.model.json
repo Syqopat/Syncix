@@ -1,0 +1,61 @@
+{
+  "class_name": "Model",
+  "name": "Strawberry",
+  "syncix_id": "a381eba1-5b32-4293-8165-4af8c5f35100",
+  "schema_version": 1,
+  "last_updated": 1790327691335,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "a8eaeddf-3bd7-4ec6-a477-c67a52377e18"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          0.4773749,
+          0.009538889,
+          0.027704805
+        ],
+        "rot": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "684192f5-cae7-46bb-9741-758ee7c137d3",
+    "1c8a2a16-88a0-43e1-8e0f-68d0ca6d2ba3",
+    "c5b118c7-1865-4989-9a0c-17fc4dcf9841",
+    "50c3ebd4-48c5-4e49-a3ee-1fb65bc5eab1",
+    "ff75fa2e-53f3-4c3a-bcf8-e1505c275f4b",
+    "fdc30e6f-b343-43f2-a29f-78a73123d1cd",
+    "0af26559-7fda-4ddc-8ea6-a33457ca2493",
+    "a8eaeddf-3bd7-4ec6-a477-c67a52377e18",
+    "6b68d9d1-5f89-46e1-b975-5952ba72060e",
+    "1a3d8764-195e-4fab-b3dc-3d700748391b",
+    "df954300-832a-48ca-b672-f158c902ce22",
+    "bda983f6-455f-4808-b10a-ff9908981c04",
+    "56ccaeb0-3719-416b-83cb-0bbdb9b1cf70",
+    "604e1473-f4db-4c25-b893-d402783b78db",
+    "13d007e5-e505-46ef-9c5e-102523d6729b",
+    "a82a29db-31cc-4fd2-a1db-d702f612ea09",
+    "8fe23be4-ab18-4a95-84c7-2fd108f6fd3e",
+    "1d4fecd0-e088-411d-92e5-ffda3e730391"
+  ],
+  "parent": "43115c48-2bbf-4c6b-99ea-2f3cf53d6ddd",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "tPWmJYgYtPWm"
+    }
+  }
+}

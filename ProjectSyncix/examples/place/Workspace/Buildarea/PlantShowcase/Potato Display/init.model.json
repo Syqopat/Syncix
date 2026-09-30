@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Potato Display",
+  "syncix_id": "724788f5-91c3-40b6-821b-32ef50873dba",
+  "schema_version": 1,
+  "last_updated": 1790327691235,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          444.0,
+          435.9585,
+          -19.95
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "4c48f450-fa23-4e59-9209-a1a7aa7879d9",
+    "f44862b6-d8a1-4d28-b615-387efe7151b8",
+    "94b9282d-16f7-4564-87e8-082401b8ee3e",
+    "0e0545fb-ccc9-4da4-99bc-8f6739c737a7"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NtU3TZ95NtU3"
+    }
+  }
+}

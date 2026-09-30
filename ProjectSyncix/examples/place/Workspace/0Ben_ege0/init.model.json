@@ -1,0 +1,65 @@
+{
+  "class_name": "Model",
+  "name": "0Ben_ege0",
+  "syncix_id": "0d58e42a-4559-4da9-a2f4-3262add4bb9e",
+  "schema_version": 1,
+  "last_updated": 1790327691324,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": "2769e2e3-5e0a-46ba-8bb7-3a6023e2e876"
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          437.25003,
+          -595.8505
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3392f69f-c141-4113-9efd-3c44ccdad45d",
+    "2b9f7fa5-7a23-4385-90c8-b29fa149124e",
+    "7c09117b-0c34-407a-86ee-20e6395c29b7",
+    "d12add81-07a7-4d77-bcc5-7805a3029854",
+    "9827b542-f9be-4fb0-935c-c6da98fa4258",
+    "c8c07cbb-45d4-405e-8f2c-d26a11d3fc9c",
+    "7c69cad4-6136-4ed8-824c-b7a52007989c",
+    "4fd215c4-cb7c-456b-ad70-9b395d775ccd",
+    "29d1ff6e-1ce7-447e-bcac-75cb0e451d50",
+    "6d31010c-a1c7-4bbd-ae25-d3dc3c1ac6c6",
+    "0616a00a-5d3e-41ec-8ca1-675be5b4fc5e",
+    "e85cb29a-5006-4e6d-92d1-991bd3b1a524",
+    "0889551c-e7d8-427e-a026-2de2f17f39bf",
+    "9c3db465-3c79-41df-9b84-357c443f9b9c",
+    "59041642-0cdd-4cda-8e47-56a21e273862",
+    "c6c10e14-da71-4d36-b57b-5f4abe3e6ccf",
+    "4a7bc7d3-3ce4-461d-8975-13ba4311c54f",
+    "44f82bff-5016-45b0-88c9-148b81797b2e",
+    "2769e2e3-5e0a-46ba-8bb7-3a6023e2e876",
+    "0f78a389-8fa0-47be-b93e-352cf5c6d1ea",
+    "728ad37e-2eec-480a-8a57-8c3ca58d3a58",
+    "ea34498f-97ee-4560-bcbe-b59206cd2f55"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000001",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "DNUDfDvtDNUD"
+    }
+  }
+}

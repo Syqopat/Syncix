@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "LeftAnkleBallSocket",
+  "syncix_id": "bd2b2f43-3527-4b63-83bc-8b34837232a9",
+  "schema_version": 1,
+  "last_updated": 1790327691263,
+  "properties": {
+    "Attachment0": {
+      "Ref": "1698be2e-03bd-4a38-a0cd-00777f3ea6a3"
+    },
+    "Attachment1": {
+      "Ref": "e0ed25fb-e577-4f78-8473-97a2c5eb2486"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 24.04297256469727
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -10.0
+    },
+    "TwistUpperAngle": {
+      "Number": 10.0
+    },
+    "UpperAngle": {
+      "Number": 10.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "989772a9-67f5-459a-a3f1-679af030929d",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "f2kg5zBBf2kg"
+    }
+  }
+}

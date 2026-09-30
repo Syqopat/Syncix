@@ -1,0 +1,47 @@
+{
+  "class_name": "Model",
+  "name": "Celestial Tree Display",
+  "syncix_id": "3c48fb22-e78f-4782-b82c-74640f98fb48",
+  "schema_version": 1,
+  "last_updated": 1790327691234,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          522.0,
+          440.2208,
+          28.05
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "3a6f1941-0557-4410-89ef-2777652e7511",
+    "e41bb78d-c6db-4a66-883b-cbb60c540502",
+    "38d0a815-5a81-4148-b983-df3f921bc957",
+    "f4294a4a-f476-4730-915c-61f67c7062dd"
+  ],
+  "parent": "cd59b290-b0c7-40ef-bf0b-fcaf548b697c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "O984kUuKO984"
+    }
+  }
+}

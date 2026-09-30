@@ -1,0 +1,57 @@
+{
+  "class_name": "Model",
+  "name": "Carrot",
+  "syncix_id": "8f739102-808e-4189-93db-fd89900a8ecc",
+  "schema_version": 1,
+  "last_updated": 1790327691238,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          413.5,
+          436.04315,
+          -21.011904
+        ],
+        "rot": [
+          0.0,
+          -1.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "6a199d3c-bba8-43ff-9153-ca85c3315822",
+    "8e1e032e-8ac6-44da-a4b5-abb8fac619f9",
+    "cf70893f-4e5d-4fba-acc5-e85a362ae23e",
+    "c8da4a3e-35a7-460c-9b22-10b38924375c",
+    "f66989da-f8d9-47a9-a24f-f281e33b96a5",
+    "cf7dc256-d36f-48a6-ba14-2a725560ce43",
+    "76cd153e-054b-4723-bc5c-d20719fb7503",
+    "85c8205b-80b0-4853-945f-4d81da9c96e4",
+    "1a499dd4-2a73-4979-afcc-1941fdc462db",
+    "7497c133-1b07-4511-bd31-63b2b0537fa4",
+    "e6c9b635-a197-41c2-b9e7-a2def25af58a",
+    "bfb26c3c-7b70-4f47-a089-eb93f6407090",
+    "73e667c0-1017-44d1-9c22-746e955eb3ce",
+    "630329c7-a214-49de-a8e6-a474c1aac099"
+  ],
+  "parent": "146af2ee-4467-4e01-af56-f98c2bb24dd2",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "EVKtsyeeEVKt"
+    }
+  }
+}

@@ -96,7 +96,7 @@ png = (
 
 target = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "vscode-extension", "resources", "icon.png",
+    "packages", "vscode-extension", "resources", "icon.png",
 )
 open(target, "wb").write(png)
 print("  wrote: %s (%dx%d)" % (os.path.basename(target), SIZE, SIZE))

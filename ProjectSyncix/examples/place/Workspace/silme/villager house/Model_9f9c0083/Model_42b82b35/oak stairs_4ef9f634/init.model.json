@@ -1,0 +1,45 @@
+{
+  "class_name": "Model",
+  "name": "oak stairs",
+  "syncix_id": "4ef9f634-9a26-4337-acfa-754175ee51f6",
+  "schema_version": 1,
+  "last_updated": 1790327691174,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1003.6708,
+          825.2236,
+          -108.22646
+        ],
+        "rot": [
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          -0.99999356,
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "368a09f3-2000-4eea-b3bb-ea9bdbf444f8",
+    "d65ed0f4-41af-445d-8af1-1c2d3b8ff0a2"
+  ],
+  "parent": "42b82b35-0562-4468-8f0a-9c191a429982",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "d8yh7qtZd8yh"
+    }
+  }
+}

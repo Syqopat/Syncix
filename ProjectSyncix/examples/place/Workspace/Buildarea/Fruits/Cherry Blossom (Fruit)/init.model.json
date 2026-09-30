@@ -1,0 +1,53 @@
+{
+  "class_name": "Model",
+  "name": "Cherry Blossom (Fruit)",
+  "syncix_id": "4e6eaf94-b489-4625-8429-cd2dbe8d3b5a",
+  "schema_version": 1,
+  "last_updated": 1790327691227,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.0,
+          -502.46875
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "01b2e26b-9a3b-4467-bfc9-f2dede710bd0",
+    "5e573d12-8277-4a40-a79d-4aa7935edcfe",
+    "4001ee07-5705-41a1-bb2b-82f60a5fe8a3",
+    "63720d9d-30ae-4dcc-b84e-77316b647224",
+    "bd4e3020-ce79-48db-a7a8-48edbd35374d",
+    "5ac1d3ac-2dac-4752-85a6-58f1f888c9df",
+    "9db10226-b22c-4ea8-bfc3-8f57cf0a62aa",
+    "e1102998-c801-4f59-bcc1-03b0499b6e4c",
+    "73fbeb71-0dd0-48c9-b575-225787110faf",
+    "0d898538-f29a-4e10-bd55-303a59857df2"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "UYOby7lxUYOb"
+    }
+  }
+}

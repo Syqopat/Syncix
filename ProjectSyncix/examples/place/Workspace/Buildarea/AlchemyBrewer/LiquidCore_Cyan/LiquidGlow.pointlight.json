@@ -1,0 +1,35 @@
+{
+  "class_name": "PointLight",
+  "name": "LiquidGlow",
+  "syncix_id": "e254a98a-e395-45e2-ab61-020291617aa5",
+  "schema_version": 1,
+  "last_updated": 1790327691260,
+  "properties": {
+    "Brightness": {
+      "Number": 3.5999999046325684
+    },
+    "Color": {
+      "Color3": {
+        "r": 0.27450982,
+        "g": 0.88235295,
+        "b": 1.0
+      }
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "Range": {
+      "Number": 24.0
+    },
+    "Shadows": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "02a049e4-cfbb-43c6-8e04-a21d9dcae78b",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "DODBFcLtDODB"
+    }
+  }
+}

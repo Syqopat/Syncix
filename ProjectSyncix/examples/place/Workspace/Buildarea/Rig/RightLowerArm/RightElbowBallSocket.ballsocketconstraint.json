@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "RightElbowBallSocket",
+  "syncix_id": "497e64d2-791b-4bd5-86f3-2265b7e6d9c3",
+  "schema_version": 1,
+  "last_updated": 1790327691264,
+  "properties": {
+    "Attachment0": {
+      "Ref": "fe427a55-2f00-411f-b00f-4e1353bc1a85"
+    },
+    "Attachment1": {
+      "Ref": "4e51092b-0b92-49de-8efc-a9f05ffd6ecf"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 52.44775390625
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": 5.0
+    },
+    "TwistUpperAngle": {
+      "Number": 120.0
+    },
+    "UpperAngle": {
+      "Number": 20.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "9ae48578-f750-43dc-a326-85e21d1428b5",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "NqUJqpTnNqUJ"
+    }
+  }
+}

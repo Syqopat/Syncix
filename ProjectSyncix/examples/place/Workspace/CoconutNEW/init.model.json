@@ -1,0 +1,42 @@
+{
+  "class_name": "Model",
+  "name": "CoconutNEW",
+  "syncix_id": "8ad9ae1e-b4fa-467e-873f-f15fea54d0b2",
+  "schema_version": 1,
+  "last_updated": 1790327691323,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1202.8096,
+          436.06638,
+          -428.7188
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "4f2522a5-eda5-47a6-b8da-23449140bdda",
+    "d869c077-ca9c-41e4-b0c9-a4f0b6367d61",
+    "3d014066-bf7d-4033-b6a5-844a90fd97a4",
+    "eb4c61d4-8823-4fc2-ba4f-f51833c3592f"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000001"
+}

@@ -1,0 +1,60 @@
+{
+  "class_name": "AnimationConstraint",
+  "name": "RightHip",
+  "syncix_id": "8cf39929-b8e1-4dd8-92bb-5937cb07a96f",
+  "schema_version": 1,
+  "last_updated": 1790327691184,
+  "properties": {
+    "Attachment0": {
+      "Ref": "a25fd261-a768-4593-aaca-051e11ee8386"
+    },
+    "Attachment1": {
+      "Ref": "4543fd7e-33ff-48e6-aa79-6d64cf95c741"
+    },
+    "Color": {
+      "BrickColor": "Bright blue"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IsKinematic": {
+      "Boolean": true
+    },
+    "MaxForce": {
+      "Number": 0.0
+    },
+    "MaxTorque": {
+      "Number": 3000.0
+    },
+    "Transform": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "b563be35-e834-487b-be75-916234033523",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "DMA2l5e0DMA2"
+    }
+  }
+}

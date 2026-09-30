@@ -1,0 +1,55 @@
+{
+  "class_name": "Model",
+  "name": "Sigma (Fruit)",
+  "syncix_id": "b55c061b-5165-4636-b7f4-c827a7701ed5",
+  "schema_version": 1,
+  "last_updated": 1790327691226,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1430.0,
+          435.4375,
+          -66.96875
+        ],
+        "rot": [
+          -1.0,
+          -8.742278e-8,
+          -8.742278e-8,
+          8.742278e-8,
+          -1.0,
+          0.0,
+          -8.742278e-8,
+          -7.642742e-15,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "1ce46259-a10c-4dab-8251-11e6f2c39819",
+    "6294ebcf-2215-423e-8494-f01280c3edb4",
+    "609e15d9-78dc-434c-b219-f25e21f29c8c",
+    "c3dcad10-bc3b-41c7-9343-bed6d86f4ee5",
+    "768bfd9b-1fca-4921-962c-7e5f9981829b",
+    "b5595941-ec2e-4213-8dce-96781aff03ba",
+    "5b6076c8-282f-451c-a40d-d3f036feb90b",
+    "018caaa7-fb36-4fc9-975c-7eb991daad6f",
+    "ad9fcf14-da39-4156-909d-96cd7120f77e",
+    "313c20be-36b4-4633-87d7-1ccd07e11e45",
+    "aca9098d-4e3b-4c4e-983f-51ae4a5eb866",
+    "a180d2ea-6aad-478d-b811-7eda65f027ff"
+  ],
+  "parent": "13831615-9df3-4311-978f-6ee998548c9e",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "lwaNu3UYlwaN"
+    }
+  }
+}

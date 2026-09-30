@@ -1,0 +1,58 @@
+{
+  "class_name": "ScreenGui",
+  "name": "ScreenGui",
+  "syncix_id": "fecce45c-4665-4b4b-b422-0d2f0af5bf51",
+  "schema_version": 1,
+  "last_updated": 1790327691389,
+  "properties": {
+    "AutoLocalize": {
+      "Boolean": true
+    },
+    "ClipToDeviceSafeArea": {
+      "Boolean": true
+    },
+    "DisplayOrder": {
+      "Number": 0.0
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "IgnoreGuiInset": {
+      "Boolean": false
+    },
+    "ResetOnSpawn": {
+      "Boolean": true
+    },
+    "RootLocalizationTable": {
+      "Ref": ""
+    },
+    "SafeAreaCompatibility": {
+      "String": "Enum.SafeAreaCompatibility.FullscreenExtension"
+    },
+    "ScreenInsets": {
+      "String": "Enum.ScreenInsets.CoreUISafeInsets"
+    },
+    "SelectionBehaviorDown": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorLeft": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorRight": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionBehaviorUp": {
+      "String": "Enum.SelectionBehavior.Escape"
+    },
+    "SelectionGroup": {
+      "Boolean": false
+    },
+    "ZIndexBehavior": {
+      "String": "Enum.ZIndexBehavior.Sibling"
+    }
+  },
+  "children": [
+    "951d7121-c66a-4a6c-9118-0975fe99cd28"
+  ],
+  "parent": "00000000-0000-4000-8000-000000000007"
+}

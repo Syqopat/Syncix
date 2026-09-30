@@ -1,0 +1,38 @@
+{
+  "class_name": "Accessory",
+  "name": "Accessory (Straw Hat)",
+  "syncix_id": "8bc9cc54-035e-474e-85cc-332f423909af",
+  "schema_version": 1,
+  "last_updated": 1790327691290,
+  "properties": {
+    "AttachmentPoint": {
+      "CFrame": {
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "84aa91b5-3f60-4fa5-bc47-b66e648ea948"
+  ],
+  "parent": "cbb9313e-3f7f-4055-8604-5d3209de02ca",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "04AMpJlx04AM"
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "class_name": "Model",
+  "name": "Fruit",
+  "syncix_id": "40ca6b22-895e-4136-8f12-3af632b4e6a6",
+  "schema_version": 1,
+  "last_updated": 1790327691240,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          465.3129,
+          440.8088,
+          3.2339787
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [
+    "21284094-8994-491d-ac5d-8d54e7380d57",
+    "8f45b0da-41b6-4839-8b46-1bda71d55430",
+    "f019db16-60c8-43a9-a22d-cde2ef603984",
+    "5e6c1716-6792-48a7-a4f9-270becbf7ded",
+    "900a10bb-b331-4c6b-95c8-bc56eb88949b",
+    "23638c8b-fe69-4f70-8593-105ff1bfdd21",
+    "43c5bce1-7aea-43da-860d-8666dcde2d29",
+    "621cb595-1bb8-41ac-a4ba-99918296af26",
+    "8875e9e3-bde5-4d4f-8238-1204aa523499",
+    "47820881-9670-45e5-aebf-bfa9855282c0",
+    "c624103d-98d7-418d-80a1-28839afbf863",
+    "ac438a65-1cf3-4047-8823-7961dcfe8be3",
+    "4d2badaa-c79a-4755-99d4-3830604d5b11",
+    "ec4e068e-fbe6-4c50-be88-e7c7d9b05135",
+    "e48d2260-28dd-4e77-88d3-a20fda8963b1",
+    "a5ff6077-0cb5-4e9f-96b7-e1ce9e625884",
+    "231e28ce-770f-48f5-bbe7-f67ba5391691",
+    "0bc82fa7-f394-43a8-a8d7-8da55d6a54cc",
+    "c8c50238-0213-4799-a23b-5e6ba0f45bad",
+    "7dddcd83-bcb3-4ba6-a6b1-dc7c68105c27",
+    "6d188a43-cba5-4b07-9f4c-b9f4eb39a3c5",
+    "21801916-0084-43f0-87f6-37807e3b18b0",
+    "d6a2ca2e-1939-4dfd-be36-fe75a7a018c9",
+    "681ab4af-c3ed-4ea8-878e-12a514efe532",
+    "e2676967-d962-43b6-8f63-22ca3fe848ef",
+    "ec1726cd-59f6-4817-ba75-7b19325eb17d",
+    "2166de5b-2dcf-48e5-a126-3b1118128db2",
+    "a4b88f7a-5ed2-4da4-8460-fb9ea29264ed"
+  ],
+  "parent": "e8efb75a-2dab-499c-a0ed-4cb7083bc303",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "BegBuiCABegB"
+    }
+  }
+}

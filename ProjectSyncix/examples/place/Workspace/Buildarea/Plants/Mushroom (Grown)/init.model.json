@@ -1,0 +1,73 @@
+{
+  "class_name": "Model",
+  "name": "Mushroom (Grown)",
+  "syncix_id": "7193455c-c10c-434d-8c5f-b33324648e68",
+  "schema_version": 1,
+  "last_updated": 1790327691216,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1540.0845,
+          442.6084,
+          -244.30035
+        ],
+        "rot": [
+          0.9802466,
+          -0.19777913,
+          0.00009549863,
+          -0.00008106232,
+          0.00008106232,
+          1.0,
+          -0.19777913,
+          -0.9802466,
+          0.000063420885
+        ]
+      }
+    }
+  },
+  "children": [
+    "778deb6c-a159-4d60-9915-e3598c7a0d7d",
+    "e685d703-5247-43a3-b46f-17bec6b936bf",
+    "c2161af2-61aa-4678-8503-4fddf29d190d",
+    "f311cba8-5485-4fa6-b996-5de9f63d8414",
+    "27102b2e-097b-436a-a1b6-fc00351b6193",
+    "5186458c-2edb-4c6f-9ca8-20ec75736fd3",
+    "07151d17-5854-480f-baab-e32d57a6fef3",
+    "c79405fa-4f9f-45f6-b653-3ac0161bbf71",
+    "3ef4f2b5-b12f-4e92-933a-55fe5750050d",
+    "4d581057-b08e-4728-9aae-7d3ca2848f1b",
+    "fe9bab6a-33db-4c28-8c54-c15c5544d6aa",
+    "86d4a206-7db0-4918-a4b9-6d296782d943",
+    "12194d11-970d-4d49-85e1-ce34edb3611c",
+    "e2661d0a-e8e1-4bc2-8529-25a973098150",
+    "75d45f96-ab20-45a7-afd7-8604e24b0a58",
+    "3283cae7-df8f-4105-ba0e-64245730f22a",
+    "2b2dbfff-8920-4d00-97b2-9172bbd51ffe",
+    "73fefb2b-3eab-485b-8b88-44b4c40de38c",
+    "f0f084c9-c661-4c37-b6e6-c7bd7a991435",
+    "28c93ed3-8a79-4871-a36d-ec2541a59ca1",
+    "909b4bd8-97d2-435d-96ed-994fad409f45",
+    "932ceb13-8f7b-4ff6-8aa9-d50b32057f4e",
+    "06830ce5-3106-4514-8ba7-b7dfd07af7fd",
+    "c56d8db6-1496-4787-9649-97ac80ef23ec",
+    "b245ffba-ed48-4164-a9e0-6873965b597d",
+    "ab6cd3ed-236c-4665-90ed-cc8b38c0396e",
+    "2abf7be7-9038-4a92-a637-6eecd0a55079",
+    "60ddede6-dc1b-412b-9a3f-48504011e5cf",
+    "4def7da2-f49e-452c-a6d2-d4b9c50dc898",
+    "33da8902-a7dc-45eb-bcd2-0668ffcc7e43"
+  ],
+  "parent": "fab204c0-f898-461d-bec4-f0cf5c2444c1",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "FkaCuM8WFkaC"
+    }
+  }
+}

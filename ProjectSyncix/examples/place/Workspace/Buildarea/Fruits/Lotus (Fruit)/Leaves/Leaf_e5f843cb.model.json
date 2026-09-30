@@ -1,0 +1,42 @@
+{
+  "class_name": "Model",
+  "name": "Leaf",
+  "syncix_id": "e5f843cb-34d4-410f-9aa2-783688973250",
+  "schema_version": 1,
+  "last_updated": 1790327691221,
+  "properties": {
+    "ModelStreamingMode": {
+      "String": "Enum.ModelStreamingMode.Default"
+    },
+    "PrimaryPart": {
+      "Ref": ""
+    },
+    "WorldPivot": {
+      "CFrame": {
+        "pos": [
+          1429.5812,
+          436.218,
+          -281.59573
+        ],
+        "rot": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "children": [],
+  "parent": "a851e2ce-2a74-4c58-a220-9c6d82a41ace",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "BQyolMC6BQyo"
+    }
+  }
+}

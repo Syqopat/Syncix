@@ -1,0 +1,55 @@
+{
+  "class_name": "BallSocketConstraint",
+  "name": "LeftKneeBallSocket",
+  "syncix_id": "a324b555-514f-46c9-9dc9-4406f686a95c",
+  "schema_version": 1,
+  "last_updated": 1790327691181,
+  "properties": {
+    "Attachment0": {
+      "Ref": "a1179e16-3a54-498e-8848-cf91ff71927b"
+    },
+    "Attachment1": {
+      "Ref": "f0190581-36f1-4daf-92fa-84f4086933d7"
+    },
+    "Color": {
+      "BrickColor": "New Yeller"
+    },
+    "Enabled": {
+      "Boolean": true
+    },
+    "LimitsEnabled": {
+      "Boolean": true
+    },
+    "MaxFrictionTorque": {
+      "Number": 48.62691116333008
+    },
+    "Radius": {
+      "Number": 0.15000000596046448
+    },
+    "Restitution": {
+      "Number": 0.0
+    },
+    "TwistLimitsEnabled": {
+      "Boolean": true
+    },
+    "TwistLowerAngle": {
+      "Number": -120.0
+    },
+    "TwistUpperAngle": {
+      "Number": -5.0
+    },
+    "UpperAngle": {
+      "Number": 5.0
+    },
+    "Visible": {
+      "Boolean": false
+    }
+  },
+  "children": [],
+  "parent": "11f08a8c-00f6-4af8-a6a0-8c24fba10a6c",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "DAqI9g4wDAqI"
+    }
+  }
+}

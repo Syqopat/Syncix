@@ -1,0 +1,48 @@
+{
+  "class_name": "SpecialMesh",
+  "name": "Mesh",
+  "syncix_id": "fefb4a97-4e6b-49a1-b9da-3b3beabb210d",
+  "schema_version": 1,
+  "last_updated": 1790327691178,
+  "properties": {
+    "MeshId": {
+      "String": ""
+    },
+    "MeshType": {
+      "String": "Enum.MeshType.Head"
+    },
+    "Offset": {
+      "Vector3": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "Scale": {
+      "Vector3": {
+        "x": 1.25,
+        "y": 1.25,
+        "z": 1.25
+      }
+    },
+    "TextureId": {
+      "String": ""
+    },
+    "VertexColor": {
+      "Vector3": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      }
+    }
+  },
+  "children": [
+    "8fa4c793-29f8-4daf-9a6d-3b786ca21d22"
+  ],
+  "parent": "6e6d5dbf-7776-46ea-bfd0-77a7e34f313f",
+  "attributes": {
+    "_lemonadeUniqueId": {
+      "String": "3wVne7dd3wVn"
+    }
+  }
+}
