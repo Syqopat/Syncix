@@ -10,6 +10,14 @@
 //! SharedString, Ref, ...) are SKIPPED and their count is reported — never
 //! silently swallowed.
 
+mod enums;
+mod properties;
+mod services;
+
+pub(crate) use enums::*;
+pub(crate) use properties::*;
+pub(crate) use services::*;
+
 use crate::model::PropertyValue;
 
 /// A single imported instance.
@@ -22,247 +30,6 @@ pub struct ImportedNode {
     pub children: Vec<ImportedNode>,
 }
 
-/// Turns an Enum token number back into text.
-/// Only the values export knows; any other token is imported as its integer
-/// (see the "token" branch of read_property).
-fn token_to_enum(prop: &str, token: i64) -> Option<String> {
-    let item_name = match (prop, token) {
-        ("Material", 256) => "Plastic",
-        ("Material", 272) => "SmoothPlastic",
-        ("Material", 288) => "Neon",
-        ("Material", 512) => "Wood",
-        ("Material", 528) => "WoodPlanks",
-        ("Material", 784) => "Marble",
-        ("Material", 800) => "Slate",
-        ("Material", 816) => "Concrete",
-        ("Material", 832) => "Granite",
-        ("Material", 848) => "Brick",
-        ("Material", 864) => "Sand",
-        ("Material", 880) => "Cobblestone",
-        ("Material", 896) => "Rock",
-        ("Material", 1072) => "Foil",
-        ("Material", 1088) => "Metal",
-        ("Material", 1280) => "Grass",
-        ("Material", 1284) => "LeafyGrass",
-        ("Material", 1296) => "Limestone",
-        ("Material", 1328) => "Snow",
-        ("Material", 1344) => "Mud",
-        ("Material", 1360) => "Pavement",
-        ("Material", 1376) => "Asphalt",
-        ("Material", 1392) => "Salt",
-        ("Material", 1536) => "Ice",
-        ("Material", 1552) => "Glacier",
-        ("Material", 1568) => "Glass",
-        ("Material", 1584) => "ForceField",
-        ("Shape", 0) => "Ball",
-        ("Shape", 1) => "Block",
-        ("Shape", 2) => "Cylinder",
-        ("Shape", 3) => "Wedge",
-        ("Shape", 4) => "CornerWedge",
-        _ => return None,
-    };
-    let run_name = if prop == "Shape" { "PartType" } else { prop };
-    Some(format!("Enum.{}.{}", run_name, item_name))
-}
-
-fn sub_text(node_entry: roxmltree::Node, tag_text: &str) -> Option<f64> {
-    node_entry
-        .children()
-        .find(|c| c.has_tag_name(tag_text))
-        .and_then(|c| c.text())
-        .and_then(|t| t.trim().parse::<f64>().ok())
-}
-
-/// Enum.FontWeight's items by the number Roblox XML stores in <Weight>.
-const FONT_WEIGHTS: &[(u32, &str)] = &[
-    (100, "Thin"),
-    (200, "ExtraLight"),
-    (300, "Light"),
-    (400, "Regular"),
-    (500, "Medium"),
-    (600, "SemiBold"),
-    (700, "Bold"),
-    (800, "ExtraBold"),
-    (900, "Heavy"),
-];
-
-/// FontFace. Studio writes it as
-/// `<Font><Family><url>..</url></Family><Weight>400</Weight><Style>Normal</Style></Font>`
-/// (plus a CachedFaceId, which Roblox recomputes and we ignore).
-///
-/// Weight and style become the exact text PatchBuilder produces with tostring()
-/// ("Enum.FontWeight.Bold", "Enum.FontStyle.Italic"): PatchExecutor's decodeFont finds
-/// the enum by comparing that text, and anything else quietly turned into
-/// Regular/Normal on the Studio side. A missing <Weight>/<Style> takes Roblox's own
-/// default; a value we cannot name, or a missing family (Font.new refuses it), makes
-/// the property count as skipped instead of arriving as a different font.
-fn read_font(p: roxmltree::Node) -> Option<PropertyValue> {
-    let element_text = |tag: &str| {
-        p.children()
-            .find(|c| c.has_tag_name(tag))
-            .and_then(|c| c.text())
-            .map(str::trim)
-            .filter(|t| !t.is_empty())
-    };
-
-    let family_node = p.children().find(|c| c.has_tag_name("Family"))?;
-    let family = family_node
-        .children()
-        .find(|c| c.has_tag_name("url"))
-        .and_then(|c| c.text())
-        .or_else(|| family_node.text())
-        .unwrap_or("")
-        .trim()
-        .to_string();
-    if family.is_empty() {
-        return None;
-    }
-
-    let weight = match element_text("Weight") {
-        None => "Regular",
-        Some(t) => match t.parse::<u32>() {
-            Ok(n) => FONT_WEIGHTS.iter().find(|(v, _)| *v == n)?.1,
-            // Hand-written or generated files sometimes name the weight instead.
-            Err(_) => FONT_WEIGHTS.iter().find(|(_, name)| *name == t)?.1,
-        },
-    };
-    let style = match element_text("Style") {
-        None | Some("Normal") | Some("0") => "Normal",
-        Some("Italic") | Some("1") => "Italic",
-        Some(_) => return None,
-    };
-
-    Some(PropertyValue::Font {
-        family,
-        weight: format!("Enum.FontWeight.{}", weight),
-        style: format!("Enum.FontStyle.{}", style),
-    })
-}
-
-/// Turns a single <Properties> child element into a PropertyValue.
-/// None means the type is not supported.
-/// The member a property is written under in Roblox XML. Some properties carry their
-/// serialized name instead (a Part's Size is written "size", its Color "Color3uint8",
-/// its Shape "shape"); stored under those names the plugin could not apply them.
-/// None: a name that exists only for serialization and has no member (formFactorRaw).
-fn member_name(xml_name: &str) -> Option<&str> {
-    match xml_name {
-        "size" => Some("Size"),
-        "shape" => Some("Shape"),
-        "Color3uint8" => Some("Color"),
-        "formFactorRaw" | "formFactor" => None,
-        other => Some(other),
-    }
-}
-
-fn read_property(p: roxmltree::Node) -> Option<(String, PropertyValue)> {
-    let item_name = member_name(p.attribute("name")?)?.to_string();
-    let type_name = p.tag_name().name();
-    let text_value = p.text().unwrap_or("").trim().to_string();
-
-    let raw_value = match type_name {
-        "string" | "ProtectedString" => PropertyValue::String(text_value),
-        "bool" => PropertyValue::Boolean(text_value == "true"),
-        "float" | "double" | "int" | "int64" => PropertyValue::Number(text_value.parse().ok()?),
-        "token" => {
-            let number_value: i64 = text_value.parse().ok()?;
-            match token_to_enum(&item_name, number_value) {
-                Some(enum_text) => PropertyValue::String(enum_text),
-                // Skipping every token the table above does not name threw away most
-                // enum settings of a Studio export (TextXAlignment, SurfaceType,
-                // SizeConstraint, any Material added after the table was written).
-                // The integer alone is enough: pv_to_wire sends a Number as a plain
-                // JSON number, PatchExecutor's decodeEnum ignores anything that is not
-                // text, so the value lands in `instance[propName] = value`, and Roblox's
-                // enum setter accepts an item's integer Value just like the EnumItem or
-                // its Name. The echo guard expects the number, not the EnumItem, so
-                // Studio then reports the property back as "Enum.X.Y" (PatchBuilder's
-                // form) and that replaces the number in the model.
-                // Only for real members (PascalCase); an unknown serialization-only token
-                // would otherwise land in the files as a property nothing can apply.
-                None if item_name.starts_with(|c: char| c.is_ascii_uppercase()) => {
-                    PropertyValue::Number(number_value as f64)
-                }
-                None => return None,
-            }
-        }
-        "Font" => read_font(p)?,
-        "Vector3" => {
-            let x = sub_text(p, "X")? as f32;
-            let y = sub_text(p, "Y")? as f32;
-            let z = sub_text(p, "Z")? as f32;
-            if item_name == "CFrame" {
-                PropertyValue::CFrame {
-                    pos: [x, y, z],
-                    rot: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-                }
-            } else {
-                PropertyValue::Vector3 { x, y, z }
-            }
-        }
-        "CoordinateFrame" | "CFrame" => PropertyValue::CFrame {
-            pos: [
-                sub_text(p, "X").unwrap_or(0.0) as f32,
-                sub_text(p, "Y").unwrap_or(0.0) as f32,
-                sub_text(p, "Z").unwrap_or(0.0) as f32,
-            ],
-            rot: [
-                sub_text(p, "R00").unwrap_or(1.0) as f32,
-                sub_text(p, "R01").unwrap_or(0.0) as f32,
-                sub_text(p, "R02").unwrap_or(0.0) as f32,
-                sub_text(p, "R10").unwrap_or(0.0) as f32,
-                sub_text(p, "R11").unwrap_or(1.0) as f32,
-                sub_text(p, "R12").unwrap_or(0.0) as f32,
-                sub_text(p, "R20").unwrap_or(0.0) as f32,
-                sub_text(p, "R21").unwrap_or(0.0) as f32,
-                sub_text(p, "R22").unwrap_or(1.0) as f32,
-            ],
-        },
-        "Color3" => PropertyValue::Color3 {
-            r: sub_text(p, "R")? as f32,
-            g: sub_text(p, "G")? as f32,
-            b: sub_text(p, "B")? as f32,
-        },
-        "Color3uint8" => {
-            let package: u32 = text_value.parse().ok()?;
-            PropertyValue::Color3 {
-                r: ((package >> 16) & 0xFF) as f32 / 255.0,
-                g: ((package >> 8) & 0xFF) as f32 / 255.0,
-                b: (package & 0xFF) as f32 / 255.0,
-            }
-        }
-        "UDim2" => PropertyValue::UDim2 {
-            xs: sub_text(p, "XS")? as f32,
-            xo: sub_text(p, "XO")? as f32,
-            ys: sub_text(p, "YS")? as f32,
-            yo: sub_text(p, "YO")? as f32,
-        },
-        "Vector2" => PropertyValue::Vector2 {
-            x: sub_text(p, "X")? as f32,
-            y: sub_text(p, "Y")? as f32,
-        },
-        "UDim" => PropertyValue::UDim {
-            scale: sub_text(p, "S")? as f32,
-            offset: sub_text(p, "O")? as f32,
-        },
-        "NumberRange" => {
-            let parts: Vec<&str> = text_value.split_whitespace().collect();
-            if parts.len() >= 2 {
-                let min = parts[0].parse().ok()?;
-                let max = parts[1].parse().ok()?;
-                PropertyValue::NumberRange { min, max }
-            } else {
-                return None;
-            }
-        }
-        "Content" => {
-            let url = p.children().find(|c| c.has_tag_name("url")).and_then(|c| c.text()).unwrap_or("").trim().to_string();
-            PropertyValue::Content(url)
-        }
-        _ => return None,
-    };
-    Some((item_name, raw_value))
-}
 
 fn read_item(item: roxmltree::Node, skipped: &mut usize) -> Option<ImportedNode> {
     let class_name = item.attribute("class")?.to_string();
@@ -328,59 +95,6 @@ pub fn tally(node_list: &[ImportedNode]) -> usize {
     node_list.iter().map(|d| 1 + tally(&d.children)).sum()
 }
 
-/// Services a place file carries at its top level. There is exactly one of each in a
-/// place and `Instance.new` cannot create them, so an import must merge into the
-/// existing one instead of creating a copy.
-const SERVICE_CLASSES: &[&str] = &[
-    "Workspace",
-    "Players",
-    "Lighting",
-    "MaterialService",
-    "ReplicatedFirst",
-    "ReplicatedStorage",
-    "ServerScriptService",
-    "ServerStorage",
-    "StarterGui",
-    "StarterPack",
-    "StarterPlayer",
-    "Teams",
-    "SoundService",
-    "Chat",
-    "TextChatService",
-    "LocalizationService",
-    "TestService",
-    "VoiceChatService",
-    "ProximityPromptService",
-    "HttpService",
-    "InsertService",
-    "CollectionService",
-];
-
-/// Containers that exist once under their parent and cannot be created either.
-/// TextChatService's four configurations were missing here: an import tried to create
-/// copies, Studio refused, and a UIGradient inside one waited for a parent forever.
-const SINGLETON_CHILD_CLASSES: &[&str] = &[
-    "StarterPlayerScripts",
-    "StarterCharacterScripts",
-    "Terrain",
-    "BubbleChatConfiguration",
-    "ChatWindowConfiguration",
-    "ChatInputBarConfiguration",
-    "ChannelTabsConfiguration",
-];
-
-pub fn is_service(class_name: &str) -> bool {
-    SERVICE_CLASSES.contains(&class_name)
-}
-
-pub fn service_names() -> impl Iterator<Item = &'static str> {
-    SERVICE_CLASSES.iter().copied()
-}
-
-/// True for every class an import must map onto an existing instance rather than create.
-pub fn is_singleton(class_name: &str) -> bool {
-    is_service(class_name) || SINGLETON_CHILD_CLASSES.contains(&class_name)
-}
 
 #[cfg(test)]
 mod tests {
@@ -688,3 +402,4 @@ mod tests {
         );
     }
 }
+
