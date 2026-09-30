@@ -53,7 +53,56 @@ struct HttpReply {
     headers: std::collections::HashMap<String, String>,
 }
 
+/// The project's access token, read once per process.
+///
+/// Every call except /health needs it. The file is the fast path; when the CLI runs
+/// outside the project folder the core hands the token out through /health, which is
+/// the same door the Studio plugin uses.
+fn access_token(port: u16) -> String {
+    static CACHE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    CACHE
+        .get_or_init(|| token_from_file().unwrap_or_else(|| token_from_health(port)))
+        .clone()
+}
+
+fn token_from_file() -> Option<String> {
+    let mut directory: PathBuf = std::env::current_dir().ok()?;
+    for _ in 0..6 {
+        let path = directory.join(".syncix").join("token");
+        if let Ok(text) = std::fs::read_to_string(&path) {
+            let token = text.trim().to_string();
+            if !token.is_empty() {
+                return Some(token);
+            }
+        }
+        if !directory.pop() {
+            break;
+        }
+    }
+    None
+}
+
+fn token_from_health(port: u16) -> String {
+    match http_call(port, "GET", "/health", None, false) {
+        Ok(reply) => serde_json::from_str::<serde_json::Value>(&reply.body)
+            .ok()
+            .and_then(|v| v.get("token").and_then(|t| t.as_str()).map(String::from))
+            .unwrap_or_default(),
+        Err(_) => String::new(),
+    }
+}
+
 fn http_request(port: u16, http_method: &str, fs_path: &str, body: Option<&str>) -> Result<HttpReply, String> {
+    http_call(port, http_method, fs_path, body, true)
+}
+
+fn http_call(
+    port: u16,
+    http_method: &str,
+    fs_path: &str,
+    body: Option<&str>,
+    with_token: bool,
+) -> Result<HttpReply, String> {
     let address = format!("127.0.0.1:{}", port);
     let mut flow = TcpStream::connect(&address).map_err(|e| format!("could not connect to {}: {}", address, e))?;
     flow.set_read_timeout(Some(std::time::Duration::from_secs(15))).ok();
@@ -63,6 +112,10 @@ fn http_request(port: u16, http_method: &str, fs_path: &str, body: Option<&str>)
         "{} {} HTTP/1.1\r\nHost: 127.0.0.1:{}\r\nConnection: close\r\n",
         http_method, fs_path, port
     );
+    if with_token {
+        raw.push_str(&format!("X-Syncix-Token: {}
+", access_token(port)));
+    }
     if let Some(b) = body {
         raw.push_str("Content-Type: application/json\r\n");
         raw.push_str(&format!("Content-Length: {}\r\n", b.len()));
@@ -241,7 +294,7 @@ fn flags_ok(cli_args: &[String]) -> bool {
 
 /// "Not found", in the core's words when it can say more: it offers the closest targets.
 fn report_not_found(port: u16, dest: &str) {
-    let reason = fetch_json(port, &format!("/object?target={}", url_encode(dest)))
+    let reason = fetch_json(port, &format!("/model/object?target={}", url_encode(dest)))
         .and_then(|o| o.get("error")?.as_str().map(str::to_string))
         .unwrap_or_else(|| format!("Not found: {}", dest));
     report_error(&reason);
@@ -346,7 +399,7 @@ fn print_trash_hint(entries: &[crate::layout::TrashEntry], filter: &crate::layou
 /// (ambiguous-target warnings come from here).
 fn send_command(port: u16, event_type: &str, data: serde_json::Value) -> bool {
     let body = serde_json::json!({ "event_type": event_type, "data": data }).to_string();
-    match http_request(port, "POST", "/command", Some(&body)) {
+    match http_request(port, "POST", "/commands", Some(&body)) {
         Ok(c) if c.status_info == 200 => true,
         Ok(c) => {
             report_error(&format!("Rejected ({}):", c.status_info));
@@ -444,7 +497,7 @@ fn status_info() -> i32 {
     print_info("Syncix Core");
     println!("  version      : {} (protocol {})", text_value("version"), number_value("protocol"));
     println!("  project      : {}", text_value("project"));
-    println!("  folder       : {}", text_value("root"));
+    println!("  folder       : {}", crate::project::ProjectConfig::load().root.display());
     println!("  port         : {}", number_value("port"));
     println!("  uptime       : {} seconds", number_value("uptime_seconds"));
 
@@ -490,7 +543,7 @@ struct TreeRow {
 }
 
 fn fetch_tree(port: u16) -> Option<Vec<TreeRow>> {
-    let v = fetch_json(port, "/tree")?;
+    let v = fetch_json(port, "/model/tree")?;
     let array_value = v.as_array()?;
     Some(
         array_value.iter()
@@ -570,7 +623,7 @@ fn resolve_row<'a>(port: u16, node_list: &'a [TreeRow], dest: &str) -> Option<&'
     if let Some(row) = find_node(node_list, dest) {
         return Some(row);
     }
-    let object = fetch_json(port, &format!("/object?target={}", url_encode(dest)))?;
+    let object = fetch_json(port, &format!("/model/object?target={}", url_encode(dest)))?;
     let id = object.get("syncix_id")?.as_str()?;
     node_list.iter().find(|row| row.id == id)
 }
@@ -661,7 +714,7 @@ fn search(word: &str) -> i32 {
 
 fn property_list(dest: &str) -> i32 {
     let Some(port) = require_core() else { return 1 };
-    let fs_path = format!("/object?target={}", url_encode(dest));
+    let fs_path = format!("/model/object?target={}", url_encode(dest));
     let Some(o) = fetch_json(port, &fs_path) else {
         report_error("Could not read the instance.");
         return 1;
@@ -724,7 +777,7 @@ fn property_list(dest: &str) -> i32 {
 
 fn verify_input() -> i32 {
     let Some(port) = require_core() else { return 1 };
-    let Some(v) = fetch_json(port, "/verify") else {
+    let Some(v) = fetch_json(port, "/model/verify") else {
         report_error("Verification failed.");
         return 1;
     };
@@ -838,7 +891,7 @@ fn stop_core() -> i32 {
         println!("{}The core is not running.{}", YELLOW, RESET);
         return 0;
     };
-    match http_request(port, "POST", "/shutdown", Some("{}")) {
+    match http_request(port, "POST", "/core/stop", Some("{}")) {
         Ok(_) => {
             print_ok("Syncix Core stopped.");
             0
@@ -936,7 +989,7 @@ fn selftest() -> i32 {
         serde_json::json!({ "id": id, "property": "Position", "value": "12,7,-34" }),
     );
     wait_for_fresh_snapshot(port);
-    let position_ok = fetch_json(port, &format!("/object?target={}", id))
+    let position_ok = fetch_json(port, &format!("/model/object?target={}", id))
         .and_then(|o| o.get("properties")?.get("Position")?.get("Vector3").cloned())
         .map(|v| {
             (v.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0) - 12.0).abs() < 0.01
@@ -952,7 +1005,7 @@ fn selftest() -> i32 {
         serde_json::json!({ "id": id, "property": "Color", "value": "#ff8800" }),
     );
     wait_for_fresh_snapshot(port);
-    let color_ok = fetch_json(port, &format!("/object?target={}", id))
+    let color_ok = fetch_json(port, &format!("/model/object?target={}", id))
         .and_then(|o| o.get("properties")?.get("Color")?.get("Color3").cloned())
         .map(|v| (v.get("r").and_then(|x| x.as_f64()).unwrap_or(0.0) - 1.0).abs() < 0.02)
         .unwrap_or(false);
@@ -1027,7 +1080,7 @@ fn positional(cli_args: &[String]) -> Vec<String> {
 /// If the terminal is not interactive (piped input), the deletion is refused:
 /// treating an unanswered question as "yes" is, for a deletion, the wrong side to err on.
 fn confirm_delete(port: u16, dest: &str) -> bool {
-    let fs_path = format!("/object?target={}", url_encode(dest));
+    let fs_path = format!("/model/object?target={}", url_encode(dest));
     match fetch_json(port, &fs_path).filter(|d| d.get("error").is_none()) {
         Some(d) => {
             let child_entry = d
@@ -1064,7 +1117,7 @@ fn confirm_delete(port: u16, dest: &str) -> bool {
 }
 
 fn show_tags(port: u16, dest: &str) -> i32 {
-    let fs_path = format!("/object?target={}", url_encode(dest));
+    let fs_path = format!("/model/object?target={}", url_encode(dest));
     let Some(o) = fetch_json(port, &fs_path) else {
         report_error("Could not read the instance.");
         return 1;
@@ -1427,7 +1480,7 @@ fn build_sourcemap(cli_args: &[String]) -> i32 {
     let Some(port) = require_core() else { return 1 };
     let dest = output_file(cli_args, "sourcemap.json");
 
-    let reply = match http_request(port, "GET", "/sourcemap", None) {
+    let reply = match http_request(port, "GET", "/model/sourcemap", None) {
         Ok(c) if c.status_info == 200 => c.body,
         Ok(c) => {
             report_error(&format!("Could not fetch sourcemap ({})", c.status_info));
@@ -1459,9 +1512,9 @@ fn run_build(cli_args: &[String]) -> i32 {
     let dest_object = positionals.first().cloned().unwrap_or_default();
 
     let fs_path = if dest_object.is_empty() {
-        "/build".to_string()
+        "/model/export".to_string()
     } else {
-        format!("/build?target={}", url_encode(&dest_object))
+        format!("/model/export?target={}", url_encode(&dest_object))
     };
 
     let reply = match http_request(port, "GET", &fs_path, None) {
@@ -1514,9 +1567,8 @@ fn publish_place(cli_args: &[String]) -> i32 {
         report_error("Could not reach the core.");
         return 1;
     };
-    let root_dir = std::path::PathBuf::from(
-        health_json.get("root").and_then(|x| x.as_str()).unwrap_or("."),
-    );
+    let _ = &health_json;
+    let root_dir = crate::project::ProjectConfig::load().root;
 
     // Safety gate: the key must not have been written into the project.
     if crate::upload::has_key_leak(&root_dir) {
@@ -1541,7 +1593,7 @@ fn publish_place(cli_args: &[String]) -> i32 {
     };
 
     // Build the place file from the live model.
-    let reply = match http_request(port, "GET", "/build", None) {
+    let reply = match http_request(port, "GET", "/model/export", None) {
         Ok(c) if c.status_info == 200 => c,
         Ok(c) => {
             report_error(&format!("Could not build the place file ({}).", c.status_info));
@@ -1709,7 +1761,7 @@ fn import_tree(cli_args: &[String]) -> i32 {
 
     // Resolved ONCE, before anything is created: looked up again for every root it would
     // become ambiguous as soon as the import created a second object of that name.
-    let parent_id = match fetch_json(port, &format!("/object?target={}", url_encode(&parent_ref))) {
+    let parent_id = match fetch_json(port, &format!("/model/object?target={}", url_encode(&parent_ref))) {
         Some(o) => match o.get("syncix_id").and_then(|v| v.as_str()) {
             Some(id) => id.to_string(),
             None => {
@@ -1833,7 +1885,7 @@ fn import_rbxmx(cli_args: &[String]) -> i32 {
     // The parent is resolved to an identity ONCE, before anything is created. Looked up by
     // name for every root, it became ambiguous as soon as the import itself created a
     // second instance with that name (a place file carrying its own ReplicatedStorage).
-    let parent_id = match fetch_json(port, &format!("/object?target={}", url_encode(&parent_ref))) {
+    let parent_id = match fetch_json(port, &format!("/model/object?target={}", url_encode(&parent_ref))) {
         Some(o) => match o.get("syncix_id").and_then(|v| v.as_str()) {
             Some(id) => id.to_string(),
             None => {
@@ -2038,7 +2090,7 @@ pub fn execute_run(cli_args: &[String]) -> Option<i32> {
                 // a refused colour, so without this `set Part Color "Really red"` printed
                 // success here and nothing changed.
                 // A missing target is left to the core's reply, which offers close ones.
-                let object = fetch_json(port, &format!("/object?target={}", url_encode(h)))
+                let object = fetch_json(port, &format!("/model/object?target={}", url_encode(h)))
                     .filter(|o| o.get("error").is_none());
                 let class_name = object
                     .as_ref()

@@ -24,8 +24,10 @@ export function getBaseUrl(): string {
 }
 
 /** Core'un WebSocket RPC adresi. */
-export function getWsUrl(): string {
-    return baseUrl.replace(/^http/, 'ws') + '/rpc';
+export function getWsUrl(projectRoot?: string): string {
+    const token = readTokenFile(projectRoot);
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    return baseUrl.replace(/^http/, 'ws') + '/rpc' + query;
 }
 
 /** Is there a Syncix core on the given port? If so, returns its /health reply. */
@@ -65,17 +67,31 @@ export function readPortFile(projectRoot: string | undefined): number | undefine
     }
 }
 
+/** The project's access token: <project>/.syncix/token, written by the core. */
+export function readTokenFile(projectRoot: string | undefined): string | undefined {
+    if (!projectRoot) return undefined;
+    try {
+        const p = path.join(projectRoot, '.syncix', 'token');
+        if (!fs.existsSync(p)) return undefined;
+        const value = fs.readFileSync(p, 'utf8').trim();
+        return value.length > 0 ? value : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 /**
- * Do the two paths point at the same project?
- * Windows is case-insensitive; a trailing separator must not matter either.
+ * Does this core serve THIS project?
+ *
+ * The check used to compare the path /health reported with the open folder. The core
+ * no longer serves its path -- it carried the user's account name -- so the proof is
+ * the token instead: the file in this project and the token the core hands out are the
+ * same string only for this project's core.
  */
-function isSameProject(a: string | undefined, b: string | undefined): boolean {
-    if (!a || !b) return false;
-    const fixUp = (x: string) => {
-        const n = path.resolve(x).replace(/[\/]+$/, '');
-        return isWindows() ? n.toLowerCase() : n;
-    };
-    return fixUp(a) === fixUp(b);
+function isSameProject(health: any, projectRoot: string | undefined): boolean {
+    const mine = readTokenFile(projectRoot);
+    if (!mine) return false;
+    return typeof health?.token === 'string' && health.token === mine;
 }
 
 /**
@@ -88,13 +104,12 @@ function isSameProject(a: string | undefined, b: string | undefined): boolean {
  * It used to check only "is there a healthy Syncix on the port". With two
  * projects open at once, the second connected to the first one's core: the editor
  * said "connected", the tree showed, but every change went to ANOTHER game.
- * A silent and dangerous situation; /health already carries the `root` field,
- * so verifying costs nothing.
+ * A silent and dangerous situation; the token in .syncix/token identifies the project's
+ * own core, so verifying costs nothing.
  */
 export async function refreshBaseUrl(projectRoot?: string): Promise<any | undefined> {
     // Without a known project root there is nothing to verify; the old behaviour is kept.
-    const checkValue = (health: any) =>
-        !projectRoot || isSameProject(health?.root, projectRoot);
+    const checkValue = (health: any) => !projectRoot || isSameProject(health, projectRoot);
 
     const fromFile = readPortFile(projectRoot);
     if (fromFile) {

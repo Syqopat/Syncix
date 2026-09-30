@@ -555,7 +555,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // 1. Dependency Injection: RPC Client
-    rpcClient = new RpcManager();
+    rpcClient = new RpcManager(() => findProjectRoot());
 
     // Auto-connect on startup
     if (autoMode) {

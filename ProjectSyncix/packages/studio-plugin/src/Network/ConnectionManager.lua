@@ -136,6 +136,11 @@ local function versionCompatible(a: string?, b: string?): boolean
 	return aMajor == bMajor and aMinor == bMinor
 end
 
+-- The headers every authenticated call needs.
+function ConnectionManager:AuthHeaders(): { [string]: string }
+	return { ["X-Syncix-Token"] = self.accessToken or "" }
+end
+
 -- Sets the port by hand (called from SettingsPanel).
 function ConnectionManager:SetManualPort(port: number?)
 	self.manualPort = port
@@ -328,6 +333,9 @@ function ConnectionManager:Connect()
 
 		self.serverUrl = info.url
 		self.serverInfo = info
+		-- Every call except /health carries the project token. The plugin cannot read
+		-- files, so /health is where it gets it.
+		self.accessToken = info.token
 
 		-- The settings in syncix.toml arrive through the core. The plugin deliberately does not
 		-- keep them itself: with two separate sets it would be unclear which one
@@ -463,9 +471,20 @@ function ConnectionManager:Send(payload: any)
 	end
 	local url = self.serverUrl .. "/sync/push"
 
+	local headers = self:AuthHeaders()
+	headers["Content-Type"] = "application/json"
+
 	task.spawn(function()
 		local success, err = pcall(function()
-			HttpService:PostAsync(url, json, Enum.HttpContentType.ApplicationJson)
+			local response = HttpService:RequestAsync({
+				Url = url,
+				Method = "POST",
+				Headers = headers,
+				Body = json,
+			})
+			if not response.Success then
+				error(string.format("HTTP %d %s", response.StatusCode, tostring(response.Body)), 0)
+			end
 		end)
 
 		if success then
@@ -594,7 +613,8 @@ function ConnectionManager:StartPolling()
 			local success, response = pcall(function()
 				return HttpService:RequestAsync({
 					Url = self.serverUrl .. "/sync/poll?batch=" .. POLL_BATCH,
-					Method = "GET"
+					Method = "GET",
+					Headers = self:AuthHeaders(),
 				})
 			end)
 			if self.pollGeneration ~= generation then

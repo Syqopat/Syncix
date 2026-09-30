@@ -1,4 +1,5 @@
 #[allow(dead_code)]
+mod api;
 mod assets;
 #[allow(dead_code)]
 mod auth;
@@ -1016,6 +1017,7 @@ async fn main() {
         chaos_mode_enabled: false, // should normally come from the config
         project: cfg.clone(),
         actual_port,
+        access_token: api::auth::ensure_token(&cfg.root.to_string_lossy()),
         place_clash_state: Arc::new(std::sync::Mutex::new(None)),
     });
 

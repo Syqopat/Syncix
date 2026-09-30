@@ -37,8 +37,14 @@ pub struct HealthStatus {
     /// relying on it ("full_sync_parts": a FULL_SYNC may come in parts).
     pub features: Vec<&'static str>,
     pub project: String,
-    pub root: String,
     pub port: u16,
+    /// The token every other call has to carry.
+    ///
+    /// The Studio plugin cannot read files, so it takes the token from here. A web page
+    /// cannot: the core sends no CORS header, so a browser will not pass this body to
+    /// page scripts. The project's path is deliberately absent -- the name is enough to
+    /// tell projects apart and the path carried the user's account name.
+    pub token: String,
 
     // --- Status ---
     pub uptime_seconds: u64,
@@ -274,7 +280,7 @@ impl HealthMonitor {
             protocol: crate::project::PROTOCOL_VERSION,
             features: vec!["full_sync_parts"],
             project: project.name.clone(),
-            root: project.root.to_string_lossy().to_string(),
+            token: String::new(),
             port,
             uptime_seconds: self.start_time.elapsed().as_secs(),
             active_connections: self.active_connections.load(Ordering::SeqCst),
@@ -318,6 +324,7 @@ pub async fn health_handler(
     let mut status_info = state
         .health_monitor
         .get_status_with_count(&state.project, state.actual_port, number_value);
+    status_info.token = state.access_token.clone();
     // Conflict is exposed via /health: so CLI, editor, and Studio plugin
     // all learn it from the same place, avoiding three separate channels.
     status_info.place_conflict = state

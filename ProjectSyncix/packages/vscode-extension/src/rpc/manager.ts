@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import WebSocket from 'ws';
 import { MessageEnvelope, PendingRequestQueue, RequestPriority } from './queue';
-import { getWsUrl } from '../core/env';
+import { getWsUrl, readTokenFile } from '../core/env';
 
 export class RpcManager {
     private ws: WebSocket | null = null;
@@ -18,14 +18,19 @@ export class RpcManager {
     private _onConnectionChange = new vscode.EventEmitter<boolean>();
     public readonly onConnectionChange = this._onConnectionChange.event;
 
-    constructor() {}
+    /**
+     * @param projectRoot tells where to read .syncix/token; the core refuses a
+     * socket that carries no token.
+     */
+    constructor(private projectRoot?: () => string | undefined) {}
 
     public connect() {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             return;
         }
 
-        this.ws = new WebSocket(this.uri);
+        const token = readTokenFile(this.projectRoot?.());
+        this.ws = new WebSocket(this.uri, token ? { headers: { 'X-Syncix-Token': token } } : undefined);
 
         this.ws.on('open', () => {
             this.isConnected = true;

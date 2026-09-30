@@ -28,8 +28,15 @@ async-trait = "0.1"
 futures-util = "0.3"
 
 # HTTP Server & WebSockets
+#
+# No CORS layer: the API answers 127.0.0.1 only and never sends an
+# Access-Control-Allow-Origin header, so a browser will not hand a reply from this
+# core to page scripts. Writes are gated by the project token instead.
 axum = { version = "0.6", features = ["ws"] }
-tower-http = { version = "0.4", features = ["cors"] }
+
+# API description, generated from the handlers
+utoipa = { version = "3", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "3", features = ["axum"] }
 
 # File System Watcher
 notify = "6.0"
