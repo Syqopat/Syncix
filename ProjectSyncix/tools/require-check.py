@@ -90,7 +90,11 @@ def check():
 
         # 2. Undefined constant
         # Anything after a dot or colon is FIELD access, not a constant (Services.UUIDS).
-        constants = set(re.findall(r"(?<![A-Za-z_.:])([A-Z][A-Z_]{2,})(?![A-Za-z_])", code))
+        # A name followed by "=" is a table field or an assignment, not a use of a
+        # constant defined elsewhere (Protocol.lua is one table of them).
+        constants = set(
+            re.findall(r"(?<![A-Za-z_.:])([A-Z][A-Z_]{2,})(?![A-Za-z_])(?![ 	]*=[^=])", code)
+        )
         for constant in sorted(constants - defined):
             print("  %-44s %s is used but never defined" % (shown, constant))
             problems += 1
