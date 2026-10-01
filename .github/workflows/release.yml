@@ -68,13 +68,12 @@ jobs:
           npm run compile
           npx --yes @vscode/vsce package --out ../../syncix-${{ github.ref_name }}.vsix
 
-      - name: Notes from the commit messages
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: ProjectSyncix/cliff.toml
-          args: --latest --strip header
-        env:
-          OUTPUT: ProjectSyncix/RELEASE_NOTES.md
+      # The body comes from CHANGELOG.md, which is the written record of the release;
+      # entries there are drafted from the commit messages with git-cliff (cliff.toml)
+      # and then edited. A tag whose version has no section fails here rather than
+      # publishing an empty release page.
+      - name: Notes from the changelog
+        run: python tools/release-notes.py ${{ github.ref_name }} > RELEASE_NOTES.md
 
       - name: Publish
         uses: softprops/action-gh-release@v2
