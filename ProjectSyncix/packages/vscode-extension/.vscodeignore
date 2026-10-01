@@ -31,3 +31,8 @@ build.js
 # The extension runs resources/bin/<platform>-<arch>/, and the terminal command
 # lives in the extension's global storage, so nothing reads bin/.
 bin/**
+
+# Tests and their config are not part of the package.
+tests/**
+vitest.config.ts
+tsconfig.test.json

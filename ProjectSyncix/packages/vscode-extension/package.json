@@ -213,17 +213,19 @@
     "compile": "node build.js",
     "watch": "node build.js --watch",
     "package": "npm run vscode:prepublish && vsce package",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@types/node": "^16.18.34",
+    "@types/node": "^18.19.0",
     "@types/vscode": "^1.80.0",
     "@types/ws": "^8.5.5",
     "esbuild": "^0.28.2",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.7"
   },
   "repository": {
     "type": "git",
