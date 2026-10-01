@@ -1,98 +1,88 @@
 name: Release
 
-# Runs when a version tag (such as v0.1.1) is pushed, or by hand.
+# Runs on a version tag (v0.1.7), or by hand. It builds what the release page offers -
+# the editor package, the Studio plugin, the Windows core - and writes the notes from
+# the commit messages, so the page cannot disagree with the repository.
 #
-# The core binary has to be compiled on the platform it is built for, so it is
-# built on a Windows runner and then packed into the .vsix together with the
-# Studio plugin. The release ships a Windows binary only: the code is written to
-# be portable, but it has never been run on macOS or Linux, and shipping an
-# untested binary would be a claim rather than a fact. Roblox Studio does not
-# exist on Linux at all.
+# The release ships a Windows binary only: the code is written to be portable, but it
+# has never been run on macOS or Linux, and shipping an untested binary would be a claim
+# rather than a fact. Roblox Studio does not exist on Linux at all.
+#
+# Same reason as ci.yml for the paths: the source tree lives under ProjectSyncix/, while
+# workflow files have to be at the repository root.
 
-# Same reason as CI: the source tree lives under ProjectSyncix/, while workflow
-# files have to be at the repository root. See the note in ci.yml.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 defaults:
   run:
     working-directory: ProjectSyncix
 
-on:
-  push:
-    tags: ['v*']
-  workflow_dispatch:
-
 jobs:
-  core:
-    name: Core (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            folder: win32-x64
-            file: syncix-core.exe
+  release:
+    name: Build and publish the assets
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Versions match
+        run: python tools/check-versions.py
+
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: ProjectSyncix/core-engine
-      - name: Build
-        working-directory: ProjectSyncix/core-engine
-        run: cargo build --release --target ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: core-${{ matrix.folder }}
-          path: ProjectSyncix/core-engine/target/${{ matrix.target }}/release/${{ matrix.file }}
+          workspaces: ProjectSyncix/packages/core-engine
+      - name: Build the core
+        working-directory: ProjectSyncix/packages/core-engine
+        run: cargo build --release
 
-  package:
-    name: VSIX package
-    needs: core
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ProjectSyncix/packages/vscode-extension/package-lock.json
+
       - uses: CompeyDev/setup-rokit@v0.1.2
         with:
           path: ProjectSyncix
-
       - name: Build the Studio plugin
-        run: rojo build studio-plugin/default.project.json -o vscode-extension/resources/SyncixPlugin.rbxm
+        run: rojo build packages/studio-plugin/default.project.json -o packages/vscode-extension/resources/SyncixPlugin.rbxm
 
-      - name: Download the binaries
-        uses: actions/download-artifact@v4
-        with:
-          path: ProjectSyncix/downloaded
-
-      - name: Place the binaries
+      - name: Package the extension
+        shell: bash
         run: |
-          for d in downloaded/core-*; do
-            folder="${d#downloaded/core-}"
-            mkdir -p "vscode-extension/resources/bin/$folder"
-            cp "$d"/* "vscode-extension/resources/bin/$folder/"
-            chmod +x "vscode-extension/resources/bin/$folder/"* || true
-          done
-          find vscode-extension/resources/bin -type f -exec ls -la {} \;
-
-      - name: Package
-        working-directory: ProjectSyncix/vscode-extension
-        run: |
-          npm ci || npm install
+          mkdir -p packages/vscode-extension/resources/bin/win32-x64
+          cp packages/core-engine/target/release/syncix-core.exe packages/vscode-extension/resources/bin/win32-x64/
+          cd packages/vscode-extension
+          npm ci
           npm run compile
-          npx --yes @vscode/vsce package --out ../syncix.vsix
+          npx --yes @vscode/vsce package --out ../../syncix-${{ github.ref_name }}.vsix
 
-      - name: Attach to the release
+      - name: Notes from the commit messages
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: ProjectSyncix/cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: ProjectSyncix/RELEASE_NOTES.md
+
+      - name: Publish
         uses: softprops/action-gh-release@v2
         with:
-          files: ProjectSyncix/syncix.vsix
-          body: |
-            Install: download syncix.vsix, then in VS Code open the Extensions
-            panel and choose "..." > "Install from VSIX...".
-
-            The Studio plugin and the core binary ship inside the package;
-            there is nothing else to download.
+          body_path: ProjectSyncix/RELEASE_NOTES.md
+          # GitHub attaches the source archives itself; these are the built files a
+          # user should not have to build.
+          files: |
+            ProjectSyncix/syncix-${{ github.ref_name }}.vsix
+            ProjectSyncix/packages/vscode-extension/resources/SyncixPlugin.rbxm
+            ProjectSyncix/packages/core-engine/target/release/syncix-core.exe
