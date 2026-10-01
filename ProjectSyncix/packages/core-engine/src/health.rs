@@ -58,6 +58,9 @@ pub struct HealthStatus {
     pub loops_detected: usize,
     pub plugin_queued: usize,
     pub plugin_coalesced: usize,
+    /// Objects the plugin found changing many times a second. The plugin's Output names
+    /// them; this is how the editor and the CLI can see that it happened at all.
+    pub plugin_floods: usize,
 
     /// Which place is this folder bound to? None if it was never bound.
     ///
@@ -187,6 +190,7 @@ pub struct HealthMonitor {
     outbound_to_studio: AtomicUsize,
     plugin_queued: AtomicUsize,
     plugin_coalesced: AtomicUsize,
+    plugin_floods: AtomicUsize,
     activity_total: AtomicUsize,
     activity_in: AtomicUsize,
     activity_out: AtomicUsize,
@@ -208,6 +212,7 @@ impl HealthMonitor {
             outbound_to_studio: AtomicUsize::new(0),
             plugin_queued: AtomicUsize::new(0),
             plugin_coalesced: AtomicUsize::new(0),
+            plugin_floods: AtomicUsize::new(0),
             activity_total: AtomicUsize::new(0),
             activity_in: AtomicUsize::new(0),
             activity_out: AtomicUsize::new(0),
@@ -240,8 +245,9 @@ impl HealthMonitor {
     /// The Studio plugin reports its own BatchQueue counters.
     /// Only this way can we measure whether merging really works:
     /// queued is how many changes came in, coalesced is how many were merged into one message.
-    pub fn set_plugin_metrics(&self, queued: usize, coalesced: usize) {
+    pub fn set_plugin_metrics(&self, queued: usize, coalesced: usize, floods: usize) {
         self.plugin_queued.store(queued, Ordering::SeqCst);
+        self.plugin_floods.store(floods, Ordering::SeqCst);
         self.plugin_coalesced.store(coalesced, Ordering::SeqCst);
     }
 
@@ -294,6 +300,7 @@ impl HealthMonitor {
             loops_detected: self.loop_detector.total_count(),
             plugin_queued: self.plugin_queued.load(Ordering::SeqCst),
             plugin_coalesced: self.plugin_coalesced.load(Ordering::SeqCst),
+            plugin_floods: self.plugin_floods.load(Ordering::SeqCst),
             object_count: 0,
             bound_place: None,
             place_conflict: None,

@@ -146,7 +146,7 @@ fn record_metrics(state: &Arc<AppState>, payload: &Payload) {
 
     state
         .health_monitor
-        .set_plugin_metrics(number("queued"), number("coalesced"));
+        .set_plugin_metrics(number("queued"), number("coalesced"), number("floods"));
 
     // The plugin used to be the only side checking versions, so an older plugin that
     // did not check was accepted in silence and the mismatch surfaced as odd behaviour.

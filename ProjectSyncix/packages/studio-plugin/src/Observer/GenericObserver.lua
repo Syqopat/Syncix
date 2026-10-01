@@ -43,6 +43,17 @@ local function isPlayerCharacter(inst: Instance): boolean
     return false
 end
 
+--- Is this object inside one of the synced services? Asked before walking up to a
+--- parent, so nothing outside the sync scope is tracked on the way.
+local function insideSyncedService(inst: Instance): boolean
+	for _, service in ipairs(Services.List()) do
+		if inst == service or inst:IsDescendantOf(service) then
+			return true
+		end
+	end
+	return false
+end
+
 local GenericObserver = {}
 GenericObserver.__index = GenericObserver
 
@@ -97,6 +108,17 @@ function GenericObserver:HandleInstanceAdded(instance: Instance, isBootstrap: bo
     if isPlayerCharacter(instance) then return end
 
     if self.tracked[instance] then return end
+
+    -- A copied subtree (Ctrl+D, paste, a clone) arrives as one event per instance, and a
+    -- child's CREATE names its parent by the identity the parent carries RIGHT THEN. With
+    -- the child handled first, that identity still belonged to the ORIGINAL, so the copy's
+    -- children were created inside the original. The parent is keyed first, so the child
+    -- can only ever name the copy.
+    local above = instance.Parent
+    if above and not self.tracked[above] and above ~= game and insideSyncedService(above) then
+        self:HandleInstanceAdded(above, isBootstrap)
+    end
+
     self.tracked[instance] = true
 
     local uuid = instance:GetAttribute("__syncix_id")

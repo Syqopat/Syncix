@@ -118,12 +118,21 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], allow_
 
     // 4) Write what is missing or changed (leave identical files alone)
     let mut written = 0usize;
+    let mut rescued: Vec<PathBuf> = Vec::new();
     for (path, content) in &expected {
-        let unchanged = fs::read_to_string(path)
-            .map(|current| current == *content)
-            .unwrap_or(false);
-        if unchanged {
+        let on_disk = fs::read_to_string(path).ok();
+        if on_disk.as_deref() == Some(content.as_str()) {
             continue;
+        }
+        // A file that differs from the model and does NOT hold the content we last wrote
+        // was changed by something else -- almost always an edit made while the core was
+        // not running. Studio's version still wins, because Studio is the session's
+        // authority, but the edit is copied to the trash first and reported. It used to be
+        // overwritten silently: work done with the core down simply disappeared.
+        if let Some(current) = &on_disk {
+            if !is_own_write(path, current) && copy_to_trash(path, sync_dir).is_ok() {
+                rescued.push(path.clone());
+            }
         }
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
@@ -140,6 +149,28 @@ pub fn write_full_tree(dm: &DataModel, sync_dir: &str, ignore: &[String], allow_
     // 5) Clean up folders that became empty
     remove_empty_dirs(root, root);
 
+    if !rescued.is_empty() {
+        let shown: Vec<String> = rescued
+            .iter()
+            .take(10)
+            .map(|p| p.display().to_string())
+            .collect();
+        tracing::warn!(
+            "{} file(s) had been changed on disk since the core last wrote them. Studio's              version was written over them; a copy of what was on disk is in {}/{}.
+  {}{}",
+            rescued.len(),
+            trash_root(sync_dir).display(),
+            run_label(),
+            shown.join("
+  "),
+            if rescued.len() > shown.len() {
+                format!("
+  ... and {} more", rescued.len() - shown.len())
+            } else {
+                String::new()
+            }
+        );
+    }
     if kept > 0 {
         tracing::debug!(
             "layout: {} file(s) not in the model were kept — Studio has not synced yet",

@@ -4,6 +4,17 @@ use std::path::PathBuf;
 
 use super::*;
 
+/// Refuses to start when Studio is not there: every create would sit in the queue and
+/// nothing would be created, which used to look like a successful import.
+fn require_studio(port: u16) -> bool {
+    if studio_is_connected(port) {
+        return true;
+    }
+    report_error("Roblox Studio is not connected, so nothing can be created.");
+    print_dim("  Open the place, wait for the Syncix panel to say connected, then import.");
+    false
+}
+
 /// Brings a .rbxmx / .rbxlx file into the tree (the last item Rojo had and Syncix lacked).
 ///
 /// For every node a CREATE_INSTANCE is sent first, then its properties. Top-down
@@ -31,6 +42,9 @@ pub(crate) fn import_target(cli_args: &[String]) -> i32 {
 pub(crate) fn import_tree(cli_args: &[String]) -> i32 {
     let target = cli_args.get(1).cloned().unwrap_or_default();
     let Some(port) = require_core() else { return 1 };
+    if !require_studio(port) {
+        return 1;
+    }
     let parent_ref = cli_args.get(2).cloned().unwrap_or_else(|| "Workspace".to_string());
 
     let tree = match crate::tree_import::read(&PathBuf::from(&target)) {
@@ -65,7 +79,13 @@ pub(crate) fn import_tree(cli_args: &[String]) -> i32 {
 
     print_info(&format!("Importing {} instance(s) into {}", total, parent_ref));
 
-    fn create(port: u16, node: &crate::tree_import::TreeNode, parent: &str, created: &mut usize, failed: &mut usize) {
+    fn create(
+        port: u16,
+        node: &crate::tree_import::TreeNode,
+        parent: &str,
+        sent: &mut Vec<Sent>,
+        failed: &mut usize,
+    ) {
         let properties: serde_json::Map<String, serde_json::Value> = node
             .properties
             .iter()
@@ -88,24 +108,29 @@ pub(crate) fn import_tree(cli_args: &[String]) -> i32 {
         if let Some(source) = &node.source {
             data["source"] = serde_json::json!(source);
         }
-        if !send_command(port, "CREATE_INSTANCE", data) {
+        if !send_command(port, "CREATE_INSTANCE", data.clone()) {
             // Its children have nowhere to go, so they are counted with it.
             *failed += 1 + node.children.iter().map(count_of).sum::<usize>();
             return;
         }
-        *created += 1;
         let id = node.id.to_string();
+        sent.push(Sent {
+            id: id.clone(),
+            name: node.name.clone(),
+            class_name: node.class_name.clone(),
+            data,
+        });
         for child in &node.children {
-            create(port, child, &id, created, failed);
+            create(port, child, &id, sent, failed);
         }
     }
     fn count_of(node: &crate::tree_import::TreeNode) -> usize {
         1 + node.children.iter().map(count_of).sum::<usize>()
     }
 
-    let (mut created, mut failed) = (0, 0);
+    let (mut sent, mut failed) = (Vec::new(), 0);
     for root in &tree.roots {
-        create(port, root, &parent_id, &mut created, &mut failed);
+        create(port, root, &parent_id, &mut sent, &mut failed);
     }
 
     if tree.outside_refs > 0 {
@@ -127,13 +152,19 @@ pub(crate) fn import_tree(cli_args: &[String]) -> i32 {
         print_dim("  .rbxm into Studio for those, or rebuild them there by hand.");
     }
     if failed > 0 {
-        report_error(&format!("{} instance(s) could not be created.", failed));
+        report_error(&format!("{} instance(s) could not be sent.", failed));
         print_dim("  Check the result with syncix tree.");
         return 1;
     }
 
-    print_ok(&format!("Imported {} instance(s).", created));
-    print_dim("  Run syncix pull to confirm the result from Studio.");
+    let missing = confirm(port, &sent);
+    if !missing.is_empty() {
+        report_missing(&missing);
+        return 1;
+    }
+
+    print_ok(&format!("Imported {} instance(s).", sent.len()));
+    print_dim("  Studio confirmed every one of them.");
     0
 }
 
@@ -143,6 +174,9 @@ pub(crate) fn import_rbxmx(cli_args: &[String]) -> i32 {
         return 1;
     };
     let Some(port) = require_core() else { return 1 };
+    if !require_studio(port) {
+        return 1;
+    }
     let parent_ref = cli_args.get(2).cloned().unwrap_or_else(|| "Workspace".to_string());
 
     let xml = match std::fs::read_to_string(file_path) {
@@ -203,7 +237,7 @@ pub(crate) fn import_rbxmx(cli_args: &[String]) -> i32 {
 
     #[derive(Default)]
     struct Outcome {
-        created: usize,
+        sent: Vec<Sent>,
         failed: usize,
         merged: usize,
         settings_kept: usize,
@@ -282,11 +316,16 @@ pub(crate) fn import_rbxmx(cli_args: &[String]) -> i32 {
         if let Some(source) = &node_entry.source {
             data["source"] = serde_json::json!(source);
         }
-        if !send_command(port, "CREATE_INSTANCE", data) {
+        if !send_command(port, "CREATE_INSTANCE", data.clone()) {
             outcome.failed += 1;
             return;
         }
-        outcome.created += 1;
+        outcome.sent.push(Sent {
+            id: identity.clone(),
+            name: node_entry.name.clone(),
+            class_name: node_entry.class_name.clone(),
+            data,
+        });
 
         for child_entry in &node_entry.children {
             generate(port, tree, child_entry, &identity, outcome);
@@ -311,12 +350,18 @@ pub(crate) fn import_rbxmx(cli_args: &[String]) -> i32 {
         ));
     }
     if outcome.failed > 0 {
-        report_error(&format!("{} instance(s) could not be created.", outcome.failed));
+        report_error(&format!("{} instance(s) could not be sent.", outcome.failed));
         print_dim("  Check the result with syncix tree.");
         return 1;
     }
 
-    print_ok(&format!("Imported {} instance(s).", outcome.created));
-    print_dim("  Run syncix pull to confirm the result from Studio.");
+    let missing = confirm(port, &outcome.sent);
+    if !missing.is_empty() {
+        report_missing(&missing);
+        return 1;
+    }
+
+    print_ok(&format!("Imported {} instance(s).", outcome.sent.len()));
+    print_dim("  Studio confirmed every one of them.");
     0
 }

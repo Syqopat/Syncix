@@ -385,6 +385,7 @@ function ConnectionManager:StartMetricsReporting()
 				data = {
 					queued = counter.queued,
 					coalesced = counter.coalesced,
+					floods = counter.floods or 0,
 					plugin_version = PLUGIN_VERSION,
 					activity_total = flow and flow.total or 0,
 					activity_in = flow and flow.incoming or 0,

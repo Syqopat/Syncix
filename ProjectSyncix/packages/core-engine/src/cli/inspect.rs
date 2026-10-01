@@ -113,6 +113,20 @@ pub(crate) fn status_info() -> i32 {
     println!("  outbound to Studio  : {}", number_value("outbound_to_studio"));
     println!("  plugin queued       : {}", number_value("plugin_queued"));
     println!("  coalesced           : {}", number_value("plugin_coalesced"));
+    let floods = number_value("plugin_floods");
+    if floods > 0 {
+        println!("  flooding objects    : {} (named in Studio's Output)", floods);
+    }
+    if let Some(jobs) = h.get("jobs") {
+        let field = |name: &str| jobs.get(name).and_then(|v| v.as_u64()).unwrap_or(0);
+        println!(
+            "  disk jobs           : {} waiting, {} done, {} refused (peak {})",
+            field("queued"),
+            field("done"),
+            field("rejected"),
+            field("peak_queued")
+        );
+    }
 
     print_info("Activity log (Studio plugin)");
     println!("  entries        : {} (in {}, out {})",

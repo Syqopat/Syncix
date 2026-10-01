@@ -142,8 +142,10 @@ function StatusView:Refresh()
 		local config = info.config or {}
 		set("Sync mode", tostring(config.mode or "?"))
 		set("Objects", tostring(info.object_count or info.objects or "-"))
-		set("Queue", string.format("%d queued  ·  %d merged",
-			info.plugin_queued or 0, info.plugin_coalesced or 0))
+		local floods = info.plugin_floods or 0
+		set("Queue", string.format("%d queued  ·  %d merged%s",
+			info.plugin_queued or 0, info.plugin_coalesced or 0,
+			floods > 0 and string.format("  ·  %d flooding", floods) or ""))
 		set("Conflicts", tostring(info.conflicts or 0))
 		set("Versions", string.format("core %s  ·  plugin %s",
 			tostring(info.version), self.pluginVersion))

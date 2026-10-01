@@ -43,6 +43,27 @@ pub(crate) fn move_to_trash(path: &Path, sync_dir: &str) -> std::io::Result<()> 
     Ok(())
 }
 
+/// Keeps a copy of the file in the trash and leaves the original where it is.
+///
+/// Used before Studio's version replaces a file that changed on disk while the core was
+/// not running: that edit is nobody's to throw away, and until now it was overwritten
+/// without a trace.
+pub(crate) fn copy_to_trash(path: &Path, sync_dir: &str) -> std::io::Result<()> {
+    if !trash_config().0 {
+        // With the trash off there is nowhere to keep it. The caller reports the
+        // overwrite either way.
+        return Ok(());
+    }
+    let rel_path = path.strip_prefix(sync_dir).unwrap_or(path);
+    let dest = trash_root(sync_dir).join(run_label()).join(rel_path);
+    if let Some(upper) = dest.parent() {
+        fs::create_dir_all(upper)?;
+    }
+    fs::copy(path, &dest)?;
+    prune_trash(sync_dir);
+    Ok(())
+}
+
 /// The trash must not grow without bound: the newest TRASH_KEEP_DEFAULT folders stay.
 pub(crate) fn prune_trash(sync_dir: &str) {
     let root_dir = trash_root(sync_dir);

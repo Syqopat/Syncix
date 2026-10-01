@@ -7,6 +7,7 @@ mod meta_tests;
 mod txt_tests;
 mod protection_tests;
 mod csv_tests;
+mod offline_edit_tests;
 mod trash_tests;
 mod path_matching_tests;
 mod suffix_tests;

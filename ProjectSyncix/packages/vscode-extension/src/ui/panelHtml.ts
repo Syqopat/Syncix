@@ -250,7 +250,8 @@ function render(s) {
     text('uptime', duration(s.uptimeSeconds));
     text('extver', s.extensionVersion || '-');
     text('corever', s.coreVersion || '-');
-    text('throughput', 'Queued ' + s.queued + '  -  merged ' + s.coalesced + '  -  loops ' + s.loops);
+    const flooding = s.floods > 0 ? '  -  ' + s.floods + ' object(s) changing every frame' : '';
+    text('throughput', 'Queued ' + s.queued + '  -  merged ' + s.coalesced + '  -  loops ' + s.loops + flooding);
 
     const stream = document.getElementById('stream');
     if (!s.stream.length) {

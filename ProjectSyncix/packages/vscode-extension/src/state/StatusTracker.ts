@@ -26,6 +26,7 @@ export interface StatusSnapshot {
     queued: number;
     coalesced: number;
     loops: number;
+    floods: number;
     stream: StreamEntry[];
 }
 
@@ -58,6 +59,7 @@ export class StatusTracker {
         queued: 0,
         coalesced: 0,
         loops: 0,
+        floods: 0,
         stream: [],
     };
 
@@ -126,6 +128,7 @@ export class StatusTracker {
         this.snapshot.queued = health.plugin_queued ?? 0;
         this.snapshot.coalesced = health.plugin_coalesced ?? 0;
         this.snapshot.loops = health.loops_detected ?? 0;
+        this.snapshot.floods = health.plugin_floods ?? 0;
         if (typeof health.object_count === 'number') {
             this.snapshot.objectCount = health.object_count;
         }
