@@ -133,30 +133,7 @@ fn handle_event(
     // Now the writer's own deletions are recorded, so they can be told apart:
     // a deletion that is not in the record is a real user deletion.
     if matches!(event.kind, EventKind::Remove(_)) {
-        for path in &event.paths {
-            if crate::layout::is_ignored(path, sync_dir, ignore) {
-                continue;
-            }
-            if crate::layout::is_own_delete(path) {
-                continue;
-            }
-            let uuid = {
-                let dm = data_model.blocking_read();
-                crate::layout::uuid_for_path(&dm, sync_dir, path)
-            };
-            match uuid {
-                Some(u) => {
-                    info!("A file was deleted from disk: {}", path.display());
-                    pending_deletes.insert(u, std::time::Instant::now());
-                }
-                // Silently dropped deletes could not be traced: when fs_path matching
-                // was broken, no trace was left.
-                None => info!(
-                    "A file was deleted but no instance matched it, so nothing was removed: {}",
-                    path.display()
-                ),
-            }
-        }
+        note_removals(&event, data_model, sync_dir, ignore, pending_deletes);
         return;
     }
 

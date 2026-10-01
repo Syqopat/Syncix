@@ -75,3 +75,42 @@ pub(crate) fn apply_ripe_deletes(
         disk_notify.notify_one();
     }
 }
+
+/// Deletions seen on disk.
+///
+/// A deletion is NOT applied at once: the operating system reports a move as
+/// "delete + create", so applying it straight away turned a move into losing the
+/// instance and creating a new one. It waits for the grace period instead, and a file
+/// that comes back within it cancels the deletion.
+pub(crate) fn note_removals(
+    event: &Event,
+    data_model: &crate::model::SharedDataModel,
+    sync_dir: &str,
+    ignore: &[String],
+    pending_deletes: &mut std::collections::HashMap<Uuid, std::time::Instant>,
+) {
+    for path in &event.paths {
+        if crate::layout::is_ignored(path, sync_dir, ignore) {
+            continue;
+        }
+        if crate::layout::is_own_delete(path) {
+            continue;
+        }
+        let uuid = {
+            let dm = data_model.blocking_read();
+            crate::layout::uuid_for_path(&dm, sync_dir, path)
+        };
+        match uuid {
+            Some(u) => {
+                info!("A file was deleted from disk: {}", path.display());
+                pending_deletes.insert(u, std::time::Instant::now());
+            }
+            // Silently dropped deletes could not be traced: when fs_path matching
+            // was broken, no trace was left.
+            None => info!(
+                "A file was deleted but no instance matched it, so nothing was removed: {}",
+                path.display()
+            ),
+        }
+    }
+}

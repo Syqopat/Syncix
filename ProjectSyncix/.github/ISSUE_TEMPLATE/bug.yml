@@ -1,0 +1,50 @@
+name: Something is broken
+description: Sync did the wrong thing, or stopped doing anything.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The two things that make a report fixable are the version and what the core
+        logged. `syncix status` prints the first; the log is at
+        `.syncix/syncix-core.log` in your project.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: Output of `syncix status`
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: log
+    attributes:
+      label: Anything the log or Studio's Output said
+      description: The lines around the moment it went wrong. Please remove anything personal.
+      render: text
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.1.7"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it went wrong
+      options:
+        - Studio plugin
+        - Editor extension
+        - Core engine / CLI
+        - Not sure
+    validations:
+      required: true

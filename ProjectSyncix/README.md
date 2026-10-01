@@ -10,7 +10,8 @@ sides in the same state.
 
 ## Install
 
-1. Download `syncix.vsix` from the [Releases](../../releases) page.
+1. Download `syncix.vsix` from the
+   [latest release](https://github.com/Syqopat/Syncix/releases/latest).
 2. In VS Code open the Extensions panel, use the `...` menu and pick
    **Install from VSIX...**, then select the downloaded file.
 3. Open your project folder in VS Code.
@@ -91,16 +92,58 @@ syncix set Ground Color "#5aa832"
 Press `Ctrl+Shift+P` and type `Syncix:` to reach the same operations — reconnect,
 restart the core, install the plugin, open the inspector, run the self test and more.
 
+### The panels
+
+Both sides have the same three views, on their host's own theme.
+
+**In the editor**, the Syncix icon in the activity bar: the workspace explorer and the
+**Syncix** panel — *Status* (what state sync is in, the project, the port, objects,
+conflicts, versions), *Live* (what is crossing right now) and *Settings* (whether the
+core starts with the project, the CLI, and **Send feedback**, which opens the issue
+form).
+
+**In Studio**, the Syncix button in the toolbar: the same Status, Live and Settings,
+where Settings also holds the port — leave it on *Automatic* unless you pinned one.
+
 ## Configuration
 
-`syncix.toml` in the project root:
+`syncix.toml` in the project root. Every key is optional and the file is read when the
+core starts:
 
 ```toml
+[files]
 sync_dir = "src"
-port = 8080
-sourcemap = true
 ignore = ["notes/**"]
+
+[sync]
+mode = "two_way"        # or studio_to_disk, disk_to_studio, manual
+debounce_ms = 120
+
+[server]
+port = 8080
+
+[editor]
+sourcemap = true
 ```
+
+```bash
+syncix config
+```
+
+prints what is actually in effect, with the settings it did not understand and the
+closest spelling for each. For completion and validation in your editor:
+
+```bash
+syncix config --schema > syncix.schema.json
+```
+
+An older, flat `syncix.toml` (keys at the top level, no sections) is rewritten into
+sections the first time the core reads it. Your comments stay where they were and the
+file as it was is kept beside it as `syncix.toml.bak`.
+
+Every setting, with its range and default, is in
+[`schemas/syncix.schema.json`](schemas/syncix.schema.json); the commented example is in
+`packages/vscode-extension/resources/syncix.example.toml`.
 
 When the port is taken Syncix moves to the next one and writes the chosen port to
 `.syncix/port`. The editor and the Studio plugin read it from there, so you can have
@@ -166,6 +209,14 @@ it cannot be undone, which is why there are two gates.
 If a key ends up inside `syncix.toml`, Syncix refuses to publish and says why — that
 file goes into version control and the key would become public.
 
+## The API
+
+The core serves its own description while it runs: `http://127.0.0.1:<port>/docs` to
+read and try, `/openapi.json` for a client generator. Every call except `/health`
+carries the project token from `.syncix/token`, and the core sends no CORS header, so
+no web page can read a reply. [docs/API.md](docs/API.md) has the status codes, the
+routes, the environment variables and the files the core writes.
+
 ## Architecture
 
 | Component | Language | Role |
@@ -181,20 +232,20 @@ rename, reparent or reconnect.
 ## Development
 
 ```bash
-cd packages/core-engine && cargo test
+cd packages/core-engine && cargo test          # unit, integration and end-to-end
+cd packages/vscode-extension && npm test       # vitest, with a fake vscode module
+python tools/luau-test.py                      # the plugin's modules under the luau CLI
 ```
 
-```bash
-sh tools/luau-check.sh $(find packages/studio-plugin/src -name "*.lua")
-```
+All three components must carry the same version number
+(`packages/core-engine/Cargo.toml`, `packages/vscode-extension/package.json`,
+`packages/studio-plugin/src/Network/Protocol.lua`); `tools/check-versions.py` and CI
+enforce it. The Studio plugin requires a matching major.minor from the core and
+refuses to connect otherwise, stating why.
 
-```bash
-cd packages/vscode-extension && npm run compile
-```
-
-All three components must carry the same version number (`Cargo.toml`,
-`package.json`, `init.server.lua`); CI enforces it. The Studio plugin requires a
-matching major.minor from the core and refuses to connect otherwise, stating why.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the rest: the layout, the 500-line rule, the
+commit format the changelog is generated from, and how to run the core from source
+without losing work.
 
 ## Licence
 

@@ -1,0 +1,23 @@
+name: An idea
+description: Something Syncix should do, or should do differently.
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The situation, not the solution. The best features come from the problem being clear.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+    validations:
+      required: false
+  - type: textarea
+    id: now
+    attributes:
+      label: How you work around it today
+    validations:
+      required: false
