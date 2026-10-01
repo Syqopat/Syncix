@@ -90,6 +90,6 @@ jobs:
           # GitHub attaches the source archives itself; these are the built files a
           # user should not have to build.
           files: |
-            ProjectSyncix/syncix-${{ github.ref_name }}.vsix
+            ProjectSyncix/syncix-${{ steps.version.outputs.number }}.vsix
             ProjectSyncix/packages/vscode-extension/resources/SyncixPlugin.rbxm
             ProjectSyncix/packages/core-engine/target/release/syncix-core.exe
