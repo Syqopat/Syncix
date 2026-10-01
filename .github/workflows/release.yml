@@ -58,6 +58,14 @@ jobs:
       - name: Build the Studio plugin
         run: rojo build packages/studio-plugin/default.project.json -o packages/vscode-extension/resources/SyncixPlugin.rbxm
 
+      # The asset is named after the version, without the tag's leading v: the tag
+      # v0.1.7 produced syncix-v0.1.7.vsix beside the syncix-0.1.7.vsix already on the
+      # page, which is one package under two names.
+      - name: The version in this tag
+        id: version
+        shell: bash
+        run: echo "number=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
       - name: Package the extension
         shell: bash
         run: |
@@ -66,7 +74,7 @@ jobs:
           cd packages/vscode-extension
           npm ci
           npm run compile
-          npx --yes @vscode/vsce package --out ../../syncix-${{ github.ref_name }}.vsix
+          npx --yes @vscode/vsce package --out ../../syncix-${{ steps.version.outputs.number }}.vsix
 
       # The body comes from CHANGELOG.md, which is the written record of the release;
       # entries there are drafted from the commit messages with git-cliff (cliff.toml)
