@@ -147,7 +147,9 @@ pub(crate) fn fetch_json(port: u16, fs_path: &str) -> Option<serde_json::Value> 
 pub(crate) fn send_command(port: u16, event_type: &str, data: serde_json::Value) -> bool {
     let body = serde_json::json!({ "event_type": event_type, "data": data }).to_string();
     match http_request(port, "POST", "/commands", Some(&body)) {
-        Ok(c) if c.status_info == 200 => true,
+        // Any 2xx is a yes. Queued work answers 202 Accepted: the core has it, Studio
+        // has not applied it yet.
+        Ok(c) if (200..300).contains(&c.status_info) => true,
         Ok(c) => {
             report_error(&format!("Rejected ({}):", c.status_info));
             eprintln!("{}", c.body.trim());

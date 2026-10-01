@@ -52,7 +52,7 @@ pub type ApiResult<T> = Result<T, ApiError>;
 /// The reply of a call that only reports that it was accepted.
 pub fn accepted() -> Response {
     (
-        StatusCode::OK,
+        StatusCode::ACCEPTED,
         Json(serde_json::json!({ "status": "accepted" })),
     )
         .into_response()
