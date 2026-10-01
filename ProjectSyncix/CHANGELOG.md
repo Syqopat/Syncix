@@ -4,6 +4,73 @@ All notable changes to Syncix are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.1.7] - 2026-10-01
+
+A release about the inside of Syncix: what it refuses, what it can prove, and what it
+is honest about. The two panels are rebuilt, the HTTP API needs a token, the settings
+file has one description and a schema, and four bugs that quietly lost work are fixed.
+
+### Added
+
+- **A Syncix panel on each side, on its host's own theme.** Three views, the same in
+  both: *Status* (what state sync is in, the project, the port, objects, conflicts,
+  versions), *Live* (what is crossing right now) and *Settings*. In Studio it replaces
+  a settings panel that positioned every row by hand and showed nothing of the sync
+  itself; in the editor it replaces a separate diagnostics tab and an empty second
+  sidebar view. Both carry a **Send feedback** button that opens the issue form.
+- **A token on every call.** The core writes `<project>/.syncix/token` and every route
+  except `/health` requires it in `X-Syncix-Token`. Before this, any web page you had
+  open could reach `127.0.0.1` and call `/shutdown` or push changes into your game. The
+  core also sends no CORS header at all, so a browser will not hand a reply to page
+  scripts.
+- **The API describes itself.** `/docs` to read and try, `/openapi.json` for a client
+  generator, both generated from the handlers so they cannot drift away from the code.
+  [docs/API.md](docs/API.md) covers the rest: status codes, the files the core writes,
+  and the two environment variables.
+- **A JSON schema for syncix.toml and `syncix config --schema`.** Every setting is
+  described once in the core - section, type, range, default, what it does - and the
+  warning check, the schema and the migration all read that table.
+- **`server.job_workers`.** How many background jobs may run at once.
+- **CI, and the checks it runs.** Versions matching across the three components, the
+  Rust tests, the TypeScript tests, the Luau tests, and no product file over 500 lines.
+
+### Fixed
+
+- **An edit made on disk while the core was down is no longer lost.** Studio's next
+  full sync still wins, but what was on disk is copied into `.syncix/trash` first and
+  the overwrite is reported with the file names. This one cost real work three times.
+- **An import no longer reports success for objects Studio never created.** It waits
+  for every identity it sent to appear in the tree, sends what is missing once more,
+  and names what is still absent. With Studio not connected it refuses to start
+  instead of queueing the whole tree and calling it done.
+- **A copied subtree lands in the copy, not in the original.** A child's create named
+  its parent by the identity the parent carried right then - still the original's - so
+  the children of a Ctrl+D copy were created inside the original.
+- **An object that changes a property every frame is named.** It was already throttled,
+  but nothing said which object it was. The plugin names it once, with the
+  `syncix.toml` line that would exclude it, and the count reaches `/health`,
+  `syncix status` and both panels.
+
+### Changed
+
+- **Work the core has queued for Studio answers 202 Accepted**, not 200, so a client
+  can tell "taken" from "done". Failures answer one shape:
+  `{"error": ..., "message": ...}`.
+- **An older, flat syncix.toml is migrated** the first time the core reads it: keys
+  move into their sections, retired keys go, your comments stay where they were, and
+  the file as it was is kept as `syncix.toml.bak`. `play_mode`, which had no effect for
+  several releases, is removed.
+- **`/health` no longer reports the project's path** - it carried the user's account
+  name. The project's name is enough to tell two projects apart.
+- **The heavy disk write runs on a job pool** instead of an async worker thread, so a
+  poll from Studio no longer waits behind thousands of file writes. The queue is
+  bounded and its depth, peak, refusals and slow jobs are reported.
+- **No product file is over 500 lines**, in any of the three languages. `main.rs` went
+  from 3000 lines to 78; `PatchExecutor.lua` from 1068 to 443; `extension.ts` from 826
+  to 189.
+- **Ten modules nothing referenced are deleted**, including a placeholder scheduler
+  that started no worker and a project manifest unrelated to the real settings file.
+
 ## [0.1.6] - 2026-09-27
 
 ### Added
