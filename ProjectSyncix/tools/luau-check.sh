@@ -10,17 +10,22 @@
 # error the stack trace is EMPTY, because no code ran. A runtime error has at
 # least one frame.
 #
-# Usage:  sh tools/luau-check.sh file1.lua file2.lua ...
-#         sh tools/luau-check.sh $(find studio-plugin/src -name "*.lua")
+# Usage:  sh tools/luau-check.sh <file or folder> ...
+#         sh tools/luau-check.sh packages/studio-plugin/src examples
+#
+# A folder is walked here rather than with $(find ...): the example place has a folder
+# with a space in its name ("Candy Blossom"), and an unquoted find expansion split that
+# into two paths that do not exist.
 
-FAILED=0
+FAILED_FLAG=$(mktemp)
 
-for f in "$@"; do
+check_one() {
+	f="$1"
 	OUTPUT=$(luau "$f" 2>&1)
 
 	if [ -z "$OUTPUT" ]; then
 		echo "OK                $f"
-		continue
+		return
 	fi
 
 	# Number of non-empty lines AFTER the "stacktrace:" line
@@ -29,16 +34,27 @@ for f in "$@"; do
 	if [ "$FRAMES" -eq 0 ]; then
 		echo "SYNTAX ERROR      $f"
 		echo "$OUTPUT" | head -2 | sed 's/^/    /'
-		FAILED=1
+		echo 1 > "$FAILED_FLAG"
 	else
 		echo "OK                $f"
 	fi
+}
+
+for target in "$@"; do
+	if [ -d "$target" ]; then
+		find "$target" -name "*.lua" -print0 | while IFS= read -r -d '' file; do
+			check_one "$file"
+		done
+	else
+		check_one "$target"
+	fi
 done
 
-if [ "$FAILED" -ne 0 ]; then
+if [ -s "$FAILED_FLAG" ]; then
+	rm -f "$FAILED_FLAG"
 	echo "RESULT: syntax errors found"
-else
-	echo "RESULT: all files clean"
+	exit 1
 fi
 
-exit $FAILED
+rm -f "$FAILED_FLAG"
+echo "RESULT: all files clean"

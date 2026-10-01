@@ -77,7 +77,7 @@ Roblox API, then each module with its requires turned into lookups the test fill
 then the test. The modules' own code is untouched.
 
 ```bash
-sh tools/luau-check.sh $(find packages/studio-plugin/src -name "*.lua")
+sh tools/luau-check.sh packages/studio-plugin/src
 python tools/require-check.py
 ```
 

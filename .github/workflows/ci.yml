@@ -95,7 +95,10 @@ jobs:
         with:
           path: ProjectSyncix
       - name: Syntax
-        run: sh tools/luau-check.sh $(find packages/studio-plugin/src examples -name "*.lua")
+        # The plugin's own source only. The example place is sample content imported
+        # from a real game: it holds a script that prints on load and file names in
+        # another alphabet, neither of which says anything about Syncix.
+        run: sh tools/luau-check.sh packages/studio-plugin/src
       - name: Used but never defined
         run: python tools/require-check.py
       - name: Tests
